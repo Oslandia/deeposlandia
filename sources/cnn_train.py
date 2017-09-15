@@ -21,9 +21,9 @@ import tensorflow as tf
 import sys
 import time
 
-import bpmll # Multilabel classification loss
-import cnn_mapillary_dashboard
-import tensorflow_layers
+import bpmll # Multilabel classification lossi
+import cnn_layers
+import dashboard
 import utils
 
 logger = logging.getLogger(__name__)
