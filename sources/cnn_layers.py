@@ -7,8 +7,8 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 
 def prepare_data(height, width, n_channels, batch_size, dataset_type, scope_name):
-    INPUT_PATH = os.path.join("data", dataset_type, "input")
-    OUTPUT_PATH = os.path.join("data", dataset_type, "output")
+    INPUT_PATH = os.path.join("..", "data", dataset_type, "input")
+    OUTPUT_PATH = os.path.join("..", "data", dataset_type, "output")
     with tf.variable_scope(scope_name) as scope:
         # Reading image file paths
         filepaths = os.listdir(INPUT_PATH)
