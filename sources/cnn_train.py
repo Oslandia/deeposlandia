@@ -89,10 +89,10 @@ SKIP_STEP = 10
 # Step 2: data recovering
 
 train_image_batch, train_label_batch, train_filename_batch = \
-tensorflow_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
+cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                BATCH_SIZE, "training", "training_data_pipe")
 validation_image_batch, validation_label_batch, validation_filename_batch =\
-tensorflow_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
+cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                BATCH_SIZE, "validation", "validation_data_pipe")
 
 # Step 3: Prepare the checkpoint creation
@@ -109,33 +109,33 @@ dropout = tf.placeholder(tf.float32, name='dropout')
 
 # Step 5: model building
 
-conv1 = tensorflow_layers.conv_layer(X, NUM_CHANNELS, K_C1, L_C1, STR_C1, 1)
-pool1 = tensorflow_layers.maxpool_layer(conv1, KS_P1, STR_P1, 1)
+conv1 = cnn_layers.conv_layer(X, NUM_CHANNELS, K_C1, L_C1, STR_C1, 1)
+pool1 = cnn_layers.maxpool_layer(conv1, KS_P1, STR_P1, 1)
 last_pool = pool1
 last_layer_dim = L_C1
 layer_coefs = [STR_C1, STR_P1]
 if "conv2" in cnn_hyperparam.keys():
-    conv2 = tensorflow_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2, 2)
+    conv2 = cnn_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2, 2)
 if "pool2" in cnn_hyperparam.keys():
-    pool2 = tensorflow_layers.maxpool_layer(conv2, KS_P2, STR_P2, 2)
+    pool2 = cnn_layers.maxpool_layer(conv2, KS_P2, STR_P2, 2)
     last_pool = pool2
     last_layer_dim = L_C2
     layer_coefs.append(STR_C2)
     layer_coefs.append(STR_P2)
 if "conv3" in cnn_hyperparam.keys():
-    conv3 = tensorflow_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3, 3)
+    conv3 = cnn_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3, 3)
 if "pool3" in cnn_hyperparam.keys():
-    pool3 = tensorflow_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3)
+    pool3 = cnn_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3)
     last_pool = pool3
     last_layer_dim = L_C3
     layer_coefs.append(STR_C3)
     layer_coefs.append(STR_P3)
-hidden_layer_dim = tensorflow_layers.layer_dim(IMAGE_HEIGHT, IMAGE_WIDTH,
+hidden_layer_dim = cnn_layers.layer_dim(IMAGE_HEIGHT, IMAGE_WIDTH,
                                                layer_coefs, last_layer_dim)
-fc1 = tensorflow_layers.fullconn_layer(last_pool, IMAGE_HEIGHT, IMAGE_WIDTH,
+fc1 = cnn_layers.fullconn_layer(last_pool, IMAGE_HEIGHT, IMAGE_WIDTH,
                                        hidden_layer_dim, L_FC1, dropout, 1)
 if "fullconn2" in cnn_hyperparam.keys():
-    fc2 = tensorflow_layers.fullconn_layer(fc1, IMAGE_HEIGHT, IMAGE_WIDTH,
+    fc2 = cnn_layers.fullconn_layer(fc1, IMAGE_HEIGHT, IMAGE_WIDTH,
                                            L_FC1, L_FC2, dropout, 2)
 
 # Output building
@@ -202,7 +202,7 @@ with tf.Session() as sess:
             loss_batch, bpmll, Y_pred = \
             sess.run([loss, bpmll_loss, Y_predict],
                      feed_dict={X: X_batch, Y: Y_batch, dropout: 1.0})
-            dashboard_batch = cnn_mapillary_dashboard.dashboard_building(Y_batch, Y_pred)
+            dashboard_batch = dashboard.dashboard_building(Y_batch, Y_pred)
             dashboard_batch.insert(0, bpmll)
             dashboard_batch.insert(0, loss_batch)
             dashboard_batch.insert(0, index)
