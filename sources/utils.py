@@ -20,16 +20,6 @@ logger.addHandler(ch)
 DATASET = ["training", "validation", "testing"]
 IMG_SIZE = (768, 576) # easy decomposition: (4, 3) * 3 * 2 * 2 * 2 * 2 * 2 * 2
 IMAGE_TYPES = ["images", "instances", "labels"]
-TRAINING_IMAGE_PATH = os.path.join("data", "training", "images")
-TRAINING_LABEL_PATH = os.path.join("data", "training", "labels")
-TRAINING_INPUT_PATH = os.path.join("data", "training", "input",
-                                   "{}_{}".format(IMG_SIZE[0], IMG_SIZE[1]))
-TRAINING_OUTPUT_PATH = os.path.join("data", "training", "output")
-VALIDATION_IMAGE_PATH = os.path.join("data", "validation", "images")
-VALIDATION_LABEL_PATH = os.path.join("data", "validation", "labels")
-VALIDATION_INPUT_PATH = os.path.join("data", "validation", "input",
-                                   "{}_{}".format(IMG_SIZE[0], IMG_SIZE[1]))
-VALIDATION_OUTPUT_PATH = os.path.join("data", "validation", "output")
 
 def make_dir(path):
     """ Create a directory if there isn't one already. """
@@ -77,7 +67,7 @@ def are_labels_equal(old_label, new_label):
     return sum(new_label == old_label) == len(old_label)
 
 def check_label_equality(dataset, labels, img_id):
-    image = Image.open(os.path.join("data", dataset, "labels",
+    image = Image.open(os.path.join("..", "data", dataset, "labels",
                                     labels.iloc[img_id, 0].replace(".jpg",
                                                                    ".png")))
     old_label = np.array(mapillary_label_building(image, 66))
@@ -94,11 +84,11 @@ def size_inventory():
     datasets = []
     for dataset in DATASET:
         logger.info("Size inventory in {} dataset".format(dataset))
-        for img_filename in os.listdir(os.path.join("data", dataset, "images")):
+        for img_filename in os.listdir(os.path.join("..", "data", dataset, "images")):
             for img_type in IMAGE_TYPES:
                 if dataset == "testing" and not img_type == "images":
                     continue
-                complete_filename = os.path.join("data", dataset,
+                complete_filename = os.path.join("..", "data", dataset,
                                                  img_type, img_filename)
                 if not img_type == "images":
                     complete_filename = complete_filename.replace("images", img_type)
@@ -118,12 +108,12 @@ def size_inventory():
                       "height": heights})
 
 def mapillary_data_preparation(dataset="training", nb_labels=1):
-    IMAGE_PATH = os.path.join("data", dataset, "images")
-    INPUT_PATH = os.path.join("data", dataset, "input")
+    IMAGE_PATH = os.path.join("..", "data", dataset, "images")
+    INPUT_PATH = os.path.join("..", "data", dataset, "input")
     make_dir(INPUT_PATH)
     if dataset != "testing":
-        LABEL_PATH = os.path.join("data", dataset, "labels")
-        OUTPUT_PATH = os.path.join("data", dataset, "output")
+        LABEL_PATH = os.path.join("..", "data", dataset, "labels")
+        OUTPUT_PATH = os.path.join("..", "data", dataset, "output")
         make_dir(OUTPUT_PATH)
         train_y = []
     for img_id, img_filename in enumerate(os.listdir(IMAGE_PATH)):
@@ -157,8 +147,8 @@ def mapillary_data_preparation(dataset="training", nb_labels=1):
         train_y.to_csv(os.path.join(OUTPUT_PATH, "labels.csv"), index=False)
 
 def mapillary_output_checking(dataset="training", nb_labels=1):
-    LABEL_PATH = os.path.join("data", dataset, "labels")
-    OUTPUT_PATH = os.path.join("data", dataset, "output")
+    LABEL_PATH = os.path.join("..", "data", dataset, "labels")
+    OUTPUT_PATH = os.path.join("..", "data", dataset, "output")
     new_labels = pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
     for new_filename in new_labels.new_name:
         current_label = new_labels.query("new_name == @new_filename")
