@@ -20,7 +20,7 @@ def confusion_matrix_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    return confusion_matrix(y_true[:,index], y_predicted[:,index])
+    return confusion_matrix(y_true[:,index], y_predicted[:,index], labels=[0, 1])
 
 def accuracy_by_label(y_true, y_predicted, index):
     """Return the accuracy according to true and predicted labels, for
@@ -54,10 +54,8 @@ def precision_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    _, false_positive, _, true_positive = confusion_matrix_by_label(y_true,
-                                                                    y_predicted,
-                                                                    index)
-    if false_positive + true_positive == 0:
+    [_, fp], [_, tp] = confusion_matrix_by_label(y_true, y_predicted, index)
+    if fp + tp == 0:
         return 0.0
     return precision_score(y_true[:,index], y_predicted[:,index])
 
@@ -76,10 +74,8 @@ def recall_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    _, _, false_negative, true_positive = confusion_matrix_by_label(y_true,
-                                                                    y_predicted,
-                                                                    index)
-    if false_negative + true_positive == 0:
+    [_, _], [fn, tp] = confusion_matrix_by_label(y_true, y_predicted, index)
+    if fn + tp == 0:
         return 0.0
     return recall_score(y_true[:,index], y_predicted[:,index])
 
