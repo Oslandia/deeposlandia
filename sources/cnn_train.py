@@ -226,8 +226,8 @@ with tf.Session() as sess:
     dashboard_columns = dashboard_columns + dashboard_columns_by_label
     param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
     param_history = param_history.set_index("epoch")
-    utils.make_dir(os.path.join("data", "results"))
-    result_file_name = os.path.join("data", "results", NETWORK_NAME + ".csv")
+    utils.make_dir(os.path.join("..", "data", "results"))
+    result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
     if initial_step == 0:
         param_history.to_csv(result_file_name, index=True)
     else:
