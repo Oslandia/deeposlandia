@@ -196,7 +196,7 @@ with tf.Session() as sess:
     # Train the model
     start_time = time.time()
     dashboard = []
-    for index in range(initial_step, initial_step+101):#N_BATCHES * N_EPOCHS):
+    for index in range(initial_step, N_BATCHES * N_EPOCHS):
         X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
         if index % SKIP_STEP == 0:
             loss_batch, bpmll, Y_pred = \
