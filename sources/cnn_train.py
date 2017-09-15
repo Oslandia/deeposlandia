@@ -23,7 +23,7 @@ import time
 
 import bpmll # Multilabel classification lossi
 import cnn_layers
-import dashboard
+import dashboard_building
 import utils
 
 logger = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ with tf.Session() as sess:
             loss_batch, bpmll, Y_pred = \
             sess.run([loss, bpmll_loss, Y_predict],
                      feed_dict={X: X_batch, Y: Y_batch, dropout: 1.0})
-            dashboard_batch = dashboard.dashboard_building(Y_batch, Y_pred)
+            dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
             dashboard_batch.insert(0, bpmll)
             dashboard_batch.insert(0, loss_batch)
             dashboard_batch.insert(0, index)
