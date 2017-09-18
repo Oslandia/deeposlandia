@@ -115,21 +115,21 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     if "conv2" in cnn_hyperparam.keys():
         conv2 = cnn_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2,
                                       2, NETWORK_NAME)
+        layer_coefs.append(STR_C2)
     if "pool2" in cnn_hyperparam.keys():
         pool2 = cnn_layers.maxpool_layer(conv2, KS_P2, STR_P2,
                                          2, NETWORK_NAME)
         last_pool = pool2
         last_layer_dim = L_C2
-        layer_coefs.append(STR_C2)
         layer_coefs.append(STR_P2)
     if "conv3" in cnn_hyperparam.keys():
         conv3 = cnn_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3,
                                       3, NETWORK_NAME)
+        layer_coefs.append(STR_C3)
     if "pool3" in cnn_hyperparam.keys():
         pool3 = cnn_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3, NETWORK_NAME)
         last_pool = pool3
         last_layer_dim = L_C3
-        layer_coefs.append(STR_C3)
         layer_coefs.append(STR_P3)
     hidden_layer_dim = cnn_layers.layer_dim(IMAGE_HEIGHT, IMAGE_WIDTH,
                                                    layer_coefs, last_layer_dim)
