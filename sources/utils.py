@@ -12,11 +12,11 @@ import sys
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
 ch_stdout = logging.StreamHandler(sys.stdout)
 ch_logfile = logging.FileHandler("../log/cnn_log.log")
-ch_stdout.setFormatter(format)
-ch_logfile.setFormatter(format)
+ch_stdout.setFormatter(formatter)
+ch_logfile.setFormatter(formatter)
 logger.addHandler(ch_stdout)
 logger.addHandler(ch_logfile)
 
