@@ -215,8 +215,8 @@ for config_file in os.listdir(os.path.join("..", "models")):
                 logger.info("""Step {}: loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
-                saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best')
-            if (index+1) % N_BATCHES == 0:
+                saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
+            if (index+1) % (SKIP_STEP * 10) == 0:
                 saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/epoch', index)
             sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
         logger.info("Optimization Finished!")
