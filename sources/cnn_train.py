@@ -111,23 +111,28 @@ for config_file in os.listdir(os.path.join("..", "models")):
 
     # Step 5: model building
 
-    conv1 = cnn_layers.conv_layer(X, NUM_CHANNELS, K_C1, L_C1, STR_C1, 1)
-    pool1 = cnn_layers.maxpool_layer(conv1, KS_P1, STR_P1, 1)
+    conv1 = cnn_layers.conv_layer(X, NUM_CHANNELS, K_C1, L_C1, STR_C1,
+                                  1, NETWORK_NAME)
+    pool1 = cnn_layers.maxpool_layer(conv1, KS_P1, STR_P1,
+                                     1, NETWORK_NAME)
     last_pool = pool1
     last_layer_dim = L_C1
     layer_coefs = [STR_C1, STR_P1]
     if "conv2" in cnn_hyperparam.keys():
-        conv2 = cnn_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2, 2)
+        conv2 = cnn_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2,
+                                      2, NETWORK_NAME)
     if "pool2" in cnn_hyperparam.keys():
-        pool2 = cnn_layers.maxpool_layer(conv2, KS_P2, STR_P2, 2)
+        pool2 = cnn_layers.maxpool_layer(conv2, KS_P2, STR_P2,
+                                         2, NETWORK_NAME)
         last_pool = pool2
         last_layer_dim = L_C2
         layer_coefs.append(STR_C2)
         layer_coefs.append(STR_P2)
     if "conv3" in cnn_hyperparam.keys():
-        conv3 = cnn_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3, 3)
+        conv3 = cnn_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3,
+                                      3, NETWORK_NAME)
     if "pool3" in cnn_hyperparam.keys():
-        pool3 = cnn_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3)
+        pool3 = cnn_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3, NETWORK_NAME)
         last_pool = pool3
         last_layer_dim = L_C3
         layer_coefs.append(STR_C3)
@@ -135,14 +140,16 @@ for config_file in os.listdir(os.path.join("..", "models")):
     hidden_layer_dim = cnn_layers.layer_dim(IMAGE_HEIGHT, IMAGE_WIDTH,
                                                    layer_coefs, last_layer_dim)
     fc1 = cnn_layers.fullconn_layer(last_pool, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                           hidden_layer_dim, L_FC1, dropout, 1)
+                                    hidden_layer_dim, L_FC1,
+                                    dropout, 1, NETWORK_NAME)
     if "fullconn2" in cnn_hyperparam.keys():
         fc2 = cnn_layers.fullconn_layer(fc1, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                               L_FC1, L_FC2, dropout, 2)
+                                        L_FC1, L_FC2,
+                                        dropout, 2, NETWORK_NAME)
 
     # Output building
 
-    with tf.variable_scope('sigmoid_linear') as scope:
+    with tf.variable_scope(NETWORK_NAME + '_sigmoid_linear') as scope:
         # Create weights and biases for the final fully-connected layer
         w = tf.get_variable('weights', [L_FC1, N_CLASSES],
                             initializer=tf.truncated_normal_initializer())
@@ -156,7 +163,7 @@ for config_file in os.listdir(os.path.join("..", "models")):
 
     # Step 6: loss function design
 
-    with tf.name_scope('loss'):
+    with tf.name_scope(NETWORK_NAME + '_loss'):
         # Cross-entropy between predicted and real values: we use sigmoid instead
         # of softmax as we are in a multilabel classification problem
         entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y, logits=logits)
@@ -165,7 +172,7 @@ for config_file in os.listdir(os.path.join("..", "models")):
 
     # Step 7: Define training optimizer
 
-    with tf.name_scope("train"):
+    with tf.name_scope(NETWORK_NAME +  '_train'):
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
         # Variable learning rate
         lrate = tf.train.exponential_decay(START_LR, global_step,

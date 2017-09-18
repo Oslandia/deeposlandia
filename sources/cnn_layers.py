@@ -37,8 +37,8 @@ def prepare_data(height, width, n_channels, batch_size, dataset_type, scope_name
 
 # Convolutional layer
 def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
-               conv_strides, counter):
-    with tf.variable_scope('conv' + str(counter)) as scope:
+               conv_strides, counter, network_name):
+    with tf.variable_scope(network_name + '_conv' + str(counter)) as scope:
         # Create kernel variable of dimension [K_C1, K_C1, NUM_CHANNELS, L_C1]
         kernel = tf.get_variable('kernel',
                                  [kernel_dim, kernel_dim,
@@ -56,8 +56,9 @@ def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
         return tf.nn.relu(tf.add(conv, biases), name=scope.name)
 
 # Max-pooling layer
-def maxpool_layer(input_layer, pool_ksize, pool_strides, counter):
-    with tf.variable_scope('pool' + str(counter)) as scope:
+def maxpool_layer(input_layer, pool_ksize, pool_strides,
+                  counter, network_name):
+    with tf.variable_scope(network_name + '_pool' + str(counter)) as scope:
         return tf.nn.max_pool(input_layer, ksize=pool_ksize,
                                strides=pool_strides, padding='SAME')
         # Output is of dimension BATCH_SIZE x 612 x 816 x L_C1
@@ -69,8 +70,8 @@ def layer_dim(height, width, layer_coefs, last_layer_depth):
     return new_height * new_width * last_layer_depth
 
 def fullconn_layer(input_layer, height, width, last_layer_dim,
-                   fc_layer_depth, t_dropout, counter):
-    with tf.variable_scope('fc' + str(counter)) as scope:
+                   fc_layer_depth, t_dropout, counter, network_name):
+    with tf.variable_scope(network_name + '_fc' + str(counter)) as scope:
         reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
         # Create weights and biases
         w = tf.get_variable('weights', [last_layer_dim, fc_layer_depth],
