@@ -6,7 +6,26 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
-def prepare_data(height, width, n_channels, batch_size, dataset_type, scope_name):
+def prepare_data(height, width, n_channels, batch_size,
+                 dataset_type, scope_name):
+    """Insert images and labels in Tensorflow batches
+
+    Parameters
+    ----------
+    height: integer
+        image height, in pixels
+    width: integer
+        image width, in pixels
+    n_channels: integer
+        Number of channels in the images (1 for grey-scaled images, 3 for RGB)
+    batch_size: integer
+        Size of the batchs, expressed as an image quantity
+    dataset_type: object
+        string designing the considered dataset (`training`, `validation` or `testing`)
+    scope_name: object
+        string designing the data preparation scope name
+    
+    """
     INPUT_PATH = os.path.join("..", "data", dataset_type, "input")
     OUTPUT_PATH = os.path.join("..", "data", dataset_type, "output")
     with tf.variable_scope(scope_name) as scope:
@@ -35,9 +54,35 @@ def prepare_data(height, width, n_channels, batch_size, dataset_type, scope_name
                               batch_size=batch_size,
                               num_threads=4)
 
-# Convolutional layer
 def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
                conv_strides, counter, network_name):
+    """Build a convolutional layer as a Tensorflow object, for a convolutional
+               neural network 
+
+    Parameters
+    ----------
+    input_layer: tensor
+        input tensor, i.e. the placeholder that represents input data if
+    the convolutional layer is the first of the network, the previous layer
+    output otherwise
+    input_layer_depth: integer
+        input tensor channel number (3 for RGB images, more if another
+    convolutional layer precedes the current one)
+    kernel_dim: integer
+        Dimension of the convolution kernel (only the first one, the kernel
+    being considered as squared; and its last dimensions being given by
+    previous and current layer depths)
+    layer_depth: integer
+        current layer channel number
+    conv_strides: list
+        Dimensions of the convolution stride operation, defined as [1, a, a, 1]
+    where a is the shift (in pixels) between each convolution operation
+    counter: integer
+        Convolutional layer counter (for scope name unicity)
+    network_name: object
+        string designing the network name (for scope name unicity)
+    
+    """
     with tf.variable_scope(network_name + '_conv' + str(counter)) as scope:
         # Create kernel variable of dimension [K_C1, K_C1, NUM_CHANNELS, L_C1]
         kernel = tf.get_variable('kernel',
@@ -52,25 +97,82 @@ def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
         conv = tf.nn.conv2d(input_layer, kernel, strides=conv_strides,
                             padding='SAME')
         # Apply relu on the sum of convolution output and biases
-        # Output is of dimension BATCH_SIZE * IMAGE_HEIGHT * IMAGE_WIDTH * L_C1.
+        # Output is of dimension BATCH_SIZE * IMAGE_HEIGHT * IMAGE_WIDTH * L_C1
         return tf.nn.relu(tf.add(conv, biases), name=scope.name)
 
-# Max-pooling layer
 def maxpool_layer(input_layer, pool_ksize, pool_strides,
                   counter, network_name):
+    """Build a max pooling layer as a Tensorflow object, into the convolutional
+                  neural network 
+
+    Parameters
+    ----------
+    input_layer: tensor
+        Pooling layer input; output of the previous layer into the network
+    pool_ksize: list
+        Dimension of the pooling kernel, defined as [1, a, a, 1] where a is the
+    main kernel dimension (in pixels)=
+    pool_strides: list
+        Dimension of the pooling stride, defined as [1, a, a, 1] where a is the
+    shift between each pooling operation
+    counter: integer
+        Max pooling layer counter (for scope name unicity)
+    network_name: object
+        string designing the network name (for scope name unicity)
+    
+    """
     with tf.variable_scope(network_name + '_pool' + str(counter)) as scope:
         return tf.nn.max_pool(input_layer, ksize=pool_ksize,
                                strides=pool_strides, padding='SAME')
-        # Output is of dimension BATCH_SIZE x 612 x 816 x L_C1
 
-# Fully-connected layer
 def layer_dim(height, width, layer_coefs, last_layer_depth):
+    """Consider the current layer depth as the function of previous layer
+    hyperparameters, so as to reshape it as a single dimension layer
+
+    Parameters
+    ----------
+    height: integer
+        image height, in pixels
+    width: integer
+        image width, in pixels
+    layer_coefs: list
+        list of previous layer hyperparameters, that have an impact on the
+    current layer depth
+    last_layer_depth: integer
+        depth of the last layer in the network
+    
+    """
     new_height = int(height / np.prod(np.array(layer_coefs)[:,2]))
     new_width = int(width / np.prod(np.array(layer_coefs)[:,1]))
     return new_height * new_width * last_layer_depth
 
 def fullconn_layer(input_layer, height, width, last_layer_dim,
                    fc_layer_depth, t_dropout, counter, network_name):
+    """Build a fully-connected layer as a tensor, into the convolutional
+                   neural network
+
+    
+
+    Parameters
+    ----------
+    input_layer: tensor
+        Fully-connected layer input; output of the previous layer into the network
+    height: integer
+        image height, in pixels
+    width: integer
+        image width, in pixels
+    last_layer_dim: integer
+        previous layer depth, into the network
+    fc_layer_depth: integer
+        full-connected layer depth
+    t_dropout: tensor
+        tensor corresponding to the neuron keeping probability during dropout operation
+    counter: integer
+        fully-connected layer counter (for scope name unicity)
+    network_name: object
+        string designing the network name (for scope name unicity)
+    
+    """
     with tf.variable_scope(network_name + '_fc' + str(counter)) as scope:
         reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
         # Create weights and biases
