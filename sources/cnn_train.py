@@ -26,13 +26,6 @@ import cnn_layers
 import dashboard_building
 import utils
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-f = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-ch = logging.StreamHandler(sys.stdout)
-ch.setFormatter(f)
-logger.addHandler(ch)
-
 # Step 1: parameter definition
 
 # image dimensions (width, height, number of channels)
@@ -44,8 +37,9 @@ NUM_CHANNELS  = 3 # Colored images (RGB)
 # hidden layer depth (number of channel per convolutional and fully connected
 # layer), kernel dimension, conv layer stride, max pool layer ksize and stride
 # Name of the convolutional neural network
-for config_file in os.listdir(os.path.join("..", "models")):
-    NETWORK_NAME = config_file.split('.')[0]
+for config_file_name in os.listdir(os.path.join("..", "models")):
+    NETWORK_NAME = config_file_name.split('.')[0]
+    utils.logger.info("Model {} training".format(NETWORK_NAME))
     # NETWORK_NAME = "cnn_mapil_2_0_2_1_1_0"
     config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
     with open(os.path.join("..", "models", config_file_name)) as config_file:
@@ -219,13 +213,13 @@ for config_file in os.listdir(os.path.join("..", "models")):
                 dashboard_batch.insert(0, loss_batch)
                 dashboard_batch.insert(0, index)
                 dashboard.append(dashboard_batch)
-                logger.info("""Step {}: loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+                utils.logger.info("""Step {}: loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
                 saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
             sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
-        logger.info("Optimization Finished!")
-        logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
+        utils.logger.info("Optimization Finished!")
+        utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
         # The results are stored as a pandas dataframe and saved on the file
         # system
