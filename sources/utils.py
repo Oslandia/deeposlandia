@@ -13,9 +13,12 @@ import sys
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-ch = logging.StreamHandler(sys.stdout)
-ch.setFormatter(format)
-logger.addHandler(ch)
+ch_stdout = logging.StreamHandler(sys.stdout)
+ch_logfile = logging.FileHandler("../log/cnn_log.log")
+ch_stdout.setFormatter(format)
+ch_logfile.setFormatter(format)
+logger.addHandler(ch_stdout)
+logger.addHandler(ch_logfile)
 
 DATASET = ["training", "validation", "testing"]
 IMG_SIZE = (768, 576) # easy decomposition: (4, 3) * 3 * 2 * 2 * 2 * 2 * 2 * 2
