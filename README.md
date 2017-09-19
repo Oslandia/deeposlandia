@@ -1,10 +1,11 @@
-# Notes about Mapillary dataset
+# Motivation
 
-Tensorflow does not permit to resize images properly (problem with
-`tf.image.resize_images` and `tf.image.resize_image_with_crop_or_pad`) ->
-*workaround* prepare the data before piping them into Tensorflow graph
-
-## Data preparation
+In this project we use a set of images provided
+by [Mapillary](https://www.mapillary.com/), in order to investigate on the
+presence of some typical street-scene objects (vehicles, roads,
+pedestrians...). Mapillary released this dataset recently, it
+is [still available on its website](https://www.mapillary.com/dataset/vistas)
+and may be downloaded freely for a research purpose.
 
 As inputs, Mapillary provides a bunch of street scene images of various sizes
 in a `images` repository, and the same images after filtering process in
@@ -16,73 +17,100 @@ there is one color per object types; and 66 object types in total.
 
 There are 18000 images in the training set, 2000 images in the validation set,
 and 5000 images in the testing set. The testing set is proposed only for a
-model test purpose, there are not any filtered version of images in it.
+model test purpose, it does not contain filtered versions of images.
 
-### Transform the image into input data
+# Dependencies
 
-The input of the process will consider images within the `images`
-repository. The goal is to transform the initial files into standardized image
-files, so as to get `np.array` of fixed shape.
+This project needs to load the following Python dependencies:
 
-At the end of these transformation steps, input images will be put away in a
-`input` repository.
++ itertools
++ json
++ logging
++ math
++ matplotlib
++ numpy
++ os
++ pandas
++ PIL
++ sklearn.metrics
++ sys
++ tensorflow
++ tensorflow.python.framework
++ time
 
-#### Resizing
+As a remark, the code has been run with Python3 (version 3.5).
 
-For all images (train, validation, test), labels (train, validation) and
-instances (train, validation), we resize the image according to a single
-reference size. As a remark, in the validation dataset, most images seem to be
-such as `heights` are `0.75*widths`; and image sizes are comprised between
-`600*800` and `3752*5376`. A first approximation could be to resize every
-images as the most encountered size (`2448*3264`).
+# Content
 
-![Encoutered image size within the Mapillary dataset](./images/mapillary_image_sizes.png)
+Contain some Python materials designed to illustrate the Tensorflow library
+(snippets and notebooks)
 
-#### Renaming
++ [sources](./sources) contains Python modules that train a convolutional
+  neural network based on the Mapillary street image dataset
++ [images](./images) contains some example images to illustrate the Mapillary
+  dataset as well as some preprocessing analysis results
 
-For a sake of simplicity, the image files are arbitrarily renamed as
-`XXXXX.jpg`, `XXXXX` being a number comprised between 0 and 18000 for the
-training set, between 0 and 2000 for the validation set and between 0 and 5000
-for the testing set.
+Additionally, running the code may generate extra repositories:
 
-### Transform the labelled image into output data
++ [checkpoints](./checkpoints) refers to trained model back-ups, they are
+  organized with respect to models
++ [graphs](./graphs) is organized like `checkpoints` repository, it contains
+  `Tensorflow` graphs corresponding to each neural network
++ [models](./models) contains a set of `.json` configuration files that
+  summarize each model through their main hyperparameter (layer number, types,
+  and shapes)
++ [results](./results) gathers some `.csv` files that describe the model
+  training evolution, epoch after epoch; more than 200 features are recorded in
+  each file, this high number being essentially due to the label quantity (66
+  labels, each of which being evaluated through accuracy, precision and recall
+  of predictions)
 
-In these project, the training and validation labels are available as filtered
-images. Some minor operations on the image pixels can give encoded versions of
-outputs as one-hot vectors (*ie* a vector of `0` and `1`, `1` when the
-corresponding label is on the image, `0` otherwise).
+# Running the code
 
-By gathering the 18000 images of the training set on one hand and the 2000
-images of the validation set on the other hand, two 2D-arrays are built,
-respectively of shapes [18000, 66] and [2000, 66] (as a reminder, there are 66
-object types within the Mapillary classification).
+This project supposes that you have downloaded the Mapillary image dataset.
 
-The output arrays are stored as `.csv` files into `output` repositories.
+First of all, a data preprocessing step is applied on the bunch of images, so
+as to normalize image file names and image sizes:
 
-### Verification
+```bash python3 ./data_preprocessing.py ```
 
-A validation procedure has been developped to ensure that new files (after
-renaming) correspond to old ones, based on Mapillary labels:
+Then some neural network model may be generated before launching the
+convolutional neural network training:
 
-+ old labels are computed starting from old filtered images;
-+ new labels are given by the accurate line of the output array, in the `.csv`
-  file.
-  
-The first verification is to check the matching between old and new image files
-(old and new labels must be similar). As a side-effect of the comparison
-between label arrays, the procedure is also able to detect label damaging after
-resizing process. If the resizing operation modify the filtered images in such a
-way that some object types are no longer recognized, the procedure is unusable.
+```bash python3 ./cnn_instance_building.py ```
 
-After running the verification procedure, only 3 files show label degradations:
+And finally the model training itself may be undertaken:
 
-+ file `01245` (training set), transformation ratio = `{width: 0.622, height: 0.662)`: the label `construction--barrier--wall` disappears (two pixels on the initial filtered image)
-+ file `05996` (training set), transformation ratio = `{width: 0.708, height: 0.708)`: the label `nature--terrain` disappears (six pixels on the initial filtered image)
-+ file `00652` (validation set), transformation ratio = `{width: 0.887, height: 0.887)`: the label `void--unlabeled` disappears (only one pixel on the initial filtered image)
+```bash python3 ./cnn_train.py ```
 
-Considering that these degradation are negligible, we decide to keep on the
-procedure with resized images.
+Every module call is supposed to be made from the `source` repository.
 
-## Convolutional neural network feeding
+# License
 
-Feed the convolutional neural network.
+The MIT License
+
+Copyright (c) 2017 Oslandia http://oslandia.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+___
+
+by Raphael Delhome, Oslandia
+
+September 2017
