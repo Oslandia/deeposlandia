@@ -47,7 +47,7 @@ NUM_CHANNELS  = 3 # Colored images (RGB)
 for config_file in os.listdir(os.path.join("..", "models")):
     NETWORK_NAME = config_file.split('.')[0]
     # NETWORK_NAME = "cnn_mapil_2_0_2_1_1_0"
-    # config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
+    config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
     with open(os.path.join("..", "models", config_file_name)) as config_file:
         cnn_hyperparam = json.load(config_file)
     L_C1 = cnn_hyperparam["conv1"]["depth"]
