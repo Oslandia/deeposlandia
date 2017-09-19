@@ -74,8 +74,10 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     N_BATCHES = int(18000 / BATCH_SIZE) # TODO
     # number of epochs (one epoch = all images have been used for training)
     N_EPOCHS = 1
-    # Starting learning rate (it moves following an exponential decay afterwards)
+    # Learning rate tuning (exponential decay)
     START_LR = 0.01
+    DECAY_STEPS = 100
+    DECAY_RATE = 0.9
     # dropout, i.e. percentage of nodes that are briefly removed during training
     # process
     DROPOUT = 2/3.0
@@ -170,7 +172,8 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
         # Variable learning rate
         lrate = tf.train.exponential_decay(START_LR, global_step,
-                                           decay_steps=1000, decay_rate=0.95,
+                                           decay_steps=DECAY_STEPS,
+                                           decay_rate=DECAY_RATE,
                                            name='learning_rate')
         # Use Adam optimizer with decaying learning rate to minimize cost.
         optimizer = tf.train.AdamOptimizer(lrate).minimize(loss,
@@ -205,15 +208,17 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
             X_val_batch, Y_val_batch = sess.run([validation_image_batch,
                                                  validation_label_batch])
             if index % SKIP_STEP == 0:
-                loss_batch, bpmll_l, Y_pred = \
-                sess.run([loss, bpmll_loss, Y_predict],
+                loss_batch, bpmll_l, Y_pred, lr = \
+                sess.run([loss, bpmll_loss, Y_predict, lrate],
                          feed_dict={X: X_batch, Y: Y_batch, dropout: 1.0})
                 dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
                 dashboard_batch.insert(0, bpmll_l)
                 dashboard_batch.insert(0, loss_batch)
                 dashboard_batch.insert(0, index)
                 dashboard.append(dashboard_batch)
-                utils.logger.info("""Step {}: loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f},
+        accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index,
+        lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
                 saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
