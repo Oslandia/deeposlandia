@@ -190,7 +190,7 @@ for config_file in os.listdir(os.path.join("..", "models")):
         # tensorboard --logdir="../graphs/"+NETWORK_NAME --port 6006)
         sess.run(tf.global_variables_initializer())
         # Declare a saver instance and a summary writer to store the trained network
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=1)
         writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
         initial_step = global_step.eval(session=sess)
         # Create folders to store checkpoints
@@ -223,8 +223,6 @@ for config_file in os.listdir(os.path.join("..", "models")):
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
                 saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
-            if (index+1) % (SKIP_STEP * 10) == 0:
-                saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/epoch', index)
             sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
         logger.info("Optimization Finished!")
         logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
