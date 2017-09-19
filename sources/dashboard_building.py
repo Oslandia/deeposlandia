@@ -1,4 +1,6 @@
-# Raphael Delhome - september 2017
+# Author: Raphael Delhome
+# Organization: Oslandia
+# Date: september 2017
 
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, hamming_loss
 

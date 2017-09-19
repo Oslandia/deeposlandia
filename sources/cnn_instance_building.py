@@ -1,3 +1,7 @@
+# Author: Raphael Delhome
+# Organization: Oslandia
+# Date: september 2017
+
 import itertools
 import json
 import numpy as np

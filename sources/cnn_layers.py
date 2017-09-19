@@ -1,4 +1,6 @@
-# Raphael Delhome - september 2017
+# Author: Raphael Delhome
+# Organization: Oslandia
+# Date: september 2017
 
 import numpy as np
 import os

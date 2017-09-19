@@ -1,4 +1,6 @@
-# Author: Raphael Delhome, Oslandia
+# Author: Raphael Delhome
+# Organization: Oslandia
+# Date: september 2017
 
 # Mapillary data set reading
 
