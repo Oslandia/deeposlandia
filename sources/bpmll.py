@@ -5,18 +5,26 @@
 # There is no warranty of any kind. The author is in no way responsible for any
 # consequences resulting of the use of this implementation.
 
-# Adapted from: "Zhang, Min-Ling, and Zhi-Hua Zhou. "Multilabel neural networks
-# with applications to functional genomics and text categorization." IEEE
-# transactions on Knowledge and Data Engineering 18.10 (2006): 1338-1351."
-
 import numpy as np
 import tensorflow as tf
 
-# bp mll loss function
-# y_true, y_pred must be 2D tensors of shape (batch dimension, number of labels)
-# y_true must satisfy y_true[i][j] == 1 iff sample i has label j
 def bp_mll_loss(y_true, y_pred):
+    """BP-MLL loss function; `y_true` and `y_pred` must be 2D tensors of shape
+    (batch dimension, number of labels); `y_true` must satisfy `y_true[i][j] ==
+    1` iff sample `i` has label `j`
 
+    *cf* "Zhang, Min-Ling, and Zhi-Hua Zhou. "Multilabel neural networks with
+     applications to functional genomics and text categorization." IEEE
+     transactions on Knowledge and Data Engineering 18.10 (2006): 1338-1351."
+
+    Parameters
+    ----------
+    y_true: tensor
+        2D tensor that represents the true labels
+    y_pred: tensor
+        2D tensor that represents the predicted labels
+
+    """
     # get true and false labels
     shape = tf.shape(y_true)
     y_i = tf.equal(y_true, tf.ones(shape))
@@ -42,14 +50,32 @@ def bp_mll_loss(y_true, y_pred):
     # sum over samples
     return tf.reduce_sum(results)
 
-# compute pairwise differences between elements of the tensors a and b
 def pairwise_sub(a, b):
+    """Compute pairwise differences between elements of the tensors a and b
+
+    Parameters
+    ----------
+    a: tensor
+        first tensor to compare
+    b: tensor
+        second tensor to compare
+    
+    """
     column = tf.expand_dims(a, 2)
     row = tf.expand_dims(b, 1)
     return tf.subtract(column, row)
 
-# compute pairwise logical and between elements of the tensors a and b
 def pairwise_and(a, b):
+    """Compute pairwise logical `and` betwenen elements of the tensors a and b
+
+    Parameters
+    ----------
+    a: tensor
+        first tensor to compare
+    b: tensor
+        second tensor to compare
+    
+    """
     column = tf.expand_dims(a, 2)
     row = tf.expand_dims(b, 1)
     return tf.logical_and(column, row)
