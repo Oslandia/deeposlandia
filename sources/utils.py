@@ -12,17 +12,6 @@ import pandas as pd
 from PIL import Image
 import sys
 
-# Define the logger for the current project
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-ch_stdout = logging.StreamHandler(sys.stdout)
-ch_logfile = logging.FileHandler("../log/cnn_log.log")
-ch_stdout.setFormatter(formatter)
-ch_logfile.setFormatter(formatter)
-logger.addHandler(ch_stdout)
-logger.addHandler(ch_logfile)
-
 DATASET = ["training", "validation", "testing"]
 IMG_SIZE = (768, 576) # easy decomposition: (4, 3) * 3 * 2 * 2 * 2 * 2 * 2 * 2
 IMAGE_TYPES = ["images", "instances", "labels"]
@@ -41,6 +30,18 @@ def make_dir(path):
         os.mkdir(path)
     except OSError:
         pass
+
+    # Define the logger for the current project
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+ch_stdout = logging.StreamHandler(sys.stdout)
+make_dir("../log")
+ch_logfile = logging.FileHandler("../log/cnn_log.log")
+ch_stdout.setFormatter(formatter)
+ch_logfile.setFormatter(formatter)
+logger.addHandler(ch_stdout)
+logger.addHandler(ch_logfile)
 
 def unnest(l):
     """Unnest a list of lists, by splitting sublists and returning a simple list of scalar elements
