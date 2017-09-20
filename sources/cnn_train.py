@@ -15,6 +15,7 @@ import json
 import logging
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import pandas as pd
 import tensorflow as tf
@@ -155,7 +156,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         logits = tf.add(tf.matmul(fc1, w), b)
         # Compute predicted outputs with sigmoid function
         Y_raw_predict = tf.nn.sigmoid(logits)
-        Y_predict = tf.to_int32(Y_raw_predict)
+        Y_predict = tf.to_int32(tf.round(Y_raw_predict))
 
     # Step 6: loss function design
 
@@ -208,9 +209,10 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
             X_val_batch, Y_val_batch = sess.run([validation_image_batch,
                                                  validation_label_batch])
             if index % SKIP_STEP == 0:
-                loss_batch, bpmll_l, Y_pred, lr = \
-                sess.run([loss, bpmll_loss, Y_predict, lrate],
-                         feed_dict={X: X_batch, Y: Y_batch, dropout: 1.0})
+                loss_batch, bpmll_l, lr = sess.run([loss, bpmll_loss, lrate],
+                                                   feed_dict={X: X_batch,
+                                                              Y: Y_batch,
+                                                              dropout: 1.0})
                 dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
                 dashboard_batch.insert(0, bpmll_l)
                 dashboard_batch.insert(0, loss_batch)
@@ -218,8 +220,11 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
                 dashboard.append(dashboard_batch)
 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f},
-        accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index,
-        lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+                accuracy={:1.3f}, precision={:1.3f},
+                recall={:1.3f}""".format(index, lr, loss_batch,
+                                         dashboard_batch[4],
+                                         dashboard_batch[5],
+                                         dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
                 saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
