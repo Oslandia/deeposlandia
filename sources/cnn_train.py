@@ -96,8 +96,8 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
 
     # Step 3: Prepare the checkpoint creation
 
-    utils.make_dir('../checkpoints')
-    utils.make_dir('../checkpoints/'+NETWORK_NAME)
+    utils.make_dir('../data/checkpoints')
+    utils.make_dir('../data/checkpoints/'+NETWORK_NAME)
 
     # Step 4: create placeholders
 
@@ -192,7 +192,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
         initial_step = global_step.eval(session=sess)
         # Create folders to store checkpoints
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname('../checkpoints/' + NETWORK_NAME + '/checkpoint'))
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('../data/checkpoints/' + NETWORK_NAME + '/checkpoint'))
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
@@ -228,7 +228,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
                                          dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
-                saver.save(sess, '../checkpoints/'+NETWORK_NAME+'/best', index)
+                saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/best', index)
             sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
