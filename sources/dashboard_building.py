@@ -154,6 +154,7 @@ def plot_dashboard(dashboard, plot_filename):
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+8], 'r-')
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+9], 'b-')
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+10], 'g-')
+        a.set_ylim((0, 1))
         a.set_title("Label "+str(i), size=6)
         if int(i/6) < 10:
             a.xaxis.set_visible(False)
@@ -177,6 +178,7 @@ def plot_dashboard(dashboard, plot_filename):
     a.plot(dashboard.epoch, dashboard.precision, 'b-')
     a.plot(dashboard.epoch, dashboard.recall, 'g-')
     a.plot(dashboard.epoch, dashboard.F_measure, 'y-')
+    a.set_ylim((0, 1))
     a.set_xlabel('epoch')
     a.set_ylabel('model evaluation')
     a.legend(['accuracy', 'precision' ,'recall', 'F-measure'], prop={'size':12})
