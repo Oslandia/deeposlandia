@@ -192,7 +192,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
         initial_step = global_step.eval(session=sess)
         # Create folders to store checkpoints
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname('../checkpoints/'+NETWORK_NAME+'/checkpoint'))
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('../checkpoints/' + NETWORK_NAME + '/checkpoint'))
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
@@ -254,6 +254,11 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
                                  index=True,
                                  mode='a',
                                  header=False)
+
+        # Training results are then saved as a multiplot
+        complete_dashboard = pd.read_csv(result_file_name)
+        plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
+        dashboard_building.plot_dashboard(complete_dashboard, plot_file_name)
         # Stop the threads used during the process
         coord.request_stop()
         coord.join(threads)
