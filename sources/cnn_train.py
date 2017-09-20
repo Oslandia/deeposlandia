@@ -209,7 +209,8 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
             X_val_batch, Y_val_batch = sess.run([validation_image_batch,
                                                  validation_label_batch])
             if index % SKIP_STEP == 0:
-                loss_batch, bpmll_l, lr = sess.run([loss, bpmll_loss, lrate],
+                Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
+                                                            bpmll_loss, lrate],
                                                    feed_dict={X: X_batch,
                                                               Y: Y_batch,
                                                               dropout: 1.0})
