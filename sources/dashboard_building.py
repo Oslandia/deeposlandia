@@ -2,6 +2,7 @@
 # Organization: Oslandia
 # Date: september 2017
 
+import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, hamming_loss
 
 import utils
@@ -129,3 +130,54 @@ def dashboard_building(y_true, y_predicted):
     for label in range(len(y_true[0])):
         dashboard = dashboard + dashboard_by_label(y_true, y_predicted, label)
     return dashboard
+
+def plot_dashboard(dashboard, plot_filename):
+    """Plot the model dashboard after a round of training; the training state
+    has been stored into a `.csv` file, `dashboard` is supposed to be a pandas
+    DataFrame that contains the file information
+
+    Parameters
+    ----------
+    dashboard: pandas.DataFrame
+        model dashboard, that contains one row for each training epoch; the
+    different features are `loss`, `accuracy`, `precision` or `recall` (among
+    others), the last three ones being detailed for each label (under the
+    format `<metric>_label<id>`)
+    plot_filename: object
+        string designing the name of the file in which the plot has to be saved
+    
+    """
+    fig = plt.figure(figsize=(16, 24))
+    plt.subplots_adjust(0.05, 0.05, 0.95, 0.95, 0.5, 0.5)
+    for i in range(66):
+        a = plt.subplot2grid((11, 12), (int(i/6), 6+i%6))
+        a.plot(dashboard.epoch, dashboard.iloc[:,3*i+8], 'r-')
+        a.plot(dashboard.epoch, dashboard.iloc[:,3*i+9], 'b-')
+        a.plot(dashboard.epoch, dashboard.iloc[:,3*i+10], 'g-')
+        a.set_title("Label "+str(i), size=6)
+        if int(i/6) < 10:
+            a.xaxis.set_visible(False)
+        if i % 6 > 0:
+            a.yaxis.set_visible(False)
+    a = plt.subplot2grid((11, 12), (0, 0), rowspan=2, colspan=6)
+    a.plot(dashboard.epoch, dashboard.loss, 'k-', lw=1.5)
+    a.set_yscale('log')
+    a.set_xlabel('epoch')
+    a.set_ylabel('Standard loss')
+    a = plt.subplot2grid((11, 12), (2, 0), rowspan=2, colspan=6)
+    a.plot(dashboard.epoch, dashboard.bpmll_loss, 'k-', lw=1.5)
+    a.set_xlabel('epoch')
+    a.set_ylabel('BPMLL loss')
+    a = plt.subplot2grid((11, 12), (4, 0), rowspan=2, colspan=6)
+    a.plot(dashboard.epoch, dashboard.hamming_loss, 'k-', lw=1.5)
+    a.set_xlabel('epoch')
+    a.set_ylabel('Hamming loss')
+    a = plt.subplot2grid((11, 12), (6, 0), rowspan=5, colspan=6)
+    a.plot(dashboard.epoch, dashboard.accuracy, 'r-')
+    a.plot(dashboard.epoch, dashboard.precision, 'b-')
+    a.plot(dashboard.epoch, dashboard.recall, 'g-')
+    a.plot(dashboard.epoch, dashboard.F_measure, 'y-')
+    a.set_xlabel('epoch')
+    a.set_ylabel('model evaluation')
+    a.legend(['accuracy', 'precision' ,'recall', 'F-measure'], prop={'size':12})
+    fig.savefig(plot_filename)
