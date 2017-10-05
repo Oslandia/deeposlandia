@@ -54,6 +54,17 @@ def unnest(l):
     """
     return [index for sublist in l for index in sublist]
 
+def mapillary_label_reading(labels):
+    """Gives the readable versions of Mapillary labels
+
+    Parameters
+    ----------
+    labels: dict
+        set of Mapillary labels, as defined in the Mapillary classification
+    
+    """
+    return [l['readable'] for l in labels]
+
 def mapillary_label_building(filtered_image, nb_labels):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
