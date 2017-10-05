@@ -182,3 +182,4 @@ def plot_dashboard(dashboard, plot_filename, plot_size=(24, 16)):
     a.set_ylabel('model evaluation')
     a.legend(['accuracy', 'precision' ,'recall', 'F-measure'], prop={'size':12})
     fig.savefig(plot_filename)
+    plt.close("all")
