@@ -220,7 +220,12 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
                 dashboard_batch.insert(0, index)
                 dashboard.append(dashboard_batch)
 
-                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f},
+                accuracy={:1.3f}, precision={:1.3f},
+                recall={:1.3f}""".format(index, lr, loss_batch,
+                                         dashboard_batch[4],
+                                         dashboard_batch[5],
+                                         dashboard_batch[6]))
             if best_accuracy < dashboard_batch[4]:
                 best_accuracy = dashboard_batch[4]
                 saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/best', index)
