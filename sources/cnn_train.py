@@ -139,21 +139,31 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     fc1 = cnn_layers.fullconn_layer(last_pool, IMAGE_HEIGHT, IMAGE_WIDTH,
                                     hidden_layer_dim, L_FC1,
                                     dropout, 1, NETWORK_NAME)
+    last_fullyconn = fc1
+    last_fc_layer_dim = L_FC1
     if "fullconn2" in cnn_hyperparam.keys():
         fc2 = cnn_layers.fullconn_layer(fc1, IMAGE_HEIGHT, IMAGE_WIDTH,
                                         L_FC1, L_FC2,
                                         dropout, 2, NETWORK_NAME)
+        last_fullyconn = fc2
+        last_fc_layer_dim = L_FC2
+    if "fullconn3" in cnn_hyperparam.keys():
+        fc3 = cnn_layers.fullconn_layer(fc2, IMAGE_HEIGHT, IMAGE_WIDTH,
+                                        L_FC2, L_FC3,
+                                        dropout, 3, NETWORK_NAME)
+        last_fullyconn = fc3
+        last_fc_layer_dim = L_FC3
 
     # Output building
 
     with tf.variable_scope(NETWORK_NAME + '_sigmoid_linear') as scope:
         # Create weights and biases for the final fully-connected layer
-        w = tf.get_variable('weights', [L_FC1, N_CLASSES],
+        w = tf.get_variable('weights', [last_fc_layer_dim, N_CLASSES],
                             initializer=tf.truncated_normal_initializer())
         b = tf.get_variable('biases', [N_CLASSES],
                             initializer=tf.random_normal_initializer())
         # Compute logits through a simple linear combination
-        logits = tf.add(tf.matmul(fc1, w), b)
+        logits = tf.add(tf.matmul(last_fullyconn, w), b)
         # Compute predicted outputs with sigmoid function
         Y_raw_predict = tf.nn.sigmoid(logits)
         Y_predict = tf.to_int32(tf.round(Y_raw_predict))
