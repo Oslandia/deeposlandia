@@ -86,12 +86,12 @@ def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
     
     """
     with tf.variable_scope(network_name + '_conv' + str(counter)) as scope:
-        # Create kernel variable of dimension [K_C1, K_C1, NUM_CHANNELS, L_C1]
+        # Create kernel variable
         kernel = tf.get_variable('kernel',
                                  [kernel_dim, kernel_dim,
                                   input_layer_depth, layer_depth],
                                  initializer=tf.truncated_normal_initializer())
-        # Create biases variable of dimension [L_C1]
+        # Create biases variable
         biases = tf.get_variable('biases',
                                  [layer_depth],
                                  initializer=tf.constant_initializer(0.0))
@@ -99,7 +99,6 @@ def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
         conv = tf.nn.conv2d(input_layer, kernel, strides=conv_strides,
                             padding='SAME')
         # Apply relu on the sum of convolution output and biases
-        # Output is of dimension BATCH_SIZE * IMAGE_HEIGHT * IMAGE_WIDTH * L_C1
         return tf.nn.relu(tf.add(conv, biases), name=scope.name)
 
 def maxpool_layer(input_layer, pool_ksize, pool_strides,

@@ -122,8 +122,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     # printing frequency during training
     SKIP_STEP = 10
 
-    # Step 2: data recovering
-
+    # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "training", "training_data_pipe")
@@ -251,8 +250,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         Y_raw_predict = tf.nn.sigmoid(logits)
         Y_predict = tf.to_int32(tf.round(Y_raw_predict))
 
-    # Step 6: loss function design
-
+    # Loss function design
     with tf.name_scope(NETWORK_NAME + '_loss'):
         # Cross-entropy between predicted and real values: we use sigmoid instead
         # of softmax as we are in a multilabel classification problem
@@ -260,8 +258,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         loss = tf.reduce_mean(entropy, name="loss")
         bpmll_loss = bpmll.bp_mll_loss(Y, Y_raw_predict)
 
-    # Step 7: Define training optimizer
-
+    # Define training optimizer
     with tf.name_scope(NETWORK_NAME +  '_train'):
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
         # Variable learning rate
@@ -273,8 +270,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         optimizer = tf.train.AdamOptimizer(lrate).minimize(loss,
                                                            global_step=global_step)
 
-    # Final step: running the neural network
-
+    # Running the neural network
     with tf.Session() as sess:
         # Initialize the tensorflow variables
         # To visualize using TensorBoard
