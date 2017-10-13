@@ -45,65 +45,6 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
     with open(os.path.join("..", "models", config_file_name)) as config_file:
         cnn_hyperparam = json.load(config_file)
-    L_C1 = cnn_hyperparam["conv1"]["depth"]
-    K_C1 = cnn_hyperparam["conv1"]["kernel_size"]
-    STR_C1 = cnn_hyperparam["conv1"]["strides"]
-    KS_P1 = cnn_hyperparam["pool1"]["kernel_size"]
-    STR_P1 = cnn_hyperparam["pool1"]["strides"]
-    if "conv2" in cnn_hyperparam.keys():
-        L_C2 = cnn_hyperparam["conv2"]["depth"]
-        K_C2 = cnn_hyperparam["conv2"]["kernel_size"]
-        STR_C2 = cnn_hyperparam["conv2"]["strides"]
-    if "pool2" in cnn_hyperparam.keys():
-        KS_P2 = cnn_hyperparam["pool2"]["kernel_size"]
-        STR_P2 = cnn_hyperparam["pool2"]["strides"]
-    if "conv3" in cnn_hyperparam.keys():
-        L_C3 = cnn_hyperparam["conv3"]["depth"]
-        K_C3 = cnn_hyperparam["conv3"]["kernel_size"]
-        STR_C3 = cnn_hyperparam["conv3"]["strides"]
-    if "pool3" in cnn_hyperparam.keys():
-        KS_P3 = cnn_hyperparam["pool3"]["kernel_size"]
-        STR_P3 = cnn_hyperparam["pool3"]["strides"]
-    if "conv4" in cnn_hyperparam.keys():
-        L_C4 = cnn_hyperparam["conv4"]["depth"]
-        K_C4 = cnn_hyperparam["conv4"]["kernel_size"]
-        STR_C4 = cnn_hyperparam["conv4"]["strides"]
-    if "pool4" in cnn_hyperparam.keys():
-        KS_P4 = cnn_hyperparam["pool4"]["kernel_size"]
-        STR_P4 = cnn_hyperparam["pool4"]["strides"]
-    if "conv5" in cnn_hyperparam.keys():
-        L_C5 = cnn_hyperparam["conv5"]["depth"]
-        K_C5 = cnn_hyperparam["conv5"]["kernel_size"]
-        STR_C5 = cnn_hyperparam["conv5"]["strides"]
-    if "pool5" in cnn_hyperparam.keys():
-        KS_P5 = cnn_hyperparam["pool5"]["kernel_size"]
-        STR_P5 = cnn_hyperparam["pool5"]["strides"]
-    if "conv6" in cnn_hyperparam.keys():
-        L_C6 = cnn_hyperparam["conv6"]["depth"]
-        K_C6 = cnn_hyperparam["conv6"]["kernel_size"]
-        STR_C6 = cnn_hyperparam["conv6"]["strides"]
-    if "pool6" in cnn_hyperparam.keys():
-        KS_P6 = cnn_hyperparam["pool6"]["kernel_size"]
-        STR_P6 = cnn_hyperparam["pool6"]["strides"]
-    if "conv7" in cnn_hyperparam.keys():
-        L_C7 = cnn_hyperparam["conv7"]["depth"]
-        K_C7 = cnn_hyperparam["conv7"]["kernel_size"]
-        STR_C7 = cnn_hyperparam["conv7"]["strides"]
-    if "pool7" in cnn_hyperparam.keys():
-        KS_P7 = cnn_hyperparam["pool7"]["kernel_size"]
-        STR_P7 = cnn_hyperparam["pool7"]["strides"]
-    if "conv8" in cnn_hyperparam.keys():
-        L_C8 = cnn_hyperparam["conv8"]["depth"]
-        K_C8 = cnn_hyperparam["conv8"]["kernel_size"]
-        STR_C8 = cnn_hyperparam["conv8"]["strides"]
-    if "pool8" in cnn_hyperparam.keys():
-        KS_P8 = cnn_hyperparam["pool8"]["kernel_size"]
-        STR_P8 = cnn_hyperparam["pool8"]["strides"]
-    L_FC1 = cnn_hyperparam["fullconn1"]["depth"]
-    if "fullconn2" in cnn_hyperparam.keys():
-        L_FC2 = cnn_hyperparam["fullconn2"]["depth"]
-    if "fullconn3" in cnn_hyperparam.keys():
-        L_FC3 = cnn_hyperparam["fullconn3"]["depth"]
 
     # number of output classes
     N_CLASSES = 66
@@ -142,102 +83,15 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
 
-    # Step 5: model building
-
-    conv1 = cnn_layers.conv_layer(X, NUM_CHANNELS, K_C1, L_C1, STR_C1,
-                                  1, NETWORK_NAME)
-    pool1 = cnn_layers.maxpool_layer(conv1, KS_P1, STR_P1,
-                                     1, NETWORK_NAME)
-    last_pool = pool1
-    last_layer_dim = L_C1
-    layer_coefs = [STR_C1, STR_P1]
-    if "conv2" in cnn_hyperparam.keys():
-        conv2 = cnn_layers.conv_layer(pool1, L_C1, K_C2, L_C2, STR_C2,
-                                      2, NETWORK_NAME)
-        layer_coefs.append(STR_C2)
-    if "pool2" in cnn_hyperparam.keys():
-        pool2 = cnn_layers.maxpool_layer(conv2, KS_P2, STR_P2,
-                                         2, NETWORK_NAME)
-        last_pool = pool2
-        last_layer_dim = L_C2
-        layer_coefs.append(STR_P2)
-    if "conv3" in cnn_hyperparam.keys():
-        conv3 = cnn_layers.conv_layer(pool2, L_C2, K_C3, L_C3, STR_C3,
-                                      3, NETWORK_NAME)
-        layer_coefs.append(STR_C3)
-    if "pool3" in cnn_hyperparam.keys():
-        pool3 = cnn_layers.maxpool_layer(conv3, KS_P3, STR_P3, 3, NETWORK_NAME)
-        last_pool = pool3
-        last_layer_dim = L_C3
-        layer_coefs.append(STR_P3)
-    if "conv4" in cnn_hyperparam.keys():
-        conv4 = cnn_layers.conv_layer(pool3, L_C3, K_C4, L_C4, STR_C4,
-                                      4, NETWORK_NAME)
-        layer_coefs.append(STR_C4)
-    if "pool4" in cnn_hyperparam.keys():
-        pool4 = cnn_layers.maxpool_layer(conv4, KS_P4, STR_P4, 4, NETWORK_NAME)
-        last_pool = pool4
-        last_layer_dim = L_C4
-        layer_coefs.append(STR_P4)
-    if "conv5" in cnn_hyperparam.keys():
-        conv5 = cnn_layers.conv_layer(pool4, L_C4, K_C5, L_C5, STR_C5,
-                                      5, NETWORK_NAME)
-        layer_coefs.append(STR_C5)
-    if "pool5" in cnn_hyperparam.keys():
-        pool5 = cnn_layers.maxpool_layer(conv5, KS_P5, STR_P5, 5, NETWORK_NAME)
-        last_pool = pool5
-        last_layer_dim = L_C5
-        layer_coefs.append(STR_P5)
-    if "conv6" in cnn_hyperparam.keys():
-        conv6 = cnn_layers.conv_layer(pool5, L_C5, K_C6, L_C6, STR_C6,
-                                      6, NETWORK_NAME)
-        layer_coefs.append(STR_C6)
-    if "pool6" in cnn_hyperparam.keys():
-        pool6 = cnn_layers.maxpool_layer(conv6, KS_P6, STR_P6, 6, NETWORK_NAME)
-        last_pool = pool6
-        last_layer_dim = L_C6
-        layer_coefs.append(STR_P6)
-    if "conv7" in cnn_hyperparam.keys():
-        conv7 = cnn_layers.conv_layer(pool6, L_C6, K_C7, L_C7, STR_C7,
-                                      7, NETWORK_NAME)
-        layer_coefs.append(STR_C7)
-    if "pool7" in cnn_hyperparam.keys():
-        pool7 = cnn_layers.maxpool_layer(conv7, KS_P7, STR_P7, 7, NETWORK_NAME)
-        last_pool = pool7
-        last_layer_dim = L_C7
-        layer_coefs.append(STR_P7)
-    if "conv8" in cnn_hyperparam.keys():
-        conv8 = cnn_layers.conv_layer(pool7, L_C7, K_C8, L_C8, STR_C8,
-                                      8, NETWORK_NAME)
-        layer_coefs.append(STR_C8)
-    if "pool8" in cnn_hyperparam.keys():
-        pool8 = cnn_layers.maxpool_layer(conv8, KS_P8, STR_P8, 8, NETWORK_NAME)
-        last_pool = pool8
-        last_layer_dim = L_C8
-        layer_coefs.append(STR_P8)
-
-    hidden_layer_dim = cnn_layers.layer_dim(IMAGE_HEIGHT, IMAGE_WIDTH,
-                                                   layer_coefs, last_layer_dim)
-    fc1 = cnn_layers.fullconn_layer(last_pool, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                    hidden_layer_dim, L_FC1,
-                                    dropout, 1, NETWORK_NAME)
-    last_fullyconn = fc1
-    last_fc_layer_dim = L_FC1
-    if "fullconn2" in cnn_hyperparam.keys():
-        fc2 = cnn_layers.fullconn_layer(fc1, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                        L_FC1, L_FC2,
-                                        dropout, 2, NETWORK_NAME)
-        last_fullyconn = fc2
-        last_fc_layer_dim = L_FC2
-    if "fullconn3" in cnn_hyperparam.keys():
-        fc3 = cnn_layers.fullconn_layer(fc2, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                        L_FC2, L_FC3,
-                                        dropout, 3, NETWORK_NAME)
-        last_fullyconn = fc3
-        last_fc_layer_dim = L_FC3
-
+    # Model building
+    last_fc, last_fc_layer_dim = cnn_layers.convnet_building(X, cnn_hyperparam,
+                                                             IMG_SIZE[0],
+                                                             IMG_SIZE[1],
+                                                             NUM_CHANNELS,
+                                                             dropout,
+                                                             NETWORK_NAME)
+    
     # Output building
-
     with tf.variable_scope(NETWORK_NAME + '_sigmoid_linear') as scope:
         # Create weights and biases for the final fully-connected layer
         w = tf.get_variable('weights', [last_fc_layer_dim, N_CLASSES],
@@ -245,7 +99,7 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
         b = tf.get_variable('biases', [N_CLASSES],
                             initializer=tf.random_normal_initializer())
         # Compute logits through a simple linear combination
-        logits = tf.add(tf.matmul(last_fullyconn, w), b)
+        logits = tf.add(tf.matmul(last_fc, w), b)
         # Compute predicted outputs with sigmoid function
         Y_raw_predict = tf.nn.sigmoid(logits)
         Y_predict = tf.to_int32(tf.round(Y_raw_predict))
