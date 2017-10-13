@@ -37,23 +37,24 @@ import cnn_layers
 import dashboard_building
 import utils
 
-# Step 1: parameter definition
+if __name__ == '__main__':
+    # call the script following format 'python3 cnn_train.py configfile.json'
+    if len(sys.argv) != 2:
+        utils.logger.error("Usage: python3 cnn_train.py <config_filename.json>")
+        sys.exit(-1)
+    NETWORK_NAME = sys.argv[1]
+    # image dimensions (width, height, number of channels)
+    IMG_SIZE = (768, 576)
+    IMAGE_HEIGHT  = IMG_SIZE[1]
+    IMAGE_WIDTH   = IMG_SIZE[0]
+    NUM_CHANNELS  = 3 # Colored images (RGB)
 
-# image dimensions (width, height, number of channels)
-IMG_SIZE = (768, 576)
-IMAGE_HEIGHT  = IMG_SIZE[1]
-IMAGE_WIDTH   = IMG_SIZE[0]
-NUM_CHANNELS  = 3 # Colored images (RGB)
+    utils.make_dir('../data/checkpoints')
+    utils.make_dir('../data/checkpoints/'+NETWORK_NAME)
 
-# hidden layer depth (number of channel per convolutional and fully connected
-# layer), kernel dimension, conv layer stride, max pool layer ksize and stride
-# Name of the convolutional neural network
-for config_file_name in os.listdir(os.path.join("..", "models")):
-    NETWORK_NAME = config_file_name.split('.')[0]
     utils.logger.info("Model {} training".format(NETWORK_NAME))
-    # NETWORK_NAME = "cnn_mapil_2_0_2_1_1_0"
-    config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
-    with open(os.path.join("..", "models", config_file_name)) as config_file:
+    config_file_name = NETWORK_NAME + ".json"
+    with open(os.path.join("..", "models", "to_run", config_file_name)) as config_file:
         cnn_hyperparam = json.load(config_file)
 
     # number of output classes
@@ -80,13 +81,6 @@ for config_file_name in os.listdir(os.path.join("..", "models")):
     validation_image_batch, validation_label_batch, validation_filename_batch =\
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "validation", "validation_data_pipe")
-
-    # Step 3: Prepare the checkpoint creation
-
-    utils.make_dir('../data/checkpoints')
-    utils.make_dir('../data/checkpoints/'+NETWORK_NAME)
-
-    # Step 4: create placeholders
 
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
                                     NUM_CHANNELS], name='X')
