@@ -1,15 +1,25 @@
-# Raphael Delhome - september 2017
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+/**
+ *   Raphael Delhome - september 2017
+ *
+ *   This library is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU Library General Public
+ *   License as published by the Free Software Foundation; either
+ *   version 2 of the License, or (at your option) any later version.
+ *   
+ *   This library is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *   Library General Public License for more details.
+ *   You should have received a copy of the GNU Library General Public
+ *   License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+"""
 
-# Convolutional Neural Network with Tensorflow
-
-# The goal of this script is to train a neural network model in order to read
-# street scene images produced by Mapillary
-# (https://www.mapillary.com/dataset/vistas)
-
-# Four main task will be of interest: data recovering, network conception,
-# optimization design and model training.
-
-# Step 0: module imports
+# This script aims to train a neural network model in order to read street
+# scene images produced by Mapillary (https://www.mapillary.com/dataset/vistas)
 
 import json
 import logging
@@ -22,7 +32,7 @@ import tensorflow as tf
 import sys
 import time
 
-import bpmll # Multilabel classification lossi
+import bpmll # Multilabel classification loss
 import cnn_layers
 import dashboard_building
 import utils
