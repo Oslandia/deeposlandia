@@ -185,3 +185,79 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
         fc = tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
         # Apply dropout
         return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
+
+def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
+    network_name):
+    """Build the structure of a convolutional neural network from image data X
+    to the last hidden layer, this layer being returned by this method  
+
+    Parameters
+    ----------
+    X: tensorflow.placeholder
+        Image data with a shape [batch_size, width, height, nb_channels]
+    param: dict
+        A dictionary of every network parameters (kernel sizes, strides, depths
+    for each layer); the keys are the different layer, under the format
+    <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
+    img_width: integer
+        number of horizontal pixels within the image, i.e. first dimension
+    img_height: integer
+        number of vertical pixels within the image, i.e. second dimension
+    nb_channels: integer
+        number of channels within images, i.e. 1 if black and white, 3 if RGB
+    images
+    dropout: tensor
+        Represent the proportion of kept neurons within fully-connected network
+    (to avoid over-fitting, some of them are deactivated at each iteration)
+    network_name: object
+        string designing the network name, for layer identification purpose
+    
+    """
+    layer_coefs = []
+    nb_convpool, nb_fullconn = [int(x) for x in
+                                network_name.split('_')[2:len(network_name):4]]
+
+    i = 1
+    while i <= nb_convpool:
+        if i == 1:
+            conv = conv_layer(X,
+                              nb_channels,
+                              param["conv"+str(i)]["kernel_size"],
+                              param["conv"+str(i)]["depth"],
+                              param["conv"+str(i)]["strides"],
+                              i, network_name)
+        else:
+            conv = conv_layer(last_pool,
+                              param["conv"+str(i-1)]["depth"],
+                              param["conv"+str(i)]["kernel_size"],
+                              param["conv"+str(i)]["depth"],
+                              param["conv"+str(i)]["strides"],
+                              i, network_name)
+        layer_coefs.append(param["conv"+str(i)]["strides"])
+        last_pool = maxpool_layer(conv,
+                                  param["pool"+str(i)]["kernel_size"],
+                                  param["pool"+str(i)]["strides"],
+                                  i, network_name)
+        last_layer_dim = param["conv"+str(i)]["depth"]
+        layer_coefs.append(param["pool2"]["strides"])
+        i = i + 1
+                
+    hidden_layer_dim = layer_dim(img_height, img_width,
+                                 layer_coefs, last_layer_dim)
+    
+    i = 1
+    while i <= nb_fullconn:
+        if i == 1:
+            last_fc = fullconn_layer(last_pool, img_height, img_width,
+                                     hidden_layer_dim,
+                                     param["fullconn1"]["depth"],
+                                     dropout, i, network_name)
+        else:
+            last_fc = fullconn_layer(last_fc, img_height, img_width,
+                                     param["fullconn"+str(i-1)]["depth"],
+                                     param["fullconn"+str(i)]["depth"],
+                                     dropout, i, network_name)
+        last_fc_layer_dim = param["fullconn"+str(i)]["depth"]
+        i = i + 1
+
+    return last_fc, last_fc_layer_dim
