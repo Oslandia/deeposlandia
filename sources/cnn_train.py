@@ -78,9 +78,6 @@ if __name__ == '__main__':
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "training", "training_data_pipe")
-    validation_image_batch, validation_label_batch, validation_filename_batch =\
-    cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                                   BATCH_SIZE, "validation", "validation_data_pipe")
 
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
                                     NUM_CHANNELS], name='X')
@@ -157,8 +154,6 @@ if __name__ == '__main__':
         best_accuracy = 0
         for index in range(initial_step, N_BATCHES * N_EPOCHS):
             X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
-            X_val_batch, Y_val_batch = sess.run([validation_image_batch,
-                                                 validation_label_batch])
             if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                 Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
                                                             bpmll_loss, lrate],
@@ -176,9 +171,10 @@ if __name__ == '__main__':
                 utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
                 saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
                            index)
-
+                
             sess.run(optimizer,
                      feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+            
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
