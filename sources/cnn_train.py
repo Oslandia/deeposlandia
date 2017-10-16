@@ -181,32 +181,35 @@ if __name__ == '__main__':
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
-        # The results are stored as a pandas dataframe and saved on the file
-        # system
-        dashboard_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                             "accuracy", "precision", "recall", "F_measure"]
-        dashboard_columns_by_label = [["accuracy_label"+str(i),
-                                       "precision_label"+str(i),
-                                       "recall_label"+str(i)]
-                                      for i in range(len(Y_batch[0]))]
-        dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
-        dashboard_columns = dashboard_columns + dashboard_columns_by_label
-        param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
-        param_history = param_history.set_index("epoch")
-        utils.make_dir(os.path.join("..", "data", "results"))
-        result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
-        if initial_step == 0:
-            param_history.to_csv(result_file_name, index=True)
-        else:
-            param_history.to_csv(result_file_name,
-                                 index=True,
-                                 mode='a',
-                                 header=False)
+        if initial_step < N_BATCHES * N_EPOCHS:
+            # The results are stored as a pandas dataframe and saved on the file
+            # system
+            dashboard_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
+                                 "accuracy", "precision", "recall", "F_measure"]
+            dashboard_columns_by_label = [["accuracy_label"+str(i),
+                                           "precision_label"+str(i),
+                                           "recall_label"+str(i)]
+                                          for i in range(len(Y_batch[0]))]
+            dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
+            dashboard_columns = dashboard_columns + dashboard_columns_by_label
+            param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
+            param_history = param_history.set_index("epoch")
+            utils.make_dir(os.path.join("..", "data", "results"))
+            result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
+            if initial_step == 0:
+                param_history.to_csv(result_file_name, index=True)
+            else:
+                param_history.to_csv(result_file_name,
+                                     index=True,
+                                     mode='a',
+                                     header=False)
 
-        # Training results are then saved as a multiplot
-        complete_dashboard = pd.read_csv(result_file_name)
-        plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
-        dashboard_building.plot_dashboard(complete_dashboard, plot_file_name)
+            # Training results are then saved as a multiplot
+            complete_dashboard = pd.read_csv(result_file_name)
+            plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
+            dashboard_building.plot_dashboard(complete_dashboard,
+                                              plot_file_name)
+            
         # Stop the threads used during the process
         coord.request_stop()
         coord.join(threads)
