@@ -137,12 +137,16 @@ if __name__ == '__main__':
         # Declare a saver instance and a summary writer to store the trained network
         saver = tf.train.Saver(max_to_keep=1)
         writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
-        initial_step = global_step.eval(session=sess)
         # Create folders to store checkpoints
         ckpt = tf.train.get_checkpoint_state(os.path.dirname('../data/checkpoints/' + NETWORK_NAME + '/checkpoint'))
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
+            utils.logger.info("Recover model state from {}".format(ckpt.model_checkpoint_path))
+            utils.logger.info("Global step = {}".format(global_step.eval(session=sess)))
+            initial_step = global_step.eval(session=sess) + 1
+        else:
+            initial_step = global_step.eval(session=sess)
         # Initialize threads to begin batching operations
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
@@ -155,7 +159,7 @@ if __name__ == '__main__':
             X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
             X_val_batch, Y_val_batch = sess.run([validation_image_batch,
                                                  validation_label_batch])
-            if index % SKIP_STEP == 0:
+            if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                 Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
                                                             bpmll_loss, lrate],
                                                    feed_dict={X: X_batch,
@@ -168,8 +172,10 @@ if __name__ == '__main__':
                 dashboard.append(dashboard_batch)
 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
-            if index % (N_BATCHES * N_EPOCHS) == 0:
-                saver.save(sess, '../data/checkpoints'+NETWORK_NAME+'/epoch', index)
+            if (index + 1) % (N_BATCHES / 90) == 0:
+                utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch {} creation".format(NETWORK_NAME, index))
+                saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
+                           index)
 
             sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
         utils.logger.info("Optimization Finished!")
