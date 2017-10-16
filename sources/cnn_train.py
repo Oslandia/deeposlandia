@@ -131,9 +131,10 @@ if __name__ == '__main__':
         # To visualize using TensorBoard
         # tensorboard --logdir="../graphs/"+NETWORK_NAME --port 6006)
         sess.run(tf.global_variables_initializer())
-        # Declare a saver instance and a summary writer to store the trained network
+        # Declare a saver instance and a summary writer to store the network
         saver = tf.train.Saver(max_to_keep=1)
         writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
+        
         # Create folders to store checkpoints
         ckpt = tf.train.get_checkpoint_state(os.path.dirname('../data/checkpoints/' + NETWORK_NAME + '/checkpoint'))
         # If that checkpoint exists, restore from checkpoint
@@ -141,9 +142,8 @@ if __name__ == '__main__':
             saver.restore(sess, ckpt.model_checkpoint_path)
             utils.logger.info("Recover model state from {}".format(ckpt.model_checkpoint_path))
             utils.logger.info("Global step = {}".format(global_step.eval(session=sess)))
-            initial_step = global_step.eval(session=sess) + 1
-        else:
-            initial_step = global_step.eval(session=sess)
+        initial_step = global_step.eval(session=sess)
+
         # Initialize threads to begin batching operations
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
@@ -167,14 +167,15 @@ if __name__ == '__main__':
                 dashboard.append(dashboard_batch)
 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+
+            sess.run(optimizer,
+                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+            
             if (index + 1) % N_BATCHES == 0:
                 utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
                 saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
                            index)
                 
-            sess.run(optimizer,
-                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
-            
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
