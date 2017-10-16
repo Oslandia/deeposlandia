@@ -173,11 +173,12 @@ if __name__ == '__main__':
 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
             if (index + 1) % (N_BATCHES / 90) == 0:
-                utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch {} creation".format(NETWORK_NAME, index))
+                utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
                 saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
                            index)
 
-            sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+            sess.run(optimizer,
+                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
