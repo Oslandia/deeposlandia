@@ -172,7 +172,7 @@ if __name__ == '__main__':
                 dashboard.append(dashboard_batch)
 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
-            if (index + 1) % (N_BATCHES / 90) == 0:
+            if (index + 1) % N_BATCHES == 0:
                 utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
                 saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
                            index)
