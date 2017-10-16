@@ -61,9 +61,9 @@ if __name__ == '__main__':
     N_CLASSES = 66
     # number of images per batch
     BATCH_SIZE = 20
-    N_BATCHES = int(18000 / BATCH_SIZE) # TODO
+    N_BATCHES = int(len(os.listdir(os.path.join("..", "data", "training", "images"))) / BATCH_SIZE)
     # number of epochs (one epoch = all images have been used for training)
-    N_EPOCHS = 1
+    N_EPOCHS = 5
     # Learning rate tuning (exponential decay)
     START_LR = 0.01
     DECAY_STEPS = 100
