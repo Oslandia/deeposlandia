@@ -23,7 +23,6 @@ model test purpose, it does not contain filtered versions of images.
 
 This project needs to load the following Python dependencies:
 
-+ json
 + matplotlib
 + numpy
 + pandas
