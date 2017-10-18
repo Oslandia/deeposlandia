@@ -142,6 +142,9 @@ biases1 = tf.get_variable('biases1',
 conv_layer1 = tf.nn.relu(tf.add(tf.nn.conv2d(X, kernel1, strides=[1, 1, 1, 1], padding="SAME"), biases1))
 #+END_SRC
 
+In this example, the kernel are 16 squares of 8*8 pixels considering 3 colors
+(RGB channels).
+
 #+RESULTS:
 
 ** How to define a max-pooling layer
@@ -152,6 +155,11 @@ As for convolutional layer, there is a ready-to-use function in Tensorflow API,
 #+BEGIN_SRC ipython :session mapcnn :exports code
 pool_layer1 = tf.nn.max_pool(conv_layer1, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
 #+END_SRC
+
+This function takes the maximal pixel value for each block of 4*4 pixels, in
+eery filtered images. The out-of-the-border pixels are set as the border
+pixels, if a block definition needs such additional information. The number of
+pixels is divided by 16 after such an operation.
 
 #+RESULTS:
 
@@ -291,7 +299,7 @@ image, /i.e./ an image that does not have been scanned during model training.
 #+CAPTION: Example of image used to validate the model
 #+NAME:   fig:ex_validation_image
 #+ATTR_HTML: width="30px"
-[[../data/validation/inputs/00000.jpg]]
+[[../data/validation/inputs/00001.jpg]]
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
 from PIL import Image
@@ -308,14 +316,6 @@ y_test = labels.query("new_name=='00001.jpg'").iloc[:,6:].values
 #+RESULTS:
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
-print(Y_pred[0])
-print(y_test[0])
-#+END_SRC:
-
-#+RESULTS:
-
-
-#+BEGIN_SRC ipython :session mapcnn :exports none
 import json
 
 with open('../data/config.json') as config_file:
@@ -330,10 +330,17 @@ label_names
 #+RESULTS:
 | bird | ground-animal | curb | fence | guard-rail | other-barrier | wall | bike-lane | crosswalk-plain | curb-cut | parking | pedestrian-area | rail-track | road | service-lane | sidewalk | bridge | building | tunnel | person | bicyclist | motorcyclist | other-rider | crosswalk-zebra | general | mountain | sand | sky | snow | terrain | vegetation | water | banner | bench | bike-rack | billboard | catch-basin | cctv-camera | fire-hydrant | junction-box | mailbox | manhole | phone-booth | pothole | street-light | pole | traffic-sign-frame | utility-pole | traffic-light | back | front | trash-can | bicycle | boat | bus | car | caravan | motorcycle | on-rails | other-vehicle | trailer | truck | wheeled-slow | car-mount | ego-vehicle | unlabeled |
 
-#+BEGIN_SRC ipython :session mapcnn :exports both
+#+BEGIN_SRC ipython :session mapcnn :exports code
 Y_pred, loss_batch = sess.run([Y_predict, loss], feed_dict={X: x_test, Y: y_test})
 sess.close()
+Y_pred[0]
 #+END_SRC
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+y_test[0]
+#+END_SRC:
+
+#+RESULTS:
 
 By comparing the output given by the model and the true output, we can assess
 the model accuracy. In this case, we focus on the confusion matrix:
@@ -346,35 +353,39 @@ pd.DataFrame(confusion_matrix(y_test[0], Y_pred[0]), columns=["Y_pred=False", "Y
 
 #+RESULTS:
 :               Y_pred=False  Y_pred=True
-: y_test=False            37           10
-: y_test=True              7           12
+: y_test=False            35            8
+: y_test=True             10           13
 
-The model accuracy for this image is around =68% ((37+12)/66)=, which is not so
-good. However the model was only trained only on a small part of images...
+The model accuracy for this image is around =72.7% ((35+13)/66)=, which is not
+so good. However it may be improved as the model was trained only on a small
+part of images...
 
 We can extract the label that are maybe the more interesting category, /aka/
 the /true positives/ corresponding to object on the image detected by the
 model:
 
 #+BEGIN_SRC ipython :session mapcnn :exports results
+import itertools
+
 true_positive = list(itertools.compress(label_names, np.logical_and(y_test[0], Y_pred[0])))
 pd.Series(true_positive)
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
-0           curb
-1           road
-2       sidewalk
-3       building
-4            sky
-5     vegetation
-6      billboard
-7           pole
-8          front
-9      trash-can
-10           car
-11     unlabeled
+0              wall
+1           parking
+2              road
+3          building
+4        vegetation
+5         billboard
+6      street-light
+7              pole
+8      utility-pole
+9     traffic-light
+10            front
+11              car
+12        unlabeled
 dtype: object
 #+end_example
 
@@ -387,19 +398,15 @@ pd.Series(false_positive)
 #+END_SRC
 
 #+RESULTS:
-#+begin_example
-0    ground-animal
-1            fence
-2        bike-lane
-3         curb-cut
-4          parking
-5          manhole
-6    traffic-light
-7             back
-8        car-mount
-9      ego-vehicle
-dtype: object
-#+end_example
+: 0            bird
+: 1       bike-lane
+: 2          bridge
+: 3       bicyclist
+: 4     other-rider
+: 5         manhole
+: 6            boat
+: 7    wheeled-slow
+: dtype: object
 
 Then a focus may be done on /false negatives/, wrongly labelled as =False= by
 the model, as they are on the picture:
@@ -410,33 +417,36 @@ pd.Series(false_negative)
 #+END_SRC
 
 #+RESULTS:
-: 0          person
-: 1    motorcyclist
-: 2         general
-: 3          banner
-: 4    street-light
-: 5    utility-pole
-: 6      motorcycle
-: dtype: object
+#+begin_example
+0           curb
+1          fence
+2       curb-cut
+3       sidewalk
+4         person
+5        general
+6            sky
+7    cctv-camera
+8           back
+9          truck
+dtype: object
+#+end_example
 
 And finally, we can extract the label that are not on the picture, and that
 were marked as absent by the model (/true negatives/). As they are more
 example, we only list some examples:
 
 #+BEGIN_SRC ipython :session mapcnn :exports results
-import itertools
-
 true_negative = list(itertools.compress(label_names, np.logical_and(np.logical_not(y_test[0]), np.logical_not(Y_pred[0]))))
-pd.Series(true_negative).iloc[0:36:6]
+pd.Series(true_negative).sample(6)
 #+END_SRC
 
 #+RESULTS:
-: 0                bird
-: 6          rail-track
-: 12    crosswalk-zebra
-: 18              bench
-: 24            mailbox
-: 30                bus
+: 3     crosswalk-plain
+: 14              water
+: 6        service-lane
+: 26            bicycle
+: 7              tunnel
+: 22        phone-booth
 : dtype: object
 
 To understand the category taxonomy, interested readers may read the [[http://research.mapillary.com/img/publications/ICCV17a.pdf][dedicated
@@ -449,7 +459,7 @@ if an object type =t= is really on an image =p=, or not. The natural
 prolongation of that is the semantic segmentation, /i.e./ knowing which
 pixel(s) of =p= have to be labeled as part of an object of type =t=.
 
-This is the way Mapillary labelled the picture; it is without any doubt a
+This is the way Mapillary labelled the pictures; it is without any doubt a
 really promising research field for use cases related to geospatial data!
 
 If you want to collaborate with us and be a R&D partner, do not hesitate to
