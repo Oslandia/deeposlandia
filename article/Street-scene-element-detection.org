@@ -1,0 +1,456 @@
+#+TITLE: Detecting objects starting from street-scene images
+#+AUTHOR: Raphaël Delhome <raphael.delhome@oslandia.com>
+
+Exploiting artificial intelligence within the geospatial data context tends to
+be easier and easier thanks to emerging IA techniques. Neural networks take
+indeed various kind of designs, and cope with a wide range of applications.
+
+At [[http://oslandia.com/en/home-en/][Oslandia]] we bet that these techniques will have an added-value in our daily
+activity, as data is of first importance for us.
+
+This article will show you an example of how to use IA techniques so as to
+address typical use cases.
+
+* Exploit an open dataset related to street-scene
+
+In this article we use a set of images provided by [[https://www.mapillary.com/][Mapillary]], in order to
+investigate on the presence of some typical street-scene objects (vehicles,
+roads, pedestrians...). Mapillary released this dataset recently, it is [[https://www.mapillary.com/dataset/vistas][still
+available on its website]] and may be downloaded freely for a research purpose.
+
+As inputs, Mapillary provides a bunch of street scene images of various sizes
+in a =images= repository, and the same images after filtering process in
+=instances= and =labels= repositories. The latter is crucial, as the filtered
+images are actually composed of pixels in a reduced set of colors. Actually,
+there is one color per object types; and 66 object types in total.
+
+#+CAPTION: Example of image, with its filtered version
+#+NAME:   fig:ex_mapillary_image
+#+ATTR_HTML: width="30px"
+[[../images/MVD_M2kh294N9c72sICO990Uew.png]]
+
+There are 18000 images in the training set, 2000 images in the validation set,
+and 5000 images in the testing set.
+
+** Comment about the image sizes
+
+For all images (train, validation, test), labels (train, validation) and
+instances (train, validation), images are resized according to a single
+reference size. As a remark, in the validation dataset, most images seem to be
+such as =height= is equal to =0.75*width=; and image sizes are comprised
+between =600*800= and =3752*5376=, as shown below.
+
+#+CAPTION: Mapillary image sizes
+#+NAME:   fig:ex_mapillary_image_sizes
+#+ATTR_HTML: width="30px"
+[[../images/mapillary_image_sizes.png]]
+
+Neural networks consider equally-sized inputs. A first approximation could be
+to resize every images as the most encountered size (=2448*3264=), however we
+choose to resize them at a smaller size (=576*768=) for computation purpose.
+
+** Transform the labelled image into output data
+
+Filtered versions are available for training and validation images. Some minor
+operations on the image pixels can give outputs as one-hot vectors (/i.e./ a
+vector of =0= and =1=, =1= when the corresponding label is on the image, =0=
+otherwise).
+
+By gathering every images, two 2D-arrays are built, respectively of shapes
+[18000, 66] and [2000, 66] (as a reminder, there are 66 object types within the
+Mapillary classification).
+
+* Implement a convolutional neural network with Tensorflow
+
+Our goal here is to predict the presence of differents street-scene components
+on pictures. We aim to train a neural network model to make it able to detect
+if there is one (or more) car(s), truck(s) or bicycle(s), for instance, on test
+images.
+
+As Mapillary provided a set of 66 labels and a labelled version of each
+training and validation dataset image, we plan to investigate a multilabel
+classification problem, where the final network layer must evaluate if there is
+an occurrence of each label on any image. As a consequence, `y_true` and
+`y_pred` will be vectors of size 66 composed of zeros and ones.
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+import tensorflow as tf
+#+END_SRC
+
+#+RESULTS:
+
+** Neural network global structure
+
+Handling image within neural network is generally done with the help of
+*convolutional neural network*. They are composed of several kind of layers
+that must be described:
+
++ some convolutional layers, in which images are filtered by several learnable
+  image kernels, so as to extract image patterns based on pixels (this layer
+  type is of first importance in convolutional neural network);
++ some pooling layers, in order to reduce the size of images and converge
+  towards output layer, as well as to extract feature rough locations (the =max=
+  pooling operation is the most common one, /i.e./ consider the maximal value
+  over a local set of pixels);
++ some fully-connected layers, where every neurons of the current layer are
+  connected to every neurons of the previous layer.
+
+#+CAPTION: Convolutional neural network illustration (/cf/ Wikipedia)
+#+NAME:   fig:cnn_illustration
+#+ATTR_HTML: width="30px"
+[[https://upload.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png]]
+
+We've carried out a set of tests with different hyperparameter values, /i.e./
+different amounts of each layer kinds. The results are globally stable if we
+consider more than one convolutional layer. Here comes the way to define a
+neural network with [[https://www.tensorflow.org/][Tensorflow]], the dedicated Python library.
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+import sources.cnn_layers as cnnl
+
+train_image_batch, train_label_batch, train_filename_batch = \
+cnnl.prepare_data(576, 768, 3, 20, "training", "training_data_pipe")
+#+END_SRC
+
+#+RESULTS:
+
+** How to define data
+
+Inputs and outputs are defined as "placeholders", /aka/ a sort of variables
+that must be feed by data.
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+X = tf.placeholder(tf.float32, [None, 576, 768, 3], name='X')
+Y = tf.placeholder(tf.float32, [None, 66], name='Y')
+#+END_SRC
+
+#+RESULTS:
+
+** How to define a convolutional layer
+
+After designing the kernel and the biases, we can use the Tensorflow function
+=conv2d= to build this layer.
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+kernel1 = tf.get_variable('kernel1',
+                         [8, 8, 3, 16],
+                         initializer=tf.truncated_normal_initializer())
+biases1 = tf.get_variable('biases1',
+                         [16],
+                         initializer=tf.constant_initializer(0.0))
+# Apply the image convolution with a ReLu activation function
+conv_layer1 = tf.nn.relu(tf.add(tf.nn.conv2d(X, kernel1, strides=[1, 1, 1, 1], padding="SAME"), biases1))
+#+END_SRC
+
+#+RESULTS:
+
+** How to define a max-pooling layer
+
+As for convolutional layer, there is a ready-to-use function in Tensorflow API,
+/i.e./ =max_pool=.
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+pool_layer1 = tf.nn.max_pool(conv_layer1, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+kernel2 = tf.get_variable('kernel2',
+                         [8, 8, 16, 24],
+                         initializer=tf.truncated_normal_initializer())
+biases2 = tf.get_variable('biases2',
+                         [24],
+                         initializer=tf.constant_initializer(0.0))
+# Apply the image convolution with a ReLu activation function
+conv_layer2 = tf.nn.relu(tf.add(tf.nn.conv2d(pool_layer1, kernel2, strides=[1, 1, 1, 1], padding="SAME"), biases2))
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+pool_layer2 = tf.nn.max_pool(conv_layer2, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
+#+END_SRC
+
+#+RESULTS:
+
+** How to define a fully-connected layer
+
+This operation corresponds to a standard matrix multiplication; we just have to
+reshape the output of the previous layer so as to consider comparable
+structures. Let's imagine we add a second convolutional layer as well as second
+max-pooling layer, the full-connected layer definition is as follows:
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+reshaped = tf.reshape(pool_layer2, [-1, int((576/(4*4))*(768/(4*4))*24)])
+# Create weights and biases
+weights_fc = tf.get_variable('weights_fullconn', [int((576/(4*4))*(768/(4*4))*24), 1024],
+                    initializer=tf.truncated_normal_initializer())
+biases_fc = tf.get_variable('biases_fullconn', [1024],
+                    initializer=tf.constant_initializer(0.0))
+# Apply relu on matmul of reshaped and w + b
+fc = tf.nn.relu(tf.add(tf.matmul(reshaped, weights_fc), biases_fc), name='relu')
+# Apply dropout
+fc_layer = tf.nn.dropout(fc, 0.75, name='relu_with_dropout')
+#+END_SRC
+
+#+RESULTS:
+
+Here we have defined the major part of our network. However the output layer is
+still missing...
+
+** Build predicted labels
+
+The predicted labels are given after a sigmoid activation in the last layer:
+even if other performing activation functions exist, the sigmoid function
+allows to consider independant probabilities in multilabel context, /i.e./ the
+presence of different object types on images is possible.
+
+The sigmoid function gives probabilities of appearance of each object type, for
+a given picture. The predicted labels are built as simply as possible: a
+threshold of =0.5= is set to differentiate negative and positive predictions.
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+# Create weights and biases for the final fully-connected layer
+weights_sig = tf.get_variable('weights_s', [1024, 66],
+                    initializer=tf.truncated_normal_initializer())
+biases_sig = tf.get_variable('biases_s', [66],
+                    initializer=tf.random_normal_initializer())
+logits = tf.add(tf.matmul(fc_layer, weights_sig), biases_sig)
+Y_raw_predict = tf.nn.sigmoid(logits)
+Y_predict = tf.to_int32(tf.round(Y_raw_predict))
+#+END_SRC
+
+#+RESULTS:
+
+** Optimize the network
+
+Although several metrics may measure the model convergence, we choose to
+consider classic cross-entropy between true and predicted labels.
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y, logits=logits)
+loss = tf.reduce_mean(entropy, name="loss")
+optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
+#+END_SRC
+
+#+RESULTS:
+
+In this snippet, we are using =AdamOptimizer=, however other solutions do exist
+(/e.g./ =GradientDescentOptimizer=).
+
+** Assess the model quality
+
+Several way of measuring the model quality may be computed:
+
++ the total accuracy (number of good predictions, over total number of
+  predictions)
++ the accuracy per label
++ the total precision (number of true positives over all positive predictions)
++ the precision per label
++ the total recall (number of true positives over all real positive values)
++ the recall per label
+
+** Train the model
+
+#+BEGIN_SRC ipython :session mapcnn :exports code
+from sklearn.metrics import accuracy_score
+
+def unnest(l):
+    return [index for sublist in l for index in sublist]
+
+sess = tf.Session()
+# Initialize the tensorflow variables
+sess.run(tf.global_variables_initializer())
+    
+# Initialize threads to begin batching operations
+coord = tf.train.Coordinator()
+threads = tf.train.start_queue_runners(coord=coord, sess=sess)
+    
+# Train the model
+for index in range(20):
+    X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
+    sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch})
+    if index % 5 == 0:
+        Y_pred, loss_batch = sess.run([Y_predict, loss], feed_dict={X: X_batch, Y: Y_batch})
+        accuracy_batch = accuracy_score(unnest(Y_batch), unnest(Y_pred))
+        print("""Step {}: loss = {:5.3f}, accuracy={:1.3f}""".format(index, loss_batch, accuracy_batch))
+    
+# Stop the threads used during the process
+coord.request_stop()
+coord.join(threads)
+#+END_SRC
+
+#+RESULTS:
+
+* What kind of objects are on a test image ?
+
+In order to illstrate previous sections, we can test our network on a new
+image, /i.e./ an image that does not have been scanned during model training.
+
+#+CAPTION: Example of image used to validate the model
+#+NAME:   fig:ex_validation_image
+#+ATTR_HTML: width="30px"
+[[../data/validation/inputs/00000.jpg]]
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+from PIL import Image
+import numpy as np
+import pandas as pd
+
+image = Image.open("../data/validation/input/00001.jpg")
+x_test = np.array(image).reshape([1, 576, 768, 3])
+
+labels = pd.read_csv("../data/validation/output/labels.csv")
+y_test = labels.query("new_name=='00001.jpg'").iloc[:,6:].values
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+print(Y_pred[0])
+print(y_test[0])
+#+END_SRC:
+
+#+RESULTS:
+
+
+#+BEGIN_SRC ipython :session mapcnn :exports none
+import json
+
+with open('../data/config.json') as config_file:
+    config = json.load(config_file)
+config.keys()
+label_description = config['labels']
+labels = [l['name'] for l in label_description]
+label_names = [l.split('--')[len(l.split('--'))-1] for l in labels]
+label_names
+#+END_SRC
+
+#+RESULTS:
+| bird | ground-animal | curb | fence | guard-rail | other-barrier | wall | bike-lane | crosswalk-plain | curb-cut | parking | pedestrian-area | rail-track | road | service-lane | sidewalk | bridge | building | tunnel | person | bicyclist | motorcyclist | other-rider | crosswalk-zebra | general | mountain | sand | sky | snow | terrain | vegetation | water | banner | bench | bike-rack | billboard | catch-basin | cctv-camera | fire-hydrant | junction-box | mailbox | manhole | phone-booth | pothole | street-light | pole | traffic-sign-frame | utility-pole | traffic-light | back | front | trash-can | bicycle | boat | bus | car | caravan | motorcycle | on-rails | other-vehicle | trailer | truck | wheeled-slow | car-mount | ego-vehicle | unlabeled |
+
+#+BEGIN_SRC ipython :session mapcnn :exports both
+Y_pred, loss_batch = sess.run([Y_predict, loss], feed_dict={X: x_test, Y: y_test})
+sess.close()
+#+END_SRC
+
+By comparing the output given by the model and the true output, we can assess
+the model accuracy. In this case, we focus on the confusion matrix:
+
+#+BEGIN_SRC ipython :session mapcnn :exports results
+from sklearn.metrics import confusion_matrix
+
+pd.DataFrame(confusion_matrix(y_test[0], Y_pred[0]), columns=["Y_pred=False", "Y_pred=True"], index=["y_test=False", "y_test=True"])
+#+END_SRC
+
+#+RESULTS:
+:               Y_pred=False  Y_pred=True
+: y_test=False            37           10
+: y_test=True              7           12
+
+The model accuracy for this image is around =68% ((37+12)/66)=, which is not so
+good. However the model was only trained only on a small part of images...
+
+We can extract the label that are maybe the more interesting category, /aka/
+the /true positives/ corresponding to object on the image detected by the
+model:
+
+#+BEGIN_SRC ipython :session mapcnn :exports results
+true_positive = list(itertools.compress(label_names, np.logical_and(y_test[0], Y_pred[0])))
+pd.Series(true_positive)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+0           curb
+1           road
+2       sidewalk
+3       building
+4            sky
+5     vegetation
+6      billboard
+7           pole
+8          front
+9      trash-can
+10           car
+11     unlabeled
+dtype: object
+#+end_example
+
+On the same manner, we have the /false positives/, /i.e./ when the model say
+=yes= on absent labels:
+
+#+BEGIN_SRC ipython :session mapcnn :exports results
+false_positive = list(itertools.compress(label_names, np.logical_and(np.logical_not(y_test[0]), Y_pred[0])))
+pd.Series(false_positive)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+0    ground-animal
+1            fence
+2        bike-lane
+3         curb-cut
+4          parking
+5          manhole
+6    traffic-light
+7             back
+8        car-mount
+9      ego-vehicle
+dtype: object
+#+end_example
+
+Then a focus may be done on /false negatives/, wrongly labelled as =False= by
+the model, as they are on the picture:
+
+#+BEGIN_SRC ipython :session mapcnn :exports results
+false_negative = list(itertools.compress(label_names, np.logical_and(y_test[0], np.logical_not(Y_pred[0]))))
+pd.Series(false_negative)
+#+END_SRC
+
+#+RESULTS:
+: 0          person
+: 1    motorcyclist
+: 2         general
+: 3          banner
+: 4    street-light
+: 5    utility-pole
+: 6      motorcycle
+: dtype: object
+
+And finally, we can extract the label that are not on the picture, and that
+were marked as absent by the model (/true negatives/). As they are more
+example, we only list some examples:
+
+#+BEGIN_SRC ipython :session mapcnn :exports results
+import itertools
+
+true_negative = list(itertools.compress(label_names, np.logical_and(np.logical_not(y_test[0]), np.logical_not(Y_pred[0]))))
+pd.Series(true_negative).iloc[0:36:6]
+#+END_SRC
+
+#+RESULTS:
+: 0                bird
+: 6          rail-track
+: 12    crosswalk-zebra
+: 18              bench
+: 24            mailbox
+: 30                bus
+: dtype: object
+
+To understand the category taxonomy, interested readers may read the [[http://research.mapillary.com/img/publications/ICCV17a.pdf][dedicated
+paper]].
+
+* How to go further?
+
+In this post we've just considered a feature detection problem, so as to decide
+if an object type =t= is really on an image =p=, or not. The natural
+prolongation of that is the semantic segmentation, /i.e./ knowing which
+pixel(s) of =p= have to be labeled as part of an object of type =t=.
+
+This is the way Mapillary labelled the picture; it is without any doubt a
+really promising research field for use cases related to geospatial data!
+
+If you want to collaborate with us and be a R&D partner, do not hesitate to
+contact us at [[infos@oslandia.com]]!
