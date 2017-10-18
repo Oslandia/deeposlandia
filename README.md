@@ -23,20 +23,14 @@ model test purpose, it does not contain filtered versions of images.
 
 This project needs to load the following Python dependencies:
 
-+ itertools
 + json
-+ logging
-+ math
 + matplotlib
 + numpy
-+ os
 + pandas
 + PIL
 + sklearn.metrics
-+ sys
 + tensorflow
 + tensorflow.python.framework
-+ time
 
 As a remark, the code has been run with Python3 (version 3.5).
 
