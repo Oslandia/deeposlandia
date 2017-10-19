@@ -1,6 +1,9 @@
 #+TITLE: Detecting objects starting from street-scene images
 #+AUTHOR: Raphaël Delhome <raphael.delhome@oslandia.com>
 
+# dag : c'est pas un peu redondant "exploiter l'IA ... de plus en plus facile
+# grâce aux techniques IA" ?
+
 Exploiting artificial intelligence within the geospatial data context tends to
 be easier and easier thanks to emerging AI techniques. Neural networks take
 indeed various kind of designs, and cope with a wide range of applications.
@@ -10,6 +13,9 @@ activity, as data is of first importance for us.
 
 This article will show you an example of how to use AI techniques so as to
 address typical use cases.
+
+# dag : j'aurais bien mis le mot-clé "deep learning" quelque part dans le début
+# de l'article (et aussi en tant que mot-clé de l'article dans wordpress)
 
 * Exploit an open dataset related to street-scene
 
@@ -104,6 +110,9 @@ We've carried out a set of tests with different hyperparameter values, /i.e./
 different amounts of each layer kinds. The results are globally stable if we
 consider more than one convolutional layer. Here comes the way to define a
 neural network with [[https://www.tensorflow.org/][TensorFlow]], the dedicated Python library.
+
+# dag : ça fonctionne 'import sources.' même si y'a pas de =__init__.py= dans ton
+# répertoire ?
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
 import sources.cnn_layers as cnnl
