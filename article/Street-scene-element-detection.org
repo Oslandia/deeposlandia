@@ -29,8 +29,8 @@ there is one color per object types; and 66 object types in total.
 #+ATTR_HTML: width="30px"
 [[../images/MVD_M2kh294N9c72sICO990Uew.png]]
 
-There are 18000 images in the training set, 2000 images in the validation set,
-and 5000 images in the testing set.
+There are 18,000 images in the training set, 2,000 images in the validation set,
+and 5,000 images in the testing set.
 
 ** Comment about the image sizes
 
@@ -46,7 +46,7 @@ between =600*800= and =3752*5376=, as shown below.
 [[../images/mapillary_image_sizes.png]]
 
 Neural networks consider equally-sized inputs. A first approximation could be
-to resize every images as the most encountered size (=2448*3264=), however we
+to resize every image as the most encountered size (=2448*3264=), however we
 choose to resize them at a smaller size (=576*768=) for computation purpose.
 
 ** Transform the labelled image into output data
@@ -60,7 +60,7 @@ By gathering every images, two 2D-arrays are built, respectively of shapes
 [18000, 66] and [2000, 66] (as a reminder, there are 66 object types within the
 Mapillary classification).
 
-* Implement a convolutional neural network with Tensorflow
+* Implement a convolutional neural network with TensorFlow
 
 Our goal here is to predict the presence of differents street-scene components
 on pictures. We aim to train a neural network model to make it able to detect
@@ -68,10 +68,10 @@ if there is one (or more) car(s), truck(s) or bicycle(s), for instance, on test
 images.
 
 As Mapillary provided a set of 66 labels and a labelled version of each
-training and validation dataset image, we plan to investigate a multilabel
+training and validation image dataset, we plan to investigate a multilabel
 classification problem, where the final network layer must evaluate if there is
-an occurrence of each label on any image. As a consequence, `y_true` and
-`y_pred` will be vectors of size 66 composed of zeros and ones.
+an occurrence of each label on any image. As a consequence, =y_true= and
+=y_pred= will be vectors of size 66 composed of zeros and ones.
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
 import tensorflow as tf
@@ -103,7 +103,7 @@ that must be described:
 We've carried out a set of tests with different hyperparameter values, /i.e./
 different amounts of each layer kinds. The results are globally stable if we
 consider more than one convolutional layer. Here comes the way to define a
-neural network with [[https://www.tensorflow.org/][Tensorflow]], the dedicated Python library.
+neural network with [[https://www.tensorflow.org/][TensorFlow]], the dedicated Python library.
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
 import sources.cnn_layers as cnnl
@@ -128,7 +128,7 @@ Y = tf.placeholder(tf.float32, [None, 66], name='Y')
 
 ** How to define a convolutional layer
 
-After designing the kernel and the biases, we can use the Tensorflow function
+After designing the kernel and the biases, we can use the TensorFlow function
 =conv2d= to build this layer.
 
 #+BEGIN_SRC ipython :session mapcnn :exports code
@@ -149,7 +149,7 @@ In this example, the kernel are 16 squares of 8*8 pixels considering 3 colors
 
 ** How to define a max-pooling layer
 
-As for convolutional layer, there is a ready-to-use function in Tensorflow API,
+As for convolutional layer, there is a ready-to-use function in TensorFlow API,
 /i.e./ =max_pool=.
 
 #+BEGIN_SRC ipython :session mapcnn :exports code
