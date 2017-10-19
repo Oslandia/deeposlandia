@@ -87,7 +87,7 @@ that must be described:
 
 + some convolutional layers, in which images are filtered by several learnable
   image kernels, so as to extract image patterns based on pixels (this layer
-  type is of first importance in convolutional neural network);
+  type is very important in convolutional neural network);
 + some pooling layers, in order to reduce the size of images and converge
   towards output layer, as well as to extract feature rough locations (the =max=
   pooling operation is the most common one, /i.e./ consider the maximal value
@@ -149,7 +149,7 @@ In this example, the kernel are 16 squares of 8*8 pixels considering 3 colors
 
 ** How to define a max-pooling layer
 
-As for convolutional layer, there is a ready-to-use function in TensorFlow API,
+As for convolutional layer, there is a ready-to-use function in the TensorFlow API,
 /i.e./ =max_pool=.
 
 #+BEGIN_SRC ipython :session mapcnn :exports code
@@ -157,7 +157,7 @@ pool_layer1 = tf.nn.max_pool(conv_layer1, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 
 #+END_SRC
 
 This function takes the maximal pixel value for each block of 4*4 pixels, in
-eery filtered images. The out-of-the-border pixels are set as the border
+every filtered image. The out-of-the-border pixels are set as the border
 pixels, if a block definition needs such additional information. The number of
 pixels is divided by 16 after such an operation.
 
@@ -293,7 +293,7 @@ coord.join(threads)
 
 * What kind of objects are on a test image ?
 
-In order to illstrate previous sections, we can test our network on a new
+In order to illstrate the previous sections, we can test our network on a new
 image, /i.e./ an image that does not have been scanned during model training.
 
 #+CAPTION: Example of image used to validate the model
@@ -460,7 +460,7 @@ prolongation of that is the semantic segmentation, /i.e./ knowing which
 pixel(s) of =p= have to be labeled as part of an object of type =t=.
 
 This is the way Mapillary labelled the pictures; it is without any doubt a
-really promising research field for use cases related to geospatial data!
+really promising research field for some use cases related to geospatial data!
 
 If you want to collaborate with us and be a R&D partner, do not hesitate to
 contact us at [[infos@oslandia.com]]!
