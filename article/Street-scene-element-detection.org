@@ -1,12 +1,10 @@
 #+TITLE: Detecting objects starting from street-scene images
 #+AUTHOR: Raphaël Delhome <raphael.delhome@oslandia.com>
 
-# dag : c'est pas un peu redondant "exploiter l'IA ... de plus en plus facile
-# grâce aux techniques IA" ?
-
 Exploiting artificial intelligence within the geospatial data context tends to
-be easier and easier thanks to emerging AI techniques. Neural networks take
-indeed various kind of designs, and cope with a wide range of applications.
+be easier and easier thanks to emerging deep learning techniques. Neural
+networks take indeed various kinds of designs, and cope with a wide range of
+applications.
 
 At [[http://oslandia.com/en/home-en/][Oslandia]] we bet that these techniques will have an added-value in our daily
 activity, as data is of first importance for us.
@@ -14,12 +12,9 @@ activity, as data is of first importance for us.
 This article will show you an example of how to use AI techniques so as to
 address typical use cases.
 
-# dag : j'aurais bien mis le mot-clé "deep learning" quelque part dans le début
-# de l'article (et aussi en tant que mot-clé de l'article dans wordpress)
-
 * Exploit an open dataset related to street-scene
 
-In this article we use a set of images provided by [[https://www.mapillary.com/][Mapillary]], in order to
+In this article we use a set of 25,000 images provided by [[https://www.mapillary.com/][Mapillary]], in order to
 investigate on the presence of some typical street-scene objects (vehicles,
 roads, pedestrians...). Mapillary released this dataset recently, it is [[https://www.mapillary.com/dataset/vistas][still
 available on its website]] and may be downloaded freely for a research purpose.
@@ -28,56 +23,31 @@ As inputs, Mapillary provides a bunch of street scene images of various sizes
 in a =images= repository, and the same images after filtering process in
 =instances= and =labels= repositories. The latter is crucial, as the filtered
 images are actually composed of pixels in a reduced set of colors. Actually,
-there is one color per object types; and 66 object types in total.
+there is one color per object types; and 66 object types in total. Some minor
+operations on the image pixels can give outputs as one-hot vectors (/i.e./ a
+vector of =0= and =1=, =1= if the corresponding label is on the image, =0=
+otherwise).
 
 #+CAPTION: Example of image, with its filtered version
 #+NAME:   fig:ex_mapillary_image
 #+ATTR_HTML: width="30px"
 [[../images/MVD_M2kh294N9c72sICO990Uew.png]]
 
-There are 18,000 images in the training set, 2,000 images in the validation set,
-and 5,000 images in the testing set.
-
-** Comment about the image sizes
-
-For all images (train, validation, test), labels (train, validation) and
-instances (train, validation), images are resized according to a single
-reference size. As a remark, in the validation dataset, most images seem to be
-such as =height= is equal to =0.75*width=; and image sizes are comprised
-between =600*800= and =3752*5376=, as shown below.
-
-#+CAPTION: Mapillary image sizes
-#+NAME:   fig:ex_mapillary_image_sizes
-#+ATTR_HTML: width="30px"
-[[../images/mapillary_image_sizes.png]]
-
-Neural networks consider equally-sized inputs. A first approximation could be
-to resize every image as the most encountered size (=2448*3264=), however we
-choose to resize them at a smaller size (=576*768=) for computation purpose.
-
-** Transform the labelled image into output data
-
-Filtered versions are available for training and validation images. Some minor
-operations on the image pixels can give outputs as one-hot vectors (/i.e./ a
-vector of =0= and =1=, =1= when the corresponding label is on the image, =0=
-otherwise).
-
-By gathering every images, two 2D-arrays are built, respectively of shapes
-[18000, 66] and [2000, 66] (as a reminder, there are 66 object types within the
-Mapillary classification).
+As a remark, neural networks consider equally-sized inputs. A first
+approximation could be to resize every image as the most encountered size
+(=2448*3264=), however we choose to resize them at a smaller size (=576*768=)
+for computation purpose.
 
 * Implement a convolutional neural network with TensorFlow
 
 Our goal here is to predict the presence of differents street-scene components
 on pictures. We aim to train a neural network model to make it able to detect
-if there is one (or more) car(s), truck(s) or bicycle(s), for instance, on test
-images.
+if there is car(s), truck(s) or bicycle(s) for instance on images.
 
-As Mapillary provided a set of 66 labels and a labelled version of each
-training and validation image dataset, we plan to investigate a multilabel
-classification problem, where the final network layer must evaluate if there is
-an occurrence of each label on any image. As a consequence, =y_true= and
-=y_pred= will be vectors of size 66 composed of zeros and ones.
+As Mapillary provided a set of 66 labels and a labelled version of each dataset
+image, we plan to investigate a multilabel classification problem, where the
+final network layer must evaluate if there is an occurrence of each label on
+any image.
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
 import tensorflow as tf
@@ -258,17 +228,22 @@ In this snippet, we are using =AdamOptimizer=, however other solutions do exist
 
 ** Assess the model quality
 
-Several way of measuring the model quality may be computed:
+Several way of measuring the model quality may be computed, see /e.g./:
 
-+ the total accuracy (number of good predictions, over total number of
-  predictions)
-+ the accuracy per label
-+ the total precision (number of true positives over all positive predictions)
-+ the precision per label
-+ the total recall (number of true positives over all real positive values)
-+ the recall per label
++ accuracy (number of good predictions, over total number of predictions)
++ precision (number of true positives over all positive predictions)
++ recall (number of true positives over all real positive values)
+
+They can be computed globally, or by label, as we are in a multilabel
+classification problem.
 
 ** Train the model
+
+Last but not least, we have to train the model we have defined. That's a bit
+complicated because of batching operations, for a sake of clarity here we
+suppose that our training data are correctly batched and we loop over 100
+iterations only, to keep the training short (that's just for demo, prefer
+considering all your data *at least* once!).
 
 #+BEGIN_SRC ipython :session mapcnn :exports code
 from sklearn.metrics import accuracy_score
@@ -339,10 +314,12 @@ label_names
 #+RESULTS:
 | bird | ground-animal | curb | fence | guard-rail | other-barrier | wall | bike-lane | crosswalk-plain | curb-cut | parking | pedestrian-area | rail-track | road | service-lane | sidewalk | bridge | building | tunnel | person | bicyclist | motorcyclist | other-rider | crosswalk-zebra | general | mountain | sand | sky | snow | terrain | vegetation | water | banner | bench | bike-rack | billboard | catch-basin | cctv-camera | fire-hydrant | junction-box | mailbox | manhole | phone-booth | pothole | street-light | pole | traffic-sign-frame | utility-pole | traffic-light | back | front | trash-can | bicycle | boat | bus | car | caravan | motorcycle | on-rails | other-vehicle | trailer | truck | wheeled-slow | car-mount | ego-vehicle | unlabeled |
 
+The neural network is supplied with this image and the corresponding true
+labels, to compute predicted labels:
+
 #+BEGIN_SRC ipython :session mapcnn :exports code
 Y_pred, loss_batch = sess.run([Y_predict, loss], feed_dict={X: x_test, Y: y_test})
 sess.close()
-Y_pred[0]
 #+END_SRC
 
 #+BEGIN_SRC ipython :session mapcnn :exports none
@@ -365,9 +342,9 @@ pd.DataFrame(confusion_matrix(y_test[0], Y_pred[0]), columns=["Y_pred=False", "Y
 : y_test=False            35            8
 : y_test=True             10           13
 
-The model accuracy for this image is around =72.7% ((35+13)/66)=, which is not
-so good. However it may be improved as the model was trained only on a small
-part of images...
+The model accuracy for this image is around =72.7% ((35+13)/66)=, which is
+quite good. However it may certainly be improved as the model was trained only
+on a small part of images...
 
 We can extract the label that are maybe the more interesting category, /aka/
 the /true positives/ corresponding to object on the image detected by the
@@ -398,68 +375,8 @@ pd.Series(true_positive)
 dtype: object
 #+end_example
 
-On the same manner, we have the /false positives/, /i.e./ when the model say
-=yes= on absent labels:
-
-#+BEGIN_SRC ipython :session mapcnn :exports results
-false_positive = list(itertools.compress(label_names, np.logical_and(np.logical_not(y_test[0]), Y_pred[0])))
-pd.Series(false_positive)
-#+END_SRC
-
-#+RESULTS:
-: 0            bird
-: 1       bike-lane
-: 2          bridge
-: 3       bicyclist
-: 4     other-rider
-: 5         manhole
-: 6            boat
-: 7    wheeled-slow
-: dtype: object
-
-Then a focus may be done on /false negatives/, wrongly labelled as =False= by
-the model, as they are on the picture:
-
-#+BEGIN_SRC ipython :session mapcnn :exports results
-false_negative = list(itertools.compress(label_names, np.logical_and(y_test[0], np.logical_not(Y_pred[0]))))
-pd.Series(false_negative)
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-0           curb
-1          fence
-2       curb-cut
-3       sidewalk
-4         person
-5        general
-6            sky
-7    cctv-camera
-8           back
-9          truck
-dtype: object
-#+end_example
-
-And finally, we can extract the label that are not on the picture, and that
-were marked as absent by the model (/true negatives/). As they are more
-example, we only list some examples:
-
-#+BEGIN_SRC ipython :session mapcnn :exports results
-true_negative = list(itertools.compress(label_names, np.logical_and(np.logical_not(y_test[0]), np.logical_not(Y_pred[0]))))
-pd.Series(true_negative).sample(6)
-#+END_SRC
-
-#+RESULTS:
-: 3     crosswalk-plain
-: 14              water
-: 6        service-lane
-: 26            bicycle
-: 7              tunnel
-: 22        phone-booth
-: dtype: object
-
 To understand the category taxonomy, interested readers may read the [[http://research.mapillary.com/img/publications/ICCV17a.pdf][dedicated
-paper]].
+paper]] available on Mapillary website.
 
 * How to go further?
 
@@ -470,6 +387,8 @@ pixel(s) of =p= have to be labeled as part of an object of type =t=.
 
 This is the way Mapillary labelled the pictures; it is without any doubt a
 really promising research field for some use cases related to geospatial data!
+
+To go deeper into this analysis, you can find our code on [[https://github.com/Oslandia/mapillary_classification][Github]].
 
 If you want to collaborate with us and be a R&D partner, do not hesitate to
 contact us at [[infos@oslandia.com]]!
