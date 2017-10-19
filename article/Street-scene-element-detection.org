@@ -2,13 +2,13 @@
 #+AUTHOR: Raphaël Delhome <raphael.delhome@oslandia.com>
 
 Exploiting artificial intelligence within the geospatial data context tends to
-be easier and easier thanks to emerging IA techniques. Neural networks take
+be easier and easier thanks to emerging AI techniques. Neural networks take
 indeed various kind of designs, and cope with a wide range of applications.
 
 At [[http://oslandia.com/en/home-en/][Oslandia]] we bet that these techniques will have an added-value in our daily
 activity, as data is of first importance for us.
 
-This article will show you an example of how to use IA techniques so as to
+This article will show you an example of how to use AI techniques so as to
 address typical use cases.
 
 * Exploit an open dataset related to street-scene
