@@ -260,7 +260,7 @@ coord = tf.train.Coordinator()
 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
     
 # Train the model
-for index in range(20):
+for index in range(900):
     X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
     sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch})
     if index % 5 == 0:
