@@ -109,7 +109,9 @@ if __name__ == '__main__':
     with tf.name_scope(NETWORK_NAME + '_loss'):
         # Cross-entropy between predicted and real values: we use sigmoid instead
         # of softmax as we are in a multilabel classification problem
-        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y, logits=logits)
+        entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
+                                                           logits=logits,
+                                                           pos_weight=1.5)
         loss = tf.reduce_mean(entropy, name="loss")
         bpmll_loss = bpmll.bp_mll_loss(Y, Y_raw_predict)
 
