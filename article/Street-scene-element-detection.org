@@ -339,12 +339,12 @@ pd.DataFrame(confusion_matrix(y_test[0], Y_pred[0]), columns=["Y_pred=False", "Y
 
 #+RESULTS:
 :               Y_pred=False  Y_pred=True
-: y_test=False            35            8
-: y_test=True             10           13
+: y_test=False            34            9
+: y_test=True              8           15
 
-The model accuracy for this image is around =72.7% ((35+13)/66)=, which is
-quite good. However it may certainly be improved as the model was trained only
-on a small part of images...
+The model accuracy for this image is around =74.2% ((34+15)/66)=, which is
+quite good. However it may certainly be improved as the model scanned training
+images only once...
 
 We can extract the label that are maybe the more interesting category, /aka/
 the /true positives/ corresponding to object on the image detected by the
@@ -359,19 +359,21 @@ pd.Series(true_positive)
 
 #+RESULTS:
 #+begin_example
-0              wall
-1           parking
-2              road
+0              curb
+1              road
+2          sidewalk
 3          building
-4        vegetation
-5         billboard
-6      street-light
-7              pole
-8      utility-pole
-9     traffic-light
-10            front
-11              car
-12        unlabeled
+4            person
+5           general
+6               sky
+7        vegetation
+8         billboard
+9      street-light
+10             pole
+11     utility-pole
+12    traffic-light
+13            truck
+14        unlabeled
 dtype: object
 #+end_example
 
