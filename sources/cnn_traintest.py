@@ -180,8 +180,8 @@ if __name__ == '__main__':
                     X_val_batch, Y_val_batch = sess.run([valid_image_batch,
                                                          valid_label_batch])
                     Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss],
-                                                       feed_dict={X: X_batch,
-                                                                  Y: Y_batch,
+                                                       feed_dict={X: X_val_batch,
+                                                                  Y: Y_val_batch,
                                                                   dropout: 1.0})
                     db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
                     db_val_batch.insert(0, bpmll_l)
@@ -192,12 +192,12 @@ if __name__ == '__main__':
                                          .apply(lambda x: x.mean(), axis=0))
                 val_dashboard.append(val_cur_dashboard)
                 
-                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_dashboard[1], dashboard_batch[5], dashboard_batch[6]))
+                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
 
             # Run the model to do a new training iteration
             sess.run(optimizer,
                      feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
-h
+
             # If all training batches have been scanned, save the training state
             if (index + 1) % N_BATCHES == 0:
                 utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
@@ -227,7 +227,7 @@ h
             val_result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + "_validation.csv")
             if initial_step == 0:
                 param_history.to_csv(result_file_name, index=True)
-                param_history.to_csv(val_result_file_name, index=True)
+                val_param_history.to_csv(val_result_file_name, index=True)
             else:
                 param_history.to_csv(result_file_name,
                                      index=True,
