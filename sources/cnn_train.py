@@ -35,6 +35,7 @@ import time
 import bpmll # Multilabel classification loss
 import cnn_layers
 import dashboard_building
+import data_analysis
 import utils
 
 if __name__ == '__main__':
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 20
     N_BATCHES = int(len(os.listdir(os.path.join("..", "data", "training", "images"))) / BATCH_SIZE)
     # number of epochs (one epoch = all images have been used for training)
-    N_EPOCHS = 5
+    N_EPOCHS = 1
     # Learning rate tuning (exponential decay)
     START_LR = 0.01
     DECAY_STEPS = 100
@@ -83,6 +84,8 @@ if __name__ == '__main__':
                                     NUM_CHANNELS], name='X')
     Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
+    class_w = tf.placeholder(tf.float32, [N_CLASSES],
+                             name='weights_per_label')
 
     # Model building
     last_fc, last_fc_layer_dim = cnn_layers.convnet_building(X, cnn_hyperparam,
@@ -107,11 +110,14 @@ if __name__ == '__main__':
 
     # Loss function design
     with tf.name_scope(NETWORK_NAME + '_loss'):
-        # Cross-entropy between predicted and real values: we use sigmoid instead
-        # of softmax as we are in a multilabel classification problem
-        entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
-                                                           logits=logits,
-                                                           pos_weight=1.5)
+        # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
+        #                                                    logits=logits,
+        #                                                    pos_weight=1.5)
+        # Tensorflow definition of sigmoid cross-entropy:
+        # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
+        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y,
+                                                          logits=logits)
+        weighted_entropy = tf.multiply(class_w, entropy)
         loss = tf.reduce_mean(entropy, name="loss")
         bpmll_loss = bpmll.bp_mll_loss(Y, Y_raw_predict)
 
@@ -156,12 +162,31 @@ if __name__ == '__main__':
         best_accuracy = 0
         for index in range(initial_step, N_BATCHES * N_EPOCHS):
             X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
+            # Case 1: unweighted loss
+            # w_batch = tf.ones_like(Y_batch).eval()
+            # Case 2: globally weighted loss
+            # label_counter = data_analysis.image_count_per_label 
+            # w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
+            #            for l in label_counter]
+            # Case 3: batch weighted loss
+            label_counter = [sum(s) for s in np.transpose(Y_batch)]
+            w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
+                       for l in label_counter]
+            # Case 4: centered globally weighted loss
+            # label_counter = data_analysis.image_count_per_label 
+            # w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
+            # Case 5: centered batch weighted loss
+            # label_counter = [sum(s) for s in np.transpose(Y_batch)]
+            # w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
+            #            for l in label_counter]
+
             if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                 Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
                                                             bpmll_loss, lrate],
                                                    feed_dict={X: X_batch,
                                                               Y: Y_batch,
-                                                              dropout: 1.0})
+                                                              dropout: 1.0,
+                                                              class_w: w_batch})
                 dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
                 dashboard_batch.insert(0, bpmll_l)
                 dashboard_batch.insert(0, loss_batch)
@@ -171,7 +196,8 @@ if __name__ == '__main__':
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
 
             sess.run(optimizer,
-                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT,
+                                class_w: w_batch})
             
             if (index + 1) % N_BATCHES == 0:
                 utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
