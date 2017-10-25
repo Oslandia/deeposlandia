@@ -113,7 +113,9 @@ if __name__ == '__main__':
                                                              IMG_SIZE[1],
                                                              NUM_CHANNELS,
                                                              dropout,
-                                                             NETWORK_NAME)
+                                                             NETWORK_NAME,
+                                                             args.nbconv,
+                                                             args.nbfullyconn)
     
     # Output building
     with tf.variable_scope(NETWORK_NAME + '_sigmoid_linear') as scope:

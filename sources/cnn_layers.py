@@ -187,7 +187,7 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
         return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
 def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
-    network_name):
+                     network_name, nb_convpool, nb_fullconn):
     """Build the structure of a convolutional neural network from image data X
     to the last hidden layer, this layer being returned by this method  
 
@@ -211,11 +211,14 @@ def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
     (to avoid over-fitting, some of them are deactivated at each iteration)
     network_name: object
         string designing the network name, for layer identification purpose
-    
+    nb_convpool: integer
+        number of convolutional layer to add to the network (the number of
+    pooling layer is the same, as one pooling layer is set after each
+    convolutional layer)
+    nb_fullconn: integer
+        number of fully-connected layer to add to the network
     """
     layer_coefs = []
-    nb_convpool, nb_fullconn = [int(x) for x in
-                                network_name.split('_')[2:len(network_name):4]]
 
     i = 1
     while i <= nb_convpool:
