@@ -41,13 +41,13 @@ import utils
 if __name__ == '__main__':
     # Manage argument parsing
     parser = argparse.ArgumentParser(description="Convolutional Neural Network on street-scene images")
-    parser.add_argument('-c', '--nbconv', required=True, nargs='?',
+    parser.add_argument('-c', '--nbconv', required=True, nargs='?', type=int,
                         help="""The number of convolutional layers that must be
     inserted into the network""")
     parser.add_argument('-d', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
-    parser.add_argument('-f', '--nbfullyconn', required=True,
+    parser.add_argument('-f', '--nbfullyconn', required=True, type=int,
                         nargs='?',
                         help="""The number of fully-connected layers that must
     be inserted into the network""")
@@ -56,8 +56,9 @@ if __name__ == '__main__':
                         help="""The network running mode ('train', 'test', 'both'""")
     args = parser.parse_args()
 
-    NETWORK_NAME = ("cnn_mapil_" + args.nbconv + "_0_" + args.nbconv + "_0_"
-                    + args.nbfullyconn + "_0")
+    NETWORK_NAME = ("cnn_mapil_" + str(args.nbconv) + "_0_"
+                    + str(args.nbconv) + "_0_"
+                    + str(args.nbfullyconn) + "_0")
     # image dimensions (width, height, number of channels)
     IMG_SIZE = (768, 576)
     IMAGE_HEIGHT  = IMG_SIZE[1]
