@@ -21,6 +21,7 @@
 # This script aims to train a neural network model in order to read street
 # scene images produced by Mapillary (https://www.mapillary.com/dataset/vistas)
 
+import argparse
 import json
 import logging
 import math
@@ -38,19 +39,33 @@ import dashboard_building
 import utils
 
 if __name__ == '__main__':
-    # call the script following format 'python3 cnn_train.py configfile.json'
-    if len(sys.argv) != 2:
-        utils.logger.error("Usage: python3 cnn_train.py <config_filename.json>")
-        sys.exit(-1)
-    NETWORK_NAME = sys.argv[1]
+    # Manage argument parsing
+    parser = argparse.ArgumentParser(description="Convolutional Neural Network on street-scene images")
+    parser.add_argument('-c', '--nbconv', required=True, nargs='+',
+                        help="""The number of convolutional layers that must be
+    inserted into the network""")
+    parser.add_argument('-d', '--datapath', required=False,
+                        default="../data", nargs='+',
+                        help="""The relative path towards data directory""")
+    parser.add_argument('-f', '--nbfullyconn', required=True,
+                        nargs='+',
+                        help="""The number of fully-connected layers that must
+    be inserted into the network""")
+    parser.add_argument('-m', '--mode', required=False,
+                        default="train", nargs='+',
+                        help="""The network running mode ('train', 'test', 'both'""")
+    args = parser.parse_args()
+
+    NETWORK_NAME = ("cnn_mapil_" + args.nbconv + "_0_" + args.nbconv + "_0_"
+                    + args.nbfullyconn + "_0")
     # image dimensions (width, height, number of channels)
     IMG_SIZE = (768, 576)
     IMAGE_HEIGHT  = IMG_SIZE[1]
     IMAGE_WIDTH   = IMG_SIZE[0]
     NUM_CHANNELS  = 3 # Colored images (RGB)
 
-    utils.make_dir('../data/checkpoints')
-    utils.make_dir('../data/checkpoints/'+NETWORK_NAME)
+    utils.make_dir(os.path.join(args.datapath, 'checkpoints'))
+    utils.make_dir(os.path.join(args.datapath, 'checkpoints', NETWORK_NAME))
 
     utils.logger.info("Model {} training".format(NETWORK_NAME))
     config_file_name = NETWORK_NAME + ".json"
@@ -141,10 +156,17 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
         # Declare a saver instance and a summary writer to store the network
         saver = tf.train.Saver(max_to_keep=1)
-        writer = tf.summary.FileWriter('../graphs/'+NETWORK_NAME, sess.graph)
+        writer = tf.summary.FileWriter(os.path.join(args.datapath,
+                                                    'graphs',
+                                                    NETWORK_NAME),
+                                       sess.graph)
         
         # Create folders to store checkpoints
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname('../data/checkpoints/' + NETWORK_NAME + '/checkpoint'))
+        ckpt =\
+        tf.train.get_checkpoint_state(os.path.dirname(os.path.join(args.datapath,
+                                                                   'checkpoints',
+                                                                   NETWORK_NAME,
+                                                                   'checkpoint')))
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
@@ -200,9 +222,10 @@ if __name__ == '__main__':
 
             # If all training batches have been scanned, save the training state
             if (index + 1) % N_BATCHES == 0:
-                utils.logger.info("Checkpoint ../data/checkpoints/{}/epoch-{} creation".format(NETWORK_NAME, index))
-                saver.save(sess, '../data/checkpoints/'+NETWORK_NAME+'/epoch',
-                           index)
+                utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
+                saver.save(sess, global_step=index,
+                           savepath=os.path.join(args.datapath, 'checkpoints',
+                                                 NETWORK_NAME, 'epoch'))
 
         utils.logger.info("Optimization Finished!")
         utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
@@ -247,3 +270,5 @@ if __name__ == '__main__':
         # Stop the threads used during the process
         coord.request_stop()
         coord.join(threads)
+
+    sys.exit(0)
