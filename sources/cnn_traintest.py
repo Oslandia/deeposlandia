@@ -215,7 +215,7 @@ if __name__ == '__main__':
                                     Y: Y_val_batch,
                                     dropout: 1.0})
                         db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
-                        db_val_batch.insert(0, bpmll_l)
+                        db_val_batch.insert(0, bpmll_val)
                         db_val_batch.insert(0, loss_batch_val)
                         db_val_batch.insert(0, index)
                         partial_val_dashboard.append(db_val_batch)
