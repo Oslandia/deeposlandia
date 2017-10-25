@@ -184,97 +184,94 @@ if __name__ == '__main__':
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
-        # Train the model
-        start_time = time.time()
-        dashboard = []
-        val_dashboard = []
-        best_accuracy = 0
-        for index in range(initial_step, N_BATCHES * N_EPOCHS):
-            X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
-            if (index + 1) % SKIP_STEP == 0 or index == initial_step:
-                Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
-                                                            bpmll_loss, lrate],
-                                                   feed_dict={X: X_batch,
-                                                              Y: Y_batch,
-                                                              dropout: 1.0})
-                dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
-                dashboard_batch.insert(0, bpmll_l)
-                dashboard_batch.insert(0, loss_batch)
-                dashboard_batch.insert(0, index)
-                dashboard.append(dashboard_batch)
+        if args.mode in ["train", "both"]:
+            # Train the model
+            start_time = time.time()
+            dashboard = []
+            val_dashboard = []
+            best_accuracy = 0
+            for index in range(initial_step, N_BATCHES * N_EPOCHS):
+                X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
+                if (index + 1) % SKIP_STEP == 0 or index == initial_step:
+                    Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
+                                                                bpmll_loss, lrate],
+                                                       feed_dict={X: X_batch,
+                                                                  Y: Y_batch,
+                                                                  dropout: 1.0})
+                    dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
+                    dashboard_batch.insert(0, bpmll_l)
+                    dashboard_batch.insert(0, loss_batch)
+                    dashboard_batch.insert(0, index)
+                    dashboard.append(dashboard_batch)
 
-                if args.mode == "both":
-                    # Run the model on validation dataset
-                    partial_val_dashboard = []
-                    for val_index in range(N_VAL_BATCHES):
-                        X_val_batch, Y_val_batch = sess.run([valid_image_batch,
-                                                             valid_label_batch])
-                        Y_pred_val, loss_batch_val, bpmll_val =\
-                sess.run([Y_predict, loss, bpmll_loss],
-                         feed_dict={X: X_val_batch,
-                                    Y: Y_val_batch,
-                                    dropout: 1.0})
-                        db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
-                        db_val_batch.insert(0, bpmll_val)
-                        db_val_batch.insert(0, loss_batch_val)
-                        db_val_batch.insert(0, index)
-                        partial_val_dashboard.append(db_val_batch)
-                    val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
-                                             .apply(lambda x: x.mean(), axis=0))
-                    val_dashboard.append(val_cur_dashboard)
-                
-                utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
+                    if args.mode == "both":
+                        # Run the model on validation dataset
+                        partial_val_dashboard = []
+                        for val_index in range(N_VAL_BATCHES):
+                            X_val_batch, Y_val_batch = sess.run([valid_image_batch,
+                                                                 valid_label_batch])
+                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0})
+                            db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
+                            db_val_batch.insert(0, bpmll_val)
+                            db_val_batch.insert(0, loss_batch_val)
+                            db_val_batch.insert(0, index)
+                            partial_val_dashboard.append(db_val_batch)
+                        val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
+                                                 .apply(lambda x: x.mean(), axis=0))
+                        val_dashboard.append(val_cur_dashboard)
 
-            # Run the model to do a new training iteration
-            sess.run(optimizer,
-                     feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+                    utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
 
-            # If all training batches have been scanned, save the training state
-            if (index + 1) % N_BATCHES == 0:
-                utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
-                saver.save(sess, global_step=index,
-                           savepath=os.path.join(args.datapath, 'checkpoints',
-                                                 NETWORK_NAME, 'epoch'))
+                # Run the model to do a new training iteration
+                sess.run(optimizer,
+                         feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
 
-        utils.logger.info("Optimization Finished!")
-        utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
+                # If all training batches have been scanned, save the training state
+                if (index + 1) % N_BATCHES == 0:
+                    utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
+                    saver.save(sess, global_step=index,
+                               savepath=os.path.join(args.datapath, 'checkpoints',
+                                                     NETWORK_NAME, 'epoch'))
 
-        if initial_step < N_BATCHES * N_EPOCHS:
-            # The results are stored as a pandas dataframe and saved on the file
-            # system
-            dashboard_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                                 "accuracy", "precision", "recall", "F_measure"]
-            dashboard_columns_by_label = [["accuracy_label"+str(i),
-                                           "precision_label"+str(i),
-                                           "recall_label"+str(i)]
-                                          for i in range(len(Y_batch[0]))]
-            dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
-            dashboard_columns = dashboard_columns + dashboard_columns_by_label
-            param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
-            param_history = param_history.set_index("epoch")
-            val_param_history = pd.DataFrame(val_dashboard, columns = dashboard_columns)
-            val_param_history = val_param_history.set_index("epoch")
-            utils.make_dir(os.path.join("..", "data", "results"))
-            result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
-            val_result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + "_validation.csv")
-            if initial_step == 0:
-                param_history.to_csv(result_file_name, index=True)
-                val_param_history.to_csv(val_result_file_name, index=True)
-            else:
-                param_history.to_csv(result_file_name,
-                                     index=True,
-                                     mode='a',
-                                     header=False)
-                val_param_history.to_csv(val_result_file_name,
-                                     index=True,
-                                     mode='a',
-                                     header=False)
+            utils.logger.info("Optimization Finished!")
+            utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
-            # Training results are then saved as a multiplot
-            complete_dashboard = pd.read_csv(result_file_name)
-            plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
-            dashboard_building.plot_dashboard(complete_dashboard,
-                                              plot_file_name)
+            if initial_step < N_BATCHES * N_EPOCHS:
+                # The results are stored as a pandas dataframe and saved on the file
+                # system
+                dashboard_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
+                                     "accuracy", "precision", "recall", "F_measure"]
+                dashboard_columns_by_label = [["accuracy_label"+str(i),
+                                               "precision_label"+str(i),
+                                               "recall_label"+str(i)]
+                                              for i in range(len(Y_batch[0]))]
+                dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
+                dashboard_columns = dashboard_columns + dashboard_columns_by_label
+                param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
+                param_history = param_history.set_index("epoch")
+                val_param_history = pd.DataFrame(val_dashboard, columns = dashboard_columns)
+                val_param_history = val_param_history.set_index("epoch")
+                utils.make_dir(os.path.join("..", "data", "results"))
+                result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
+                val_result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + "_validation.csv")
+                if initial_step == 0:
+                    param_history.to_csv(result_file_name, index=True)
+                    val_param_history.to_csv(val_result_file_name, index=True)
+                else:
+                    param_history.to_csv(result_file_name,
+                                         index=True,
+                                         mode='a',
+                                         header=False)
+                    val_param_history.to_csv(val_result_file_name,
+                                         index=True,
+                                         mode='a',
+                                         header=False)
+
+                # Training results are then saved as a multiplot
+                complete_dashboard = pd.read_csv(result_file_name)
+                plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
+                dashboard_building.plot_dashboard(complete_dashboard,
+                                                  plot_file_name)
             
         # Stop the threads used during the process
         coord.request_stop()
