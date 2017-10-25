@@ -54,9 +54,13 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', required=False,
                         default="train", nargs='?',
                         help="""The network running mode ('train', 'test', 'both'""")
+    parser.add_argument('-n', '--name', required=False,
+                        default="cnn_mapil", nargs='?',
+                        help="""The model name that will be used for results,
+                        checkout and graph storage on file system""")
     args = parser.parse_args()
 
-    NETWORK_NAME = ("cnn_mapil_" + str(args.nbconv) + "_0_"
+    NETWORK_NAME = (args.name + "_" + str(args.nbconv) + "_0_"
                     + str(args.nbconv) + "_0_"
                     + str(args.nbfullyconn) + "_0")
     # image dimensions (width, height, number of channels)
