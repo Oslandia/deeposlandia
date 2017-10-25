@@ -41,18 +41,18 @@ import utils
 if __name__ == '__main__':
     # Manage argument parsing
     parser = argparse.ArgumentParser(description="Convolutional Neural Network on street-scene images")
-    parser.add_argument('-c', '--nbconv', required=True, nargs='+',
+    parser.add_argument('-c', '--nbconv', required=True, nargs='?',
                         help="""The number of convolutional layers that must be
     inserted into the network""")
     parser.add_argument('-d', '--datapath', required=False,
-                        default="../data", nargs='+',
+                        default="../data", nargs='?',
                         help="""The relative path towards data directory""")
     parser.add_argument('-f', '--nbfullyconn', required=True,
-                        nargs='+',
+                        nargs='?',
                         help="""The number of fully-connected layers that must
     be inserted into the network""")
     parser.add_argument('-m', '--mode', required=False,
-                        default="train", nargs='+',
+                        default="train", nargs='?',
                         help="""The network running mode ('train', 'test', 'both'""")
     args = parser.parse_args()
 
