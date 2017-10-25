@@ -163,15 +163,15 @@ if __name__ == '__main__':
         for index in range(initial_step, N_BATCHES * N_EPOCHS):
             X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
             # Case 1: unweighted loss
-            # w_batch = tf.ones_like(Y_batch).eval()
+            w_batch = np.repeat(1.0, len(Y_batch[0]))
             # Case 2: globally weighted loss
             # label_counter = glossary_reading.NB_IMAGE_PER_LABEL
             # w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
             #            for l in label_counter]
             # Case 3: batch weighted loss
-            label_counter = [sum(s) for s in np.transpose(Y_batch)]
-            w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
-                       for l in label_counter]
+            # label_counter = [sum(s) for s in np.transpose(Y_batch)]
+            # w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
+            #            for l in label_counter]
             # Case 4: centered globally weighted loss
             # label_counter = glossary_reading.NB_IMAGE_PER_LABEL 
             # w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
