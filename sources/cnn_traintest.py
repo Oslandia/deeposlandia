@@ -202,24 +202,26 @@ if __name__ == '__main__':
                 dashboard_batch.insert(0, loss_batch)
                 dashboard_batch.insert(0, index)
                 dashboard.append(dashboard_batch)
-                
-                # Run the model on validation dataset
-                partial_val_dashboard = []
-                for val_index in range(N_VAL_BATCHES):
-                    X_val_batch, Y_val_batch = sess.run([valid_image_batch,
-                                                         valid_label_batch])
-                    Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss],
-                                                       feed_dict={X: X_val_batch,
-                                                                  Y: Y_val_batch,
-                                                                  dropout: 1.0})
-                    db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
-                    db_val_batch.insert(0, bpmll_l)
-                    db_val_batch.insert(0, loss_batch_val)
-                    db_val_batch.insert(0, index)
-                    partial_val_dashboard.append(db_val_batch)
-                val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
-                                         .apply(lambda x: x.mean(), axis=0))
-                val_dashboard.append(val_cur_dashboard)
+
+                if args.mode == "both":
+                    # Run the model on validation dataset
+                    partial_val_dashboard = []
+                    for val_index in range(N_VAL_BATCHES):
+                        X_val_batch, Y_val_batch = sess.run([valid_image_batch,
+                                                             valid_label_batch])
+                        Y_pred_val, loss_batch_val, bpmll_val =\
+                sess.run([Y_predict, loss, bpmll_loss],
+                         feed_dict={X: X_val_batch,
+                                    Y: Y_val_batch,
+                                    dropout: 1.0})
+                        db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
+                        db_val_batch.insert(0, bpmll_l)
+                        db_val_batch.insert(0, loss_batch_val)
+                        db_val_batch.insert(0, index)
+                        partial_val_dashboard.append(db_val_batch)
+                    val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
+                                             .apply(lambda x: x.mean(), axis=0))
+                    val_dashboard.append(val_cur_dashboard)
                 
                 utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
 
