@@ -111,6 +111,8 @@ if __name__ == '__main__':
                                     NUM_CHANNELS], name='X')
     Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
+    class_w = tf.placeholder(tf.float32, [N_CLASSES],
+                             name='weights_per_label')
 
     # Model building
     last_fc, last_fc_layer_dim = cnn_layers.convnet_building(X, cnn_hyperparam,
@@ -137,11 +139,18 @@ if __name__ == '__main__':
 
     # Loss function design
     with tf.name_scope(NETWORK_NAME + '_loss'):
-        # Cross-entropy between predicted and real values: we use sigmoid instead
-        # of softmax as we are in a multilabel classification problem
-        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y, logits=logits)
-        loss = tf.reduce_mean(entropy, name="loss")
+        # Tensorflow definition of sigmoid cross-entropy:
+        # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
+        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y,
+                                                          logits=logits)
+        weighted_entropy = tf.multiply(class_w, entropy)
+        loss = tf.reduce_mean(weighted_entropy, name="loss")
         bpmll_loss = bpmll.bp_mll_loss(Y, Y_raw_predict)
+        # Alternative way of measuring a weighted cross-entropy (weighting true
+        # and false labels, but not label contributions to loss):
+        # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
+        #                                                    logits=logits,
+        #                                                    pos_weight=1.5)
 
     # Define training optimizer
     with tf.name_scope(NETWORK_NAME +  '_train'):
@@ -192,12 +201,39 @@ if __name__ == '__main__':
             best_accuracy = 0
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
                 X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
+                # Case 1: unweighted loss
+                if args.weights == "base":
+                    w_batch = np.repeat(1.0, len(Y_batch[0]))
+                # Case 2: globally weighted loss
+                elif args.weights == "global":
+                    label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                    w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
+                               for l in label_counter]
+                # Case 3: batch weighted loss
+                elif args.weights == "batch":
+                    label_counter = [sum(s) for s in np.transpose(Y_batch)]
+                    w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
+                               for l in label_counter]
+                # Case 4: centered globally weighted loss
+                elif args.weights == "centered_global":
+                    label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                    w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
+                # Case 5: centered batch weighted loss
+                elif args.weights == "centered_batch":
+                    label_counter = [sum(s) for s in np.transpose(Y_batch)]
+                    w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
+                               for l in label_counter]
+                else:
+                    utils.logger.error("""Unsupported weighting policy. Please choose amongst 'basis', 'global', 'batch', 'centered_global' or 'centered_batch'.""")
+                    sys.exit(1)
+
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                     Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
                                                                 bpmll_loss, lrate],
                                                        feed_dict={X: X_batch,
                                                                   Y: Y_batch,
-                                                                  dropout: 1.0})
+                                                                  dropout: 1.0,
+                                                                  class_w: w_batch})
                     dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
                     dashboard_batch.insert(0, bpmll_l)
                     dashboard_batch.insert(0, loss_batch)
@@ -224,8 +260,8 @@ if __name__ == '__main__':
                         utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
 
                 # Run the model to do a new training iteration
-                sess.run(optimizer,
-                         feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+                sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch,
+                                               dropout: DROPOUT, class_w: w_batch})
 
                 # If all training batches have been scanned, save the training state
                 if (index + 1) % N_BATCHES == 0:
@@ -272,9 +308,10 @@ if __name__ == '__main__':
 
                 # Training results are then saved as a multiplot
                 complete_dashboard = pd.read_csv(result_file_name)
-                plot_file_name = os.path.join("..", "images", NETWORK_NAME + "_s" + str(global_step.eval(session=sess)) + ".png")
-                dashboard_building.plot_dashboard(complete_dashboard,
-                                                  plot_file_name)
+                plot_file_name = os.path.join("..", "images",
+                                              (NETWORK_NAME + "_s"
+                                               + str(global_step.eval(session=sess)) + ".png"))
+                dashboard_building.plot_dashboard(complete_dashboard, plot_file_name)
             
         # Stop the threads used during the process
         coord.request_stop()
