@@ -219,8 +219,9 @@ if __name__ == '__main__':
                         val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
                                                  .apply(lambda x: x.mean(), axis=0))
                         val_dashboard.append(val_cur_dashboard)
-
-                    utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
+                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
+                    else:
+                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
 
                 # Run the model to do a new training iteration
                 sess.run(optimizer,
@@ -256,16 +257,18 @@ if __name__ == '__main__':
                 val_result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + "_validation.csv")
                 if initial_step == 0:
                     param_history.to_csv(result_file_name, index=True)
-                    val_param_history.to_csv(val_result_file_name, index=True)
+                    if args.mode in ["both", "test"]:
+                        val_param_history.to_csv(val_result_file_name, index=True)
                 else:
                     param_history.to_csv(result_file_name,
                                          index=True,
                                          mode='a',
                                          header=False)
-                    val_param_history.to_csv(val_result_file_name,
-                                         index=True,
-                                         mode='a',
-                                         header=False)
+                    if args.mode in ["both", "test"]:
+                        val_param_history.to_csv(val_result_file_name,
+                                                 index=True,
+                                                 mode='a',
+                                                 header=False)
 
                 # Training results are then saved as a multiplot
                 complete_dashboard = pd.read_csv(result_file_name)
