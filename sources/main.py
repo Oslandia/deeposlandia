@@ -200,7 +200,7 @@ if __name__ == '__main__':
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
                                for l in label_counter]
-                    
+                fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                     Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred,
                                                                 output["loss"],
