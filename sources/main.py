@@ -74,24 +74,32 @@ if __name__ == '__main__':
        sys.exit(1)
     if args.weights not in ["base", "global", "batch", "centered_batch", "centered_global"]:
        utils.logger.error("""Unsupported weighting policy. Please choose amongst 'basis', 'global', 'batch', 'centered_global' or 'centered_batch'.""")
+       utils.logger.info("'base': Regular weighting scheme...")
+       utils.logger.info("""'global': Label contributions to loss are weighted with respect to label popularity within the dataset (decreasing weights)...""")
+       utils.logger.info("""'batch': Label contributions to loss are weighted with respect to label popularity within the dataset (convex weights with min at 50%)...""")
+       utils.logger.info("""'centeredbatch': Label contributions to loss are weighted with respect to label popularity within each batch (decreasing weights)...""")
+       utils.logger.info("""'centeredglobal': Label contributions to loss are weighted with respect to label popularity within each batch (convex weights with min at 50%)...""")
        sys.exit(1)
 
     NETWORK_NAME = (args.name + "_" + str(args.nbconv) + "_0_"
                     + str(args.nbconv) + "_0_"
                     + str(args.nbfullyconn) + "_0")
+    if args.mode == "train":
+        utils.logger.info("Model {} training".format(NETWORK_NAME))
+    elif args.mode == "test":
+        utils.logger.info("Model {} testing".format(NETWORK_NAME))
+    elif args.mode == "both":
+        utils.logger.info("Model {} training and testing".format(NETWORK_NAME))
+
+    config_file_name = NETWORK_NAME + ".json"
+    with open(os.path.join("..", "models", config_file_name)) as config_file:
+        cnn_hyperparam = json.load(config_file)
+
     # image dimensions (width, height, number of channels)
     IMG_SIZE = (768, 576)
     IMAGE_HEIGHT  = IMG_SIZE[1]
     IMAGE_WIDTH   = IMG_SIZE[0]
     NUM_CHANNELS  = 3 # Colored images (RGB)
-
-    utils.make_dir(os.path.join(args.datapath, 'checkpoints'))
-    utils.make_dir(os.path.join(args.datapath, 'checkpoints', NETWORK_NAME))
-
-    utils.logger.info("Model {} training".format(NETWORK_NAME))
-    config_file_name = NETWORK_NAME + ".json"
-    with open(os.path.join("..", "models", config_file_name)) as config_file:
-        cnn_hyperparam = json.load(config_file)
 
     # number of output classes
     N_CLASSES = glossary_reading.LABELS.shape[1]
@@ -206,24 +214,19 @@ if __name__ == '__main__':
                 # utils.logger.info("Regular weighting scheme...")
                 w_batch = np.repeat(1.0, glossary_reading.LABELS.shape[1])
             elif args.weights == "global":
-                # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within the dataset (decreasing weights)...")
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
                            for l in label_counter]
             elif args.weights == "centered_global":
-                # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within the dataset (convex weights with min at 50%)...")
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
                 X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
                 if args.weights == "batch":
-                    # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within each batch (decreasing weights)...")
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
                                for l in label_counter]
-                # Case 5: centered batch weighted loss
                 elif args.weights == "centered_batch":
-                    # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within each batch (convex weights with min at 50%)...")
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
                                for l in label_counter]
