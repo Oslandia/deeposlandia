@@ -59,6 +59,11 @@ if __name__ == '__main__':
                         default="cnn_mapil", nargs='?',
                         help="""The model name that will be used for results,
                         checkout and graph storage on file system""")
+    parser.add_argument('-w', '--weights', required=False,
+                        default="base", nargs='?',
+                        help="""The weight policy to apply on label
+                        contributions to loss: either 'base' (default case),
+                        'global', 'batch', 'centered_global', 'centered_batch'""")
     args = parser.parse_args()
 
     NETWORK_NAME = (args.name + "_" + str(args.nbconv) + "_0_"
