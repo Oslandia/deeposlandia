@@ -191,7 +191,8 @@ if __name__ == '__main__':
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
-                X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
+                X_batch, Y_batch = sess.run([train_image_batch,
+                                             train_label_batch])
                 if args.weights == "batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = utils.compute_monotonic_weights(BATCH_SIZE,
@@ -201,6 +202,7 @@ if __name__ == '__main__':
                     w_batch = utils.compute_centered_weights(BATCH_SIZE,
                                                              label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
+
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                     Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred,
                                                                 output["loss"],
@@ -233,7 +235,7 @@ if __name__ == '__main__':
                         val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
                                                  .apply(lambda x: x.mean(), axis=0))
                         val_dashboard.append(val_cur_dashboard)
-                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], val_cur_dashboard[4], db_batch[5], db_batch[6]))
+                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:1.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], val_cur_dashboard[4], db_batch[5], db_batch[6]))
                     else:
                         utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], db_batch[5], db_batch[6]))
 
@@ -250,7 +252,8 @@ if __name__ == '__main__':
                                                       NETWORK_NAME, 'epoch'))
 
             utils.logger.info("Optimization Finished!")
-            utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
+            utils.logger.info("Total time: {:.2f} seconds".format(time.time() -
+                                                                  start_time))
 
             if initial_step < N_BATCHES * N_EPOCHS:
                 # The results are stored as a df and saved on the file system
