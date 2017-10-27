@@ -201,7 +201,7 @@ if __name__ == '__main__':
             dashboard = []
             val_dashboard = []
             if args.weights == "base":
-                w_batch = np.repeat(1.0, NB_LABELS)
+                w_batch = np.repeat(1.0, N_CLASSES)
             elif args.weights == "global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
@@ -276,7 +276,7 @@ if __name__ == '__main__':
                 dashboard_columns_by_label = [["accuracy_label"+str(i),
                                                "precision_label"+str(i),
                                                "recall_label"+str(i)]
-                                              for i in range(NB_LABELS)]
+                                              for i in range(N_CLASSES)]
                 dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
                 db_columns = dashboard_columns + dashboard_columns_by_label
                 param_history = pd.DataFrame(dashboard, columns=db_columns)
