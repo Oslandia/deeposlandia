@@ -151,28 +151,6 @@ if __name__ == '__main__':
     # Loss function design
     output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, START_LR,
                                     DECAY_STEPS, DECAY_RATE, NETWORK_NAME)
-    
-    # # Loss function design
-    # with tf.name_scope(NETWORK_NAME + '_loss'):
-    #     # Tensorflow definition of sigmoid cross-entropy:
-    #     # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
-    #     entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y,
-    #                                                       logits=logits)
-    #     weighted_entropy = tf.multiply(class_w, entropy)
-    #     loss = tf.reduce_mean(weighted_entropy, name="loss")
-    #     bpmll_loss = bpmll.bp_mll_loss(Y, y_raw_pred)
-    #     # Alternative way of measuring a weighted cross-entropy (weighting true
-    #     # and false labels, but not label contributions to loss):
-    #     # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
-    #     #                                                    logits=logits,
-    #     #                                                    pos_weight=1.5)
-    #     global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
-    #                               name='global_step')
-    #     lrate = tf.train.exponential_decay(START_LR, global_step,
-    #                                        decay_steps=DECAY_STEPS,
-    #                                        decay_rate=DECAY_RATE,
-    #                                        name='learning_rate')
-    #     optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
 
     # Running the neural network
     with tf.Session() as sess:
