@@ -163,18 +163,13 @@ if __name__ == '__main__':
         # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
         #                                                    logits=logits,
         #                                                    pos_weight=1.5)
-
-    # Define training optimizer
-    with tf.name_scope(NETWORK_NAME +  '_train'):
-        global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
-        # Variable learning rate
+        global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
+                                  name='global_step')
         lrate = tf.train.exponential_decay(START_LR, global_step,
                                            decay_steps=DECAY_STEPS,
                                            decay_rate=DECAY_RATE,
                                            name='learning_rate')
-        # Use Adam optimizer with decaying learning rate to minimize cost.
-        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss,
-                                                           global_step=global_step)
+        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
 
     # Running the neural network
     with tf.Session() as sess:
