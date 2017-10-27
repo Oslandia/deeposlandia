@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     utils.logger.info("Model {} training".format(NETWORK_NAME))
     config_file_name = NETWORK_NAME + ".json"
-    with open(os.path.join("..", "models", "to_run", config_file_name)) as config_file:
+    with open(os.path.join("..", "models", config_file_name)) as config_file:
         cnn_hyperparam = json.load(config_file)
 
     # number of output classes
