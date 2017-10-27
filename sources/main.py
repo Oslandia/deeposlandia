@@ -47,6 +47,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
+    parser.add_argument('-e', '--nb-epochs', required=False, type=int,
+                        default=5, nargs='?',
+                        help="""The number of training epochs (one epoch means
+                        scanning each training image once)""")
     parser.add_argument('-f', '--nbfullyconn', required=True, type=int,
                         nargs='?',
                         help="""The number of fully-connected layers that must
@@ -90,24 +94,23 @@ if __name__ == '__main__':
         cnn_hyperparam = json.load(config_file)
 
     # number of output classes
-    N_CLASSES = 66
+    N_CLASSES = glossary_reading.LABELS.shape[1]
     # number of images per batch
     BATCH_SIZE = 20
-    N_BATCHES = int(len(os.listdir(os.path.join("..", "data",
-                                                "training", "images")))
+    N_BATCHES = int(len(os.listdir(os.path.join(args.datapath, "training",
+                                                "images")))
                     / BATCH_SIZE)
-    N_VAL_BATCHES = int(len(os.listdir(os.path.join("..", "data",
+    N_VAL_BATCHES = int(len(os.listdir(os.path.join(args.datapath,
                                                     "validation", "images")))
                         / BATCH_SIZE)
-    # number of epochs (one epoch = all images have been used for training)
-    N_EPOCHS = 5
-    # Learning rate tuning (exponential decay)
+    # learning rate tuning (exponential decay)
     START_LR = 0.01
     DECAY_STEPS = 100
     DECAY_RATE = 0.9
-    # dropout, i.e. percentage of nodes that are briefly removed during training
-    # process
+    # percentage of nodes that are briefly removed during training process
     DROPOUT = 2/3.0
+    # number of epochs (one epoch = all images have been used for training)
+    N_EPOCHS = args.nb_epochs
     # printing frequency during training
     SKIP_STEP = 10
 
@@ -119,6 +122,7 @@ if __name__ == '__main__':
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "validation", "valid_data_pipe")
 
+    # Definition of TensorFlow placeholder
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
                                     NUM_CHANNELS], name='X')
     Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
@@ -279,7 +283,7 @@ if __name__ == '__main__':
                 dashboard_columns_by_label = [["accuracy_label"+str(i),
                                                "precision_label"+str(i),
                                                "recall_label"+str(i)]
-                                              for i in range(len(Y_batch[0]))]
+                                              for i in range(NB_LABELS)]
                 dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
                 dashboard_columns = dashboard_columns + dashboard_columns_by_label
                 param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
