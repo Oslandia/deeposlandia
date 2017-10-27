@@ -256,7 +256,7 @@ if __name__ == '__main__':
                         for val_index in range(N_VAL_BATCHES):
                             X_val_batch, Y_val_batch = sess.run([valid_image_batch,
                                                                  valid_label_batch])
-                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0})
+                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0, class_w: w_batch})
                             db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
