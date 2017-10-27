@@ -184,21 +184,22 @@ if __name__ == '__main__':
                 w_batch = np.repeat(1.0, N_CLASSES)
             elif args.weights == "global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
-                w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
-                           for l in label_counter]
+                w_batch = utils.compute_monotonic_weights(N_IMAGES,
+                                                          label_counter)
             elif args.weights == "centered_global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
-                w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
+                w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
+
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
                 X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
                 if args.weights == "batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
-                    w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
-                               for l in label_counter]
+                    w_batch = utils.compute_monotonic_weights(BATCH_SIZE,
+                                                              label_counter)
                 elif args.weights == "centered_batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
-                    w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
-                               for l in label_counter]
+                    w_batch = utils.compute_centered_weights(BATCH_SIZE,
+                                                             label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                     Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred,

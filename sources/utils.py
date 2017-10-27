@@ -54,6 +54,44 @@ def unnest(l):
     """
     return [index for sublist in l for index in sublist]
 
+
+def compute_monotonic_weights(nb_images, label_counter, mu=0.5, max_weight=10):
+    """Compute monotonic weights regarding the popularity of each label given
+    by `label_counter`, over a total population of `nb_images`
+
+    Parameters
+    ----------
+    nb_images: integer
+        Number of images over which the weights must be computed
+    label_counter: list
+        Number of images where each label does appear
+    mu: float
+        Constant coefficient between 0 and 1
+    max_weight: integer
+        Maximum weight to apply when counter is too small with respect to
+    nb_images (in such a case, the function can give a far too large number)
+    """
+    return [min(math.log(mu * nb_images / l), max_weight) for l in label_counter]
+
+def compute_centered_weights(nb_images, label_counter, mu=0.5):
+    """Compute weights regarding the popularity of each label given by
+    `label_counter`, over a total population of `nb_images`; the weights will
+    be larger when popularity is either too small or too large (comparison with
+    a 50% popularity)
+
+    Parameters
+    ----------
+    nb_images: integer
+        Number of images over which the weights must be computed
+    label_counter: list
+        Number of images where each label does appear
+    mu: float
+        Constant coefficient between 0 and 1
+    
+    """
+    return [math.log(1 + mu * (l - nb_images / 2) ** 2 / nb_images)
+            for l in label_counter]
+
 def mapillary_label_reading(labels):
     """Gives the readable versions of Mapillary labels
 
