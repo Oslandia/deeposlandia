@@ -179,22 +179,17 @@ if __name__ == '__main__':
     # Running the neural network
     with tf.Session() as sess:
         # Initialize the tensorflow variables
-        # To visualize using TensorBoard
-        # tensorboard --logdir="../graphs/"+NETWORK_NAME --port 6006)
         sess.run(tf.global_variables_initializer())
         # Declare a saver instance and a summary writer to store the network
         saver = tf.train.Saver(max_to_keep=1)
-        writer = tf.summary.FileWriter(os.path.join(args.datapath,
-                                                    'graphs',
-                                                    NETWORK_NAME),
-                                       sess.graph)
+        graph_path = os.path.join(args.datapath, 'graphs', NETWORK_NAME)
+        writer = tf.summary.FileWriter(graph_path, sess.graph)
         
         # Create folders to store checkpoints
-        ckpt =\
-        tf.train.get_checkpoint_state(os.path.dirname(os.path.join(args.datapath,
-                                                                   'checkpoints',
-                                                                   NETWORK_NAME,
-                                                                   'checkpoint')))
+        ckpt_path = os.path.join(args.datapath, 'checkpoints', NETWORK_NAME)
+        utils.make_dir(os.path.dirname(ckpt_path))
+        utils.make_dir(ckpt_path)
+        ckpt = tf.train.get_checkpoint_state(ckpt_path)
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
