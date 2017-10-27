@@ -199,35 +199,32 @@ if __name__ == '__main__':
             start_time = time.time()
             dashboard = []
             val_dashboard = []
-            best_accuracy = 0
+            if args.weights == "base":
+                # utils.logger.info("Regular weighting scheme...")
+                w_batch = np.repeat(1.0, glossary_reading.LABELS.shape[1])
+            elif args.weights == "global":
+                # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within the dataset (decreasing weights)...")
+                label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
+                           for l in label_counter]
+            elif args.weights == "centered_global":
+                # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within the dataset (convex weights with min at 50%)...")
+                label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
                 X_batch, Y_batch = sess.run([train_image_batch, train_label_batch])
-                # Case 1: unweighted loss
-                if args.weights == "base":
-                    w_batch = np.repeat(1.0, len(Y_batch[0]))
-                # Case 2: globally weighted loss
-                elif args.weights == "global":
-                    label_counter = glossary_reading.NB_IMAGE_PER_LABEL
-                    w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
-                               for l in label_counter]
-                # Case 3: batch weighted loss
-                elif args.weights == "batch":
+                if args.weights == "batch":
+                    # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within each batch (decreasing weights)...")
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = [min(math.log(0.5 * BATCH_SIZE / l), 100.0)
                                for l in label_counter]
-                # Case 4: centered globally weighted loss
-                elif args.weights == "centered_global":
-                    label_counter = glossary_reading.NB_IMAGE_PER_LABEL
-                    w_batch = [(math.log(1 + 0.5 * (l - (BATCH_SIZE * N_BATCHES) / 2)**2) / (BATCH_SIZE * N_BATCHES)) for l in label_counter]
                 # Case 5: centered batch weighted loss
                 elif args.weights == "centered_batch":
+                    # utils.logger.info("Label contributions to loss are weighted with respect to label popularity within each batch (convex weights with min at 50%)...")
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = [math.log(1 + 0.5 * (l - BATCH_SIZE/2)**2 / BATCH_SIZE)
                                for l in label_counter]
-                else:
-                    utils.logger.error("""Unsupported weighting policy. Please choose amongst 'basis', 'global', 'batch', 'centered_global' or 'centered_batch'.""")
-                    sys.exit(1)
-
+                    
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
                     Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
                                                                 bpmll_loss, lrate],
