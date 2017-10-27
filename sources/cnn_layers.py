@@ -186,7 +186,39 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
         # Apply dropout
         return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
-def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
+def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
+    """Build an output layer to a neural network with a sigmoid final activation
+    function; return final network scores (logits) as well as predictions
+
+    Parameters
+    ----------
+    input_layer: tensor
+        Previous layer within the neural network (last hidden layer)
+    input_layer_dim: integer
+        Dimension of the previous neural network layer
+    n_output_classes: integer
+        Dimension of the output layer
+    network_name: object
+        String designing the network name (for scope name unicity)
+
+    """
+    # Output building
+    with tf.variable_scope(network_name + '_sigmoid_linear') as scope:
+        # Create weights and biases for the final fully-connected layer
+        w = tf.get_variable('weights', [input_layer_dim, n_output_classes],
+                            initializer=tf.truncated_normal_initializer())
+        b = tf.get_variable('biases', [n_output_classes],
+                            initializer=tf.random_normal_initializer())
+        # Compute logits through a simple linear combination
+        logits = tf.add(tf.matmul(input_layer, w), b)
+        # Compute predicted outputs with sigmoid function
+        Y_raw_predict = tf.nn.sigmoid(logits)
+        Y_predict = tf.to_int32(tf.round(Y_raw_predict))
+        return logits, Y_raw_predict, Y_predict
+
+    
+def convnet_building(X, param, img_width, img_height, nb_channels,
+                     nb_labels, dropout,
                      network_name, nb_convpool, nb_fullconn):
     """Build the structure of a convolutional neural network from image data X
     to the last hidden layer, this layer being returned by this method  
@@ -206,6 +238,8 @@ def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
     nb_channels: integer
         number of channels within images, i.e. 1 if black and white, 3 if RGB
     images
+    nb_labels: integer
+        number of output classes (labels)
     dropout: tensor
         Represent the proportion of kept neurons within fully-connected network
     (to avoid over-fitting, some of them are deactivated at each iteration)
@@ -263,4 +297,4 @@ def convnet_building(X, param, img_width, img_height, nb_channels, dropout,
         last_fc_layer_dim = param["fullconn"+str(i)]["depth"]
         i = i + 1
 
-    return last_fc, last_fc_layer_dim
+    return output_layer(last_fc, last_fc_layer_dim, nb_labels, network_name)

@@ -127,27 +127,15 @@ if __name__ == '__main__':
                              name='weights_per_label')
 
     # Model building
-    last_fc, last_fc_layer_dim = cnn_layers.convnet_building(X, cnn_hyperparam,
+    logits, y_raw_pred, y_pred = cnn_layers.convnet_building(X, cnn_hyperparam,
                                                              IMG_SIZE[0],
                                                              IMG_SIZE[1],
                                                              NUM_CHANNELS,
+                                                             N_CLASSES,
                                                              dropout,
                                                              NETWORK_NAME,
                                                              args.nbconv,
                                                              args.nbfullyconn)
-    
-    # Output building
-    with tf.variable_scope(NETWORK_NAME + '_sigmoid_linear') as scope:
-        # Create weights and biases for the final fully-connected layer
-        w = tf.get_variable('weights', [last_fc_layer_dim, N_CLASSES],
-                            initializer=tf.truncated_normal_initializer())
-        b = tf.get_variable('biases', [N_CLASSES],
-                            initializer=tf.random_normal_initializer())
-        # Compute logits through a simple linear combination
-        logits = tf.add(tf.matmul(last_fc, w), b)
-        # Compute predicted outputs with sigmoid function
-        Y_raw_predict = tf.nn.sigmoid(logits)
-        Y_predict = tf.to_int32(tf.round(Y_raw_predict))
 
     # Loss function design
     with tf.name_scope(NETWORK_NAME + '_loss'):
@@ -157,7 +145,7 @@ if __name__ == '__main__':
                                                           logits=logits)
         weighted_entropy = tf.multiply(class_w, entropy)
         loss = tf.reduce_mean(weighted_entropy, name="loss")
-        bpmll_loss = bpmll.bp_mll_loss(Y, Y_raw_predict)
+        bpmll_loss = bpmll.bp_mll_loss(Y, y_raw_pred)
         # Alternative way of measuring a weighted cross-entropy (weighting true
         # and false labels, but not label contributions to loss):
         # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
@@ -237,7 +225,7 @@ if __name__ == '__main__':
                                for l in label_counter]
                     
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
-                    Y_pred, loss_batch, bpmll_l, lr = sess.run([Y_predict, loss,
+                    Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred, loss,
                                                                 bpmll_loss, lrate],
                                                        feed_dict={X: X_batch,
                                                                   Y: Y_batch,
@@ -255,7 +243,7 @@ if __name__ == '__main__':
                         for val_index in range(N_VAL_BATCHES):
                             X_val_batch, Y_val_batch = sess.run([valid_image_batch,
                                                                  valid_label_batch])
-                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([Y_predict, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0, class_w: w_batch})
+                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([y_pred, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0, class_w: w_batch})
                             db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
