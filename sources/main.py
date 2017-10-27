@@ -129,7 +129,7 @@ if __name__ == '__main__':
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "validation", "valid_data_pipe")
 
-    # Definition of TensorFlow placeholder
+    # Definition of TensorFlow placeholders
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
                                     NUM_CHANNELS], name='X')
     Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
@@ -263,7 +263,7 @@ if __name__ == '__main__':
                 fd = {X: X_batch, Y: Y_batch, dropout: DROPOUT, class_w: w_batch}
                 sess.run(output["optim"], feed_dict=fd)
 
-                # If all training batches have been scanned, save the training state
+                # If all training batches have been scanned, save the model
                 if (index + 1) % N_BATCHES == 0:
                     utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
                     saver.save(sess, global_step=index,
