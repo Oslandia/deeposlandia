@@ -277,8 +277,9 @@ if __name__ == '__main__':
                 if (index + 1) % N_BATCHES == 0:
                     utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
                     saver.save(sess, global_step=index,
-                               savepath=os.path.join(args.datapath, 'checkpoints',
-                                                     NETWORK_NAME, 'epoch'))
+                               save_path=os.path.join(args.datapath,
+                                                      'checkpoints',
+                                                      NETWORK_NAME, 'epoch'))
 
             utils.logger.info("Optimization Finished!")
             utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
