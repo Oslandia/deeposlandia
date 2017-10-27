@@ -104,12 +104,11 @@ if __name__ == '__main__':
     N_CLASSES = glossary_reading.LABELS.shape[1]
     # number of images per batch
     BATCH_SIZE = 20
-    N_BATCHES = int(len(os.listdir(os.path.join(args.datapath, "training",
-                                                "images")))
-                    / BATCH_SIZE)
-    N_VAL_BATCHES = int(len(os.listdir(os.path.join(args.datapath,
-                                                    "validation", "images")))
-                        / BATCH_SIZE)
+    N_IMAGES = len(os.listdir(os.path.join(args.datapath, "training", "images")))
+    N_VAL_IMAGES = len(os.listdir(os.path.join(args.datapath,
+                                               "validation", "images")))
+    N_BATCHES = int(N_IMAGES / BATCH_SIZE)
+    N_VAL_BATCHES = int(N_VAL_IMAGES / BATCH_SIZE)
     # learning rate tuning (exponential decay)
     START_LR = 0.01
     DECAY_STEPS = 100
