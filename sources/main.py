@@ -259,7 +259,8 @@ if __name__ == '__main__':
 
                 # Run the model to do a new training iteration
                 sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch,
-                                               dropout: DROPOUT, class_w: w_batch})
+                                               dropout: DROPOUT,
+                                               class_w: w_batch})
 
                 # If all training batches have been scanned, save the training state
                 if (index + 1) % N_BATCHES == 0:
@@ -273,19 +274,19 @@ if __name__ == '__main__':
             utils.logger.info("Total time: {:.2f} seconds".format(time.time() - start_time))
 
             if initial_step < N_BATCHES * N_EPOCHS:
-                # The results are stored as a pandas dataframe and saved on the file
-                # system
-                dashboard_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                                     "accuracy", "precision", "recall", "F_measure"]
+                # The results are stored as a df and saved on the file system
+                dashboard_columns = ["epoch", "loss", "bpmll_loss",
+                                     "hamming_loss", "accuracy", "precision",
+                                     "recall", "F_measure"]
                 dashboard_columns_by_label = [["accuracy_label"+str(i),
                                                "precision_label"+str(i),
                                                "recall_label"+str(i)]
                                               for i in range(NB_LABELS)]
                 dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
-                dashboard_columns = dashboard_columns + dashboard_columns_by_label
-                param_history = pd.DataFrame(dashboard, columns = dashboard_columns)
+                db_columns = dashboard_columns + dashboard_columns_by_label
+                param_history = pd.DataFrame(dashboard, columns=db_columns)
                 param_history = param_history.set_index("epoch")
-                val_param_history = pd.DataFrame(val_dashboard, columns = dashboard_columns)
+                val_param_history = pd.DataFrame(val_dashboard, columns=db_columns)
                 val_param_history = val_param_history.set_index("epoch")
                 utils.make_dir(os.path.join("..", "data", "results"))
                 result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
@@ -310,7 +311,8 @@ if __name__ == '__main__':
                 plot_file_name = os.path.join("..", "images",
                                               (NETWORK_NAME + "_s"
                                                + str(global_step.eval(session=sess)) + ".png"))
-                dashboard_building.plot_dashboard(complete_dashboard, plot_file_name)
+                dashboard_building.plot_dashboard(complete_dashboard,
+                                                  plot_file_name)
             
         # Stop the threads used during the process
         coord.request_stop()
