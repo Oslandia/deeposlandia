@@ -8,6 +8,8 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
+import bpmll # Multilabel classification loss
+
 def prepare_data(height, width, n_channels, batch_size,
                  dataset_type, scope_name):
     """Insert images and labels in Tensorflow batches
@@ -216,6 +218,54 @@ def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
         Y_predict = tf.to_int32(tf.round(Y_raw_predict))
         return logits, Y_raw_predict, Y_predict
 
+def define_loss(y_true, logits, y_raw_pred, weights,
+                start_lr, decay_steps, decay_rate, network_name):
+    """Define the loss tensor as well as the optimizer; it uses a decaying
+    learning rate following the equation 
+
+    Parameters
+    ----------
+    y_true: np.array
+        True labels (1 if the i-th label is true for j-th image, 0 otherwise)
+    logits: tensor
+        Logits computed by the model (scores associated to each labels for a
+    given image)
+    y_raw_pred: tensor
+        Raw values computed for outputs (float), before transformation into 0-1
+    weights: tensor
+        Values associated to each label for weighting loss contributions with
+    respect to label popularity
+    start_lr: integer
+        Starting learning rate, used in the first iteration
+    decay_steps: integer
+        Number of steps over which the learning rate is computed
+    decay_rate: float
+        Decreasing rate used for learning rate computation
+    network_name: object
+        String designing the network name (for scope name unicity)
+    """
+    with tf.name_scope(network_name + '_loss'):
+        # Tensorflow definition of sigmoid cross-entropy:
+        # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
+        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
+                                                          logits=logits)
+        weighted_entropy = tf.multiply(weights, entropy)
+        loss = tf.reduce_mean(weighted_entropy, name="loss")
+        bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_pred)
+        # Alternative way of measuring a weighted cross-entropy (weighting true
+        # and false labels, but not label contributions to loss):
+        # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
+        #                                                    logits=logits,
+        #                                                    pos_weight=1.5)
+        global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
+                                  name='global_step')
+        lrate = tf.train.exponential_decay(start_lr, global_step,
+                                           decay_steps=decay_steps,
+                                           decay_rate=decay_rate,
+                                           name='learning_rate')
+        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
+        return {"loss": loss, "bpmll": bpmll_loss, "gs": global_step,
+                "lrate": lrate, "optim": optimizer}
     
 def convnet_building(X, param, img_width, img_height, nb_channels,
                      nb_labels, dropout,

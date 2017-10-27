@@ -32,7 +32,6 @@ import tensorflow as tf
 import sys
 import time
 
-import bpmll # Multilabel classification loss
 import cnn_layers
 import dashboard_building
 import glossary_reading
@@ -150,26 +149,30 @@ if __name__ == '__main__':
                                                              args.nbfullyconn)
 
     # Loss function design
-    with tf.name_scope(NETWORK_NAME + '_loss'):
-        # Tensorflow definition of sigmoid cross-entropy:
-        # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
-        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y,
-                                                          logits=logits)
-        weighted_entropy = tf.multiply(class_w, entropy)
-        loss = tf.reduce_mean(weighted_entropy, name="loss")
-        bpmll_loss = bpmll.bp_mll_loss(Y, y_raw_pred)
-        # Alternative way of measuring a weighted cross-entropy (weighting true
-        # and false labels, but not label contributions to loss):
-        # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
-        #                                                    logits=logits,
-        #                                                    pos_weight=1.5)
-        global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
-                                  name='global_step')
-        lrate = tf.train.exponential_decay(START_LR, global_step,
-                                           decay_steps=DECAY_STEPS,
-                                           decay_rate=DECAY_RATE,
-                                           name='learning_rate')
-        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
+    output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, START_LR,
+                                    DECAY_STEPS, DECAY_RATE, NETWORK_NAME)
+    
+    # # Loss function design
+    # with tf.name_scope(NETWORK_NAME + '_loss'):
+    #     # Tensorflow definition of sigmoid cross-entropy:
+    #     # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
+    #     entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=Y,
+    #                                                       logits=logits)
+    #     weighted_entropy = tf.multiply(class_w, entropy)
+    #     loss = tf.reduce_mean(weighted_entropy, name="loss")
+    #     bpmll_loss = bpmll.bp_mll_loss(Y, y_raw_pred)
+    #     # Alternative way of measuring a weighted cross-entropy (weighting true
+    #     # and false labels, but not label contributions to loss):
+    #     # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
+    #     #                                                    logits=logits,
+    #     #                                                    pos_weight=1.5)
+    #     global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
+    #                               name='global_step')
+    #     lrate = tf.train.exponential_decay(START_LR, global_step,
+    #                                        decay_steps=DECAY_STEPS,
+    #                                        decay_rate=DECAY_RATE,
+    #                                        name='learning_rate')
+    #     optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
 
     # Running the neural network
     with tf.Session() as sess:
@@ -189,7 +192,7 @@ if __name__ == '__main__':
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
             utils.logger.info("Recover model state from {}".format(ckpt.model_checkpoint_path))
-        initial_step = global_step.eval(session=sess)
+        initial_step = output["gs"].eval(session=sess)
 
         # Initialize threads to begin batching operations
         coord = tf.train.Coordinator()
@@ -221,17 +224,17 @@ if __name__ == '__main__':
                                for l in label_counter]
                     
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
-                    Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred, loss,
-                                                                bpmll_loss, lrate],
-                                                       feed_dict={X: X_batch,
-                                                                  Y: Y_batch,
-                                                                  dropout: 1.0,
-                                                                  class_w: w_batch})
-                    dashboard_batch = dashboard_building.dashboard_building(Y_batch, Y_pred)
-                    dashboard_batch.insert(0, bpmll_l)
-                    dashboard_batch.insert(0, loss_batch)
-                    dashboard_batch.insert(0, index)
-                    dashboard.append(dashboard_batch)
+                    Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred,
+                                                                output["loss"],
+                                                                output["bpmll"],
+                                                                output["lrate"]],
+                                                               feed_dict=fd)
+                    db_batch = dashboard_building.dashboard_building(Y_batch,
+                                                                     Y_pred)
+                    db_batch.insert(0, bpmll_l)
+                    db_batch.insert(0, loss_batch)
+                    db_batch.insert(0, index)
+                    dashboard.append(db_batch)
 
                     if args.mode == "both":
                         # Run the model on validation dataset
@@ -239,7 +242,11 @@ if __name__ == '__main__':
                         for val_index in range(N_VAL_BATCHES):
                             X_val_batch, Y_val_batch = sess.run([valid_image_batch,
                                                                  valid_label_batch])
-                            Y_pred_val, loss_batch_val, bpmll_val = sess.run([y_pred, loss, bpmll_loss], feed_dict={X: X_val_batch, Y: Y_val_batch, dropout: 1.0, class_w: w_batch})
+                            fd_val = {X: X_val_batch, Y: Y_val_batch,
+                                      dropout: 1.0, class_w: w_batch}
+                            Y_pred_val, loss_batch_val, bpmll_val =\
+                    sess.run([y_pred, output["loss"], output["bpmll"]],
+                            feed_dict=fd_val)
                             db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
@@ -248,14 +255,13 @@ if __name__ == '__main__':
                         val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
                                                  .apply(lambda x: x.mean(), axis=0))
                         val_dashboard.append(val_cur_dashboard)
-                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], val_cur_dashboard[4], dashboard_batch[5], dashboard_batch[6]))
+                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:5.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], val_cur_dashboard[4], db_batch[5], db_batch[6]))
                     else:
-                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, dashboard_batch[4], dashboard_batch[5], dashboard_batch[6]))
+                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], db_batch[5], db_batch[6]))
 
                 # Run the model to do a new training iteration
-                sess.run(optimizer, feed_dict={X: X_batch, Y: Y_batch,
-                                               dropout: DROPOUT,
-                                               class_w: w_batch})
+                fd = {X: X_batch, Y: Y_batch, dropout: DROPOUT, class_w: w_batch}
+                sess.run(output["optim"], feed_dict=fd)
 
                 # If all training batches have been scanned, save the training state
                 if (index + 1) % N_BATCHES == 0:
@@ -302,10 +308,11 @@ if __name__ == '__main__':
                                                  header=False)
 
                 # Training results are then saved as a multiplot
+                step = output["gs"].eval(session=sess)
                 complete_dashboard = pd.read_csv(result_file_name)
                 plot_file_name = os.path.join("..", "images",
                                               (NETWORK_NAME + "_s"
-                                               + str(global_step.eval(session=sess)) + ".png"))
+                                               + str(step) + ".png"))
                 dashboard_building.plot_dashboard(complete_dashboard,
                                                   plot_file_name)
             
