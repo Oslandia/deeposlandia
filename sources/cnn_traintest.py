@@ -66,6 +66,13 @@ if __name__ == '__main__':
                         'global', 'batch', 'centered_global', 'centered_batch'""")
     args = parser.parse_args()
 
+    if args.mode not in ["train", "test", "both"]:
+       utils.logger.error("""Unsupported running mode. Please choose amongst 'train', 'test' or 'both'.""")
+       sys.exit(1)
+    if args.weights not in ["base", "global", "batch", "centered_batch", "centered_global"]:
+       utils.logger.error("""Unsupported weighting policy. Please choose amongst 'basis', 'global', 'batch', 'centered_global' or 'centered_batch'.""")
+       sys.exit(1)
+
     NETWORK_NAME = (args.name + "_" + str(args.nbconv) + "_0_"
                     + str(args.nbconv) + "_0_"
                     + str(args.nbfullyconn) + "_0")
