@@ -211,8 +211,7 @@ if __name__ == '__main__':
             dashboard = []
             val_dashboard = []
             if args.weights == "base":
-                # utils.logger.info("Regular weighting scheme...")
-                w_batch = np.repeat(1.0, glossary_reading.LABELS.shape[1])
+                w_batch = np.repeat(1.0, NB_LABELS)
             elif args.weights == "global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = [min(math.log(0.5 * BATCH_SIZE * N_BATCHES / l), 10.0)
