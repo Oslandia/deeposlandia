@@ -215,12 +215,25 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
                             db_val_batch.insert(0, loss_batch_val)
                             db_val_batch.insert(0, index)
                             partial_val_dashboard.append(db_val_batch)
-                        val_cur_dashboard = list(pd.DataFrame(partial_val_dashboard)
-                                                 .apply(lambda x: x.mean(), axis=0))
-                        val_dashboard.append(val_cur_dashboard)
-                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f} (validation: {:1.3f}), precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], val_cur_dashboard[4], db_batch[5], db_batch[6]))
+                        curval_dashboard = (pd.DataFrame(partial_val_dashboard)
+                                            .apply(lambda x: x.mean(), axis=0))
+                        curval_dashboard = list(curval_dashboard)
+                        val_dashboard.append(curval_dashboard)
+                        utils.logger.info(("Step {} (lr={:1.3f}): loss="
+                                           "{:5.3f}, accuracy={:1.3f} "
+                                           "(validation: {:1.3f}), precision="
+                                           "{:1.3f}, recall={:1.3f}")
+                                          .format(index, lr, loss,
+                                                  db_batch[8],
+                                                  val_cur_dashboard[8],
+                                                  db_batch[9], db_batch[10]))
                     else:
-                        utils.logger.info("""Step {} (lr={:1.3f}): loss = {:5.3f}, accuracy={:1.3f}, precision={:1.3f}, recall={:1.3f}""".format(index, lr, loss_batch, db_batch[4], db_batch[5], db_batch[6]))
+                        utils.logger.info(("Step {} (lr={:1.3f}): loss={:5.3f}"
+                                           ", accuracy={:1.3f}, precision="
+                                           "{:1.3f}, recall={:1.3f}")
+                                          .format(index, lr, loss,
+                                                  db_batch[8], db_batch[9],
+                                                  db_batch[10]))
 
                 # Run the model to do a new training iteration
                 fd = {X: X_batch, Y: Y_batch, dropout: DROPOUT, class_w: w_batch}
