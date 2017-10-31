@@ -5,6 +5,7 @@
 # Utilitary function for Mapillary dataset analysis
 
 import logging
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
