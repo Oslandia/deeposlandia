@@ -167,7 +167,7 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = utils.compute_monotonic_weights(N_IMAGES,
                                                           label_counter)
-            elif weight_policy == "centered_global":
+            elif weight_policy == "centeredglobal":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
@@ -178,7 +178,7 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = utils.compute_monotonic_weights(BATCH_SIZE,
                                                               label_counter)
-                elif weight_policy == "centered_batch":
+                elif weight_policy == "centeredbatch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = utils.compute_centered_weights(BATCH_SIZE,
                                                              label_counter)
@@ -361,7 +361,7 @@ if __name__ == '__main__':
                         help=("The weight policy to apply on label "
                               "contributions to loss: either 'base' "
                               "(default case), 'global', 'batch', "
-                              "'centered_global', 'centered_batch'"))
+                              "'centeredglobal', 'centeredbatch'"))
     args = parser.parse_args()
 
     if args.mode not in ["train", "test", "both"]:
@@ -369,11 +369,11 @@ if __name__ == '__main__':
                            "Please choose amongst 'train', 'test' or 'both'."))
        sys.exit(1)
     print(args.weights)
-    weights = ["base", "global", "batch", "centered_batch", "centered_global"] 
+    weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
     if sum([w in weights for w in args.weights]) != len(args.weights):
        utils.logger.error(("Unsupported weighting policy. Please choose "
                            "amongst 'base', 'global', 'batch', "
-                           "'centered_global' or 'centered_batch'."""))
+                           "'centeredglobal' or 'centeredbatch'."""))
        utils.logger.info("'base': Regular weighting scheme...")
        utils.logger.info(("'global': Label contributions to loss are weighted "
                           "with respect to label popularity "
