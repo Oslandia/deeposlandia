@@ -37,60 +37,40 @@ import dashboard_building
 import glossary_reading
 import utils
 
-if __name__ == '__main__':
-    # Manage argument parsing
-    parser = argparse.ArgumentParser(description="Convolutional Neural Network on street-scene images")
-    parser.add_argument('-c', '--nbconv', required=True, nargs='?', type=int,
-                        help="""The number of convolutional layers that must be
-    inserted into the network""")
-    parser.add_argument('-d', '--datapath', required=False,
-                        default="../data", nargs='?',
-                        help="""The relative path towards data directory""")
-    parser.add_argument('-e', '--nb-epochs', required=False, type=int,
-                        default=5, nargs='?',
-                        help="""The number of training epochs (one epoch means
-                        scanning each training image once)""")
-    parser.add_argument('-f', '--nbfullyconn', required=True, type=int,
-                        nargs='?',
-                        help="""The number of fully-connected layers that must
-    be inserted into the network""")
-    parser.add_argument('-m', '--mode', required=False,
-                        default="train", nargs='?',
-                        help="""The network running mode ('train', 'test', 'both'""")
-    parser.add_argument('-n', '--name', required=False,
-                        default="cnn_mapil", nargs='?',
-                        help="""The model name that will be used for results,
-                        checkout and graph storage on file system""")
-    parser.add_argument('-w', '--weights', required=False,
-                        default="base", nargs='?',
-                        help="""The weight policy to apply on label
-                        contributions to loss: either 'base' (default case),
-                        'global', 'batch', 'centered_global', 'centered_batch'""")
-    args = parser.parse_args()
+def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
+    """Train and/or test a convolutional neural network on street-scene images
+    to detect features
 
-    if args.mode not in ["train", "test", "both"]:
-       utils.logger.error("""Unsupported running mode. Please choose amongst 'train', 'test' or 'both'.""")
-       sys.exit(1)
-    if args.weights not in ["base", "global", "batch", "centered_batch", "centered_global"]:
-       utils.logger.error("""Unsupported weighting policy. Please choose amongst 'basis', 'global', 'batch', 'centered_global' or 'centered_batch'.""")
-       utils.logger.info("'base': Regular weighting scheme...")
-       utils.logger.info("""'global': Label contributions to loss are weighted with respect to label popularity within the dataset (decreasing weights)...""")
-       utils.logger.info("""'batch': Label contributions to loss are weighted with respect to label popularity within the dataset (convex weights with min at 50%)...""")
-       utils.logger.info("""'centeredbatch': Label contributions to loss are weighted with respect to label popularity within each batch (decreasing weights)...""")
-       utils.logger.info("""'centeredglobal': Label contributions to loss are weighted with respect to label popularity within each batch (convex weights with min at 50%)...""")
-       sys.exit(1)
-
-    NETWORK_NAME = (args.name + "_" + str(args.nbconv) + "_0_"
-                    + str(args.nbconv) + "_0_"
-                    + str(args.nbfullyconn) + "_0")
-    if args.mode == "train":
+    Parameters
+    ----------
+    nbconv: integer
+        Number of convolutional layer to setup in the network
+    nbfullconn: integer
+        Number of fully connected layer to setup in the network
+    nb_epochs: integer
+        Number of training epoch(s)
+    mode: object
+        String designing the running mode ("train", "test", or "both")
+    weight_policy: object
+        String designing the way label loss contributions are weighted ("base",
+    "global", "batch", "centeredglobal", "centeredbatch")
+    name: object
+        String designing the name of the network
+    datapath: object
+        String designing the relative path to dataset directory
+    
+    """
+    NETWORK_NAME = (name + "_" + weight_policy + "_" + str(nbconv) + "_0_"
+                    + str(nbconv) + "_0_" + str(nbfullyconn) + "_0")
+    if mode == "train":
         utils.logger.info("Model {} training".format(NETWORK_NAME))
-    elif args.mode == "test":
+    elif mode == "test":
         utils.logger.info("Model {} testing".format(NETWORK_NAME))
-    elif args.mode == "both":
+    elif mode == "both":
         utils.logger.info("Model {} training and testing".format(NETWORK_NAME))
 
-    config_file_name = NETWORK_NAME + ".json"
+    config_file_name = (name + "_" + str(nbconv) + "_0_" + str(nbconv) + "_0_"
+                        + str(nbfullyconn) + "_0.json")
     with open(os.path.join("..", "models", config_file_name)) as config_file:
         cnn_hyperparam = json.load(config_file)
 
@@ -104,9 +84,9 @@ if __name__ == '__main__':
     N_CLASSES = glossary_reading.LABELS.shape[1]
     # number of images per batch
     BATCH_SIZE = 20
-    N_IMAGES = len(os.listdir(os.path.join(args.datapath, "training", "images")))
-    N_VAL_IMAGES = len(os.listdir(os.path.join(args.datapath,
-                                               "validation", "images")))
+    N_IMAGES = len(os.listdir(os.path.join(datapath, "training", "images")))
+    N_VAL_IMAGES = len(os.listdir(os.path.join(datapath, "validation",
+                                               "images")))
     N_BATCHES = int(N_IMAGES / BATCH_SIZE)
     N_VAL_BATCHES = int(N_VAL_IMAGES / BATCH_SIZE)
     # learning rate tuning (exponential decay)
@@ -116,7 +96,7 @@ if __name__ == '__main__':
     # percentage of nodes that are briefly removed during training process
     DROPOUT = 2/3.0
     # number of epochs (one epoch = all images have been used for training)
-    N_EPOCHS = args.nb_epochs
+    N_EPOCHS = nb_epochs
     # printing frequency during training
     SKIP_STEP = 10
 
@@ -144,24 +124,24 @@ if __name__ == '__main__':
                                                              N_CLASSES,
                                                              dropout,
                                                              NETWORK_NAME,
-                                                             args.nbconv,
-                                                             args.nbfullyconn)
+                                                             nbconv,
+                                                             nbfullyconn)
 
     # Loss function design
     output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, START_LR,
                                     DECAY_STEPS, DECAY_RATE, NETWORK_NAME)
-    
+
     # Running the neural network
     with tf.Session() as sess:
         # Initialize the tensorflow variables
         sess.run(tf.global_variables_initializer())
         # Declare a saver instance and a summary writer to store the network
         saver = tf.train.Saver(max_to_keep=1)
-        graph_path = os.path.join(args.datapath, 'graphs', NETWORK_NAME)
+        graph_path = os.path.join(datapath, 'graphs', NETWORK_NAME)
         writer = tf.summary.FileWriter(graph_path, sess.graph)
         
         # Create folders to store checkpoints
-        ckpt_path = os.path.join(args.datapath, 'checkpoints', NETWORK_NAME)
+        ckpt_path = os.path.join(datapath, 'checkpoints', NETWORK_NAME)
         utils.make_dir(os.path.dirname(ckpt_path))
         utils.make_dir(ckpt_path)
         ckpt = tf.train.get_checkpoint_state(ckpt_path)
@@ -176,29 +156,29 @@ if __name__ == '__main__':
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
-        if args.mode in ["train", "both"]:
+        if mode in ["train", "both"]:
             # Train the model
             start_time = time.time()
             dashboard = []
             val_dashboard = []
-            if args.weights == "base":
+            if weight_policy == "base":
                 w_batch = np.repeat(1.0, N_CLASSES)
-            elif args.weights == "global":
+            elif weight_policy == "global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = utils.compute_monotonic_weights(N_IMAGES,
                                                           label_counter)
-            elif args.weights == "centered_global":
+            elif weight_policy == "centered_global":
                 label_counter = glossary_reading.NB_IMAGE_PER_LABEL
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
             for index in range(initial_step, N_BATCHES * N_EPOCHS):
                 X_batch, Y_batch = sess.run([train_image_batch,
                                              train_label_batch])
-                if args.weights == "batch":
+                if weight_policy == "batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = utils.compute_monotonic_weights(BATCH_SIZE,
                                                               label_counter)
-                elif args.weights == "centered_batch":
+                elif weight_policy == "centered_batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
                     w_batch = utils.compute_centered_weights(BATCH_SIZE,
                                                              label_counter)
@@ -217,7 +197,7 @@ if __name__ == '__main__':
                     db_batch.insert(0, index)
                     dashboard.append(db_batch)
 
-                    if args.mode == "both":
+                    if mode == "both":
                         # Run the model on validation dataset
                         partial_val_dashboard = []
                         for val_index in range(N_VAL_BATCHES):
@@ -248,10 +228,12 @@ if __name__ == '__main__':
 
                 # If all training batches have been scanned, save the model
                 if (index + 1) % N_BATCHES == 0:
-                    utils.logger.info("Checkpoint {}/checkpoints/{}/epoch-{} creation".format(args.datapath, NETWORK_NAME, index))
+                    utils.logger.info(("Checkpoint {}/checkpoints/{}/epoch-{}"
+                                       " creation")
+                                      .format(datapath, NETWORK_NAME,
+                                              index))
                     saver.save(sess, global_step=index,
-                               save_path=os.path.join(args.datapath,
-                                                      'checkpoints',
+                               save_path=os.path.join(datapath, 'checkpoints',
                                                       NETWORK_NAME, 'epoch'))
 
             utils.logger.info("Optimization Finished!")
@@ -285,18 +267,15 @@ if __name__ == '__main__':
                                                     NETWORK_NAME + "_val.csv")
                 if initial_step == 0:
                     param_history.to_csv(result_file_name, index=True)
-                    if args.mode in ["both", "test"]:
-                        val_param_history.to_csv(val_result_file_name, index=True)
-                else:
-                    param_history.to_csv(result_file_name,
-                                         index=True,
-                                         mode='a',
-                                         header=False)
-                    if args.mode in ["both", "test"]:
+                    if mode in ["both", "test"]:
                         val_param_history.to_csv(val_result_file_name,
-                                                 index=True,
-                                                 mode='a',
-                                                 header=False)
+                                                 index=True)
+                else:
+                    param_history.to_csv(result_file_name, mode='a',
+                                         index=True, header=False)
+                    if mode in ["both", "test"]:
+                        val_param_history.to_csv(val_result_file_name, mode='a',
+                                                 index=True, header=False)
 
                 # Training results are then saved as a multiplot
                 step = output["gs"].eval(session=sess)
@@ -306,9 +285,99 @@ if __name__ == '__main__':
                                                + str(step) + ".png"))
                 dashboard_building.plot_dashboard(complete_dashboard,
                                                   plot_file_name)
-            
+        elif mode == "test":
+            utils.logger.info(("Test model after {}"
+                               " training steps!").format(initial_step))
+
+            # Run the model on validation dataset
+            val_dashboard = []
+            for val_index in range(N_VAL_BATCHES):
+                X_val_batch, Y_val_batch = sess.run([val_image_batch,
+                                                     val_label_batch])
+                fd_val = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0,
+                          class_w: np.repeat(1.0, N_CLASSES)}
+                Y_pred_val = sess.run([y_pred], feed_dict=fd_val)
+                db_val_batch = \
+                dashboard_building.dashboard_building(Y_val_batch, Y_pred_val[0])
+                db_val_batch.insert(0, val_index)
+                val_dashboard.append(db_val_batch)
+                if (index + 1) % SKIP_STEP == 0 or index == initial_step:
+                    utils.logger.info(("Step {}: accuracy = {:1.3f}, precision"
+                                       " = {:1.3f}, recall = {:1.3f}")
+                                      .format(val_index, db_val_batch[2],
+                                              db_val_batch[3], db_val_batch[4]))
+            val_cur_dashboard = list(pd.DataFrame(val_dashboard)
+                                     .apply(lambda x: x.mean(), axis=0))
+            val_dashboard.append(val_cur_dashboard)
+            utils.logger.info(("Model validation: accuracy={:1.3f}, precision"
+                               "={:1.3f}, recall={:1.3f}")
+                              .format(val_cur_dashboard[2],
+                                      val_cur_dashboard[3],
+                                      val_cur_dashboard[4]))
+
         # Stop the threads used during the process
         coord.request_stop()
         coord.join(threads)
 
+
+if __name__ == '__main__':
+    # Manage argument parsing
+    parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
+                                                  "ork on street-scene images"))
+    parser.add_argument('-c', '--nbconv', required=True, nargs='?', type=int,
+                        help=("The number of convolutional layers "
+                              "that must be inserted into the network"))
+    parser.add_argument('-d', '--datapath', required=False,
+                        default="../data", nargs='?',
+                        help="""The relative path towards data directory""")
+    parser.add_argument('-e', '--nb-epochs', required=False, type=int,
+                        default=5, nargs='?',
+                        help=("The number of training epochs (one epoch means "
+                              "scanning each training image once)"))
+    parser.add_argument('-f', '--nbfullyconn', required=True, type=int,
+                        nargs='?',
+                        help=("The number of fully-connected layers "
+                              "that must be inserted into the network"))
+    parser.add_argument('-m', '--mode', required=False, default="train",
+                        nargs='?', help=("The network running mode"
+                                         "('train', 'test', 'both')"))
+    parser.add_argument('-n', '--name', default=["cnn_mapil"], nargs='+',
+                        help=("The model name that will be used for results, "
+                              "checkout and graph storage on file system"))
+    parser.add_argument('-w', '--weights', default=["base"], nargs='+',
+                        help=("The weight policy to apply on label "
+                              "contributions to loss: either 'base' "
+                              "(default case), 'global', 'batch', "
+                              "'centered_global', 'centered_batch'"))
+    args = parser.parse_args()
+
+    if args.mode not in ["train", "test", "both"]:
+       utils.logger.error(("Unsupported running mode. "
+                           "Please choose amongst 'train', 'test' or 'both'."))
+       sys.exit(1)
+    print(args.weights)
+    weights = ["base", "global", "batch", "centered_batch", "centered_global"] 
+    if sum([w in weights for w in args.weights]) != len(args.weights):
+       utils.logger.error(("Unsupported weighting policy. Please choose "
+                           "amongst 'base', 'global', 'batch', "
+                           "'centered_global' or 'centered_batch'."""))
+       utils.logger.info("'base': Regular weighting scheme...")
+       utils.logger.info(("'global': Label contributions to loss are weighted "
+                          "with respect to label popularity "
+                          "within the dataset (decreasing weights)..."))
+       utils.logger.info(("'batch': Label contributions to loss are weighted "
+                          "with respect to label popularity within the "
+                          "dataset (convex weights with min at 50%)..."))
+       utils.logger.info(("'centeredbatch': Label contributions to loss are "
+                          "weighted with respect to label popularity within "
+                          "each batch (decreasing weights)..."))
+       utils.logger.info(("'centeredglobal': Label contributions to loss are "
+                          "weighted with respect to label popularity within "
+                          "each batch (convex weights with min at 50%)..."))
+       sys.exit(1)
+
+    for n in args.name:
+        for w in args.weights:
+            run(args.nbconv, args.nbfullyconn, args.nb_epochs, args.mode,
+                w, n, args.datapath)
     sys.exit(0)
