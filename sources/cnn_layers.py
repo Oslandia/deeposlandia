@@ -154,8 +154,6 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
     """Build a fully-connected layer as a tensor, into the convolutional
                    neural network
 
-    
-
     Parameters
     ----------
     input_layer: tensor
@@ -266,7 +264,7 @@ def define_loss(y_true, logits, y_raw_pred, weights,
         optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
         return {"loss": loss, "bpmll": bpmll_loss, "gs": global_step,
                 "lrate": lrate, "optim": optimizer}
-    
+
 def convnet_building(X, param, img_width, img_height, nb_channels,
                      nb_labels, dropout,
                      network_name, nb_convpool, nb_fullconn):

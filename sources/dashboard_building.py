@@ -23,7 +23,8 @@ def confusion_matrix_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    return confusion_matrix(y_true[:,index], y_predicted[:,index], labels=[0, 1])
+    return confusion_matrix(y_true[:,index], y_predicted[:,index],
+                            labels=[0, 1]).reshape([-1]).tolist()
 
 def accuracy_by_label(y_true, y_predicted, index):
     """Return the accuracy according to true and predicted labels, for
@@ -57,7 +58,7 @@ def precision_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    [_, fp], [_, tp] = confusion_matrix_by_label(y_true, y_predicted, index)
+    _, fp, _, tp = confusion_matrix_by_label(y_true, y_predicted, index)
     if fp + tp == 0:
         return 0.0
     return precision_score(y_true[:,index], y_predicted[:,index])
@@ -77,7 +78,7 @@ def recall_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    [_, _], [fn, tp] = confusion_matrix_by_label(y_true, y_predicted, index)
+    _, _, fn, tp = confusion_matrix_by_label(y_true, y_predicted, index)
     if fn + tp == 0:
         return 0.0
     return recall_score(y_true[:,index], y_predicted[:,index])
@@ -97,9 +98,10 @@ def dashboard_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    return [accuracy_by_label(y_true, y_predicted, index),
-            precision_by_label(y_true, y_predicted, index),
-            recall_by_label(y_true, y_predicted, index)]
+    return (confusion_matrix_by_label(y_true, y_predicted, index)
+            + [accuracy_by_label(y_true, y_predicted, index),
+               precision_by_label(y_true, y_predicted, index),
+               recall_by_label(y_true, y_predicted, index)])
 
 def dashboard_building(y_true, y_predicted):
     """Compute a whole set of metrics to characterize a model accuracy,
@@ -117,6 +119,11 @@ def dashboard_building(y_true, y_predicted):
     dashboard = []
     hammingloss = hamming_loss(utils.unnest(y_true), utils.unnest(y_predicted))
     dashboard.append(hammingloss)
+    conf_matrix = (confusion_matrix(utils.unnest(y_true),
+                                    utils.unnest(y_predicted))
+                   .reshape([-1])
+                   .tolist())
+    dashboard = dashboard + conf_matrix
     total_accuracy = accuracy_score(utils.unnest(y_true),
                                     utils.unnest(y_predicted))
     dashboard.append(total_accuracy)
