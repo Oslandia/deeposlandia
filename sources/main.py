@@ -14,7 +14,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *   Library General Public License for more details.
  *   You should have received a copy of the GNU Library General Public
- *   License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ *   License along with this library; if not, see <http://www.gnu.org/licenses/>
  */
 """
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "training", "training_data_pipe")
-    valid_image_batch, valid_label_batch, valid_filename_batch = \
+    val_image_batch, val_label_batch, val_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
                                    BATCH_SIZE, "validation", "valid_data_pipe")
 
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     # Loss function design
     output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, START_LR,
                                     DECAY_STEPS, DECAY_RATE, NETWORK_NAME)
-
+    
     # Running the neural network
     with tf.Session() as sess:
         # Initialize the tensorflow variables
@@ -168,7 +168,8 @@ if __name__ == '__main__':
         # If that checkpoint exists, restore from checkpoint
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
-            utils.logger.info("Recover model state from {}".format(ckpt.model_checkpoint_path))
+            utils.logger.info(("Recover model state "
+                               "from {}").format(ckpt.model_checkpoint_path))
         initial_step = output["gs"].eval(session=sess)
 
         # Initialize threads to begin batching operations
@@ -204,15 +205,15 @@ if __name__ == '__main__':
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
 
                 if (index + 1) % SKIP_STEP == 0 or index == initial_step:
-                    Y_pred, loss_batch, bpmll_l, lr = sess.run([y_pred,
-                                                                output["loss"],
-                                                                output["bpmll"],
-                                                                output["lrate"]],
-                                                               feed_dict=fd)
+                    Y_pred, loss, bpmll, lr = sess.run([y_pred,
+                                                        output["loss"],
+                                                        output["bpmll"],
+                                                        output["lrate"]],
+                                                       feed_dict=fd)
                     db_batch = dashboard_building.dashboard_building(Y_batch,
                                                                      Y_pred)
-                    db_batch.insert(0, bpmll_l)
-                    db_batch.insert(0, loss_batch)
+                    db_batch.insert(0, bpmll)
+                    db_batch.insert(0, loss)
                     db_batch.insert(0, index)
                     dashboard.append(db_batch)
 
@@ -220,14 +221,16 @@ if __name__ == '__main__':
                         # Run the model on validation dataset
                         partial_val_dashboard = []
                         for val_index in range(N_VAL_BATCHES):
-                            X_val_batch, Y_val_batch = sess.run([valid_image_batch,
-                                                                 valid_label_batch])
+                            X_val_batch, Y_val_batch = \
+                            sess.run([val_image_batch, val_label_batch])
                             fd_val = {X: X_val_batch, Y: Y_val_batch,
                                       dropout: 1.0, class_w: w_batch}
                             Y_pred_val, loss_batch_val, bpmll_val =\
                     sess.run([y_pred, output["loss"], output["bpmll"]],
                             feed_dict=fd_val)
-                            db_val_batch = dashboard_building.dashboard_building(Y_val_batch, Y_pred_val)
+                            db_val_batch = \
+                            dashboard_building.dashboard_building(Y_val_batch,
+                                                                  Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
                             db_val_batch.insert(0, index)
@@ -272,11 +275,14 @@ if __name__ == '__main__':
                 db_columns = db_columns + db_columns_by_label
                 param_history = pd.DataFrame(dashboard, columns=db_columns)
                 param_history = param_history.set_index("epoch")
-                val_param_history = pd.DataFrame(val_dashboard, columns=db_columns)
+                val_param_history = pd.DataFrame(val_dashboard,
+                                                 columns=db_columns)
                 val_param_history = val_param_history.set_index("epoch")
                 utils.make_dir(os.path.join("..", "data", "results"))
-                result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + ".csv")
-                val_result_file_name = os.path.join("..", "data", "results", NETWORK_NAME + "_validation.csv")
+                result_file_name = os.path.join(datapath, "results",
+                                                NETWORK_NAME + ".csv")
+                val_result_file_name = os.path.join(datapath, "results",
+                                                    NETWORK_NAME + "_val.csv")
                 if initial_step == 0:
                     param_history.to_csv(result_file_name, index=True)
                     if args.mode in ["both", "test"]:
