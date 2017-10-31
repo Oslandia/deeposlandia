@@ -257,15 +257,19 @@ if __name__ == '__main__':
 
             if initial_step < N_BATCHES * N_EPOCHS:
                 # The results are stored as a df and saved on the file system
-                dashboard_columns = ["epoch", "loss", "bpmll_loss",
-                                     "hamming_loss", "accuracy", "precision",
-                                     "recall", "F_measure"]
-                dashboard_columns_by_label = [["accuracy_label"+str(i),
-                                               "precision_label"+str(i),
-                                               "recall_label"+str(i)]
-                                              for i in range(N_CLASSES)]
-                dashboard_columns_by_label = utils.unnest(dashboard_columns_by_label)
-                db_columns = dashboard_columns + dashboard_columns_by_label
+                db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
+                              "true_neg", "false_pos", "false_neg", "true_pos",
+                              "accuracy", "precision", "recall", "F_measure"]
+                db_columns_by_label = [["tn_"+str(i),
+                                        "fp_"+str(i),
+                                        "fn_"+str(i),
+                                        "tp_"+str(i),
+                                        "accuracy_"+str(i),
+                                        "precision_"+str(i),
+                                        "recall_"+str(i)]
+                                       for i in range(N_CLASSES)]
+                db_columns_by_label = utils.unnest(db_columns_by_label)
+                db_columns = db_columns + db_columns_by_label
                 param_history = pd.DataFrame(dashboard, columns=db_columns)
                 param_history = param_history.set_index("epoch")
                 val_param_history = pd.DataFrame(val_dashboard, columns=db_columns)
