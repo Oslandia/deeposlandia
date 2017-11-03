@@ -368,7 +368,7 @@ if __name__ == '__main__':
        utils.logger.error(("Unsupported running mode. "
                            "Please choose amongst 'train', 'test' or 'both'."))
        sys.exit(1)
-    print(args.weights)
+
     weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
     if sum([w in weights for w in args.weights]) != len(args.weights):
        utils.logger.error(("Unsupported weighting policy. Please choose "
