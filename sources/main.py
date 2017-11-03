@@ -164,11 +164,11 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
             if weight_policy == "base":
                 w_batch = np.repeat(1.0, N_CLASSES)
             elif weight_policy == "global":
-                label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
                 w_batch = utils.compute_monotonic_weights(N_IMAGES,
                                                           label_counter)
             elif weight_policy == "centeredglobal":
-                label_counter = glossary_reading.NB_IMAGE_PER_LABEL
+                label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
             for index in range(initial_step, N_BATCHES * N_EPOCHS):

@@ -80,6 +80,10 @@ def build_category_description(glossary, labels):
     return category_description
 
 GLOSSARY = read_glossary(CONFIG_FILENAME)
+TRAIN_LABELS = build_labels([TRAIN_LABEL_FILENAME])
+NB_TRAIN_IMAGE_PER_LABEL = count_image_per_label(TRAIN_LABELS)
+VAL_LABELS = build_labels([VALIDATION_LABEL_FILENAME])
+NB_VAL_IMAGE_PER_LABEL = count_image_per_label(VAL_LABELS)
 LABELS = build_labels([TRAIN_LABEL_FILENAME, VALIDATION_LABEL_FILENAME])
 NB_IMAGE_PER_LABEL = count_image_per_label(LABELS)
 
