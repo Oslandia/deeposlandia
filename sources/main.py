@@ -225,7 +225,7 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
                                            "{:1.3f}, recall={:1.3f}")
                                           .format(index, lr, loss,
                                                   db_batch[8],
-                                                  val_cur_dashboard[8],
+                                                  db_val_batch[8],
                                                   db_batch[9], db_batch[10]))
                     else:
                         utils.logger.info(("Step {} (lr={:1.3f}): loss={:5.3f}"
