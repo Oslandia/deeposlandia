@@ -72,7 +72,7 @@ def compute_monotonic_weights(nb_images, label_counter, mu=0.5, max_weight=10):
         Maximum weight to apply when counter is too small with respect to
     nb_images (in such a case, the function can give a far too large number)
     """
-    return [min(math.log(mu * nb_images / l), max_weight) for l in label_counter]
+    return [min(math.log(1 + mu * nb_images / l), max_weight) for l in label_counter]
 
 def compute_centered_weights(nb_images, label_counter, mu=0.5):
     """Compute weights regarding the popularity of each label given by
