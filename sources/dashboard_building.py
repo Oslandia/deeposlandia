@@ -138,7 +138,7 @@ def dashboard_building(y_true, y_predicted):
         dashboard = dashboard + dashboard_by_label(y_true, y_predicted, label)
     return dashboard
 
-def plot_dashboard(dashboard, plot_filename, plot_size=(24, 16)):
+def plot_dashboard(dashboard, plot_filename, label_to_plot, plot_size=(24, 16)):
     """Plot the model dashboard after a round of training; the training state
     has been stored into a `.csv` file, `dashboard` is supposed to be a pandas
     DataFrame that contains the file information
@@ -150,21 +150,23 @@ def plot_dashboard(dashboard, plot_filename, plot_size=(24, 16)):
     different features are `loss`, `accuracy`, `precision` or `recall` (among
     others), the last three ones being detailed for each label (under the
     format `<metric>_label<id>`)
+    label_to_plot: list
+        list of integer designing the indices of the label that must be plotted
     plot_filename: object
         string designing the name of the file in which the plot has to be saved
     
     """
     fig = plt.figure(figsize=plot_size)
     plt.subplots_adjust(0.05, 0.05, 0.95, 0.95, 0.5, 0.6)
-    for i in range(66):
-        a = plt.subplot2grid((11, 12), (int(i/6), 6+i%6))
+    for i, x in enumerate(label_to_plot):
+        a = plt.subplot2grid((11, 12), (int(x/6), 6+x%6))
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+8], 'r-')
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+9], 'b-')
         a.plot(dashboard.epoch, dashboard.iloc[:,3*i+10], 'g-')
         a.set_ylim((0, 1))
-        a.set_title("Label "+str(i), size=10)
+        a.set_title("Label "+str(x), size=10)
         a.xaxis.set_visible(False)
-        if i % 6 > 0:
+        if x % 6 > 0:
             a.yaxis.set_visible(False)
     a = plt.subplot2grid((11, 12), (0, 0), rowspan=2, colspan=6)
     a.plot(dashboard.epoch, dashboard.loss, 'k-', lw=1.5)

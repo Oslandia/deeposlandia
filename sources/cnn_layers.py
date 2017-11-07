@@ -11,7 +11,7 @@ from tensorflow.python.framework import ops
 import bpmll # Multilabel classification loss
 
 def prepare_data(height, width, n_channels, batch_size,
-                 dataset_type, scope_name):
+                 labels_of_interest, dataset_type, scope_name):
     """Insert images and labels in Tensorflow batches
 
     Parameters
@@ -24,6 +24,8 @@ def prepare_data(height, width, n_channels, batch_size,
         Number of channels in the images (1 for grey-scaled images, 3 for RGB)
     batch_size: integer
         Size of the batchs, expressed as an image quantity
+    labels_of_interest: list
+        List of label indices on which a model will be trained
     dataset_type: object
         string designing the considered dataset (`training`, `validation` or `testing`)
     scope_name: object
@@ -42,6 +44,7 @@ def prepare_data(height, width, n_channels, batch_size,
         # Reading labels
         labels = (pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
                   .iloc[:,6:].values)
+        labels = labels[:,labels_of_interest]
         labels = ops.convert_to_tensor(labels, dtype=tf.int16,
                                        name=dataset_type+"_labels")
         # Create input queues

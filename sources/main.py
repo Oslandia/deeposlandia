@@ -37,7 +37,8 @@ import dashboard_building
 import glossary_reading
 import utils
 
-def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, datapath):
+def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
+        weight_policy, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -54,6 +55,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
     * nb_batches iterations
     mode: object
         String designing the running mode ("train", "test", or "both")
+    label_list: list
+        List of label indices (integers) that will be considered during training
     weight_policy: object
         String designing the way label loss contributions are weighted ("base",
     "global", "batch", "centeredglobal", "centeredbatch")
@@ -82,7 +85,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
     NUM_CHANNELS  = 3 # Colored images (RGB)
 
     # number of output classes
-    N_CLASSES = glossary_reading.LABELS.shape[1]
+    N_CLASSES = len(label_list)
     # number of images per batch
     BATCH_SIZE = 20
     N_IMAGES = len(os.listdir(os.path.join(datapath, "training", "images")))
@@ -104,10 +107,12 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                                   BATCH_SIZE, "training", "training_data_pipe")
+                            BATCH_SIZE, label_list,
+                            "training", "training_data_pipe")
     val_image_batch, val_label_batch, val_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                                   BATCH_SIZE, "validation", "valid_data_pipe")
+                            BATCH_SIZE, label_list,
+                            "validation", "valid_data_pipe")
 
     # Definition of TensorFlow placeholders
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
@@ -166,10 +171,12 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
                 w_batch = np.repeat(1.0, N_CLASSES)
             elif weight_policy == "global":
                 label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
+                label_counter = [label_counter[l] for l in label_list]
                 w_batch = utils.compute_monotonic_weights(N_IMAGES,
                                                           label_counter)
             elif weight_policy == "centeredglobal":
                 label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
+                label_counter = [label_counter[l] for l in label_list]
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
             if nb_iter is None:
@@ -268,7 +275,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
                                         "accuracy_"+str(i),
                                         "precision_"+str(i),
                                         "recall_"+str(i)]
-                                       for i in range(N_CLASSES)]
+                                       for i in label_list]
                 db_columns_by_label = utils.unnest(db_columns_by_label)
                 db_columns = db_columns + db_columns_by_label
                 param_history = pd.DataFrame(dashboard, columns=db_columns)
@@ -300,7 +307,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
                                               (NETWORK_NAME + "_s"
                                                + str(step) + ".png"))
                 dashboard_building.plot_dashboard(complete_dashboard,
-                                                  plot_file_name)
+                                                  plot_file_name,
+                                                  label_list)
         elif mode == "test":
             utils.logger.info(("Test model after {}"
                                " training steps!").format(initial_step))
@@ -354,6 +362,10 @@ if __name__ == '__main__':
                         nargs='?',
                         help=("The number of fully-connected layers "
                               "that must be inserted into the network"))
+    parser.add_argument('-l', '--label-list', required=False, nargs="+",
+                        default=-1, type=int,
+                        help=("The list of label indices that "
+                              "will be considered during training process"))
     parser.add_argument('-m', '--mode', required=False, default="train",
                         nargs='?', help=("The network running mode"
                                          "('train', 'test', 'both')"))
@@ -375,6 +387,19 @@ if __name__ == '__main__':
        utils.logger.error(("Unsupported running mode. "
                            "Please choose amongst 'train', 'test' or 'both'."))
        sys.exit(1)
+
+    nb_labels = glossary_reading.LABELS.shape[1]
+
+    if args.label_list == -1:
+        label_list = [i for i in range(nb_labels)]
+    else:
+        label_list = args.label_list
+        print(label_list)
+        if sum([l>=nb_labels for l in args.label_list]) > 0:
+            utils.logger.error(("Unsupported label list. "
+                                "Please enter a list of integers comprised"
+                                "between 0 and {}".format(nb_labels)))
+            sys.exit(1)
 
     weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
     if sum([w in weights for w in args.weights]) != len(args.weights):
@@ -399,6 +424,6 @@ if __name__ == '__main__':
     for n in args.name:
         for w in args.weights:
             run(args.nbconv, args.nbfullyconn, args.nb_epochs,
-                args.training_limit, args.mode,
+                args.training_limit, args.mode, label_list,
                 w, n, args.datapath)
     sys.exit(0)
