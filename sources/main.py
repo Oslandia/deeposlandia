@@ -63,18 +63,16 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, data
         String designing the relative path to dataset directory
     
     """
-    NETWORK_NAME = (name + "_" + weight_policy + "_" + str(nbconv) + "_0_"
-                    + str(nbconv) + "_0_" + str(nbfullyconn) + "_0")
+    NETWORK_NAME = (name + "_" + weight_policy + "_"
+                    + str(nbconv) + "_" + str(nbfullyconn))
     if mode == "train":
         utils.logger.info("Model {} training".format(NETWORK_NAME))
     elif mode == "test":
         utils.logger.info("Model {} testing".format(NETWORK_NAME))
     elif mode == "both":
         utils.logger.info("Model {} training and testing".format(NETWORK_NAME))
-
-    config_file_name = (name + "_" + str(nbconv) + "_0_" + str(nbconv) + "_0_"
-                        + str(nbfullyconn) + "_0.json")
-    with open(os.path.join("..", "models", config_file_name)) as config_file:
+    config_file_name = os.path.join("..", "models", NETWORK_NAME + ".json")
+    with open(config_file_name) as config_file:
         cnn_hyperparam = json.load(config_file)
 
     # image dimensions (width, height, number of channels)
