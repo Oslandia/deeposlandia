@@ -37,7 +37,7 @@ import dashboard_building
 import glossary_reading
 import utils
 
-def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
+def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, weight_policy, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -49,6 +49,9 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
         Number of fully connected layer to setup in the network
     nb_epochs: integer
         Number of training epoch(s)
+    nb_iter: integer
+        Number of training iterations, if None, the model run during nb_epochs
+    * nb_batches iterations
     mode: object
         String designing the running mode ("train", "test", or "both")
     weight_policy: object
@@ -171,7 +174,9 @@ def run(nbconv, nbfullyconn, nb_epochs, mode, weight_policy, name, datapath):
                 label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
-            for index in range(initial_step, N_BATCHES * N_EPOCHS):
+            if nb_iter is None:
+                nb_iter = N_BATCHES * N_EPOCHS
+            for index in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([train_image_batch,
                                              train_label_batch])
                 if weight_policy == "batch":
@@ -357,6 +362,10 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default=["cnn_mapil"], nargs='+',
                         help=("The model name that will be used for results, "
                               "checkout and graph storage on file system"))
+    parser.add_argument('-tl', '--training-limit', default=None, type=int,
+                        help=("Number of training iteration, "
+                              "if not specified the model run during "
+                              "nb-epochs * nb-batchs iterations"))
     parser.add_argument('-w', '--weights', default=["base"], nargs='+',
                         help=("The weight policy to apply on label "
                               "contributions to loss: either 'base' "
@@ -391,6 +400,7 @@ if __name__ == '__main__':
 
     for n in args.name:
         for w in args.weights:
-            run(args.nbconv, args.nbfullyconn, args.nb_epochs, args.mode,
+            run(args.nbconv, args.nbfullyconn, args.nb_epochs,
+                args.training_limit, args.mode,
                 w, n, args.datapath)
     sys.exit(0)
