@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 /**
  *   Raphael Delhome - september 2017
@@ -384,12 +385,31 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode not in ["train", "test", "both"]:
-       utils.logger.error(("Unsupported running mode. "
-                           "Please choose amongst 'train', 'test' or 'both'."))
-       sys.exit(1)
+        utils.logger.error(("Unsupported running mode. "
+                            "Please choose amongst 'train', 'test' or 'both'."))
+        sys.exit(1)
 
-    nb_labels = glossary_reading.LABELS.shape[1]
+    weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
+    if sum([w in weights for w in args.weights]) != len(args.weights):
+        utils.logger.error(("Unsupported weighting policy. Please choose "
+                            "amongst 'base', 'global', 'batch', "
+                            "'centeredglobal' or 'centeredbatch'."""))
+        utils.logger.info("'base': Regular weighting scheme...")
+        utils.logger.info(("'global': Label contributions to loss are "
+                           "weighted with respect to label popularity "
+                           "within the dataset (decreasing weights)..."))
+        utils.logger.info(("'batch': Label contributions to loss are weighted "
+                           "with respect to label popularity within the "
+                           "dataset (convex weights with min at 50%)..."))
+        utils.logger.info(("'centeredbatch': Label contributions to loss are "
+                           "weighted with respect to label popularity within "
+                           "each batch (decreasing weights)..."))
+        utils.logger.info(("'centeredglobal': Label contributions to loss are "
+                           "weighted with respect to label popularity within "
+                           "each batch (convex weights with min at 50%)..."))
+        sys.exit(1)
 
+    nb_labels = glossary_reading.label_quantity(glossary_reading.GLOSSARY)
     if args.label_list == -1:
         label_list = [i for i in range(nb_labels)]
     else:
@@ -401,25 +421,11 @@ if __name__ == '__main__':
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
 
-    weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
-    if sum([w in weights for w in args.weights]) != len(args.weights):
-       utils.logger.error(("Unsupported weighting policy. Please choose "
-                           "amongst 'base', 'global', 'batch', "
-                           "'centeredglobal' or 'centeredbatch'."""))
-       utils.logger.info("'base': Regular weighting scheme...")
-       utils.logger.info(("'global': Label contributions to loss are weighted "
-                          "with respect to label popularity "
-                          "within the dataset (decreasing weights)..."))
-       utils.logger.info(("'batch': Label contributions to loss are weighted "
-                          "with respect to label popularity within the "
-                          "dataset (convex weights with min at 50%)..."))
-       utils.logger.info(("'centeredbatch': Label contributions to loss are "
-                          "weighted with respect to label popularity within "
-                          "each batch (decreasing weights)..."))
-       utils.logger.info(("'centeredglobal': Label contributions to loss are "
-                          "weighted with respect to label popularity within "
-                          "each batch (convex weights with min at 50%)..."))
-       sys.exit(1)
+    if args.prepare_data:
+        utils.mapillary_data_preparation(args.datapath, "training",
+                                         args.image_size, nb_labels)
+        utils.mapillary_data_preparation(args.datapath, "validation",
+                                         args.image_size, nb_labels)
 
     for n in args.name:
         for w in args.weights:
