@@ -373,6 +373,12 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default=["cnn_mapil"], nargs='+',
                         help=("The model name that will be used for results, "
                               "checkout and graph storage on file system"))
+    parser.add_argument('-p', '--prepare-data', action="store_true",
+                        help=("True if the data must be prepared, "
+                              "false otherwise"))
+    parser.add_argument('-s', '--image-size', nargs="+",
+                        default=[512, 384], type=int,
+                        help=("The desired size of images (width, height)"))
     parser.add_argument('-tl', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
