@@ -39,7 +39,7 @@ import glossary_reading
 import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
-        weight_policy, name, datapath):
+        image_size, weight_policy, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -80,9 +80,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         cnn_hyperparam = json.load(config_file)
 
     # image dimensions (width, height, number of channels)
-    IMG_SIZE = (768, 576)
-    IMAGE_HEIGHT  = IMG_SIZE[1]
-    IMAGE_WIDTH   = IMG_SIZE[0]
+    IMAGE_WIDTH   = image_size[0]
+    IMAGE_HEIGHT  = image_size[1]
     NUM_CHANNELS  = 3 # Colored images (RGB)
 
     # number of output classes
@@ -125,8 +124,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
     # Model building
     logits, y_raw_pred, y_pred = cnn_layers.convnet_building(X, cnn_hyperparam,
-                                                             IMG_SIZE[0],
-                                                             IMG_SIZE[1],
+                                                             image_size[0],
+                                                             image_size[1],
                                                              NUM_CHANNELS,
                                                              N_CLASSES,
                                                              dropout,
@@ -437,5 +436,5 @@ if __name__ == '__main__':
         for w in args.weights:
             run(args.nbconv, args.nbfullyconn, args.nb_epochs,
                 args.training_limit, args.mode, label_list,
-                w, n, args.datapath)
+                args.image_size, w, n, args.datapath)
     sys.exit(0)
