@@ -14,7 +14,6 @@ from PIL import Image
 import sys
 
 DATASET = ["training", "validation", "testing"]
-IMG_SIZE = (768, 576) # easy decomposition: (4, 3) * 3 * 2 * 2 * 2 * 2 * 2 * 2
 IMAGE_TYPES = ["images", "instances", "labels"]
 
 def make_dir(path):
@@ -32,7 +31,7 @@ def make_dir(path):
     except OSError:
         pass
 
-    # Define the logger for the current project
+# Define the logger for the current project
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
