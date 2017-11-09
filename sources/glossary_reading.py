@@ -18,25 +18,23 @@ def read_glossary(config_filename):
     with open(config_filename) as config_file:
         return json.load(config_file)
 
+def label_quantity(glossary):
+    """Extract the total number of labels from the raw glossary
+    """
+    return len(glossary["labels"])
+
 def build_labels(label_file_list):
     """Build a DataFrame with the label of all dataset image (shape:
     nb_images(training+validation) * nb_labels)
 
     """
-    # train_labels = pd.read_csv(TRAIN_LABEL_FILENAME)
-    # validation_labels = pd.read_csv(VALIDATION_LABEL_FILENAME)
     labels = pd.read_csv(label_file_list[0])
     if len(label_file_list) > 1:
         for filename in label_file_list[1:]:
-            # validation_labels.index = validation_labels.index + 18000
-            # labels = pd.concat([train_labels, validation_labels])
             new_labels = pd.read_csv(filename)
             new_labels.index = new_labels.index + labels.shape[0]
             labels = pd.concat([labels, new_labels])
-    
-    return labels.drop(["old_name", "new_name",
-                        "old_width", "width_ratio",
-                        "old_height", "height_ratio"], axis=1)
+    return labels.drop(["name", "origin", "width", "height"], axis=1)
 
 def count_label_per_image(labels):
     """Compute the number of existing object on each dataset image
