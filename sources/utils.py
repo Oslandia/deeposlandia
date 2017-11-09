@@ -187,7 +187,7 @@ def size_inventory():
                       "width": widths,
                       "height": heights})
 
-def mapillary_data_preparation(dataset, nb_labels):
+def mapillary_data_preparation(datapath, dataset, size, nb_labels):
     """Prepare the Mapillary dataset for processing convolutional neural network
     computing: the images are resized and renamed as `index.jpg`, where `index`
     is an integer comprised between 0 and 17999 (size of the validation
@@ -197,85 +197,53 @@ def mapillary_data_preparation(dataset, nb_labels):
 
     Parameters
     ----------
+    datapath: object
+        string designing the image dataset relative path
     dataset: object
-        string designing the image data (`training`, `validation` or `testing`)
+        string designing the dataset type (either `training` or `validation`)
+    size: list
+        desired image size (two integers, resp. width and height)
     nb_labels: integer
         number of label in the Mapillary classification
 
     """
-    IMAGE_PATH = os.path.join("..", "data", dataset, "images")
-    INPUT_PATH = os.path.join("..", "data", dataset, "input")
+    logger.info("Generating images from {} dataset...".format(dataset))
+    IMAGE_PATH = os.path.join(datapath, dataset, "images")
+    INPUT_PATH = os.path.join(datapath, dataset, "input")
     make_dir(INPUT_PATH)
-    if dataset != "testing":
-        LABEL_PATH = os.path.join("..", "data", dataset, "labels")
-        OUTPUT_PATH = os.path.join("..", "data", dataset, "output")
-        make_dir(OUTPUT_PATH)
-        train_y = []
+    LABEL_PATH = os.path.join(datapath, dataset, "labels")
+    OUTPUT_PATH = os.path.join(datapath, dataset, "output")
+    make_dir(OUTPUT_PATH)
+    train_labels = []
     for img_id, img_filename in enumerate(os.listdir(IMAGE_PATH)):
         img_in = Image.open(os.path.join(IMAGE_PATH, img_filename))
         old_width, old_height = img_in.size
-        img_in = img_in.resize(IMG_SIZE, Image.NEAREST)
-        new_img_name = "{:05d}.jpg".format(img_id)
-        instance_name = os.path.join(INPUT_PATH, new_img_name)
-        img_in.save(instance_name)
-        logger.info("""[{} set] Image {} saved as {}..."""
-                       .format(dataset, img_filename, new_img_name))
-        if dataset != "testing":
+        # pick ten (x, y) couples
+        x = np.random.randint(0, old_width-size[0], 10)
+        y = np.random.randint(0, old_height-size[1], 10)
+        # crop ten sub-images starting from the original one
+        for i, x_, y_ in zip(range(len(x)), x, y):
+            new_img = img_in.crop((x_, y_, x_+size[0], y_+size[1]))
+            if i % 2 == 1:
+                new_img = new_img.transpose(Image.FLIP_LEFT_RIGHT)
+            new_img_name = "{:05d}{}.jpg".format(img_id, i)
+            instance_name = os.path.join(INPUT_PATH, new_img_name)
+            new_img.save(instance_name)
+            logger.info(("[{} set] Create image {} from {}..."
+                         "").format(dataset, new_img_name, img_filename))
             label_filename = img_filename.replace(".jpg", ".png")
-            img_out = Image.open(os.path.join(LABEL_PATH, label_filename))
-            img_out = img_out.resize(IMG_SIZE, Image.NEAREST)
-            y = mapillary_label_building(img_out, nb_labels)
-            width_ratio = IMG_SIZE[0] / old_width
-            height_ratio = IMG_SIZE[1] / old_height
-            y.insert(0, height_ratio)
-            y.insert(0, old_height)
-            y.insert(0, width_ratio)
-            y.insert(0, old_width)
-            y.insert(0, new_img_name)
-            y.insert(0, img_filename)
-            train_y.append(y)
-    if dataset != "testing":
-        train_y = pd.DataFrame(train_y, columns=["old_name", "new_name",
-                                                 "old_width", "width_ratio",
-                                                 "old_height", "height_ratio"]
-                               + ["label_" + str(i) for i in range(nb_labels)])
-        train_y.to_csv(os.path.join(OUTPUT_PATH, "labels.csv"), index=False)
-
-def mapillary_output_checking(dataset, nb_labels):
-    """Verify if every images are well-labeled, i.e. that new image names
-    correspond to old ones, and that resizing operations did not affect output
-    labels too much; images are not the same in the first case, thus labels
-    should be largely different; in the second case we can expect some minor
-    label modification (low-frequency classes, i.e. with just a few pixels in
-    the raw images, may have disappeared in new image versions)
-
-    This function only provides logs that describe the image alterations, it
-    does not break the code.
-    
-    Parameters
-    ----------
-    dataset: object
-        string designing the considered dataset (`training`, `validation` or
-    `testing`)
-    nb_labels: integer
-        number of labels in the Mapillary classification
-    
-    """
-    LABEL_PATH = os.path.join("..", "data", dataset, "labels")
-    OUTPUT_PATH = os.path.join("..", "data", dataset, "output")
-    new_labels = pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
-    for new_filename in new_labels.new_name:
-        current_label = new_labels.query("new_name == @new_filename")
-        new_label = np.array(current_label.iloc[0,6:])
-        label_filename = current_label['old_name'].values[0]
-        img_filename = label_filename.replace(".jpg", ".png")
-        img_out = Image.open(os.path.join(LABEL_PATH, img_filename))
-        old_label = mapillary_label_building(img_out, nb_labels)
-        equality = are_labels_equal(old_label, new_label)
-        if equality:
-            logger.info("""[{} set] Image {} OK""".format(dataset, new_filename))
-        else:
-            logger.info("""[{} set] Image {} not OK:\
-            {}""".format(dataset, new_filename, current_label.iloc[0,:6]))
-            img_id = int(current_label['new_name'].values[0].split('.')[0])
-            logger.info(check_label_equality(dataset, new_labels, img_id))
+            img_out = Image.open(os.path.join(LABEL_PATH,
+                                              label_filename))
+            img_out = img_out.crop((x_, y_, x_+size[0], y_+size[1]))
+            labels_out = mapillary_label_building(img_out, nb_labels)
+            labels_out.insert(0, old_height)
+            labels_out.insert(0, old_width)
+            labels_out.insert(0, new_img_name)
+            labels_out.insert(0, img_filename)
+            train_labels.append(labels_out)
+    train_label_descr = (["name", "origin", "width", "height"] +
+                         ["label"+str(i) for i in range(nb_labels)])
+    train_labels = pd.DataFrame(train_labels,
+                                columns=train_label_descr)
+    train_labels.to_csv(os.path.join(OUTPUT_PATH, "labels.csv"),
+                        index=False)
