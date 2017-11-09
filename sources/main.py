@@ -389,6 +389,11 @@ if __name__ == '__main__':
                               "'centeredglobal', 'centeredbatch'"))
     args = parser.parse_args()
 
+    if type(args.image_size) is not list or len(args.image_size) != 2:
+        utils.logger.error(("Unsupported image size. Please provide two "
+                            "integers (respectively width and height)"))
+        sys.exit(1)
+
     if args.mode not in ["train", "test", "both"]:
         utils.logger.error(("Unsupported running mode. "
                             "Please choose amongst 'train', 'test' or 'both'."))
