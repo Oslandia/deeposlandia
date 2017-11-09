@@ -151,45 +151,6 @@ def mapillary_image_size_plot(data, filename):
     plt.tight_layout()
     plt.savefig(os.path.join("..", "images", filename))
 
-def are_labels_equal(old_label, new_label):
-    """Verify if two lists contain the same values, at the same location;
-    these lists must contain comparable items
-
-    Parameters
-    ----------
-    old_label: list
-        First list to compare
-    new_label: list
-        Second list to compare
-    
-    """
-    return sum(new_label == old_label) == len(old_label)
-
-def check_label_equality(dataset, labels, img_id):
-    """Verify if the raw filtered images and the new ones (generated after
-    resizing operations) are equally labeled, and return the index of the
-    issuing label(s) when it is not the case
-
-    Parameters
-    ----------
-    dataset: object
-        string designing the considered repository (`training`, `validation` or `testing`)
-    labels: pd.DataFrame
-        table that contains the metadata information about each filtered images
-    (ex: their name on the file system)
-    img_id: integer
-        index of the checked image
-    
-    """
-    image = Image.open(os.path.join("..", "data", dataset, "labels",
-                                    labels.iloc[img_id, 0].replace(".jpg",
-                                                                   ".png")))
-    old_label = np.array(mapillary_label_building(image, 66))
-    new_label = labels.iloc[img_id, 6:]
-    return {"invalid_label": np.where(new_label != old_label)[0],
-            "pixel_count": (pd.Series(np.array(image).reshape([-1]))
-                            .value_counts())}
-
 def size_inventory():
     """Make an inventory of the size of every image in the dataset (training,
     validation and testing sets taken together)
