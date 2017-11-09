@@ -11,7 +11,7 @@ from tensorflow.python.framework import ops
 import bpmll # Multilabel classification loss
 
 def prepare_data(height, width, n_channels, batch_size,
-                 labels_of_interest, dataset_type, scope_name):
+                 labels_of_interest, datapath, dataset_type, scope_name):
     """Insert images and labels in Tensorflow batches
 
     Parameters
@@ -26,14 +26,16 @@ def prepare_data(height, width, n_channels, batch_size,
         Size of the batchs, expressed as an image quantity
     labels_of_interest: list
         List of label indices on which a model will be trained
+    datapath: object
+        String designing the relative path to data
     dataset_type: object
         string designing the considered dataset (`training`, `validation` or `testing`)
     scope_name: object
         string designing the data preparation scope name
     
     """
-    INPUT_PATH = os.path.join("..", "data", dataset_type, "input")
-    OUTPUT_PATH = os.path.join("..", "data", dataset_type, "output")
+    INPUT_PATH = os.path.join(datapath, dataset_type, "input")
+    OUTPUT_PATH = os.path.join(datapath, dataset_type, "output")
     with tf.variable_scope(scope_name) as scope:
         # Reading image file paths
         filepaths = os.listdir(INPUT_PATH)

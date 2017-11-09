@@ -107,11 +107,11 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                            BATCH_SIZE, label_list,
+                            BATCH_SIZE, label_list, datapath,
                             "training", "training_data_pipe")
     val_image_batch, val_label_batch, val_filename_batch = \
     cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                            BATCH_SIZE, label_list,
+                            BATCH_SIZE, label_list, datapath,
                             "validation", "valid_data_pipe")
 
     # Definition of TensorFlow placeholders
