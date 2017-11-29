@@ -196,7 +196,8 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
 
 def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
     """Build an output layer to a neural network with a sigmoid final activation
-    function; return final network scores (logits) as well as predictions
+    function (softmax if there is only one label to predict); return final
+    network scores (logits) as well as predictions
 
     Parameters
     ----------
@@ -211,7 +212,7 @@ def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
 
     """
     # Output building
-    with tf.variable_scope(network_name + '_sigmoid_linear') as scope:
+    with tf.variable_scope(network_name + '_output_layer') as scope:
         # Create weights and biases for the final fully-connected layer
         w = tf.get_variable('weights', [input_layer_dim, n_output_classes],
                             initializer=tf.truncated_normal_initializer())
@@ -219,8 +220,11 @@ def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
                             initializer=tf.random_normal_initializer())
         # Compute logits through a simple linear combination
         logits = tf.add(tf.matmul(input_layer, w), b)
-        # Compute predicted outputs with sigmoid function
-        Y_raw_predict = tf.nn.sigmoid(logits)
+        # Compute predicted outputs with softmax/sigmoid function
+        if n_output_classes == 1:
+            Y_raw_predict = tf.nn.softmax(logits)
+        else:
+            Y_raw_predict = tf.nn.sigmoid(logits)
         Y_predict = tf.to_int32(tf.round(Y_raw_predict))
         return logits, Y_raw_predict, Y_predict
 
@@ -250,11 +254,17 @@ def define_loss(y_true, logits, y_raw_pred, weights,
     network_name: object
         String designing the network name (for scope name unicity)
     """
+
     with tf.name_scope(network_name + '_loss'):
         # Tensorflow definition of sigmoid cross-entropy:
         # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
-        entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
-                                                          logits=logits)
+        if y_true.shape[1] == 1:
+            # Mono-label: softmax
+            entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_true,
+                                                              logits=logits)
+        else:
+            entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
+                                                              logits=logits)
         weighted_entropy = tf.multiply(weights, entropy)
         loss = tf.reduce_mean(weighted_entropy, name="loss")
         bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_pred)
