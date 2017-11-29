@@ -39,7 +39,8 @@ import glossary_reading as gr
 import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
-        image_size, weight_policy, name, datapath):
+        image_size, weight_policy, start_lr, decay_steps, decay_rate,
+        name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -61,6 +62,12 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     weight_policy: object
         String designing the way label loss contributions are weighted ("base",
     "global", "batch", "centeredglobal", "centeredbatch")
+    start_lr: integer
+        Starting learning rate (between 0 and 1) - cf Tensorflow tf.train.exponential_decay
+    decay_steps: double
+        Step normalization term - cf Tensorflow tf.train.exponential_decay
+    decay_rate: double
+        Learning rate decay (between 0 and 1) - cf Tensorflow tf.train.exponential_decay
     name: object
         String designing the name of the network
     datapath: object
@@ -83,20 +90,25 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     IMAGE_WIDTH   = image_size[0]
     IMAGE_HEIGHT  = image_size[1]
     NUM_CHANNELS  = 3 # Colored images (RGB)
+    NETWORK_NAME = (NETWORK_NAME + "_" + str(image_size[0])
+                    + "_" + str(image_size[1]))
 
     # number of output classes
     N_CLASSES = len(label_list)
     # number of images per batch
     BATCH_SIZE = 20
-    N_IMAGES = len(os.listdir(os.path.join(datapath, "training", "images")))
+    N_IMAGES = len(os.listdir(os.path.join(datapath, "training",
+                                           "input" + "_" + str(image_size[0])
+                                           + "_" + str(image_size[1]))))
     N_VAL_IMAGES = len(os.listdir(os.path.join(datapath, "validation",
-                                               "images")))
+                                           "input" + "_" + str(image_size[0])
+                                           + "_" + str(image_size[1]))))
     N_BATCHES = int(N_IMAGES / BATCH_SIZE)
     N_VAL_BATCHES = int(N_VAL_IMAGES / BATCH_SIZE)
     # learning rate tuning (exponential decay)
-    START_LR = 0.01
-    DECAY_STEPS = 100
-    DECAY_RATE = 0.9
+    START_LR = start_lr
+    DECAY_STEPS = decay_steps
+    DECAY_RATE = decay_rate
     # percentage of nodes that are briefly removed during training process
     DROPOUT = 2/3.0
     # number of epochs (one epoch = all images have been used for training)
@@ -378,6 +390,10 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--prepare-data', action="store_true",
                         help=("True if the data must be prepared, "
                               "false otherwise"))
+    parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
+                        default=[0.01, 0.95, 1000], type=int,
+                        help=("List of learning rate components (starting LR, "
+                              "decay steps and decay rate)"))
     parser.add_argument('-s', '--image-size', nargs="+",
                         default=[512, 384], type=int,
                         help=("The desired size of images (width, height)"))
@@ -435,15 +451,33 @@ if __name__ == '__main__':
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
 
+    if args.glossary_printing:
+        glossary_description = gr.build_category_description(mapil_glossary)
+        nb_images_per_label = gr.count_image_per_label(args.datapath,
+                                                       args.image_size)
+        glossary_description["nb_images"] = nb_images_per_label
+        utils.logger.info(("Data glossary:\n{}"
+                           "").format(glossary_description.iloc[label_list,:]))
+        sys.exit(0)
+
+    if len(args.learning_rate) != 3:
+        utils.logger.error(("There must be 3 learning rate components "
+                            "(start, decay steps and decay rate"
+                            "; actually, there is/are {}"
+                            "").format(len(args.learning_rate)))
+        sys.exit(1)
+
     if args.prepare_data:
         utils.mapillary_data_preparation(args.datapath, "training",
                                          args.image_size, nb_labels)
         utils.mapillary_data_preparation(args.datapath, "validation",
                                          args.image_size, nb_labels)
-
-    for n in args.name:
-        for w in args.weights:
-            run(args.nbconv, args.nbfullyconn, args.nb_epochs,
-                args.training_limit, args.mode, label_list,
-                args.image_size, w, n, args.datapath)
+    else:
+        for n in args.name:
+            for w in args.weights:
+                run(args.nbconv, args.nbfullyconn, args.nb_epochs,
+                    args.training_limit, args.mode, label_list,
+                    args.image_size, w, args.learning_rate[0],
+                    args.learning_rate[1], args.learning_rate[2],
+                    n, args.datapath)
     sys.exit(0)
