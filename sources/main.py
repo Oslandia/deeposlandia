@@ -360,7 +360,8 @@ if __name__ == '__main__':
     # Manage argument parsing
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
-    parser.add_argument('-c', '--nbconv', required=True, nargs='?', type=int,
+    parser.add_argument('-c', '--nbconv', required=False, type=int,
+                        nargs='?', default=2,
                         help=("The number of convolutional layers "
                               "that must be inserted into the network"))
     parser.add_argument('-d', '--datapath', required=False,
@@ -370,8 +371,8 @@ if __name__ == '__main__':
                         default=5, nargs='?',
                         help=("The number of training epochs (one epoch means "
                               "scanning each training image once)"))
-    parser.add_argument('-f', '--nbfullyconn', required=True, type=int,
-                        nargs='?',
+    parser.add_argument('-f', '--nbfullyconn', required=False, type=int,
+                        nargs='?', default=1,
                         help=("The number of fully-connected layers "
                               "that must be inserted into the network"))
     parser.add_argument('-g', '--glossary-printing', action="store_true",

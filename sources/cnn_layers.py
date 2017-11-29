@@ -35,8 +35,10 @@ def prepare_data(height, width, n_channels, batch_size,
         string designing the data preparation scope name
     
     """
-    INPUT_PATH = os.path.join(datapath, dataset_type, "input")
-    OUTPUT_PATH = os.path.join(datapath, dataset_type, "output")
+    INPUT_PATH = os.path.join(datapath, dataset_type,
+                              "input_" + str(width) + "_" + str(height))
+    OUTPUT_PATH = os.path.join(datapath, dataset_type,
+                              "output_" + str(width) + "_" + str(height))
     with tf.variable_scope(scope_name) as scope:
         # Reading image file paths
         filepaths = os.listdir(INPUT_PATH)
