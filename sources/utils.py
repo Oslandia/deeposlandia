@@ -221,41 +221,87 @@ def mapillary_data_preparation(datapath, dataset, size, nb_labels):
     """
     logger.info("Generating images from {} dataset...".format(dataset))
     IMAGE_PATH = os.path.join(datapath, dataset, "images")
-    INPUT_PATH = os.path.join(datapath, dataset, "input")
-    make_dir(INPUT_PATH)
+    INPUT_PATH = os.path.join(datapath, dataset, "input_" + str(size[0]) + "_" + str(size[1]))
     LABEL_PATH = os.path.join(datapath, dataset, "labels")
-    OUTPUT_PATH = os.path.join(datapath, dataset, "output")
+    OUTPUT_PATH = os.path.join(datapath, dataset, "output_" + str(size[0]) + "_" + str(size[1]))
+    make_dir(INPUT_PATH)
     make_dir(OUTPUT_PATH)
-    train_labels = []
-    for img_id, img_filename in enumerate(os.listdir(IMAGE_PATH)):
-        img_in = Image.open(os.path.join(IMAGE_PATH, img_filename))
-        old_width, old_height = img_in.size
-        # pick ten (x, y) couples
-        x = np.random.randint(0, old_width-size[0], 10)
-        y = np.random.randint(0, old_height-size[1], 10)
-        # crop ten sub-images starting from the original one
-        for i, x_, y_ in zip(range(len(x)), x, y):
-            new_img = img_in.crop((x_, y_, x_+size[0], y_+size[1]))
-            if i % 2 == 1:
-                new_img = new_img.transpose(Image.FLIP_LEFT_RIGHT)
-            new_img_name = "{:05d}{}.jpg".format(img_id, i)
-            instance_name = os.path.join(INPUT_PATH, new_img_name)
-            new_img.save(instance_name)
-            logger.info(("[{} set] Create image {} from {}..."
-                         "").format(dataset, new_img_name, img_filename))
-            label_filename = img_filename.replace(".jpg", ".png")
-            img_out = Image.open(os.path.join(LABEL_PATH,
-                                              label_filename))
-            img_out = img_out.crop((x_, y_, x_+size[0], y_+size[1]))
-            labels_out = mapillary_label_building(img_out, nb_labels)
-            labels_out.insert(0, old_height)
-            labels_out.insert(0, old_width)
-            labels_out.insert(0, new_img_name)
-            labels_out.insert(0, img_filename)
-            train_labels.append(labels_out)
-    train_label_descr = (["name", "origin", "width", "height"] +
+    image_files = os.listdir(IMAGE_PATH)
+    train_label_descr = (["name", "raw_image", "width", "height"] +
                          ["label"+str(i) for i in range(nb_labels)])
-    train_labels = pd.DataFrame(train_labels,
-                                columns=train_label_descr)
+    train_labels = [pd.DataFrame(generate_images(img_id, img_fn,
+                                                 size, nb_labels,
+                                                 IMAGE_PATH, INPUT_PATH,
+                                                 LABEL_PATH),
+                                 columns=train_label_descr)
+                    for img_id, img_fn in enumerate(image_files)]
+    train_labels = pd.concat(train_labels)
+    train_labels = train_labels.sort_values(by="name")
     train_labels.to_csv(os.path.join(OUTPUT_PATH, "labels.csv"),
                         index=False)
+
+def generate_images(img_id, img_filename, size, nb_labels,
+                    image_path, input_path, label_path):
+    """Generate a bunch of sub-images from another image by cropping operations
+
+    Parameter
+    ---------
+    img_id: integer
+        Raw image id, that will be integrated in the new image names
+    img_filename: object
+        String designing the name of the starting image
+    size: list
+        List of two integers that represent the desired image size (width*height)
+    nb_labels: integer
+        Total number of labels within the glossary
+    image_path: object
+        String designing the relative path to images
+    input_path: object
+        String designing the relative path in which new images must be saved
+    label_path: object
+        String designing the relative path to labelled images
+    """
+    labels = []
+    logger.info("Create images {} to {} from {}...".format(img_id*10,
+                                                           (img_id+1)*10-1,
+                                                           img_filename))
+    img_in = Image.open(os.path.join(image_path, img_filename))
+    old_width, old_height = img_in.size
+    if old_width <= size[0] or old_height <= size[1]:
+        logger.info(("Current image ({}, {}) is too small, "
+                     "pass.").format(old_width, old_height))
+        return None
+    # pick ten (x, y) couples
+    x = np.random.randint(0, old_width-size[0], 10)
+    y = np.random.randint(0, old_height-size[1], 10)
+    # crop ten sub-images starting from the original one
+    for i, x_, y_ in zip(range(len(x)), x, y):
+        new_img = img_in.crop((x_, y_, x_+size[0], y_+size[1]))
+        if i % 2 == 1:
+            new_img = new_img.transpose(Image.FLIP_LEFT_RIGHT)
+        new_img_name = "{:05d}{}.jpg".format(img_id, i)
+        instance_name = os.path.join(input_path, new_img_name)
+        new_img.save(instance_name)
+        label_filename = img_filename.replace(".jpg", ".png")
+        img_out = Image.open(os.path.join(label_path, label_filename))
+        img_out = img_out.crop((x_, y_, x_+size[0], y_+size[1]))
+        labels_out = mapillary_label_building(img_out, nb_labels)
+        labels_out.insert(0, old_height)
+        labels_out.insert(0, old_width)
+        labels_out.insert(0, img_filename)
+        labels_out.insert(0, new_img_name)
+        labels.append(labels_out)
+    return labels
+
+def split_list(l, nb_partitions):
+    """Split a list `l` into `nb_partitions` equal sublists
+
+    Parameters
+    ----------
+    l: list
+        List of elements to split
+    nb_partitions: integer
+        number of desired partitions
+    """
+    return [l[i:(i+len(l)/nb_partitions)]
+            for i in range(0, len(l), int(len(l)/nb_partitions))]
