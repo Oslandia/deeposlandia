@@ -11,6 +11,7 @@ import numpy as np
 import os
 import pandas as pd
 from PIL import Image
+import re
 import sys
 
 DATASET = ["training", "validation", "testing"]
@@ -42,6 +43,18 @@ ch_stdout.setFormatter(formatter)
 ch_logfile.setFormatter(formatter)
 logger.addHandler(ch_stdout)
 logger.addHandler(ch_logfile)
+
+def extract_features(data, pattern):
+    """Extract features from data that respect the given string pattern
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        dataframe to filter
+    pattern: object
+        string designing the column filter
+    """
+    return data[[col for col in data.columns if re.search(pattern, col) is not None]]
 
 def unnest(l):
     """Unnest a list of lists, by splitting sublists and returning a simple list of scalar elements
