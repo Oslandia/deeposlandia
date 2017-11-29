@@ -9,6 +9,7 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 
 import bpmll # Multilabel classification loss
+import utils
 
 def prepare_data(height, width, n_channels, batch_size,
                  labels_of_interest, datapath, dataset_type, scope_name):
