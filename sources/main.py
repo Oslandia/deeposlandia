@@ -35,7 +35,7 @@ import time
 
 import cnn_layers
 import dashboard_building
-import glossary_reading
+import glossary_reading as gr
 import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
@@ -170,12 +170,12 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             if weight_policy == "base":
                 w_batch = np.repeat(1.0, N_CLASSES)
             elif weight_policy == "global":
-                label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
+                label_counter = gr.count_image_per_label(datapath, image_size)
                 label_counter = [label_counter[l] for l in label_list]
                 w_batch = utils.compute_monotonic_weights(N_IMAGES,
                                                           label_counter)
             elif weight_policy == "centeredglobal":
-                label_counter = glossary_reading.NB_TRAIN_IMAGE_PER_LABEL
+                label_counter = gr.count_image_per_label(datapath, image_size)
                 label_counter = [label_counter[l] for l in label_list]
                 w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
 
@@ -362,6 +362,9 @@ if __name__ == '__main__':
                         nargs='?',
                         help=("The number of fully-connected layers "
                               "that must be inserted into the network"))
+    parser.add_argument('-g', '--glossary-printing', action="store_true",
+                        help=("True if the program must only "
+                              "print the glossary, false otherwise)"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
                         help=("The list of label indices that "
@@ -419,7 +422,8 @@ if __name__ == '__main__':
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
 
-    nb_labels = glossary_reading.label_quantity(glossary_reading.GLOSSARY)
+    mapil_glossary = gr.read_glossary(os.path.join(args.datapath, "config.json"))
+    nb_labels = gr.label_quantity(mapil_glossary)
     if args.label_list == -1:
         label_list = [i for i in range(nb_labels)]
     else:

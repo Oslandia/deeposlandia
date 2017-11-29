@@ -5,11 +5,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-DATA_REPOSITORY = os.path.join("..", "data")
-TRAIN_LABEL_FILENAME = os.path.join(DATA_REPOSITORY, "training", "output", "labels.csv")
-VALIDATION_LABEL_FILENAME = os.path.join(DATA_REPOSITORY, "validation", "output", "labels.csv")
-CONFIG_FILENAME = os.path.join(DATA_REPOSITORY, "config.json")
-
 def read_glossary(config_filename):
     """Read the Mapillary glossary stored as a json file at the data repository
     root
@@ -34,7 +29,7 @@ def build_labels(label_file_list):
             new_labels = pd.read_csv(filename)
             new_labels.index = new_labels.index + labels.shape[0]
             labels = pd.concat([labels, new_labels])
-    return labels.drop(["name", "origin", "width", "height"], axis=1)
+    return labels.drop(["name", "raw_image", "width", "height"], axis=1)
 
 def count_label_per_image(labels):
     """Compute the number of existing object on each dataset image
@@ -44,7 +39,7 @@ def count_label_per_image(labels):
     label_counter.index = range(len(label_counter))
     return label_counter
 
-def count_image_per_label(labels):
+def count_images(labels):
     """Compute the number of images for each glossary label
 
     """
@@ -52,7 +47,7 @@ def count_image_per_label(labels):
     image_counter.index = range(len(image_counter))
     return image_counter
   
-def build_category_description(glossary, labels):
+def build_category_description(glossary):
     """Build a dataframe that contains Mapillary label category description,
     with three columns "category", "subcategory" (empty if there is no subcategory), "object"
     Parameter
@@ -70,20 +65,17 @@ def build_category_description(glossary, labels):
         if len(cur_name) == 2:
             cur_name.insert(1, '')
         category_description.append(cur_name)
-    category_description = pd.DataFrame(category_description,
-                                        columns=["category",
-                                                 "subcategory",
-                                                 "object"])
-    category_description['nb_images'] = count_image_per_label(labels)
-    return category_description
+    return pd.DataFrame(category_description,
+                        columns=["category", "subcategory", "object"])
 
-GLOSSARY = read_glossary(CONFIG_FILENAME)
-TRAIN_LABELS = build_labels([TRAIN_LABEL_FILENAME])
-NB_TRAIN_IMAGE_PER_LABEL = count_image_per_label(TRAIN_LABELS)
-VAL_LABELS = build_labels([VALIDATION_LABEL_FILENAME])
-NB_VAL_IMAGE_PER_LABEL = count_image_per_label(VAL_LABELS)
-LABELS = build_labels([TRAIN_LABEL_FILENAME, VALIDATION_LABEL_FILENAME])
-NB_IMAGE_PER_LABEL = count_image_per_label(LABELS)
+def count_image_per_label(datapath, size):
+    """
+    """
+    train_label_filename = os.path.join(datapath, "training",
+                                        "output_" + str(size[0])
+                                        + "_" + str(size[1]), "labels.csv")
+    train_labels = build_labels([train_label_filename])
+    return 100 * (count_images(train_labels) / train_labels.shape[0])
 
 def plot_nb_image_per_category(category_description):
     """Plot the number of images for each glossary label
