@@ -44,9 +44,9 @@ def prepare_data(height, width, n_channels, batch_size,
         images = ops.convert_to_tensor(filepaths, dtype=tf.string,
                                        name=dataset_type+"_images")
         # Reading labels
-        labels = (pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
-                  .iloc[:,6:].values)
-        labels = labels[:,labels_of_interest]
+        df_labels = pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
+        labels = utils.extract_features(df_labels, "label").values
+        labels = labels[:, labels_of_interest]
         labels = ops.convert_to_tensor(labels, dtype=tf.int16,
                                        name=dataset_type+"_labels")
         # Create input queues
