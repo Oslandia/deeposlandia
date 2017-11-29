@@ -3,6 +3,7 @@
 # Date: september 2017
 
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, hamming_loss
 
 import utils
@@ -192,3 +193,74 @@ def plot_dashboard(dashboard, plot_filename, label_to_plot, plot_size=(24, 16)):
     a.legend(['accuracy', 'precision' ,'recall', 'F-measure'], prop={'size':12})
     fig.savefig(plot_filename)
     plt.close("all")
+
+def dashboard_summary(dashboard):
+    """ Give the summary of dashboard, i.e. the situation of global metrics
+    each tenth of training step
+
+    Parameters
+    ----------
+    dashboard: pandas.DataFrame
+    training process dashboard, with 12 global variables, and 7 variables for
+    each label
+    """
+    return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11), :12]
+
+def dashboard_label_summary(dashboard, index):
+    """Give the summary of a specific label within dashboard, i.e. the
+    situation of metrics dedicated to it each tenth of training step
+
+    Parameters
+    ----------
+    dashboard: pandas.DataFrame
+    training process dashboard, with 12 global variables, and 7 variables for
+    each label
+
+    """
+    return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11),
+                          (index*7+12):(index*7+19)]
+
+
+def dashboard_result(dashboard, step):#, datapath, image_size):
+    """Return an extended version of training process dashboard, by giving
+    positive and negative labels, as well as positive and negative predicted
+    labels, for each glossary item
+
+    Parameters
+    ----------
+    dashboard: pandas.DataFrame
+    training process dashboard, with 12 global variables, and 7 variables for
+    each label
+    """
+    db = dashboard.drop(["epoch", "loss", "bpmll_loss", "hamming_loss",
+    "F_measure"], axis=1)
+    db = db.loc[step].T.reset_index()
+    db.columns = ["metric", "value"]
+    db["label"] = np.repeat("global", db.shape[0])
+    db.loc[7:, "label"] = ["label_" + str(i) for i in np.repeat(range(66), 7)]
+    db["metric"] = np.tile(["tn", "fp", "fn", "tp",
+                            "accuracy", "precision", "recall"], 67)
+    db = db.set_index(["label", "metric"]).unstack().value
+    db['positive'] = db['tp'] + db['fn']
+    db['negative'] = db['tn'] + db['fp']
+    db['pos_pred'] = db['tp'] + db['fp']
+    db['neg_pred'] = db['tn'] + db['fn']
+    db['positive_part'] = (100 * db['positive'] /
+                                  (db['positive'] +
+                                   db['negative']))
+    db['pos_pred_part'] = (100 * db['pos_pred'] /
+                                  (db['pos_pred'] +
+                                   db['neg_pred']))
+    return db
+
+def analyze_model_results(dashboard, period=10):
+    """Analyze the model response after each training step
+    """
+    model_results = []
+    for step in dashboard.index[0:len(dashboard):period]:
+        utils.logger.info("Step {}".format(step))
+        db_results = dashboard_result(dashboard, step)
+        hist_results = plt.hist(db_results.pos_pred_part[1:],
+                                bins=np.linspace(0, 100, 11))
+        model_results.append(hist_results[0].tolist())
+    return model_results
