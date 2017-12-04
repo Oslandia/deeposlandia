@@ -223,14 +223,21 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                             .apply(lambda x: x.mean(), axis=0))
                         curval_dashboard = list(curval_dashboard)
                         val_dashboard.append(curval_dashboard)
-                        utils.logger.info(("Step {} (lr={:1.3f}): loss="
-                                           "{:5.3f}, accuracy={:1.3f} "
-                                           "(validation: {:1.3f}), precision="
-                                           "{:1.3f}, recall={:1.3f}")
+                        utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
+                                           " cm=[{},{},{},{}], "
+                                           "acc={:1.3f} (validation: "
+                                           "{:1.3f}), tpr={:1.3f}, "
+                                           "tnr={:1.3f}, fpr={:1.3f}, "
+                                           "fnr={:1.3f}, ppv={:1.3f}, "
+                                           "npv={:1.3f}, f1s={:1.3f}")
                                           .format(index, lr, loss,
-                                                  db_batch[8],
-                                                  db_val_batch[8],
-                                                  db_batch[9], db_batch[10]))
+                                                  db_batch[4], db_batch[5],
+                                                  db_batch[6], db_batch[7],
+                                                  db_batch[8], db_val_batch[8],
+                                                  db_batch[9],
+                                                  db_batch[10], db_batch[11],
+                                                  db_batch[12], db_batch[13],
+                                                  db_batch[14], db_batch[15]))
                     else:
                         utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
                                            " cm=[{},{},{},{}], "
