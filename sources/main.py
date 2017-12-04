@@ -250,12 +250,19 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                   db_val_batch[8],
                                                   db_batch[9], db_batch[10]))
                     else:
-                        utils.logger.info(("Step {} (lr={:1.3f}): loss={:5.3f}"
-                                           ", accuracy={:1.3f}, precision="
-                                           "{:1.3f}, recall={:1.3f}")
+                        utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
+                                           " cm=[{},{},{},{}], "
+                                           "acc={:1.3f}, tpr={:1.3f}, "
+                                           "tnr={:1.3f}, fpr={:1.3f}, "
+                                           "fnr={:1.3f}, ppv={:1.3f}, "
+                                           "npv={:1.3f}, f1s={:1.3f}")
                                           .format(index, lr, loss,
+                                                  db_batch[4], db_batch[5],
+                                                  db_batch[6], db_batch[7],
                                                   db_batch[8], db_batch[9],
-                                                  db_batch[10]))
+                                                  db_batch[10], db_batch[11],
+                                                  db_batch[12], db_batch[13],
+                                                  db_batch[14], db_batch[15]))
 
                 # Run the model to do a new training iteration
                 fd = {X: X_batch, Y: Y_batch, dropout: DROPOUT, class_w: w_batch}
@@ -278,15 +285,14 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             if initial_step < N_BATCHES * N_EPOCHS:
                 # The results are stored as a df and saved on the file system
                 db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                              "true_neg", "false_pos", "false_neg", "true_pos",
-                              "accuracy", "precision", "recall", "F_measure"]
-                db_columns_by_label = [["tn_"+str(i),
-                                        "fp_"+str(i),
-                                        "fn_"+str(i),
-                                        "tp_"+str(i),
-                                        "accuracy_"+str(i),
-                                        "precision_"+str(i),
-                                        "recall_"+str(i)]
+                              "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
+                              "fpr", "fnr", "ppv", "fpv", "fm"]
+                db_columns_by_label = [["tn_"+str(i), "fp_"+str(i),
+                                        "fn_"+str(i), "tp_"+str(i),
+                                        "acc_"+str(i), "tpr_"+str(i),
+                                        "tnr_"+str(i), "fpr_"+str(i),
+                                        "fnr_"+str(i), "ppv_"+str(i),
+                                        "fpv_"+str(i), "fm_"+str(i)]
                                        for i in label_list]
                 db_columns_by_label = utils.unnest(db_columns_by_label)
                 db_columns = db_columns + db_columns_by_label

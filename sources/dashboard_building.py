@@ -24,65 +24,10 @@ def confusion_matrix_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
+    if index == -1:
+        return confusion_matrix(y_true, y_predicted, labels=[0, 1]).reshape([-1]).tolist()
     return confusion_matrix(y_true[:,index], y_predicted[:,index],
                             labels=[0, 1]).reshape([-1]).tolist()
-
-def accuracy_by_label(y_true, y_predicted, index):
-    """Return the accuracy according to true and predicted labels, for
-    the label of index 'index'; the accuracy is equal to (true_positive+true_negative) / nb_observations (cf sklearn API)
-
-    Parameters
-    ----------
-    y_true: list of lists
-        True labels for the current batch, format [n, m] with n the number of
-    individuals in the batch and m the number of labels
-    y_predicted: list of lists
-        Labels predicted by the model, same format than  y_true
-    index: integer
-        Label to study (between 0 and nb_labels-1)
-    
-    """
-    return accuracy_score(y_true[:,index], y_predicted[:,index])
-
-def precision_by_label(y_true, y_predicted, index):
-    """Return the precision according to true and predicted labels, for
-    the label of index 'index'; the precision is equal to (true_positive+false_positive) / nb_observations (cf sklearn API)
-
-    Parameters
-    ----------
-    y_true: list of lists
-        True labels for the current batch, format [n, m] with n the number of
-    individuals in the batch and m the number of labels
-    y_predicted: list of lists
-        Labels predicted by the model, same format than  y_true
-    index: integer
-        Label to study (between 0 and nb_labels-1)
-    
-    """
-    _, fp, _, tp = confusion_matrix_by_label(y_true, y_predicted, index)
-    if fp + tp == 0:
-        return 0.0
-    return precision_score(y_true[:,index], y_predicted[:,index])
-
-def recall_by_label(y_true, y_predicted, index):
-    """Return the recall according to true and predicted labels, for
-    the label of index 'index'; the recall is equal to true_positive / (true_positive+false_negative) (cf sklearn API)
-
-    Parameters
-    ----------
-    y_true: list of lists
-        True labels for the current batch, format [n, m] with n the number of
-    individuals in the batch and m the number of labels
-    y_predicted: list of lists
-        Labels predicted by the model, same format than  y_true
-    index: integer
-        Label to study (between 0 and nb_labels-1)
-    
-    """
-    _, _, fn, tp = confusion_matrix_by_label(y_true, y_predicted, index)
-    if fn + tp == 0:
-        return 0.0
-    return recall_score(y_true[:,index], y_predicted[:,index])
 
 def dashboard_by_label(y_true, y_predicted, index):
     """Return a mini-dashboard for each label, i.e. accuracy, precision and
@@ -99,10 +44,17 @@ def dashboard_by_label(y_true, y_predicted, index):
         Label to study (between 0 and nb_labels-1)
     
     """
-    return (confusion_matrix_by_label(y_true, y_predicted, index)
-            + [accuracy_by_label(y_true, y_predicted, index),
-               precision_by_label(y_true, y_predicted, index),
-               recall_by_label(y_true, y_predicted, index)])
+    tn, fp, fn, tp = confusion_matrix_by_label(y_true, y_predicted, index)
+    acc = 1.0 * (tp + tn) / (tn + fp + fn + tp)
+    tpr = 1.0 * tp / (fn + tp) if fn + tp > 0 else np.NaN
+    tnr = 1.0 * tn / (tn + fp) if tn + fp > 0 else np.NaN
+    fpr = 1.0 * fp / (tn + fp) if tn + fp > 0 else np.NaN
+    fnr = 1.0 * fn / (fn + tp) if fn + tp > 0 else np.NaN
+    ppv = 1.0 * tp / (fp + tp) if fp + tp > 0 else np.NaN
+    npv = 1.0 * tn / (tn + fn) if fn + tn > 0 else np.NaN
+    fm = 2 * (ppv * tpr) / (ppv + tpr) if ((fn + tp > 0 or fp + tp > 0)
+                                           and ppv + tpr > 0) else np.NaN
+    return [tn, fp, fn, tp, acc, tpr, tnr, fpr, fnr, ppv, npv, fm]
 
 def dashboard_building(y_true, y_predicted):
     """Compute a whole set of metrics to characterize a model accuracy,
@@ -118,23 +70,12 @@ def dashboard_building(y_true, y_predicted):
     
     """
     dashboard = []
-    hammingloss = hamming_loss(utils.unnest(y_true), utils.unnest(y_predicted))
+    y_true_unnest = utils.unnest(y_true)
+    y_predicted_unnest = utils.unnest(y_predicted)
+    hammingloss = hamming_loss(y_true_unnest, y_predicted_unnest)
     dashboard.append(hammingloss)
-    conf_matrix = (confusion_matrix(utils.unnest(y_true),
-                                    utils.unnest(y_predicted))
-                   .reshape([-1])
-                   .tolist())
-    dashboard = dashboard + conf_matrix
-    total_accuracy = accuracy_score(utils.unnest(y_true),
-                                    utils.unnest(y_predicted))
-    dashboard.append(total_accuracy)
-    total_precision = precision_score(utils.unnest(y_true),
-                                      utils.unnest(y_predicted))
-    dashboard.append(total_precision)
-    total_recall = recall_score(utils.unnest(y_true), utils.unnest(y_predicted))
-    dashboard.append(total_recall)
-    total_fmeasure = f1_score(utils.unnest(y_true), utils.unnest(y_predicted))
-    dashboard.append(total_fmeasure)
+    dashboard = dashboard + dashboard_by_label(y_true_unnest,
+                                               y_predicted_unnest, -1)
     for label in range(len(y_true[0])):
         dashboard = dashboard + dashboard_by_label(y_true, y_predicted, label)
     return dashboard
@@ -183,10 +124,10 @@ def plot_dashboard(dashboard, plot_filename, label_to_plot, plot_size=(24, 16)):
     a.set_xlabel('epoch')
     a.set_ylabel('Hamming loss')
     a = plt.subplot2grid((11, 12), (6, 0), rowspan=5, colspan=6)
-    a.plot(dashboard.epoch, dashboard.accuracy, 'r-')
-    a.plot(dashboard.epoch, dashboard.precision, 'b-')
-    a.plot(dashboard.epoch, dashboard.recall, 'g-')
-    a.plot(dashboard.epoch, dashboard.F_measure, 'y-')
+    a.plot(dashboard.epoch, dashboard.acc, 'r-')
+    a.plot(dashboard.epoch, dashboard.ppv, 'b-')
+    a.plot(dashboard.epoch, dashboard.tpr, 'g-')
+    a.plot(dashboard.epoch, dashboard.fm, 'y-')
     a.set_ylim((0, 1))
     a.set_xlabel('epoch')
     a.set_ylabel('model evaluation')
@@ -201,10 +142,10 @@ def dashboard_summary(dashboard):
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 12 global variables, and 7 variables for
+    training process dashboard, with 16 global variables, and 12 variables for
     each label
     """
-    return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11), :12]
+    return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11), :16]
 
 def dashboard_label_summary(dashboard, index):
     """Give the summary of a specific label within dashboard, i.e. the
@@ -213,12 +154,12 @@ def dashboard_label_summary(dashboard, index):
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 12 global variables, and 7 variables for
+    training process dashboard, with 16 global variables, and 12 variables for
     each label
 
     """
-    return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11),
-                          (index*7+12):(index*7+19)]
+    dashboard_label = utils.extract_features(dashboard, str(index))
+    return dashboard_label.iloc[np.linspace(0, len(dashboard)-1, 11)]
 
 
 def dashboard_result(dashboard, step):#, datapath, image_size):
@@ -232,14 +173,13 @@ def dashboard_result(dashboard, step):#, datapath, image_size):
     training process dashboard, with 12 global variables, and 7 variables for
     each label
     """
-    db = dashboard.drop(["epoch", "loss", "bpmll_loss", "hamming_loss",
-    "F_measure"], axis=1)
+    db = dashboard.drop(["epoch", "loss", "bpmll_loss", "hamming_loss"], axis=1)
     db = db.loc[step].T.reset_index()
     db.columns = ["metric", "value"]
     db["label"] = np.repeat("global", db.shape[0])
-    db.loc[7:, "label"] = ["label_" + str(i) for i in np.repeat(range(66), 7)]
-    db["metric"] = np.tile(["tn", "fp", "fn", "tp",
-                            "accuracy", "precision", "recall"], 67)
+    db.loc[12:, "label"] = ["label_" + str(i) for i in np.repeat(range(66), 12)]
+    db["metric"] = np.tile(["tn", "fp", "fn", "tp", "acc", "tpr", "tnr", "fpr",
+                            "fnr", "ppv", "pnv", "fm"], 67)
     db = db.set_index(["label", "metric"]).unstack().value
     db['positive'] = db['tp'] + db['fn']
     db['negative'] = db['tn'] + db['fp']
