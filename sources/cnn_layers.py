@@ -213,34 +213,43 @@ def output_layer(input_layer, input_layer_dim, n_output_classes, network_name):
     """
     # Output building
     with tf.variable_scope(network_name + '_output_layer') as scope:
-        # Create weights and biases for the final fully-connected layer
-        w = tf.get_variable('weights', [input_layer_dim, n_output_classes],
-                            initializer=tf.truncated_normal_initializer())
-        b = tf.get_variable('biases', [n_output_classes],
-                            initializer=tf.random_normal_initializer())
-        # Compute logits through a simple linear combination
-        logits = tf.add(tf.matmul(input_layer, w), b)
         # Compute predicted outputs with softmax/sigmoid function
         if n_output_classes == 1:
+            # Create weights and biases for the final fully-connected layer
+            w = tf.get_variable('weights', [input_layer_dim, 2],
+                                initializer=tf.truncated_normal_initializer())
+            b = tf.get_variable('biases', [2],
+                                initializer=tf.random_normal_initializer())
+            # Compute logits through a simple linear combination
+            logits = tf.add(tf.matmul(input_layer, w), b)
             Y_raw_predict = tf.nn.softmax(logits)
+            Y_predict = tf.to_int32(tf.round(tf.slice(Y_raw_predict, [0, 0], [-1, 1])))
+            return logits, Y_raw_predict, Y_predict
         else:
+            # Create weights and biases for the final fully-connected layer
+            w = tf.get_variable('weights', [input_layer_dim, n_output_classes],
+                                initializer=tf.truncated_normal_initializer())
+            b = tf.get_variable('biases', [n_output_classes],
+                                initializer=tf.random_normal_initializer())
+            # Compute logits through a simple linear combination
+            logits = tf.add(tf.matmul(input_layer, w), b)
             Y_raw_predict = tf.nn.sigmoid(logits)
-        Y_predict = tf.to_int32(tf.round(Y_raw_predict))
-        return logits, Y_raw_predict, Y_predict
+            Y_predict = tf.to_int32(tf.round(Y_raw_predict))
+            return logits, Y_raw_predict, Y_predict
 
-def define_loss(y_true, logits, y_raw_pred, weights,
+def define_loss(y_true, logits, y_raw_p, weights,
                 start_lr, decay_steps, decay_rate, network_name):
     """Define the loss tensor as well as the optimizer; it uses a decaying
     learning rate following the equation 
 
     Parameters
     ----------
-    y_true: np.array
+    y_true: tensor
         True labels (1 if the i-th label is true for j-th image, 0 otherwise)
     logits: tensor
         Logits computed by the model (scores associated to each labels for a
     given image)
-    y_raw_pred: tensor
+    y_raw_p: tensor
         Raw values computed for outputs (float), before transformation into 0-1
     weights: tensor
         Values associated to each label for weighting loss contributions with
@@ -256,23 +265,19 @@ def define_loss(y_true, logits, y_raw_pred, weights,
     """
 
     with tf.name_scope(network_name + '_loss'):
-        # Tensorflow definition of sigmoid cross-entropy:
-        # (tf.maximum(logits, 0) - logits*Y + tf.log(1+tf.exp(-tf.abs(logits))))
-        if y_true.shape[1] == 1:
-            # Mono-label: softmax
+        if y_true.shape[1] == 1: # Mono-label: softmax
+            # not_ytrue = tf.cast(tf.logical_not(tf.cast(y_true, tf.bool)), tf.float32)
+            # Y_true_soft = tf.transpose(tf.reshape(tf.concat([y_true, not_ytrue], axis=0), [2, -1]))
+            soft_logits = tf.slice(logits, [0, 0], [-1, 1])
             entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_true,
-                                                              logits=logits)
+                                                              logits=soft_logits)
+            bpmll_loss = tf.constant(0.0)
         else:
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
+            bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_p)
         weighted_entropy = tf.multiply(weights, entropy)
         loss = tf.reduce_mean(weighted_entropy, name="loss")
-        bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_pred)
-        # Alternative way of measuring a weighted cross-entropy (weighting true
-        # and false labels, but not label contributions to loss):
-        # entropy = tf.nn.weighted_cross_entropy_with_logits(targets=Y,
-        #                                                    logits=logits,
-        #                                                    pos_weight=1.5)
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
         lrate = tf.train.exponential_decay(start_lr, global_step,
