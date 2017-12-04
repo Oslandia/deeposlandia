@@ -60,23 +60,66 @@ Additionally, running the code may generate extra repositories:
 
 # Running the code
 
-This project supposes that you have downloaded the Mapillary image dataset.
+This project supposes that you have downloaded the Mapillary image dataset. The
+following program calls are supposed to be made from the `source` repository.
 
-First of all, a data preprocessing step is applied on the bunch of images, so
-as to normalize image file names and image sizes:
+First of all, the Mapillary glossary can be printed for information purpose
+with the following command:
 
-```bash python3 ./data_preprocessing.py ```
+```
+python3 main.py -g -d ../data
+```
 
-Then some neural network model may be generated before launching the
-convolutional neural network training:
+The `-g` argument makes the program recover the data glossary within the
+repository indicated by `-d` command. By default, the program will look at
+`../data` (it hypothesizes that the data repository is at the project root, or
+that a symbolic link points to it).
 
-```bash python3 ./cnn_instance_building.py ```
+As a prerequisite of the training, a data preprocessing step is applied on the
+bunch of images (`-p` argument), so as to normalize image file names and image
+sizes. The desired size is given after the `-s` argument, under the format `-s
+<width> <height>`:
 
-And finally the model training itself may be undertaken:
+```
+python3 main.py -p -d ../data -s 512 512
+```
 
-```bash python3 ./cnn_train.py ```
+Then the model training itself may be undertaken:
 
-Every module call is supposed to be made from the `source` repository.
+```
+python3 main.py -d ../data -s 512 512 -n cnn_mapil -c 2 -f 1 -e 5
+```
+
+In this example, the 512*512 images produced by previous command will be
+exploited. A network called `cnn_mapil` will be built (`cnn_mapil` is the
+default value), it will be composed of three convolutional layers followed by
+two fully-connected layers (respectively arguments `-c` and `-f`, with default
+values of 2 and 1). The network name and the layer quantities are useful for
+checkpoints and results naming. Here the training will take place for five
+epoches, as indicated by the `-e` argument. One epoch refers to the scan of
+every training image.
+
+Some other arguments may be parametrized for running this program:
++ `-h`: show the help message
++ `-b`: indicate the batch size (number of images per training batch)
++ `-do`: percentage of dropped out neurons during training process
++ `-l`: IDs of considered labels during training (between 1 and 66 if Mapillary
+  data are considered); if 1, the problem becomes a mono-label problem, the
+  `softmax` activation function is preferred to the `sigmoid` one in order to
+  compute final logits
++ `-m`: training mode (either `training`, `testing` or `both`)
++ `-r`: decaying learning rate components (starting learning rate, decay steps
+  and decay rate)
++ `-ss`: log periodicity during training (print dashboard on log each `ss`
+  steps)
++ `-t`: training limit, measured as a number of iteration; overload the epoch
+  number if specified
++ `-w`: weighting policy to apply on label contributions to loss (either `base`
+  if no weights, `global` if contributions are weighted according to global
+  label popularity, `batch` if they are weighted according to label popularity
+  within each batch, `centeredglobal` if global weighting with less weight for
+  medium-popularity labels, `centeredbatch` if batch weighting with less weight
+  for medium-popularity labels)
 
 # License
 
@@ -104,6 +147,4 @@ SOFTWARE.
 
 ___
 
-by Raphael Delhome, Oslandia
-
-September 2017
+Oslandia, December 2017
