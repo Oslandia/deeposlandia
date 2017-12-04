@@ -188,7 +188,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                              label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
 
-                if (index + 1) % SKIP_STEP == 0 or index == initial_step:
+                if (index + 1) % skip_step == 0 or index == initial_step:
                     Y_pred, loss, bpmll, lr = sess.run([y_pred,
                                                         output["loss"],
                                                         output["bpmll"],
