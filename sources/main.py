@@ -40,7 +40,7 @@ import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         image_size, weight_policy, start_lr, decay_steps, decay_rate,
-        name, datapath):
+        drpt, skip_step, batch_size, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -86,68 +86,50 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     with open(config_file_name) as config_file:
         cnn_hyperparam = json.load(config_file)
 
-    # image dimensions (width, height, number of channels)
-    IMAGE_WIDTH   = image_size[0]
-    IMAGE_HEIGHT  = image_size[1]
-    NUM_CHANNELS  = 3 # Colored images (RGB)
     NETWORK_NAME = (NETWORK_NAME + "_" + str(image_size[0])
                     + "_" + str(image_size[1]))
 
-    # number of output classes
-    N_CLASSES = len(label_list)
-    # number of images per batch
-    BATCH_SIZE = 20
-    N_IMAGES = len(os.listdir(os.path.join(datapath, "training",
+    n_images = len(os.listdir(os.path.join(datapath, "training",
                                            "input" + "_" + str(image_size[0])
                                            + "_" + str(image_size[1]))))
-    N_VAL_IMAGES = len(os.listdir(os.path.join(datapath, "validation",
+    n_val_images = len(os.listdir(os.path.join(datapath, "validation",
                                            "input" + "_" + str(image_size[0])
                                            + "_" + str(image_size[1]))))
-    N_BATCHES = int(N_IMAGES / BATCH_SIZE)
-    N_VAL_BATCHES = int(N_VAL_IMAGES / BATCH_SIZE)
-    # learning rate tuning (exponential decay)
-    START_LR = start_lr
-    DECAY_STEPS = decay_steps
-    DECAY_RATE = decay_rate
-    # percentage of nodes that are briefly removed during training process
-    DROPOUT = 2/3.0
-    # number of epochs (one epoch = all images have been used for training)
-    N_EPOCHS = nb_epochs
-    # printing frequency during training
-    SKIP_STEP = 10
+    n_batches = int(n_images / batch_size)
+    n_val_batches = int(n_val_images / batch_size)
 
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
-    cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                            BATCH_SIZE, label_list, datapath,
+    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+                            batch_size, label_list, datapath,
                             "training", "training_data_pipe")
     val_image_batch, val_label_batch, val_filename_batch = \
-    cnn_layers.prepare_data(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS,
-                            BATCH_SIZE, label_list, datapath,
+    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+                            batch_size, label_list, datapath,
                             "validation", "valid_data_pipe")
 
     # Definition of TensorFlow placeholders
-    X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH,
-                                    NUM_CHANNELS], name='X')
-    Y = tf.placeholder(tf.float32, [None, N_CLASSES], name='Y')
+    X = tf.placeholder(tf.float32, [None, image_size[1], image_size[0],
+                                    3], name='X')
+    Y = tf.placeholder(tf.float32, [None, len(label_list)], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
-    class_w = tf.placeholder(tf.float32, [N_CLASSES],
+    class_w = tf.placeholder(tf.float32, [len(label_list)],
                              name='weights_per_label')
 
     # Model building
     logits, y_raw_pred, y_pred = cnn_layers.convnet_building(X, cnn_hyperparam,
                                                              image_size[0],
                                                              image_size[1],
-                                                             NUM_CHANNELS,
-                                                             N_CLASSES,
+                                                             3,
+                                                             len(label_list),
                                                              dropout,
                                                              NETWORK_NAME,
                                                              nbconv,
                                                              nbfullyconn)
 
     # Loss function design
-    output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, START_LR,
-                                    DECAY_STEPS, DECAY_RATE, NETWORK_NAME)
+    output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, start_lr,
+                                    decay_steps, decay_rate, NETWORK_NAME)
 
     # Running the neural network
     with tf.Session() as sess:
@@ -180,29 +162,29 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             dashboard = []
             val_dashboard = []
             if weight_policy == "base":
-                w_batch = np.repeat(1.0, N_CLASSES)
+                w_batch = np.repeat(1.0, len(label_list))
             elif weight_policy == "global":
                 label_counter = gr.count_image_per_label(datapath, image_size)
                 label_counter = [label_counter[l] for l in label_list]
-                w_batch = utils.compute_monotonic_weights(N_IMAGES,
+                w_batch = utils.compute_monotonic_weights(n_images,
                                                           label_counter)
             elif weight_policy == "centeredglobal":
                 label_counter = gr.count_image_per_label(datapath, image_size)
                 label_counter = [label_counter[l] for l in label_list]
-                w_batch = utils.compute_centered_weights(N_IMAGES, label_counter)
+                w_batch = utils.compute_centered_weights(n_images, label_counter)
 
             if nb_iter is None:
-                nb_iter = N_BATCHES * N_EPOCHS
+                nb_iter = n_batches * nb_epochs
             for index in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([train_image_batch,
                                              train_label_batch])
                 if weight_policy == "batch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
-                    w_batch = utils.compute_monotonic_weights(BATCH_SIZE,
+                    w_batch = utils.compute_monotonic_weights(batch_size,
                                                               label_counter)
                 elif weight_policy == "centeredbatch":
                     label_counter = [sum(s) for s in np.transpose(Y_batch)]
-                    w_batch = utils.compute_centered_weights(BATCH_SIZE,
+                    w_batch = utils.compute_centered_weights(batch_size,
                                                              label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
 
@@ -222,7 +204,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                     if mode == "both":
                         # Run the model on validation dataset
                         partial_val_dashboard = []
-                        for val_index in range(N_VAL_BATCHES):
+                        for val_index in range(n_val_batches):
                             X_val_batch, Y_val_batch = \
                             sess.run([val_image_batch, val_label_batch])
                             fd_val = {X: X_val_batch, Y: Y_val_batch,
@@ -265,11 +247,11 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                   db_batch[14], db_batch[15]))
 
                 # Run the model to do a new training iteration
-                fd = {X: X_batch, Y: Y_batch, dropout: DROPOUT, class_w: w_batch}
+                fd = {X: X_batch, Y: Y_batch, dropout: drpt, class_w: w_batch}
                 sess.run(output["optim"], feed_dict=fd)
 
                 # If all training batches have been scanned, save the model
-                if (index + 1) % N_BATCHES == 0:
+                if (index + 1) % n_batches == 0:
                     utils.logger.info(("Checkpoint {}/checkpoints/{}/epoch-{}"
                                        " creation")
                                       .format(datapath, NETWORK_NAME,
@@ -282,7 +264,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             utils.logger.info("Total time: {:.2f} seconds".format(time.time() -
                                                                   start_time))
 
-            if initial_step < N_BATCHES * N_EPOCHS:
+            if initial_step < n_batches * nb_epochs:
                 # The results are stored as a df and saved on the file system
                 db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
                               "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
@@ -333,17 +315,17 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
             # Run the model on validation dataset
             val_dashboard = []
-            for val_index in range(N_VAL_BATCHES):
+            for val_index in range(n_val_batches):
                 X_val_batch, Y_val_batch = sess.run([val_image_batch,
                                                      val_label_batch])
                 fd_val = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0,
-                          class_w: np.repeat(1.0, N_CLASSES)}
+                          class_w: np.repeat(1.0, len(label_list))}
                 Y_pred_val = sess.run([y_pred], feed_dict=fd_val)
                 db_val_batch = \
                 dashboard_building.dashboard_building(Y_val_batch, Y_pred_val[0])
                 db_val_batch.insert(0, val_index)
                 val_dashboard.append(db_val_batch)
-                if (index + 1) % SKIP_STEP == 0 or index == initial_step:
+                if (index + 1) % skip_step == 0 or index == initial_step:
                     utils.logger.info(("Step {}: accuracy = {:1.3f}, precision"
                                        " = {:1.3f}, recall = {:1.3f}")
                                       .format(val_index, db_val_batch[2],
@@ -366,6 +348,10 @@ if __name__ == '__main__':
     # Manage argument parsing
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
+    parser.add_argument('-b', '--batch-size', required=False, type=int,
+                        nargs='?', default=20,
+                        help=("The number of images that must be contained "
+                              "into a single batch"))
     parser.add_argument('-c', '--nbconv', required=False, type=int,
                         nargs='?', default=2,
                         help=("The number of convolutional layers "
@@ -373,6 +359,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
+    parser.add_argument('-do', '--dropout', required=False,
+                        default=2.0/3, nargs='?',
+                        help=("The percentage of dropped out neurons "
+                              "during training"))
     parser.add_argument('-e', '--nb-epochs', required=False, type=int,
                         default=5, nargs='?',
                         help=("The number of training epochs (one epoch means "
@@ -398,13 +388,16 @@ if __name__ == '__main__':
                         help=("True if the data must be prepared, "
                               "false otherwise"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
-                        default=[0.01, 0.95, 1000], type=int,
+                        default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
                               "decay steps and decay rate)"))
     parser.add_argument('-s', '--image-size', nargs="+",
                         default=[512, 384], type=int,
                         help=("The desired size of images (width, height)"))
-    parser.add_argument('-tl', '--training-limit', default=None, type=int,
+    parser.add_argument('-ss', '--skip-step', nargs="+",
+                        default=10, type=int,
+                        help=("The log periodicity during training process"))
+    parser.add_argument('-t', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
                               "nb-epochs * nb-batchs iterations"))
@@ -486,5 +479,6 @@ if __name__ == '__main__':
                     args.training_limit, args.mode, label_list,
                     args.image_size, w, args.learning_rate[0],
                     args.learning_rate[1], args.learning_rate[2],
-                    n, args.datapath)
+                    args.dropout, args.skip_step,
+                    args.batch_size, n, args.datapath)
     sys.exit(0)
