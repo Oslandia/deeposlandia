@@ -444,7 +444,6 @@ if __name__ == '__main__':
         label_list = [i for i in range(nb_labels)]
     else:
         label_list = args.label_list
-        print(label_list)
         if sum([l>=nb_labels for l in args.label_list]) > 0:
             utils.logger.error(("Unsupported label list. "
                                 "Please enter a list of integers comprised"
