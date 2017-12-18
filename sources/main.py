@@ -279,51 +279,6 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             utils.logger.info("Total time: {:.2f} seconds".format(time.time() -
                                                                   start_time))
 
-            if initial_step < n_batches * nb_epochs:
-                # The results are stored as a df and saved on the file system
-                db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                              "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
-                              "fpr", "fnr", "ppv", "fpv", "fm"]
-                db_columns_by_label = [["tn_"+str(i), "fp_"+str(i),
-                                        "fn_"+str(i), "tp_"+str(i),
-                                        "acc_"+str(i), "tpr_"+str(i),
-                                        "tnr_"+str(i), "fpr_"+str(i),
-                                        "fnr_"+str(i), "ppv_"+str(i),
-                                        "fpv_"+str(i), "fm_"+str(i)]
-                                       for i in label_list]
-                db_columns_by_label = utils.unnest(db_columns_by_label)
-                db_columns = db_columns + db_columns_by_label
-                param_history = pd.DataFrame(dashboard, columns=db_columns)
-                param_history = param_history.set_index("epoch")
-                val_param_history = pd.DataFrame(val_dashboard,
-                                                 columns=db_columns)
-                val_param_history = val_param_history.set_index("epoch")
-                utils.make_dir(os.path.join("..", "data", "results"))
-                result_file_name = os.path.join(datapath, "results",
-                                                NETWORK_NAME + ".csv")
-                val_result_file_name = os.path.join(datapath, "results",
-                                                    NETWORK_NAME + "_val.csv")
-                if initial_step == 0:
-                    param_history.to_csv(result_file_name, index=True)
-                    if mode in ["both", "test"]:
-                        val_param_history.to_csv(val_result_file_name,
-                                                 index=True)
-                else:
-                    param_history.to_csv(result_file_name, mode='a',
-                                         index=True, header=False)
-                    if mode in ["both", "test"]:
-                        val_param_history.to_csv(val_result_file_name, mode='a',
-                                                 index=True, header=False)
-
-                # Training results are then saved as a multiplot
-                step = output["gs"].eval(session=sess)
-                complete_dashboard = pd.read_csv(result_file_name)
-                plot_file_name = os.path.join("..", "images",
-                                              (NETWORK_NAME + "_s"
-                                               + str(step) + ".png"))
-                dashboard_building.plot_dashboard(complete_dashboard,
-                                                  plot_file_name,
-                                                  label_list)
         elif mode == "test":
             utils.logger.info(("Test model after {}"
                                " training steps!").format(initial_step))
