@@ -8,6 +8,22 @@
 import numpy as np
 import tensorflow as tf
 
+def multilabel_loss(y_true, y_pred):
+    """ Multi-label loss computing according to Vallet&Sakamoto (2015)
+
+    Parameters
+    ----------
+    y_true: tensor
+        2D tensor that represents the true labels
+    y_pred: tensor
+        2D tensor that represents the model return
+    """
+    ml_num_term = [i for i,j in zip(y_pred, y_true) if j==1]
+    ml_loss_basis = tf.divide(tf.reduce_sum(tf.exp(ml_num_term)),
+                              tf.reduce_sum(tf.exp(y_pred)))
+    ml_loss = tf.reduce_mean(tf.negative(tf.log(ml_loss_basis)))
+    return ml_loss
+
 def bp_mll_loss(y_true, y_pred):
     """BP-MLL loss function; `y_true` and `y_pred` must be 2D tensors of shape
     (batch dimension, number of labels); `y_true` must satisfy `y_true[i][j] ==

@@ -268,7 +268,7 @@ def define_loss(y_true, logits, y_raw_p, weights,
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
             bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_p)
-            ml_loss = tf.constant(0.0)#bpmll.multilabel_loss(y_true, y_raw_p)
+            ml_loss = bpmll.multilabel_loss(y_true, y_raw_p)
         weighted_entropy = tf.multiply(weights, entropy)
         loss = tf.reduce_mean(weighted_entropy, name="loss")
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
