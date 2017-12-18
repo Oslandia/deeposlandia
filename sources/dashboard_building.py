@@ -147,19 +147,23 @@ def dashboard_summary(dashboard):
     """
     return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11), :16]
 
-def dashboard_label_summary(dashboard, index):
+def dashboard_label_summary(dashboard, index, nb_steps):
     """Give the summary of a specific label within dashboard, i.e. the
     situation of metrics dedicated to it each tenth of training step
 
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 16 global variables, and 12 variables for
+        training process dashboard, with 16 global variables, and 12 variables for
     each label
+    index: integer
+        Mapillary index that must be detailed
+    nb_steps: integer
+        Number of training steps that must be logged (regular periodicity)
 
     """
     dashboard_label = utils.extract_features(dashboard, str(index))
-    return dashboard_label.iloc[np.linspace(0, len(dashboard)-1, 11)]
+    return dashboard_label.iloc[np.linspace(0, len(dashboard)-1, 1+nb_steps)]
 
 
 def dashboard_result(dashboard, step):#, datapath, image_size):
@@ -170,27 +174,30 @@ def dashboard_result(dashboard, step):#, datapath, image_size):
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 12 global variables, and 7 variables for
+        training process dashboard, with 16 global variables, and 12 variables for
     each label
+    step: integer
+        training step that must be detailed
     """
-    db = dashboard.drop(["epoch", "loss", "bpmll_loss", "hamming_loss"], axis=1)
-    db = db.loc[step].T.reset_index()
+    db = dashboard.query("epoch==@step")
+    db = db.drop(["epoch", "loss", "bpmll_loss", "hamming_loss"], axis=1)
+    db = db.T.reset_index()
     db.columns = ["metric", "value"]
     db["label"] = np.repeat("global", db.shape[0])
-    db.loc[12:, "label"] = ["label_" + str(i) for i in np.repeat(range(66), 12)]
+    nb_labels = int(db.shape[0] / 12 - 1)
+    db.loc[12:, "label"] = ["label_0" + str(i) if i < 10 else "label_" + str(i)
+                            for i in np.repeat(range(nb_labels), 12)]
     db["metric"] = np.tile(["tn", "fp", "fn", "tp", "acc", "tpr", "tnr", "fpr",
-                            "fnr", "ppv", "pnv", "fm"], 67)
+                            "fnr", "ppv", "pnv", "fm"], nb_labels + 1)
     db = db.set_index(["label", "metric"]).unstack().value
     db['positive'] = db['tp'] + db['fn']
     db['negative'] = db['tn'] + db['fp']
     db['pos_pred'] = db['tp'] + db['fp']
     db['neg_pred'] = db['tn'] + db['fn']
     db['positive_part'] = (100 * db['positive'] /
-                                  (db['positive'] +
-                                   db['negative']))
+                           (db['positive'] + db['negative']))
     db['pos_pred_part'] = (100 * db['pos_pred'] /
-                                  (db['pos_pred'] +
-                                   db['neg_pred']))
+                           (db['pos_pred'] + db['neg_pred']))
     return db
 
 def analyze_model_results(dashboard, period=10):
