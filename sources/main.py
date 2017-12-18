@@ -58,7 +58,10 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     mode: object
         String designing the running mode ("train", "test", or "both")
     label_list: list
-        List of label indices (integers) that will be considered during training
+        List of label indices (integers) that will be considered during
+    training
+    image_size: integer
+        Desired image size (width and height are equals)
     weight_policy: object
         String designing the way label loss contributions are weighted ("base",
     "global", "batch", "centeredglobal", "centeredbatch")
@@ -67,15 +70,24 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     decay_steps: double
         Step normalization term - cf Tensorflow tf.train.exponential_decay
     decay_rate: double
-        Learning rate decay (between 0 and 1) - cf Tensorflow tf.train.exponential_decay
+        Learning rate decay (between 0 and 1) - cf Tensorflow
+    tf.train.exponential_decay
+    drpt: float
+        Percentage of neurons that will be used during training process
+    save_step: integer
+        Periodicity of training result saving (number of iteration)
+    log_step: integer
+        Periodicity of training result printing (number of iteration)
+    batch_size: integer
+        Number of images in each mini-batches
     name: object
         String designing the name of the network
     datapath: object
         String designing the relative path to dataset directory
     
     """
-    NETWORK_NAME = (name + "_" + weight_policy + "_"
-                    + str(nbconv) + "_" + str(nbfullyconn))
+    NETWORK_NAME = (name + "_" + weight_policy + "_" + str(nbconv)
+                    + "_" + str(nbfullyconn))
     if mode == "train":
         utils.logger.info("Model {} training".format(NETWORK_NAME))
     elif mode == "test":
@@ -86,30 +98,27 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     with open(config_file_name) as config_file:
         cnn_hyperparam = json.load(config_file)
 
-    NETWORK_NAME = (NETWORK_NAME + "_" + str(image_size[0])
-                    + "_" + str(image_size[1]))
-
+    NETWORK_NAME = NETWORK_NAME + "_" + str(image_size)
     n_images = len(os.listdir(os.path.join(datapath, "training",
-                                           "input" + "_" + str(image_size[0])
-                                           + "_" + str(image_size[1]))))
+                                           "input" + "_" + str(image_size))))
     n_val_images = len(os.listdir(os.path.join(datapath, "validation",
-                                           "input" + "_" + str(image_size[0])
-                                           + "_" + str(image_size[1]))))
+                                               "input" + "_"
+                                               + str(image_size))))
     n_batches = int(n_images / batch_size)
     n_val_batches = int(n_val_images / batch_size)
 
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
-    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+    cnn_layers.prepare_data(image_size, 3,
                             batch_size, label_list, datapath,
                             "training", "training_data_pipe")
     val_image_batch, val_label_batch, val_filename_batch = \
-    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+    cnn_layers.prepare_data(image_size, 3,
                             batch_size, label_list, datapath,
                             "validation", "valid_data_pipe")
 
     # Definition of TensorFlow placeholders
-    X = tf.placeholder(tf.float32, [None, image_size[1], image_size[0],
+    X = tf.placeholder(tf.float32, [None, image_size, image_size,
                                     3], name='X')
     Y = tf.placeholder(tf.float32, [None, len(label_list)], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
@@ -118,15 +127,14 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
     # Model building
     logits, y_raw_pred, y_pred = cnn_layers.convnet_building(X, cnn_hyperparam,
-                                                             image_size[0],
-                                                             image_size[1],
+                                                             image_size,
                                                              3,
                                                              len(label_list),
                                                              dropout,
                                                              NETWORK_NAME,
                                                              nbconv,
                                                              nbfullyconn)
-
+    
     # Loss function design
     output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, start_lr,
                                     decay_steps, decay_rate, NETWORK_NAME)
@@ -398,12 +406,12 @@ if __name__ == '__main__':
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
                               "decay steps and decay rate)"))
-    parser.add_argument('-s', '--image-size', nargs="+",
-                        default=[512, 384], type=int,
-                        help=("The desired size of images (width, height)"))
-    parser.add_argument('-ss', '--skip-step', nargs="+",
-                        default=10, type=int,
-                        help=("The log periodicity during training process"))
+    parser.add_argument('-s', '--image-size', nargs="?",
+                        default=512, type=int,
+                        help=("The desired size of images (width = height)"))
+    parser.add_argument('-ss', '--save-step', nargs="?",
+                        default=100, type=int,
+                        help=("The save periodicity during training process"))
     parser.add_argument('-t', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
@@ -415,9 +423,9 @@ if __name__ == '__main__':
                               "'centeredglobal', 'centeredbatch'"))
     args = parser.parse_args()
 
-    if type(args.image_size) is not list or len(args.image_size) != 2:
-        utils.logger.error(("Unsupported image size. Please provide two "
-                            "integers (respectively width and height)"))
+    if args.image_size < 256 or args.image_size > 2048:
+        utils.logger.error(("Unsupported image size. Please provide a "
+                            "reasonable image size (between 256 and 2048"))
         sys.exit(1)
 
     if args.mode not in ["train", "test", "both"]:

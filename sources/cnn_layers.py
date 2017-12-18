@@ -11,16 +11,14 @@ from tensorflow.python.framework import ops
 import bpmll # Multilabel classification loss
 import utils
 
-def prepare_data(height, width, n_channels, batch_size,
+def prepare_data(img_size, n_channels, batch_size,
                  labels_of_interest, datapath, dataset_type, scope_name):
     """Insert images and labels in Tensorflow batches
 
     Parameters
     ----------
-    height: integer
-        image height, in pixels
-    width: integer
-        image width, in pixels
+    img_size: integer
+        image width/height, in pixels
     n_channels: integer
         Number of channels in the images (1 for grey-scaled images, 3 for RGB)
     batch_size: integer
@@ -35,10 +33,9 @@ def prepare_data(height, width, n_channels, batch_size,
         string designing the data preparation scope name
     
     """
-    INPUT_PATH = os.path.join(datapath, dataset_type,
-                              "input_" + str(width) + "_" + str(height))
+    INPUT_PATH = os.path.join(datapath, dataset_type, "input_" + str(img_size))
     OUTPUT_PATH = os.path.join(datapath, dataset_type,
-                              "output_" + str(width) + "_" + str(height))
+                               "output_" + str(img_size))
     with tf.variable_scope(scope_name) as scope:
         # Reading image file paths
         filepaths = os.listdir(INPUT_PATH)
@@ -58,7 +55,7 @@ def prepare_data(height, width, n_channels, batch_size,
         # Process path and string tensor into an image and a label
         file_content = tf.read_file(input_queue[0])
         image = tf.image.decode_jpeg(file_content, channels=n_channels)
-        image.set_shape([height, width, n_channels])
+        image.set_shape([img_size, img_size, n_channels])
         image = tf.div(image, 255) # Data normalization
         label = input_queue[1]
         # Collect batches of images before processing
@@ -93,8 +90,8 @@ def conv_layer(input_layer, input_layer_depth, kernel_dim, layer_depth,
         Convolutional layer counter (for scope name unicity)
     network_name: object
         string designing the network name (for scope name unicity)
-    
     """
+
     with tf.variable_scope(network_name + '_conv' + str(counter)) as scope:
         # Create kernel variable
         kernel = tf.get_variable('kernel',
@@ -136,16 +133,14 @@ def maxpool_layer(input_layer, pool_ksize, pool_strides,
         return tf.nn.max_pool(input_layer, ksize=pool_ksize,
                                strides=pool_strides, padding='SAME')
 
-def layer_dim(height, width, layer_coefs, last_layer_depth):
+def layer_dim(img_size, layer_coefs, last_layer_depth):
     """Consider the current layer depth as the function of previous layer
     hyperparameters, so as to reshape it as a single dimension layer
 
     Parameters
     ----------
-    height: integer
-        image height, in pixels
-    width: integer
-        image width, in pixels
+    img_size: integer
+        image width/height, in pixels
     layer_coefs: list
         list of previous layer hyperparameters, that have an impact on the
     current layer depth
@@ -153,12 +148,12 @@ def layer_dim(height, width, layer_coefs, last_layer_depth):
         depth of the last layer in the network
     
     """
-    new_height = int(height / np.prod(np.array(layer_coefs)[:,2]))
-    new_width = int(width / np.prod(np.array(layer_coefs)[:,1]))
+    new_height = int(img_size / np.prod(np.array(layer_coefs)[:,2]))
+    new_width = int(img_size / np.prod(np.array(layer_coefs)[:,1]))
     return new_height * new_width * last_layer_depth
 
-def fullconn_layer(input_layer, height, width, last_layer_dim,
-                   fc_layer_depth, t_dropout, counter, network_name):
+def fullconn_layer(input_layer, last_layer_dim, fc_layer_depth, t_dropout,
+                   counter, network_name):
     """Build a fully-connected layer as a tensor, into the convolutional
                    neural network
 
@@ -166,10 +161,6 @@ def fullconn_layer(input_layer, height, width, last_layer_dim,
     ----------
     input_layer: tensor
         Fully-connected layer input; output of the previous layer into the network
-    height: integer
-        image height, in pixels
-    width: integer
-        image width, in pixels
     last_layer_dim: integer
         previous layer depth, into the network
     fc_layer_depth: integer
@@ -263,7 +254,7 @@ def define_loss(y_true, logits, y_raw_p, weights,
     network_name: object
         String designing the network name (for scope name unicity)
     """
-
+    
     with tf.name_scope(network_name + '_loss'):
         if y_true.shape[1] == 1: # Mono-label: softmax
             # not_ytrue = tf.cast(tf.logical_not(tf.cast(y_true, tf.bool)), tf.float32)
@@ -272,10 +263,12 @@ def define_loss(y_true, logits, y_raw_p, weights,
             entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_true,
                                                               logits=soft_logits)
             bpmll_loss = tf.constant(0.0)
+            ml_loss = tf.constant(0.0)
         else:
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
             bpmll_loss = bpmll.bp_mll_loss(y_true, y_raw_p)
+            ml_loss = tf.constant(0.0)#bpmll.multilabel_loss(y_true, y_raw_p)
         weighted_entropy = tf.multiply(weights, entropy)
         loss = tf.reduce_mean(weighted_entropy, name="loss")
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
@@ -284,12 +277,12 @@ def define_loss(y_true, logits, y_raw_p, weights,
                                            decay_steps=decay_steps,
                                            decay_rate=decay_rate,
                                            name='learning_rate')
-        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss, global_step)
-        return {"loss": loss, "bpmll": bpmll_loss, "gs": global_step,
-                "lrate": lrate, "optim": optimizer}
+        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss,
+                                                           global_step)
+        return {"loss": loss, "bpmll": bpmll_loss, "ml_loss": ml_loss,
+                "gs": global_step, "lrate": lrate, "optim": optimizer}
 
-def convnet_building(X, param, img_width, img_height, nb_channels,
-                     nb_labels, dropout,
+def convnet_building(X, param, img_size, nb_channels, nb_labels, dropout,
                      network_name, nb_convpool, nb_fullconn):
     """Build the structure of a convolutional neural network from image data X
     to the last hidden layer, this layer being returned by this method  
@@ -302,10 +295,8 @@ def convnet_building(X, param, img_width, img_height, nb_channels,
         A dictionary of every network parameters (kernel sizes, strides, depths
     for each layer); the keys are the different layer, under the format
     <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
-    img_width: integer
-        number of horizontal pixels within the image, i.e. first dimension
-    img_height: integer
-        number of vertical pixels within the image, i.e. second dimension
+    img_size: integer
+        number of horizontal/vertical pixels within the image
     nb_channels: integer
         number of channels within images, i.e. 1 if black and white, 3 if RGB
     images
@@ -350,18 +341,16 @@ def convnet_building(X, param, img_width, img_height, nb_channels,
         layer_coefs.append(param["pool2"]["strides"])
         i = i + 1
                 
-    hidden_layer_dim = layer_dim(img_height, img_width,
-                                 layer_coefs, last_layer_dim)
+    hidden_layer_dim = layer_dim(img_size, layer_coefs, last_layer_dim)
     
     i = 1
     while i <= nb_fullconn:
         if i == 1:
-            last_fc = fullconn_layer(last_pool, img_height, img_width,
-                                     hidden_layer_dim,
+            last_fc = fullconn_layer(last_pool, hidden_layer_dim,
                                      param["fullconn1"]["depth"],
                                      dropout, i, network_name)
         else:
-            last_fc = fullconn_layer(last_fc, img_height, img_width,
+            last_fc = fullconn_layer(last_fc,
                                      param["fullconn"+str(i-1)]["depth"],
                                      param["fullconn"+str(i)]["depth"],
                                      dropout, i, network_name)
