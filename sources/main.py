@@ -34,7 +34,7 @@ import sys
 import time
 
 import cnn_layers
-import dashboard_building
+import dashboard_building as db
 import glossary_reading as gr
 import utils
 
@@ -200,10 +200,11 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                     Y_pred, loss, bpmll, lr = sess.run([y_pred,
                                                         output["loss"],
                                                         output["bpmll"],
-                                                        output["lrate"]],
-                                                       feed_dict=fd)
-                    db_batch = dashboard_building.dashboard_building(Y_batch,
-                                                                     Y_pred)
+                                                        output["ml_loss"],
+                                                                 output["lrate"],
+                                                                     logits],
+                                                                feed_dict=fd)
+                    db_batch = db.dashboard_building(Y_batch, Y_pred)
                     db_batch.insert(0, bpmll)
                     db_batch.insert(0, loss)
                     db_batch.insert(0, index)
@@ -220,9 +221,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                             Y_pred_val, loss_batch_val, bpmll_val =\
                     sess.run([y_pred, output["loss"], output["bpmll"]],
                             feed_dict=fd_val)
-                            db_val_batch = \
-                            dashboard_building.dashboard_building(Y_val_batch,
-                                                                  Y_pred_val)
+                            db_val_batch = db.dashboard_building(Y_val_batch,
+                                                                 Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
                             db_val_batch.insert(0, index)
@@ -336,9 +336,9 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                 fd_val = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0,
                           class_w: np.repeat(1.0, len(label_list))}
                 Y_pred_val = sess.run([y_pred], feed_dict=fd_val)
-                db_val_batch = \
-                dashboard_building.dashboard_building(Y_val_batch, Y_pred_val[0])
-                db_val_batch.insert(0, val_index)
+                db_val_batch = db.dashboard_building(Y_val_batch,
+                                                     Y_pred_val[0])
+                db_val_batch.insert(0, val_step)
                 val_dashboard.append(db_val_batch)
                 if (index + 1) % skip_step == 0 or index == initial_step:
                     utils.logger.info(("Step {}: accuracy = {:1.3f}, precision"
