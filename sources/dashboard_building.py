@@ -204,10 +204,32 @@ def analyze_model_results(dashboard, period=10):
     """Analyze the model response after each training step
     """
     model_results = []
-    for step in dashboard.index[0:len(dashboard):period]:
+    for step in dashboard.epoch[0:len(dashboard):period]:
         utils.logger.info("Step {}".format(step))
         db_results = dashboard_result(dashboard, step)
         hist_results = plt.hist(db_results.pos_pred_part[1:],
                                 bins=np.linspace(0, 100, 11))
         model_results.append(hist_results[0].tolist())
     return model_results
+
+def dashboard_columns(labels):
+    """ Give a list of strings that will be used as the dashboard column names,
+    in case of csv saving
+
+    Parameters
+    ----------
+    labels: list
+        list of integers that represents the used labels
+    """
+    db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
+                  "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
+                  "fpr", "fnr", "ppv", "fpv", "fm"]
+    db_columns_by_label = [["tn_"+str(i), "fp_"+str(i),
+                            "fn_"+str(i), "tp_"+str(i),
+                            "acc_"+str(i), "tpr_"+str(i),
+                            "tnr_"+str(i), "fpr_"+str(i),
+                            "fnr_"+str(i), "ppv_"+str(i),
+                            "fpv_"+str(i), "fm_"+str(i)]
+                           for i in labels]
+    db_columns_by_label = utils.unnest(db_columns_by_label)
+    return db_columns + db_columns_by_label
