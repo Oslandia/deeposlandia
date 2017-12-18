@@ -66,7 +66,7 @@ def pairwise_sub(a, b):
     return tf.subtract(column, row)
 
 def pairwise_and(a, b):
-    """Compute pairwise logical `and` betwenen elements of the tensors a and b
+    """Compute pairwise logical `and` between elements of the tensors a and b
 
     Parameters
     ----------

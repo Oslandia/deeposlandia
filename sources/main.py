@@ -107,6 +107,9 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     n_batches = int(n_images / batch_size)
     n_val_batches = int(n_val_images / batch_size)
 
+    utils.logger.info(("{} images splitted into {} batches (batch_size={})!"
+                       "").format(n_images, n_batches, batch_size))
+
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
     cnn_layers.prepare_data(image_size, 3,

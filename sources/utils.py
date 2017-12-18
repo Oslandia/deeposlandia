@@ -232,8 +232,7 @@ def mapillary_data_preparation(datapath, dataset, size, nb_labels):
                          ["label"+str(i) for i in range(nb_labels)])
     train_labels = [pd.DataFrame(generate_images(img_id, img_fn, size, 10, nb_labels,
                                                  IMAGE_PATH, INPUT_PATH,
-                                                 LABEL_PATH),
-                                 columns=train_label_descr)
+                                                 LABEL_PATH), columns=train_label_descr)
                     for img_id, img_fn in enumerate(image_files)]
     train_labels = pd.concat(train_labels)
     train_labels = train_labels.sort_values(by="name")
@@ -263,10 +262,9 @@ def generate_images(img_id, img_filename, base_size, nb_subimages, nb_labels,
     label_path: object
         String designing the relative path to labelled images
     """
-    labels = []
-    logger.info("Create images {} to {} from {}...".format(img_id*10,
-                                                           (img_id+1)*10-1,
-                                                           img_filename))
+
+    logger.info(("Create images {} to {} from {}..."
+                 "").format(img_id*10, (img_id+1)*10-1, img_filename))
     img_in = Image.open(os.path.join(image_path, img_filename))
     img_out = Image.open(os.path.join(label_path,
                                       img_filename.replace(".jpg", ".png")))
