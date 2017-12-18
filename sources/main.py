@@ -165,10 +165,19 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         threads = tf.train.start_queue_runners(coord=coord)
 
         if mode in ["train", "both"]:
+            # Prepare the result backup csv file
+            db_columns = db.dashboard_columns(label_list)
+            utils.make_dir(os.path.join("..", "data", "results", NETWORK_NAME))
+            result_file_name = os.path.join(datapath, "results",
+                                            NETWORK_NAME, NETWORK_NAME)
+            if mode == "both":
+                val_result_file_name = os.path.join(datapath, "results",
+                                                    NETWORK_NAME,
+                                                    NETWORK_NAME + "_val")
+
             # Train the model
             start_time = time.time()
-            dashboard = []
-            val_dashboard = []
+
             if weight_policy == "base":
                 w_batch = np.repeat(1.0, len(label_list))
             elif weight_policy == "global":
@@ -183,7 +192,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
             if nb_iter is None:
                 nb_iter = n_batches * nb_epochs
-            for index in range(initial_step, nb_iter):
+            for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([train_image_batch,
                                              train_label_batch])
                 if weight_policy == "batch":
@@ -196,8 +205,8 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                              label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
 
-                if (index + 1) % skip_step == 0 or index == initial_step:
-                    Y_pred, loss, bpmll, lr = sess.run([y_pred,
+                if (step + 1) % log_step == 0 or step == initial_step:
+                    Y_pred, loss, bpmll, mll, lr, lo = sess.run([y_pred,
                                                         output["loss"],
                                                         output["bpmll"],
                                                         output["ml_loss"],
@@ -207,13 +216,21 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                     db_batch = db.dashboard_building(Y_batch, Y_pred)
                     db_batch.insert(0, bpmll)
                     db_batch.insert(0, loss)
-                    db_batch.insert(0, index)
-                    dashboard.append(db_batch)
+                    db_batch.insert(0, step)
+                    df_batch = pd.DataFrame(np.array(db_batch).reshape([1,-1]),
+                                            columns=db_columns)
+
+                    csv_mode = "w" if step == 0 else "a"
+                    df_batch.to_csv(result_file_name + ".csv", index=False,
+                                    mode=csv_mode, header=csv_mode=="w")
+                    batch_res = db.dashboard_result(df_batch, step)
+                    batch_res.to_csv(result_file_name + "_step"
+                                     + str(step) + ".csv")
 
                     if mode == "both":
                         # Run the model on validation dataset
                         partial_val_dashboard = []
-                        for val_index in range(n_val_batches):
+                        for val_step in range(n_val_batches):
                             X_val_batch, Y_val_batch = \
                             sess.run([val_image_batch, val_label_batch])
                             fd_val = {X: X_val_batch, Y: Y_val_batch,
@@ -225,22 +242,30 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                                  Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
-                            db_val_batch.insert(0, index)
+                            db_val_batch.insert(0, step)
                             partial_val_dashboard.append(db_val_batch)
+
                         curval_dashboard = (pd.DataFrame(partial_val_dashboard)
                                             .apply(lambda x: x.mean(), axis=0))
-                        curval_dashboard = list(curval_dashboard)
-                        val_dashboard.append(curval_dashboard)
+                        curval_dashboard.columns = db_columns
+                        curval_dashboard.set_index("epoch")
+                        curval_dashboard.to_csv(result_file_name, index=True,
+                                                mode=csv_mode,
+                                                header=csv_mode=="w")
                         utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
-                                           " cm=[{},{},{},{}], "
+                                           " mlloss={:5.1f}"
+                                           " cm=[{},{},{},{}] (validation: "
+                                           "[{},{},{},{}]), "
                                            "acc={:1.3f} (validation: "
                                            "{:1.3f}), tpr={:1.3f}, "
                                            "tnr={:1.3f}, fpr={:1.3f}, "
                                            "fnr={:1.3f}, ppv={:1.3f}, "
                                            "npv={:1.3f}, f1s={:1.3f}")
-                                          .format(index, lr, loss,
+                                          .format(step, lr, loss, mll,
                                                   db_batch[4], db_batch[5],
                                                   db_batch[6], db_batch[7],
+                                                  db_val_batch[4], db_val_batch[5],
+                                                  db_val_batch[6], db_val_batch[7],
                                                   db_batch[8], db_val_batch[8],
                                                   db_batch[9],
                                                   db_batch[10], db_batch[11],
@@ -248,12 +273,13 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                   db_batch[14], db_batch[15]))
                     else:
                         utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
+                                           " mlloss={:5.1f}"
                                            " cm=[{},{},{},{}], "
                                            "acc={:1.3f}, tpr={:1.3f}, "
                                            "tnr={:1.3f}, fpr={:1.3f}, "
                                            "fnr={:1.3f}, ppv={:1.3f}, "
                                            "npv={:1.3f}, f1s={:1.3f}")
-                                          .format(index, lr, loss,
+                                          .format(step, lr, loss, mll,
                                                   db_batch[4], db_batch[5],
                                                   db_batch[6], db_batch[7],
                                                   db_batch[8], db_batch[9],
@@ -266,12 +292,11 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                 sess.run(output["optim"], feed_dict=fd)
 
                 # If all training batches have been scanned, save the model
-                if (index + 1) % n_batches == 0:
+                if (step + 1) % save_step == 0:
                     utils.logger.info(("Checkpoint {}/checkpoints/{}/epoch-{}"
                                        " creation")
-                                      .format(datapath, NETWORK_NAME,
-                                              index))
-                    saver.save(sess, global_step=index,
+                                      .format(datapath, NETWORK_NAME, step))
+                    saver.save(sess, global_step=step,
                                save_path=os.path.join(datapath, 'checkpoints',
                                                       NETWORK_NAME, 'epoch'))
 
@@ -285,7 +310,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
             # Run the model on validation dataset
             val_dashboard = []
-            for val_index in range(n_val_batches):
+            for val_step in range(n_val_batches):
                 X_val_batch, Y_val_batch = sess.run([val_image_batch,
                                                      val_label_batch])
                 fd_val = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0,
@@ -295,10 +320,10 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                      Y_pred_val[0])
                 db_val_batch.insert(0, val_step)
                 val_dashboard.append(db_val_batch)
-                if (index + 1) % skip_step == 0 or index == initial_step:
+                if (step + 1) % log_step == 0 or step == initial_step:
                     utils.logger.info(("Step {}: accuracy = {:1.3f}, precision"
                                        " = {:1.3f}, recall = {:1.3f}")
-                                      .format(val_index, db_val_batch[2],
+                                      .format(val_step, db_val_batch[2],
                                               db_val_batch[3], db_val_batch[4]))
             val_cur_dashboard = list(pd.DataFrame(val_dashboard)
                                      .apply(lambda x: x.mean(), axis=0))
