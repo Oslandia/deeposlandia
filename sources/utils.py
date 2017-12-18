@@ -213,34 +213,33 @@ def mapillary_data_preparation(datapath, dataset, size, nb_labels):
         string designing the image dataset relative path
     dataset: object
         string designing the dataset type (either `training` or `validation`)
-    size: list
-        desired image size (two integers, resp. width and height)
+    size: integer
+        desired image size (width and height are equals)
     nb_labels: integer
         number of label in the Mapillary classification
 
     """
     logger.info("Generating images from {} dataset...".format(dataset))
     IMAGE_PATH = os.path.join(datapath, dataset, "images")
-    INPUT_PATH = os.path.join(datapath, dataset, "input_" + str(size[0]) + "_" + str(size[1]))
+    INPUT_PATH = os.path.join(datapath, dataset, "input_" + str(size))
     LABEL_PATH = os.path.join(datapath, dataset, "labels")
-    OUTPUT_PATH = os.path.join(datapath, dataset, "output_" + str(size[0]) + "_" + str(size[1]))
+    OUTPUT_PATH = os.path.join(datapath, dataset, "output_" + str(size))
     make_dir(INPUT_PATH)
     make_dir(OUTPUT_PATH)
     image_files = os.listdir(IMAGE_PATH)
-    train_label_descr = (["name", "raw_image", "width", "height"] +
+    train_label_descr = (["name", "raw_image",
+                          "old_width", "old_height", "pixel_ratio"] +
                          ["label"+str(i) for i in range(nb_labels)])
-    train_labels = [pd.DataFrame(generate_images(img_id, img_fn,
-                                                 size, nb_labels,
+    train_labels = [pd.DataFrame(generate_images(img_id, img_fn, size, 10, nb_labels,
                                                  IMAGE_PATH, INPUT_PATH,
-                                                 LABEL_PATH),
-                                 columns=train_label_descr)
+                                                 LABEL_PATH), columns=train_label_descr)
                     for img_id, img_fn in enumerate(image_files)]
     train_labels = pd.concat(train_labels)
     train_labels = train_labels.sort_values(by="name")
     train_labels.to_csv(os.path.join(OUTPUT_PATH, "labels.csv"),
                         index=False)
 
-def generate_images(img_id, img_filename, size, nb_labels,
+def generate_images(img_id, img_filename, base_size, nb_subimages, nb_labels,
                     image_path, input_path, label_path):
     """Generate a bunch of sub-images from another image by cropping operations
 
@@ -250,8 +249,10 @@ def generate_images(img_id, img_filename, size, nb_labels,
         Raw image id, that will be integrated in the new image names
     img_filename: object
         String designing the name of the starting image
-    size: list
-        List of two integers that represent the desired image size (width*height)
+    base_size: integer
+        Desired image size (width=height)
+    nb_sumimages: integer
+        Number of generated sub-images from each input image
     nb_labels: integer
         Total number of labels within the glossary
     image_path: object
@@ -261,37 +262,80 @@ def generate_images(img_id, img_filename, size, nb_labels,
     label_path: object
         String designing the relative path to labelled images
     """
-    labels = []
-    logger.info("Create images {} to {} from {}...".format(img_id*10,
-                                                           (img_id+1)*10-1,
-                                                           img_filename))
+
+    logger.info(("Create images {} to {} from {}..."
+                 "").format(img_id*10, (img_id+1)*10-1, img_filename))
     img_in = Image.open(os.path.join(image_path, img_filename))
+    img_out = Image.open(os.path.join(label_path,
+                                      img_filename.replace(".jpg", ".png")))
+    # Resizing
     old_width, old_height = img_in.size
-    if old_width <= size[0] or old_height <= size[1]:
-        logger.info(("Current image ({}, {}) is too small, "
-                     "pass.").format(old_width, old_height))
-        return None
-    # pick ten (x, y) couples
-    x = np.random.randint(0, old_width-size[0], 10)
-    y = np.random.randint(0, old_height-size[1], 10)
-    # crop ten sub-images starting from the original one
+    img_in = resize_image(img_in, base_size*2)
+    img_out = resize_image(img_out, base_size*2)
+    new_width, new_height = img_in.size
+    resizing_ratio = math.ceil(old_width * old_height / (new_width * new_height))
+    # Sub-image generation
+    labels = []
+    x = np.random.randint(0, img_in.size[0] - base_size, nb_subimages)
+    y = np.random.randint(0, img_in.size[1] - base_size, nb_subimages)
     for i, x_, y_ in zip(range(len(x)), x, y):
-        new_img = img_in.crop((x_, y_, x_+size[0], y_+size[1]))
-        if i % 2 == 1:
-            new_img = new_img.transpose(Image.FLIP_LEFT_RIGHT)
+        new_img = crop_image(img_in, (x_, y_, x_ + base_size, y_ + base_size))
+        new_img = flip_image(new_img)
         new_img_name = "{:05d}{}.jpg".format(img_id, i)
-        instance_name = os.path.join(input_path, new_img_name)
-        new_img.save(instance_name)
-        label_filename = img_filename.replace(".jpg", ".png")
-        img_out = Image.open(os.path.join(label_path, label_filename))
-        img_out = img_out.crop((x_, y_, x_+size[0], y_+size[1]))
-        labels_out = mapillary_label_building(img_out, nb_labels)
-        labels_out.insert(0, old_height)
-        labels_out.insert(0, old_width)
-        labels_out.insert(0, img_filename)
-        labels_out.insert(0, new_img_name)
+        new_img.save(os.path.join(input_path, new_img_name))
+        labels_out = [new_img_name, img_filename, img_in.size[0],
+                      img_in.size[1], resizing_ratio]
+        new_img_out = img_out.crop((x_, y_, x_ + base_size, y_ + base_size))
+        labels_out = labels_out + mapillary_label_building(new_img_out, nb_labels)
         labels.append(labels_out)
     return labels
+
+def resize_image(img, base_size):
+    """ Resize image `img` such that min(width, height)=base_size; keep image
+    proportions
+
+    Parameters:
+    -----------
+    img: Image
+        input image to resize
+    base_size: integer
+        minimal dimension of the returned image
+    """
+    old_width, old_height = img.size
+    if old_width < old_height:
+        new_size = (base_size, int(base_size * old_height / old_width))
+    else:
+        new_size = (int(base_size * old_width / old_height), base_size)
+    return img.resize(new_size)
+
+def crop_image(img, coordinates):
+    """ Crop image `img` following coordinates `coordinates`; simple overload
+    of the Image.crop() procedure
+
+    Parameters:
+    -----------
+    img: Image
+        input image to resize
+    coordinates: list/tuple
+        iterable object of 4 elements (left, up, right, down) that bound the
+    cropping process
+    """
+    return img.crop(coordinates)
+
+def flip_image(img, proba=0.5):
+    """ Flip image `img` horizontally with a probability of `proba`
+
+    Parameters:
+    -----------
+    img: Image
+        input image to resize
+    proba: float
+        probability of flipping input image (if less than 0.5, no flipping)
+    """
+    if np.random.sample() < proba:
+        return img
+    else:
+        return img.transpose(Image.FLIP_LEFT_RIGHT)
 
 def split_list(l, nb_partitions):
     """Split a list `l` into `nb_partitions` equal sublists

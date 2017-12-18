@@ -24,8 +24,6 @@
 
 import argparse
 import json
-import math
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
@@ -34,13 +32,13 @@ import sys
 import time
 
 import cnn_layers
-import dashboard_building
+import dashboard_building as db
 import glossary_reading as gr
 import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         image_size, weight_policy, start_lr, decay_steps, decay_rate,
-        drpt, skip_step, batch_size, name, datapath):
+        drpt, save_step, log_step, batch_size, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -58,7 +56,10 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     mode: object
         String designing the running mode ("train", "test", or "both")
     label_list: list
-        List of label indices (integers) that will be considered during training
+        List of label indices (integers) that will be considered during
+    training
+    image_size: integer
+        Desired image size (width and height are equals)
     weight_policy: object
         String designing the way label loss contributions are weighted ("base",
     "global", "batch", "centeredglobal", "centeredbatch")
@@ -67,15 +68,24 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     decay_steps: double
         Step normalization term - cf Tensorflow tf.train.exponential_decay
     decay_rate: double
-        Learning rate decay (between 0 and 1) - cf Tensorflow tf.train.exponential_decay
+        Learning rate decay (between 0 and 1) - cf Tensorflow
+    tf.train.exponential_decay
+    drpt: float
+        Percentage of neurons that will be used during training process
+    save_step: integer
+        Periodicity of training result saving (number of iteration)
+    log_step: integer
+        Periodicity of training result printing (number of iteration)
+    batch_size: integer
+        Number of images in each mini-batches
     name: object
         String designing the name of the network
     datapath: object
         String designing the relative path to dataset directory
     
     """
-    NETWORK_NAME = (name + "_" + weight_policy + "_"
-                    + str(nbconv) + "_" + str(nbfullyconn))
+    NETWORK_NAME = (name + "_" + weight_policy + "_" + str(nbconv)
+                    + "_" + str(nbfullyconn))
     if mode == "train":
         utils.logger.info("Model {} training".format(NETWORK_NAME))
     elif mode == "test":
@@ -86,30 +96,30 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
     with open(config_file_name) as config_file:
         cnn_hyperparam = json.load(config_file)
 
-    NETWORK_NAME = (NETWORK_NAME + "_" + str(image_size[0])
-                    + "_" + str(image_size[1]))
-
+    NETWORK_NAME = NETWORK_NAME + "_" + str(image_size)
     n_images = len(os.listdir(os.path.join(datapath, "training",
-                                           "input" + "_" + str(image_size[0])
-                                           + "_" + str(image_size[1]))))
+                                           "input" + "_" + str(image_size))))
     n_val_images = len(os.listdir(os.path.join(datapath, "validation",
-                                           "input" + "_" + str(image_size[0])
-                                           + "_" + str(image_size[1]))))
+                                               "input" + "_"
+                                               + str(image_size))))
     n_batches = int(n_images / batch_size)
     n_val_batches = int(n_val_images / batch_size)
 
+    utils.logger.info(("{} images splitted into {} batches (batch_size={})!"
+                       "").format(n_images, n_batches, batch_size))
+
     # Data recovering
     train_image_batch, train_label_batch, train_filename_batch = \
-    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+    cnn_layers.prepare_data(image_size, 3,
                             batch_size, label_list, datapath,
                             "training", "training_data_pipe")
     val_image_batch, val_label_batch, val_filename_batch = \
-    cnn_layers.prepare_data(image_size[1], image_size[0], 3,
+    cnn_layers.prepare_data(image_size, 3,
                             batch_size, label_list, datapath,
                             "validation", "valid_data_pipe")
 
     # Definition of TensorFlow placeholders
-    X = tf.placeholder(tf.float32, [None, image_size[1], image_size[0],
+    X = tf.placeholder(tf.float32, [None, image_size, image_size,
                                     3], name='X')
     Y = tf.placeholder(tf.float32, [None, len(label_list)], name='Y')
     dropout = tf.placeholder(tf.float32, name='dropout')
@@ -118,15 +128,14 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
     # Model building
     logits, y_raw_pred, y_pred = cnn_layers.convnet_building(X, cnn_hyperparam,
-                                                             image_size[0],
-                                                             image_size[1],
+                                                             image_size,
                                                              3,
                                                              len(label_list),
                                                              dropout,
                                                              NETWORK_NAME,
                                                              nbconv,
                                                              nbfullyconn)
-
+    
     # Loss function design
     output = cnn_layers.define_loss(Y, logits, y_raw_pred, class_w, start_lr,
                                     decay_steps, decay_rate, NETWORK_NAME)
@@ -157,10 +166,19 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         threads = tf.train.start_queue_runners(coord=coord)
 
         if mode in ["train", "both"]:
+            # Prepare the result backup csv file
+            db_columns = db.dashboard_columns(label_list)
+            utils.make_dir(os.path.join("..", "data", "results", NETWORK_NAME))
+            result_file_name = os.path.join(datapath, "results",
+                                            NETWORK_NAME, NETWORK_NAME)
+            if mode == "both":
+                val_result_file_name = os.path.join(datapath, "results",
+                                                    NETWORK_NAME,
+                                                    NETWORK_NAME + "_val")
+
             # Train the model
             start_time = time.time()
-            dashboard = []
-            val_dashboard = []
+
             if weight_policy == "base":
                 w_batch = np.repeat(1.0, len(label_list))
             elif weight_policy == "global":
@@ -175,7 +193,7 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
 
             if nb_iter is None:
                 nb_iter = n_batches * nb_epochs
-            for index in range(initial_step, nb_iter):
+            for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([train_image_batch,
                                              train_label_batch])
                 if weight_policy == "batch":
@@ -188,23 +206,32 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                              label_counter)
                 fd = {X: X_batch, Y: Y_batch, dropout: 1.0, class_w: w_batch}
 
-                if (index + 1) % skip_step == 0 or index == initial_step:
-                    Y_pred, loss, bpmll, lr = sess.run([y_pred,
+                if (step + 1) % log_step == 0 or step == initial_step:
+                    Y_pred, loss, bpmll, mll, lr, lo = sess.run([y_pred,
                                                         output["loss"],
                                                         output["bpmll"],
-                                                        output["lrate"]],
-                                                       feed_dict=fd)
-                    db_batch = dashboard_building.dashboard_building(Y_batch,
-                                                                     Y_pred)
+                                                        output["ml_loss"],
+                                                                 output["lrate"],
+                                                                     logits],
+                                                                feed_dict=fd)
+                    db_batch = db.dashboard_building(Y_batch, Y_pred)
                     db_batch.insert(0, bpmll)
                     db_batch.insert(0, loss)
-                    db_batch.insert(0, index)
-                    dashboard.append(db_batch)
+                    db_batch.insert(0, step)
+                    df_batch = pd.DataFrame(np.array(db_batch).reshape([1,-1]),
+                                            columns=db_columns)
+
+                    csv_mode = "w" if step == 0 else "a"
+                    df_batch.to_csv(result_file_name + ".csv", index=False,
+                                    mode=csv_mode, header=csv_mode=="w")
+                    batch_res = db.dashboard_result(df_batch, step)
+                    batch_res.to_csv(result_file_name + "_step"
+                                     + str(step) + ".csv")
 
                     if mode == "both":
                         # Run the model on validation dataset
                         partial_val_dashboard = []
-                        for val_index in range(n_val_batches):
+                        for val_step in range(n_val_batches):
                             X_val_batch, Y_val_batch = \
                             sess.run([val_image_batch, val_label_batch])
                             fd_val = {X: X_val_batch, Y: Y_val_batch,
@@ -212,27 +239,34 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                             Y_pred_val, loss_batch_val, bpmll_val =\
                     sess.run([y_pred, output["loss"], output["bpmll"]],
                             feed_dict=fd_val)
-                            db_val_batch = \
-                            dashboard_building.dashboard_building(Y_val_batch,
-                                                                  Y_pred_val)
+                            db_val_batch = db.dashboard_building(Y_val_batch,
+                                                                 Y_pred_val)
                             db_val_batch.insert(0, bpmll_val)
                             db_val_batch.insert(0, loss_batch_val)
-                            db_val_batch.insert(0, index)
+                            db_val_batch.insert(0, step)
                             partial_val_dashboard.append(db_val_batch)
+
                         curval_dashboard = (pd.DataFrame(partial_val_dashboard)
                                             .apply(lambda x: x.mean(), axis=0))
-                        curval_dashboard = list(curval_dashboard)
-                        val_dashboard.append(curval_dashboard)
+                        curval_dashboard.columns = db_columns
+                        curval_dashboard.set_index("epoch")
+                        curval_dashboard.to_csv(result_file_name, index=True,
+                                                mode=csv_mode,
+                                                header=csv_mode=="w")
                         utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
-                                           " cm=[{},{},{},{}], "
+                                           " mlloss={:5.1f}"
+                                           " cm=[{},{},{},{}] (validation: "
+                                           "[{},{},{},{}]), "
                                            "acc={:1.3f} (validation: "
                                            "{:1.3f}), tpr={:1.3f}, "
                                            "tnr={:1.3f}, fpr={:1.3f}, "
                                            "fnr={:1.3f}, ppv={:1.3f}, "
                                            "npv={:1.3f}, f1s={:1.3f}")
-                                          .format(index, lr, loss,
+                                          .format(step, lr, loss, mll,
                                                   db_batch[4], db_batch[5],
                                                   db_batch[6], db_batch[7],
+                                                  db_val_batch[4], db_val_batch[5],
+                                                  db_val_batch[6], db_val_batch[7],
                                                   db_batch[8], db_val_batch[8],
                                                   db_batch[9],
                                                   db_batch[10], db_batch[11],
@@ -240,12 +274,13 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                                                   db_batch[14], db_batch[15]))
                     else:
                         utils.logger.info(("Step {} (lr={:.5f}): loss={:5.1f},"
+                                           " mlloss={:5.1f}"
                                            " cm=[{},{},{},{}], "
                                            "acc={:1.3f}, tpr={:1.3f}, "
                                            "tnr={:1.3f}, fpr={:1.3f}, "
                                            "fnr={:1.3f}, ppv={:1.3f}, "
                                            "npv={:1.3f}, f1s={:1.3f}")
-                                          .format(index, lr, loss,
+                                          .format(step, lr, loss, mll,
                                                   db_batch[4], db_batch[5],
                                                   db_batch[6], db_batch[7],
                                                   db_batch[8], db_batch[9],
@@ -258,12 +293,11 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
                 sess.run(output["optim"], feed_dict=fd)
 
                 # If all training batches have been scanned, save the model
-                if (index + 1) % n_batches == 0:
+                if (step + 1) % save_step == 0:
                     utils.logger.info(("Checkpoint {}/checkpoints/{}/epoch-{}"
                                        " creation")
-                                      .format(datapath, NETWORK_NAME,
-                                              index))
-                    saver.save(sess, global_step=index,
+                                      .format(datapath, NETWORK_NAME, step))
+                    saver.save(sess, global_step=step,
                                save_path=os.path.join(datapath, 'checkpoints',
                                                       NETWORK_NAME, 'epoch'))
 
@@ -271,71 +305,26 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
             utils.logger.info("Total time: {:.2f} seconds".format(time.time() -
                                                                   start_time))
 
-            if initial_step < n_batches * nb_epochs:
-                # The results are stored as a df and saved on the file system
-                db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
-                              "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
-                              "fpr", "fnr", "ppv", "fpv", "fm"]
-                db_columns_by_label = [["tn_"+str(i), "fp_"+str(i),
-                                        "fn_"+str(i), "tp_"+str(i),
-                                        "acc_"+str(i), "tpr_"+str(i),
-                                        "tnr_"+str(i), "fpr_"+str(i),
-                                        "fnr_"+str(i), "ppv_"+str(i),
-                                        "fpv_"+str(i), "fm_"+str(i)]
-                                       for i in label_list]
-                db_columns_by_label = utils.unnest(db_columns_by_label)
-                db_columns = db_columns + db_columns_by_label
-                param_history = pd.DataFrame(dashboard, columns=db_columns)
-                param_history = param_history.set_index("epoch")
-                val_param_history = pd.DataFrame(val_dashboard,
-                                                 columns=db_columns)
-                val_param_history = val_param_history.set_index("epoch")
-                utils.make_dir(os.path.join("..", "data", "results"))
-                result_file_name = os.path.join(datapath, "results",
-                                                NETWORK_NAME + ".csv")
-                val_result_file_name = os.path.join(datapath, "results",
-                                                    NETWORK_NAME + "_val.csv")
-                if initial_step == 0:
-                    param_history.to_csv(result_file_name, index=True)
-                    if mode in ["both", "test"]:
-                        val_param_history.to_csv(val_result_file_name,
-                                                 index=True)
-                else:
-                    param_history.to_csv(result_file_name, mode='a',
-                                         index=True, header=False)
-                    if mode in ["both", "test"]:
-                        val_param_history.to_csv(val_result_file_name, mode='a',
-                                                 index=True, header=False)
-
-                # Training results are then saved as a multiplot
-                step = output["gs"].eval(session=sess)
-                complete_dashboard = pd.read_csv(result_file_name)
-                plot_file_name = os.path.join("..", "images",
-                                              (NETWORK_NAME + "_s"
-                                               + str(step) + ".png"))
-                dashboard_building.plot_dashboard(complete_dashboard,
-                                                  plot_file_name,
-                                                  label_list)
         elif mode == "test":
             utils.logger.info(("Test model after {}"
                                " training steps!").format(initial_step))
 
             # Run the model on validation dataset
             val_dashboard = []
-            for val_index in range(n_val_batches):
+            for val_step in range(n_val_batches):
                 X_val_batch, Y_val_batch = sess.run([val_image_batch,
                                                      val_label_batch])
                 fd_val = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0,
                           class_w: np.repeat(1.0, len(label_list))}
                 Y_pred_val = sess.run([y_pred], feed_dict=fd_val)
-                db_val_batch = \
-                dashboard_building.dashboard_building(Y_val_batch, Y_pred_val[0])
-                db_val_batch.insert(0, val_index)
+                db_val_batch = db.dashboard_building(Y_val_batch,
+                                                     Y_pred_val[0])
+                db_val_batch.insert(0, val_step)
                 val_dashboard.append(db_val_batch)
-                if (index + 1) % skip_step == 0 or index == initial_step:
+                if (step + 1) % log_step == 0 or step == initial_step:
                     utils.logger.info(("Step {}: accuracy = {:1.3f}, precision"
                                        " = {:1.3f}, recall = {:1.3f}")
-                                      .format(val_index, db_val_batch[2],
+                                      .format(val_step, db_val_batch[2],
                                               db_val_batch[3], db_val_batch[4]))
             val_cur_dashboard = list(pd.DataFrame(val_dashboard)
                                      .apply(lambda x: x.mean(), axis=0))
@@ -349,7 +338,6 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         # Stop the threads used during the process
         coord.request_stop()
         coord.join(threads)
-
 
 if __name__ == '__main__':
     # Manage argument parsing
@@ -385,6 +373,9 @@ if __name__ == '__main__':
                         default=-1, type=int,
                         help=("The list of label indices that "
                               "will be considered during training process"))
+    parser.add_argument('-ls', '--log-step', nargs="?",
+                        default=10, type=int,
+                        help=("The log periodicity during training process"))
     parser.add_argument('-m', '--mode', required=False, default="train",
                         nargs='?', help=("The network running mode"
                                          "('train', 'test', 'both')"))
@@ -398,12 +389,12 @@ if __name__ == '__main__':
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
                               "decay steps and decay rate)"))
-    parser.add_argument('-s', '--image-size', nargs="+",
-                        default=[512, 384], type=int,
-                        help=("The desired size of images (width, height)"))
-    parser.add_argument('-ss', '--skip-step', nargs="+",
-                        default=10, type=int,
-                        help=("The log periodicity during training process"))
+    parser.add_argument('-s', '--image-size', nargs="?",
+                        default=512, type=int,
+                        help=("The desired size of images (width = height)"))
+    parser.add_argument('-ss', '--save-step', nargs="?",
+                        default=100, type=int,
+                        help=("The save periodicity during training process"))
     parser.add_argument('-t', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
@@ -415,9 +406,9 @@ if __name__ == '__main__':
                               "'centeredglobal', 'centeredbatch'"))
     args = parser.parse_args()
 
-    if type(args.image_size) is not list or len(args.image_size) != 2:
-        utils.logger.error(("Unsupported image size. Please provide two "
-                            "integers (respectively width and height)"))
+    if args.image_size < 256 or args.image_size > 2048:
+        utils.logger.error(("Unsupported image size. Please provide a "
+                            "reasonable image size (between 256 and 2048"))
         sys.exit(1)
 
     if args.mode not in ["train", "test", "both"]:
@@ -485,6 +476,6 @@ if __name__ == '__main__':
                     args.training_limit, args.mode, label_list,
                     args.image_size, w, args.learning_rate[0],
                     args.learning_rate[1], args.learning_rate[2],
-                    args.dropout, args.skip_step,
+                    args.dropout, args.save_step, args.log_step,
                     args.batch_size, n, args.datapath)
     sys.exit(0)

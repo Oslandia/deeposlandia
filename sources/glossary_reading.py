@@ -72,8 +72,7 @@ def count_image_per_label(datapath, size):
     """
     """
     train_label_filename = os.path.join(datapath, "training",
-                                        "output_" + str(size[0])
-                                        + "_" + str(size[1]), "labels.csv")
+                                        "output_" + str(size), "labels.csv")
     train_labels = build_labels([train_label_filename])
     return 100 * (count_images(train_labels) / train_labels.shape[0])
 

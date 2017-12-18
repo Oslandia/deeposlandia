@@ -147,19 +147,23 @@ def dashboard_summary(dashboard):
     """
     return dashboard.iloc[np.linspace(0, len(dashboard)-1, 11), :16]
 
-def dashboard_label_summary(dashboard, index):
+def dashboard_label_summary(dashboard, index, nb_steps):
     """Give the summary of a specific label within dashboard, i.e. the
     situation of metrics dedicated to it each tenth of training step
 
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 16 global variables, and 12 variables for
+        training process dashboard, with 16 global variables, and 12 variables for
     each label
+    index: integer
+        Mapillary index that must be detailed
+    nb_steps: integer
+        Number of training steps that must be logged (regular periodicity)
 
     """
     dashboard_label = utils.extract_features(dashboard, str(index))
-    return dashboard_label.iloc[np.linspace(0, len(dashboard)-1, 11)]
+    return dashboard_label.iloc[np.linspace(0, len(dashboard)-1, 1+nb_steps)]
 
 
 def dashboard_result(dashboard, step):#, datapath, image_size):
@@ -170,37 +174,62 @@ def dashboard_result(dashboard, step):#, datapath, image_size):
     Parameters
     ----------
     dashboard: pandas.DataFrame
-    training process dashboard, with 12 global variables, and 7 variables for
+        training process dashboard, with 16 global variables, and 12 variables for
     each label
+    step: integer
+        training step that must be detailed
     """
-    db = dashboard.drop(["epoch", "loss", "bpmll_loss", "hamming_loss"], axis=1)
-    db = db.loc[step].T.reset_index()
+    db = dashboard.query("epoch==@step")
+    db = db.drop(["epoch", "loss", "bpmll_loss", "hamming_loss"], axis=1)
+    db = db.T.reset_index()
     db.columns = ["metric", "value"]
     db["label"] = np.repeat("global", db.shape[0])
-    db.loc[12:, "label"] = ["label_" + str(i) for i in np.repeat(range(66), 12)]
+    nb_labels = int(db.shape[0] / 12 - 1)
+    db.loc[12:, "label"] = ["label_0" + str(i) if i < 10 else "label_" + str(i)
+                            for i in np.repeat(range(nb_labels), 12)]
     db["metric"] = np.tile(["tn", "fp", "fn", "tp", "acc", "tpr", "tnr", "fpr",
-                            "fnr", "ppv", "pnv", "fm"], 67)
+                            "fnr", "ppv", "pnv", "fm"], nb_labels + 1)
     db = db.set_index(["label", "metric"]).unstack().value
     db['positive'] = db['tp'] + db['fn']
     db['negative'] = db['tn'] + db['fp']
     db['pos_pred'] = db['tp'] + db['fp']
     db['neg_pred'] = db['tn'] + db['fn']
     db['positive_part'] = (100 * db['positive'] /
-                                  (db['positive'] +
-                                   db['negative']))
+                           (db['positive'] + db['negative']))
     db['pos_pred_part'] = (100 * db['pos_pred'] /
-                                  (db['pos_pred'] +
-                                   db['neg_pred']))
+                           (db['pos_pred'] + db['neg_pred']))
     return db
 
 def analyze_model_results(dashboard, period=10):
     """Analyze the model response after each training step
     """
     model_results = []
-    for step in dashboard.index[0:len(dashboard):period]:
+    for step in dashboard.epoch[0:len(dashboard):period]:
         utils.logger.info("Step {}".format(step))
         db_results = dashboard_result(dashboard, step)
         hist_results = plt.hist(db_results.pos_pred_part[1:],
                                 bins=np.linspace(0, 100, 11))
         model_results.append(hist_results[0].tolist())
     return model_results
+
+def dashboard_columns(labels):
+    """ Give a list of strings that will be used as the dashboard column names,
+    in case of csv saving
+
+    Parameters
+    ----------
+    labels: list
+        list of integers that represents the used labels
+    """
+    db_columns = ["epoch", "loss", "bpmll_loss", "hamming_loss",
+                  "tn", "fp", "fn", "tp", "acc", "tpr", "tnr",
+                  "fpr", "fnr", "ppv", "fpv", "fm"]
+    db_columns_by_label = [["tn_"+str(i), "fp_"+str(i),
+                            "fn_"+str(i), "tp_"+str(i),
+                            "acc_"+str(i), "tpr_"+str(i),
+                            "tnr_"+str(i), "fpr_"+str(i),
+                            "fnr_"+str(i), "ppv_"+str(i),
+                            "fpv_"+str(i), "fm_"+str(i)]
+                           for i in labels]
+    db_columns_by_label = utils.unnest(db_columns_by_label)
+    return db_columns + db_columns_by_label
