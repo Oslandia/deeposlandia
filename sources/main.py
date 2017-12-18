@@ -40,7 +40,7 @@ import utils
 
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         image_size, weight_policy, start_lr, decay_steps, decay_rate,
-        drpt, skip_step, batch_size, name, datapath):
+        drpt, save_step, log_step, batch_size, name, datapath):
     """Train and/or test a convolutional neural network on street-scene images
     to detect features
 
@@ -358,7 +358,6 @@ def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         coord.request_stop()
         coord.join(threads)
 
-
 if __name__ == '__main__':
     # Manage argument parsing
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
@@ -393,6 +392,9 @@ if __name__ == '__main__':
                         default=-1, type=int,
                         help=("The list of label indices that "
                               "will be considered during training process"))
+    parser.add_argument('-ls', '--log-step', nargs="?",
+                        default=10, type=int,
+                        help=("The log periodicity during training process"))
     parser.add_argument('-m', '--mode', required=False, default="train",
                         nargs='?', help=("The network running mode"
                                          "('train', 'test', 'both')"))
@@ -493,6 +495,6 @@ if __name__ == '__main__':
                     args.training_limit, args.mode, label_list,
                     args.image_size, w, args.learning_rate[0],
                     args.learning_rate[1], args.learning_rate[2],
-                    args.dropout, args.skip_step,
+                    args.dropout, args.save_step, args.log_step,
                     args.batch_size, n, args.datapath)
     sys.exit(0)
