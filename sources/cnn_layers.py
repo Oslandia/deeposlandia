@@ -318,6 +318,11 @@ def convnet_building(X, param, img_size, nb_channels, nb_labels, dropout,
 
     i = 1
     while i <= nb_convpool:
+        utils.logger.info(("Convolutional (kernel {}*{}, strides={}; depth={})"
+                           "").format(param["conv"+str(i)]["kernel_size"],
+                                      param["conv"+str(i)]["kernel_size"],
+                                      param["conv"+str(i)]["depth"],
+                                      param["conv"+str(i)]["strides"]))
         if i == 1:
             conv = conv_layer(X,
                               nb_channels,
@@ -333,6 +338,10 @@ def convnet_building(X, param, img_size, nb_channels, nb_labels, dropout,
                               param["conv"+str(i)]["strides"],
                               i, network_name)
         layer_coefs.append(param["conv"+str(i)]["strides"])
+        utils.logger.info(("Pooling (kernel {}*{}, strides={})"
+                           "").format(param["pool"+str(i)]["kernel_size"],
+                                      param["pool"+str(i)]["kernel_size"],
+                                      param["pool"+str(i)]["strides"]))
         last_pool = maxpool_layer(conv,
                                   param["pool"+str(i)]["kernel_size"],
                                   param["pool"+str(i)]["strides"],
@@ -345,6 +354,8 @@ def convnet_building(X, param, img_size, nb_channels, nb_labels, dropout,
     
     i = 1
     while i <= nb_fullconn:
+        utils.logger.info(("Fully-connected (depth={})"
+                           "").format(param["fullconn"+str(i)]["depth"]))
         if i == 1:
             last_fc = fullconn_layer(last_pool, hidden_layer_dim,
                                      param["fullconn1"]["depth"],
