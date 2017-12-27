@@ -40,22 +40,22 @@ class ConvolutionalNeuralNetwork(object):
         self._num_labels = num_labels
 
     def get_network_name(self):
-        return _network_name
+        return self._network_name
 
     def get_image_size(self):
-        return _image_size
+        return self._image_size
 
     def get_nb_channels(self):
-        return _nb_channels
+        return self._nb_channels
 
     def get_batch_size(self):
-        return _batch_size
+        return self._batch_size
     
     def get_learning_rate(self):
-        return _learning_rate
+        return self._learning_rate
     
     def get_num_labels(self):
-        return _num_labels
+        return self._num_labels
 
     def create_weights(self, shape):
         return tf.get_variable('weights', shape,
