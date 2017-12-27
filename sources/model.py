@@ -44,47 +44,13 @@ class ConvolutionalNeuralNetwork(object):
     def get_num_labels(self):
         return _num_labels
 
-    def add_layers(self, X, img_size, nb_chan, nb_labels, network_name):
-        """Build the structure of a convolutional neural network from image data X
-        to the last hidden layer, this layer being returned by this method
+    def create_weights(self, shape):
+        return tf.get_variable('weights', shape,
+                               initializer=tf.truncated_normal_initializer())
 
-        Parameters
-        ----------
-        X: tensorflow.placeholder
-            Image data with a shape [batch_size, width, height, nb_channels]
-        param: dict
-            A dictionary of every network parameters (kernel sizes, strides, depths
-        for each layer); the keys are the different layer, under the format
-        <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
-        img_size: integer
-            number of horizontal/vertical pixels within the image
-        nb_chan: integer
-            number of channels within images, i.e. 1 if black and white, 3 if RGB
-        images
-        nb_labels: integer
-            number of output classes (labels)
-        network_name: object
-            string designing the network name, for layer identification purpose
-        """
-
-        layer = self.convolutional_layer(1, network_name, X, nb_chan, 8, 16)
-        layer = self.maxpooling_layer(1, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(2, network_name, layer, 16, 8, 16)
-        layer = self.maxpooling_layer(2, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(3, network_name, layer, 16, 8, 32)
-        layer = self.maxpooling_layer(3, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(4, network_name, layer, 32, 8, 32)
-        layer = self.maxpooling_layer(4, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(5, network_name, layer, 32, 8, 64)
-        layer = self.maxpooling_layer(5, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(6, network_name, layer, 64, 8, 64)
-        layer = self.maxpooling_layer(6, network_name, layer, 2, 2)
-        last_layer_dim = self.get_last_conv_layer_dim(img_size, 64, 64)
-        layer = self.fullyconnected_layer(1, network_name, layer,
-                                          last_layer_dim, 1024, 0.75)
-        layer = self.fullyconnected_layer(2, network_name, layer,
-                                          1024, 1024, 0.75)
-        return self.output_layer(network_name, layer, 1024, nb_labels)
+    def create_biases(self, shape):
+        return tf.get_variable('biases', shape,
+                               initializer=tf.constant_initializer(0.0))
 
     def convolutional_layer(self, counter, network_name, input_layer,
                             input_layer_depth, kernel_dim,
@@ -220,13 +186,47 @@ class ConvolutionalNeuralNetwork(object):
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             return {"logits": logits, "y_pred": Y_raw_predict}
 
-    def create_weights(self, shape):
-        return tf.get_variable('weights', shape,
-                               initializer=tf.truncated_normal_initializer())
+    def add_layers(self, X, img_size, nb_chan, nb_labels, network_name):
+        """Build the structure of a convolutional neural network from image data X
+        to the last hidden layer, this layer being returned by this method
 
-    def create_biases(self, shape):
-        return tf.get_variable('biases', shape,
-                               initializer=tf.constant_initializer(0.0))
+        Parameters
+        ----------
+        X: tensorflow.placeholder
+            Image data with a shape [batch_size, width, height, nb_channels]
+        param: dict
+            A dictionary of every network parameters (kernel sizes, strides, depths
+        for each layer); the keys are the different layer, under the format
+        <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
+        img_size: integer
+            number of horizontal/vertical pixels within the image
+        nb_chan: integer
+            number of channels within images, i.e. 1 if black and white, 3 if RGB
+        images
+        nb_labels: integer
+            number of output classes (labels)
+        network_name: object
+            string designing the network name, for layer identification purpose
+        """
+
+        layer = self.convolutional_layer(1, network_name, X, nb_chan, 8, 16)
+        layer = self.maxpooling_layer(1, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(2, network_name, layer, 16, 8, 16)
+        layer = self.maxpooling_layer(2, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(3, network_name, layer, 16, 8, 32)
+        layer = self.maxpooling_layer(3, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(4, network_name, layer, 32, 8, 32)
+        layer = self.maxpooling_layer(4, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(5, network_name, layer, 32, 8, 64)
+        layer = self.maxpooling_layer(5, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(6, network_name, layer, 64, 8, 64)
+        layer = self.maxpooling_layer(6, network_name, layer, 2, 2)
+        last_layer_dim = self.get_last_conv_layer_dim(img_size, 64, 64)
+        layer = self.fullyconnected_layer(1, network_name, layer,
+                                          last_layer_dim, 1024, 0.75)
+        layer = self.fullyconnected_layer(2, network_name, layer,
+                                          1024, 1024, 0.75)
+        return self.output_layer(network_name, layer, 1024, nb_labels)
 
     def compute_loss(self, network_name, y_true, logits, y_raw_p):
         """Define the loss tensor as well as the optimizer; it uses a decaying
