@@ -277,8 +277,8 @@ def define_loss(y_true, logits, y_raw_p, weights,
                                            decay_steps=decay_steps,
                                            decay_rate=decay_rate,
                                            name='learning_rate')
-        optimizer = tf.train.AdamOptimizer(lrate).minimize(loss,
-                                                           global_step)
+        opt = tf.train.AdamOptimizer(learning_rate=lrate)
+        optimizer = opt.minimize(loss, global_step)
         return {"loss": loss, "bpmll": bpmll_loss, "ml_loss": ml_loss,
                 "gs": global_step, "lrate": lrate, "optim": optimizer}
 
