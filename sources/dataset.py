@@ -49,3 +49,29 @@ class Dataset(object):
         """
         """
         return len(self.class_info)
+
+    def build_glossary(self, config_filename):
+        """Read the Mapillary glossary stored as a json file at the data repository
+        root
+
+        """
+        with open(config_filename) as config_file:
+            glossary = json.load(config_file)
+        if "labels" not in glossary.keys():
+            print("There is no 'label' key in the provided glossary.")
+            return None
+        for lab_id, label in enumerate(glossary["labels"]):
+            if label["evaluate"]:
+                name_items = label["name"].split('--')
+                category = '-'.join(name_items[:-1])
+                self.add_class(lab_id, name_items[-1], label["color"], category)
+
+    def add_class(self, class_id, class_name, color, category=None):
+        """
+        """
+        if class_id in self.class_info.keys():
+            print("Class {} already stored into the class set.".format(class_id))
+            return None
+        self.class_info[class_id] = {"name": class_name,
+                                     "category": category,
+                                     "color": color}
