@@ -269,8 +269,7 @@ class ConvolutionalNeuralNetwork(object):
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
         return self.optimize(loss)
 
-    def define_batch(self, labels_of_interest, datapath, dataset_type,
-                     scope_name):
+    def define_batch(self, labels_of_interest, datapath, dataset_type):
         """Insert images and labels in Tensorflow batches
 
         Parameters
@@ -282,15 +281,13 @@ class ConvolutionalNeuralNetwork(object):
         dataset_type: object
             string designing the considered dataset
         (`training`, `validation` or `testing`)
-        scope_name: object
-            string designing the data preparation scope name
 
         """
         INPUT_PATH = os.path.join(datapath, dataset_type,
                                   "input_" + str(self._image_size))
         OUTPUT_PATH = os.path.join(datapath, dataset_type,
                                    "output_" + str(self._image_size))
-        with tf.variable_scope(scope_name) as scope:
+        with tf.variable_scope(self._network_name+"_"+dataset_type+"_pipe") as scope:
             filepaths = os.listdir(INPUT_PATH)
             filepaths.sort()
             filepaths = [os.path.join(INPUT_PATH, fp) for fp in filepaths]
@@ -324,8 +321,7 @@ class ConvolutionalNeuralNetwork(object):
         """
         train_image_batch, train_label_batch = self.define_batch(label_list,
                                                                  datapath,
-                                                                 "training",
-                                                                 "train_pipe")
+                                                                 "training")
         output = self.build()
 
         with tf.Session() as sess:
