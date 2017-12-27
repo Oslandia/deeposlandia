@@ -18,7 +18,8 @@ def multilabel_loss(y_true, y_pred):
     y_pred: tensor
         2D tensor that represents the model return
     """
-    ml_num_term = [i for i,j in zip(y_pred, y_true) if j==1]
+    # ml_num_term = [i for i,j in zip(y_pred, y_true) if j==1]
+    ml_num_term = y_pred
     ml_loss_basis = tf.divide(tf.reduce_sum(tf.exp(ml_num_term)),
                               tf.reduce_sum(tf.exp(y_pred)))
     ml_loss = tf.reduce_mean(tf.negative(tf.log(ml_loss_basis)))
