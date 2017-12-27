@@ -262,3 +262,19 @@ class ConvolutionalNeuralNetwork(object):
         opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": lrate, "optim": optimizer}
+
+    def build(self, network_name, image_size, nb_chan=3):
+        """ Build the convolutional neural network structure from input
+        placeholders to loss function optimization
+
+        """
+        X = tf.placeholder(tf.float32, name='X',
+                           shape=[None, image_size, image_size, nb_chan])
+        Y = tf.placeholder(tf.float32, name='Y', shape=[None, len(label_list)])
+        dropout = tf.placeholder(tf.float32, name='dropout')
+
+        output = self.add_layer(X, image_size, nb_chan, len(label_list),
+                                network_name)
+
+        loss = self.compute_loss(network_name, Y, output["logits"], output["y_pred"])
+        return self.optimize(network_name, loss)
