@@ -36,6 +36,48 @@ class ConvolutionalNeuralNetwork(object):
     def get_num_labels(self):
         return _num_labels
 
+    def add_layers(self, X, img_size, nb_chan, nb_labels, network_name):
+        """Build the structure of a convolutional neural network from image data X
+        to the last hidden layer, this layer being returned by this method
+
+        Parameters
+        ----------
+        X: tensorflow.placeholder
+            Image data with a shape [batch_size, width, height, nb_channels]
+        param: dict
+            A dictionary of every network parameters (kernel sizes, strides, depths
+        for each layer); the keys are the different layer, under the format
+        <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
+        img_size: integer
+            number of horizontal/vertical pixels within the image
+        nb_chan: integer
+            number of channels within images, i.e. 1 if black and white, 3 if RGB
+        images
+        nb_labels: integer
+            number of output classes (labels)
+        network_name: object
+            string designing the network name, for layer identification purpose
+        """
+
+        layer = self.convolutional_layer(1, network_name, X, nb_chan, 8, 16)
+        layer = self.maxpooling_layer(1, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(2, network_name, layer, 16, 8, 16)
+        layer = self.maxpooling_layer(2, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(3, network_name, layer, 16, 8, 32)
+        layer = self.maxpooling_layer(3, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(4, network_name, layer, 32, 8, 32)
+        layer = self.maxpooling_layer(4, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(5, network_name, layer, 32, 8, 64)
+        layer = self.maxpooling_layer(5, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(6, network_name, layer, 64, 8, 64)
+        layer = self.maxpooling_layer(6, network_name, layer, 2, 2)
+        last_layer_dim = self.get_last_conv_layer_dim(img_size, 64, 64)
+        layer = self.fullyconnected_layer(1, network_name, layer,
+                                          last_layer_dim, 1024, 0.75)
+        layer = self.fullyconnected_layer(2, network_name, layer,
+                                          1024, 1024, 0.75)
+        return self.output_layer(network_name, layer, 1024, nb_labels)
+
     def convolutional_layer(self, counter, network_name, input_layer,
                             input_layer_depth, kernel_dim,
                             layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
@@ -127,3 +169,28 @@ class ConvolutionalNeuralNetwork(object):
             b = self.create_biases([layer_depth])
             return tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
             # return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
+
+    def output_layer(self, network_name, input_layer, input_layer_dim,
+                     n_output_classes):
+        """Build an output layer to a neural network with a sigmoid final
+        activation function (softmax if there is only one label to predict);
+        return final network scores (logits) as well as predictions
+
+        Parameters
+        ----------
+        network_name: object
+            String designing the network name (for scope name unicity)
+        input_layer: tensor
+            Previous layer within the neural network (last hidden layer)
+        input_layer_dim: integer
+            Dimension of the previous neural network layer
+        n_output_classes: integer
+            Dimension of the output layer
+
+        """
+        with tf.variable_scope(network_name + '_output_layer') as scope:
+            w = self.create_weights([input_layer_dim, n_output_classes])
+            b = self.create_biases([n_output_classes])
+            logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
+            Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
+            return {"logits": logits, "y_pred": Y_raw_predict}
