@@ -330,3 +330,29 @@ class ConvolutionalNeuralNetwork(object):
             return tf.train.batch([image, label],
                                   batch_size=self._batch_size,
                                   num_threads=4)
+
+    def train(self, dataset, nb_epochs, loss, global_step):
+        """
+        """
+        train_image_batch, train_label_batch = self.define_batch(image_size,
+                                                                 nb_chan,
+                                                                 batch_size,
+                                                                 label_list,
+                                                                 datapath,
+                                                                 "training",
+                                                                 "train_pipe")
+        output = self.build(network_name, image_size)
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            initial_step = output["gs"].eval(session=sess)
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=coord)
+            for step in range(initial_step, nb_iter):
+                X_batch, Y_batch = sess.run([train_image_batch,
+                                             train_label_batch])
+                fd = {X: X_batch, Y: Y_batch, dropout: drpt, class_w: w_batch}
+                sess.run(output["optim"], feed_dict=fd)
+
+            coord.request_stop()
+            coord.join(threads)
