@@ -142,6 +142,23 @@ class ConvolutionalNeuralNetwork(object):
                                   ksize=[1, kernel_dim, kernel_dim, 1],
                                   strides=[1,stride,stride,1], padding=padding)
 
+    def get_last_conv_layer_dim(self, img_size, strides, last_layer_depth):
+        """Consider the current layer depth as the function of previous layer
+        hyperparameters, so as to reshape it as a single dimension layer
+
+        Parameters
+        ----------
+        img_size: integer
+            image width/height, in pixels
+        strides: list
+            list of previous layer hyperparameters, that have an impact on the
+        current layer depth
+        last_layer_depth: integer
+            depth of the last layer in the network
+
+        """
+        return int(img_size/strides) * int(img_size/strides) * last_layer_depth
+
     def fullyconnected_layer(self, counter, network_name, input_layer,
                              last_layer_dim, layer_depth, t_dropout=1.0):
         """Build a fully-connected layer as a tensor, into the convolutional
