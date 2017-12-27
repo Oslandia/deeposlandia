@@ -30,13 +30,17 @@ import utils
 
 class ConvolutionalNeuralNetwork(object):
 
-    def __init__(self, image_size=512, nb_channels=3, batch_size=128,
-                 num_labels=65, learning_rate=1e-3):
+    def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
+                 batch_size=128, num_labels=65, learning_rate=1e-3):
+        self._network_name = network_name
         self._image_size = image_size
         self._nb_channels = nb_channels
         self._batch_size = batch_size
         self._learning_rate = learning_rate
         self._num_labels = num_labels
+
+    def get_network_name(self):
+        return _network_name
 
     def get_image_size(self):
         return _image_size
@@ -61,7 +65,7 @@ class ConvolutionalNeuralNetwork(object):
         return tf.get_variable('biases', shape,
                                initializer=tf.constant_initializer(0.0))
 
-    def convolutional_layer(self, counter, network_name, input_layer,
+    def convolutional_layer(self, counter, input_layer,
                             input_layer_depth, kernel_dim,
                             layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
         """Build a convolutional layer as a Tensorflow object,
@@ -87,10 +91,8 @@ class ConvolutionalNeuralNetwork(object):
         where a is the shift (in pixels) between each convolution operation
         counter: integer
             Convolutional layer counter (for scope name unicity)
-        network_name: object
-            string designing the network name (for scope name unicity)
         """
-        with tf.variable_scope(network_name+'_conv'+str(counter)) as scope:
+        with tf.variable_scope(self._network_name+'_conv'+str(counter)) as scope:
             w = self.create_weights([kernel_dim, kernel_dim,
                                      input_layer_depth, layer_depth])
             b = self.create_biases([layer_depth])
@@ -99,7 +101,7 @@ class ConvolutionalNeuralNetwork(object):
             return tf.nn.relu(tf.add(conv, b), name=scope.name)
 
     
-    def maxpooling_layer(self, counter, network_name, input_layer, kernel_dim,
+    def maxpooling_layer(self, counter, input_layer, kernel_dim,
                          stride=2, padding='SAME'):
         """Build a max pooling layer as a Tensorflow object,
         into the convolutional neural network
@@ -108,8 +110,6 @@ class ConvolutionalNeuralNetwork(object):
         ----------
         counter: integer
             Max pooling layer counter (for scope name unicity)
-        network_name: object
-            string designing the network name (for scope name unicity)
         input_layer: tensor
             Pooling layer input; output of the previous layer into the network
         kernel_dim: list
@@ -120,7 +120,7 @@ class ConvolutionalNeuralNetwork(object):
         where a is the shift between each pooling operation
 
         """
-        with tf.variable_scope(network_name + '_pool' + str(counter)) as scope:
+        with tf.variable_scope(self._network_name + '_pool' + str(counter)) as scope:
             return tf.nn.max_pool(input_layer,
                                   ksize=[1, kernel_dim, kernel_dim, 1],
                                   strides=[1,stride,stride,1], padding=padding)
@@ -140,7 +140,7 @@ class ConvolutionalNeuralNetwork(object):
         """
         return last_layer_depth * (int(self._image_size/strides) ** 2)
 
-    def fullyconnected_layer(self, counter, network_name, input_layer,
+    def fullyconnected_layer(self, counter, input_layer,
                              last_layer_dim, layer_depth, t_dropout=1.0):
         """Build a fully-connected layer as a tensor, into the convolutional
                        neural network
@@ -157,18 +157,16 @@ class ConvolutionalNeuralNetwork(object):
             tensor corresponding to the neuron keeping probability during dropout operation
         counter: integer
             fully-connected layer counter (for scope name unicity)
-        network_name: object
-            string designing the network name (for scope name unicity)
 
         """
-        with tf.variable_scope(network_name + '_fc' + str(counter)) as scope:
+        with tf.variable_scope(self._network_name + '_fc' + str(counter)) as scope:
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             b = self.create_biases([layer_depth])
             return tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
             # return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
-    def output_layer(self, network_name, input_layer, input_layer_dim,
+    def output_layer(self, input_layer, input_layer_dim,
                      n_output_classes):
         """Build an output layer to a neural network with a sigmoid final
         activation function (softmax if there is only one label to predict);
@@ -176,8 +174,6 @@ class ConvolutionalNeuralNetwork(object):
 
         Parameters
         ----------
-        network_name: object
-            String designing the network name (for scope name unicity)
         input_layer: tensor
             Previous layer within the neural network (last hidden layer)
         input_layer_dim: integer
@@ -186,14 +182,14 @@ class ConvolutionalNeuralNetwork(object):
             Dimension of the output layer
 
         """
-        with tf.variable_scope(network_name + '_output_layer') as scope:
+        with tf.variable_scope(self._network_name + '_output_layer') as scope:
             w = self.create_weights([input_layer_dim, n_output_classes])
             b = self.create_biases([n_output_classes])
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             return {"logits": logits, "y_pred": Y_raw_predict}
 
-    def add_layers(self, X, nb_labels, network_name):
+    def add_layers(self, X, nb_labels):
         """Build the structure of a convolutional neural network from image data X
         to the last hidden layer, this layer being returned by this method
 
@@ -201,44 +197,33 @@ class ConvolutionalNeuralNetwork(object):
         ----------
         X: tensorflow.placeholder
             Image data with a shape [batch_size, width, height, nb_channels]
-        param: dict
-            A dictionary of every network parameters (kernel sizes, strides, depths
-        for each layer); the keys are the different layer, under the format
-        <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
         nb_labels: integer
             number of output classes (labels)
-        network_name: object
-            string designing the network name, for layer identification purpose
         """
 
-        layer = self.convolutional_layer(1, network_name, X,
-                                         self._nb_channels, 8, 16)
-        layer = self.maxpooling_layer(1, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(2, network_name, layer, 16, 8, 16)
-        layer = self.maxpooling_layer(2, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(3, network_name, layer, 16, 8, 32)
-        layer = self.maxpooling_layer(3, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(4, network_name, layer, 32, 8, 32)
-        layer = self.maxpooling_layer(4, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(5, network_name, layer, 32, 8, 64)
-        layer = self.maxpooling_layer(5, network_name, layer, 2, 2)
-        layer = self.convolutional_layer(6, network_name, layer, 64, 8, 64)
-        layer = self.maxpooling_layer(6, network_name, layer, 2, 2)
+        layer = self.convolutional_layer(1, X, self._nb_channels, 8, 16)
+        layer = self.maxpooling_layer(1, layer, 2, 2)
+        layer = self.convolutional_layer(2, layer, 16, 8, 16)
+        layer = self.maxpooling_layer(2, layer, 2, 2)
+        layer = self.convolutional_layer(3, layer, 16, 8, 32)
+        layer = self.maxpooling_layer(3, layer, 2, 2)
+        layer = self.convolutional_layer(4, layer, 32, 8, 32)
+        layer = self.maxpooling_layer(4, layer, 2, 2)
+        layer = self.convolutional_layer(5, layer, 32, 8, 64)
+        layer = self.maxpooling_layer(5, layer, 2, 2)
+        layer = self.convolutional_layer(6, layer, 64, 8, 64)
+        layer = self.maxpooling_layer(6, layer, 2, 2)
         last_layer_dim = self.get_last_conv_layer_dim(64, 64)
-        layer = self.fullyconnected_layer(1, network_name, layer,
-                                          last_layer_dim, 1024, 0.75)
-        layer = self.fullyconnected_layer(2, network_name, layer,
-                                          1024, 1024, 0.75)
-        return self.output_layer(network_name, layer, 1024, nb_labels)
+        layer = self.fullyconnected_layer(1, layer, last_layer_dim, 1024, 0.75)
+        layer = self.fullyconnected_layer(2, layer, 1024, 1024, 0.75)
+        return self.output_layer(layer, 1024, nb_labels)
 
-    def compute_loss(self, network_name, y_true, logits, y_raw_p):
+    def compute_loss(self, y_true, logits, y_raw_p):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
         Parameters
         ----------
-        network_name: object
-            String designing the network name (for scope name unicity)
         y_true: tensor
             True labels (1 if the i-th label is true for j-th image, 0 otherwise)
         logits: tensor
@@ -248,25 +233,19 @@ class ConvolutionalNeuralNetwork(object):
             Raw values computed for outputs (float), before transformation into 0-1
         """
 
-        with tf.name_scope(network_name + '_loss'):
+        with tf.name_scope(self._network_name + '_loss'):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
             return tf.reduce_mean(entropy, name="loss")
 
-    def optimize(self, network_name, loss):
+    def optimize(self, loss):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
         Parameters
         ----------
-        network_name: object
-            String designing the network name (for scope name unicity)
-        start_lr: integer
-            Starting learning rate, used in the first iteration
-        decay_steps: integer
-            Number of steps over which the learning rate is computed
-        decay_rate: float
-            Decreasing rate used for learning rate computation
+        loss: tensor
+        Tensor that represents the neural network loss function
         """
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
@@ -274,7 +253,7 @@ class ConvolutionalNeuralNetwork(object):
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": lrate, "optim": optimizer}
 
-    def build(self, network_name):
+    def build(self):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
@@ -285,10 +264,10 @@ class ConvolutionalNeuralNetwork(object):
         Y = tf.placeholder(tf.float32, name='Y', shape=[None, len(label_list)])
         dropout = tf.placeholder(tf.float32, name='dropout')
 
-        output = self.add_layer(X, len(label_list), network_name)
+        output = self.add_layer(X, len(label_list))
 
-        loss = self.compute_loss(network_name, Y, output["logits"], output["y_pred"])
-        return self.optimize(network_name, loss)
+        loss = self.compute_loss(Y, output["logits"], output["y_pred"])
+        return self.optimize(loss)
 
     def define_batch(self, labels_of_interest, datapath, dataset_type,
                      scope_name):
@@ -347,7 +326,7 @@ class ConvolutionalNeuralNetwork(object):
                                                                  datapath,
                                                                  "training",
                                                                  "train_pipe")
-        output = self.build(network_name)
+        output = self.build()
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
