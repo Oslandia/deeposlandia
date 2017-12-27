@@ -211,3 +211,11 @@ class ConvolutionalNeuralNetwork(object):
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             return {"logits": logits, "y_pred": Y_raw_predict}
+
+    def create_weights(self, shape):
+        return tf.get_variable('weights', shape,
+                               initializer=tf.truncated_normal_initializer())
+
+    def create_biases(self, shape):
+        return tf.get_variable('biases', shape,
+                               initializer=tf.constant_initializer(0.0))
