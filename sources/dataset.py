@@ -75,3 +75,22 @@ class Dataset(object):
         self.class_info[class_id] = {"name": class_name,
                                      "category": category,
                                      "color": color}
+
+    def populate(self, datadir):
+        """
+        """
+        self.image_info = defaultdict()
+        image_dir = os.listdir(os.path.join(datadir, "images"))
+        for image_id, image_filename in enumerate(image_dir):
+            label_filename = image_filename.replace("/images/", "/labels/")
+            label_filename = image_filename.replace(".jpg", ".png")
+            self.add_image(image_id, image_filename, label_filename)
+
+    def add_image(self, image_id, image_filename, label_filename):
+        """
+        """
+        if image_id in self.image_info.keys():
+            print("Image {} already stored into the class set.".format(image_id))
+            return None
+        self.image_info[image_id] = {"image_filename": image_filename,
+                                     "label_filename": label_filename}
