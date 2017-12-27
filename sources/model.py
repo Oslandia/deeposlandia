@@ -30,10 +30,19 @@ import utils
 
 class ConvolutionalNeuralNetwork(object):
 
-    def __init__(self, batch_size=128, num_labels=65, learning_rate=1e-3):
+    def __init__(self, image_size=512, nb_channels=3, batch_size=128,
+                 num_labels=65, learning_rate=1e-3):
+        self._image_size = image_size
+        self._nb_channels = nb_channels
         self._batch_size = batch_size
         self._learning_rate = learning_rate
         self._num_labels = num_labels
+
+    def get_image_size(self):
+        return _image_size
+
+    def get_nb_channels(self):
+        return _nb_channels
 
     def get_batch_size(self):
         return _batch_size
@@ -116,14 +125,12 @@ class ConvolutionalNeuralNetwork(object):
                                   ksize=[1, kernel_dim, kernel_dim, 1],
                                   strides=[1,stride,stride,1], padding=padding)
 
-    def get_last_conv_layer_dim(self, img_size, strides, last_layer_depth):
+    def get_last_conv_layer_dim(self, strides, last_layer_depth):
         """Consider the current layer depth as the function of previous layer
         hyperparameters, so as to reshape it as a single dimension layer
 
         Parameters
         ----------
-        img_size: integer
-            image width/height, in pixels
         strides: list
             list of previous layer hyperparameters, that have an impact on the
         current layer depth
@@ -131,7 +138,7 @@ class ConvolutionalNeuralNetwork(object):
             depth of the last layer in the network
 
         """
-        return int(img_size/strides) * int(img_size/strides) * last_layer_depth
+        return last_layer_depth * (int(self._image_size/strides) ** 2)
 
     def fullyconnected_layer(self, counter, network_name, input_layer,
                              last_layer_dim, layer_depth, t_dropout=1.0):
@@ -186,7 +193,7 @@ class ConvolutionalNeuralNetwork(object):
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             return {"logits": logits, "y_pred": Y_raw_predict}
 
-    def add_layers(self, X, img_size, nb_chan, nb_labels, network_name):
+    def add_layers(self, X, nb_labels, network_name):
         """Build the structure of a convolutional neural network from image data X
         to the last hidden layer, this layer being returned by this method
 
@@ -198,18 +205,14 @@ class ConvolutionalNeuralNetwork(object):
             A dictionary of every network parameters (kernel sizes, strides, depths
         for each layer); the keys are the different layer, under the format
         <conv/pool/fullconn><rank>, e.g. conv1 for the first convolutional layer
-        img_size: integer
-            number of horizontal/vertical pixels within the image
-        nb_chan: integer
-            number of channels within images, i.e. 1 if black and white, 3 if RGB
-        images
         nb_labels: integer
             number of output classes (labels)
         network_name: object
             string designing the network name, for layer identification purpose
         """
 
-        layer = self.convolutional_layer(1, network_name, X, nb_chan, 8, 16)
+        layer = self.convolutional_layer(1, network_name, X,
+                                         self._nb_channels, 8, 16)
         layer = self.maxpooling_layer(1, network_name, layer, 2, 2)
         layer = self.convolutional_layer(2, network_name, layer, 16, 8, 16)
         layer = self.maxpooling_layer(2, network_name, layer, 2, 2)
@@ -221,7 +224,7 @@ class ConvolutionalNeuralNetwork(object):
         layer = self.maxpooling_layer(5, network_name, layer, 2, 2)
         layer = self.convolutional_layer(6, network_name, layer, 64, 8, 64)
         layer = self.maxpooling_layer(6, network_name, layer, 2, 2)
-        last_layer_dim = self.get_last_conv_layer_dim(img_size, 64, 64)
+        last_layer_dim = self.get_last_conv_layer_dim(64, 64)
         layer = self.fullyconnected_layer(1, network_name, layer,
                                           last_layer_dim, 1024, 0.75)
         layer = self.fullyconnected_layer(2, network_name, layer,
@@ -271,33 +274,28 @@ class ConvolutionalNeuralNetwork(object):
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": lrate, "optim": optimizer}
 
-    def build(self, network_name, image_size, nb_chan=3):
+    def build(self, network_name):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
         """
         X = tf.placeholder(tf.float32, name='X',
-                           shape=[None, image_size, image_size, nb_chan])
+                           shape=[None, self._image_size,
+                                  self._image_size, self._nb_channels])
         Y = tf.placeholder(tf.float32, name='Y', shape=[None, len(label_list)])
         dropout = tf.placeholder(tf.float32, name='dropout')
 
-        output = self.add_layer(X, image_size, nb_chan, len(label_list),
-                                network_name)
+        output = self.add_layer(X, len(label_list), network_name)
 
         loss = self.compute_loss(network_name, Y, output["logits"], output["y_pred"])
         return self.optimize(network_name, loss)
 
-    def define_batch(self, img_size, n_channels,
-                 labels_of_interest, datapath, dataset_type, scope_name):
+    def define_batch(self, labels_of_interest, datapath, dataset_type,
+                     scope_name):
         """Insert images and labels in Tensorflow batches
 
         Parameters
         ----------
-        img_size: integer
-            image width/height, in pixels
-        n_channels: integer
-            Number of channels in the images
-        (1 for grey-scaled images, 3 for RGB)
         labels_of_interest: list
             List of label indices on which a model will be trained
         datapath: object
@@ -309,11 +307,11 @@ class ConvolutionalNeuralNetwork(object):
             string designing the data preparation scope name
 
         """
-        INPUT_PATH = os.path.join(datapath, dataset_type, "input_" + str(img_size))
+        INPUT_PATH = os.path.join(datapath, dataset_type,
+                                  "input_" + str(self._image_size))
         OUTPUT_PATH = os.path.join(datapath, dataset_type,
-                                   "output_" + str(img_size))
+                                   "output_" + str(self._image_size))
         with tf.variable_scope(scope_name) as scope:
-            # Reading image file paths
             filepaths = os.listdir(INPUT_PATH)
             filepaths.sort()
             filepaths = [os.path.join(INPUT_PATH, fp) for fp in filepaths]
@@ -330,8 +328,11 @@ class ConvolutionalNeuralNetwork(object):
                                                         shuffle=False)
             # Process path and string tensor into an image and a label
             file_content = tf.read_file(input_queue[0])
-            image = tf.image.decode_jpeg(file_content, channels=n_channels)
-            image.set_shape([img_size, img_size, n_channels])
+            image = tf.image.decode_jpeg(file_content,
+                                         channels=self._nb_channels)
+            image.set_shape([self._image_size,
+                             self._image_size,
+                             self._nb_channels])
             image = tf.div(image, 255) # Data normalization
             label = input_queue[1]
             # Collect batches of images before processing
@@ -342,14 +343,11 @@ class ConvolutionalNeuralNetwork(object):
     def train(self, dataset, nb_epochs, loss, global_step):
         """
         """
-        train_image_batch, train_label_batch = self.define_batch(image_size,
-                                                                 nb_chan,
-                                                                 batch_size,
-                                                                 label_list,
+        train_image_batch, train_label_batch = self.define_batch(label_list,
                                                                  datapath,
                                                                  "training",
                                                                  "train_pipe")
-        output = self.build(network_name, image_size)
+        output = self.build(network_name)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
