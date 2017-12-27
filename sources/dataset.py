@@ -19,6 +19,10 @@
  */
 """
 
+from collections import defaultdict
+import json
+import os
+
 class Dataset(object):
 
     def __init__(self, image_size, glossary_filename):
