@@ -219,3 +219,46 @@ class ConvolutionalNeuralNetwork(object):
     def create_biases(self, shape):
         return tf.get_variable('biases', shape,
                                initializer=tf.constant_initializer(0.0))
+
+    def compute_loss(self, network_name, y_true, logits, y_raw_p):
+        """Define the loss tensor as well as the optimizer; it uses a decaying
+        learning rate following the equation
+
+        Parameters
+        ----------
+        network_name: object
+            String designing the network name (for scope name unicity)
+        y_true: tensor
+            True labels (1 if the i-th label is true for j-th image, 0 otherwise)
+        logits: tensor
+            Logits computed by the model (scores associated to each labels for a
+        given image)
+        y_raw_p: tensor
+            Raw values computed for outputs (float), before transformation into 0-1
+        """
+
+        with tf.name_scope(network_name + '_loss'):
+            entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
+                                                              logits=logits)
+            return tf.reduce_mean(entropy, name="loss")
+
+    def optimize(self, network_name, loss):
+        """Define the loss tensor as well as the optimizer; it uses a decaying
+        learning rate following the equation
+
+        Parameters
+        ----------
+        network_name: object
+            String designing the network name (for scope name unicity)
+        start_lr: integer
+            Starting learning rate, used in the first iteration
+        decay_steps: integer
+            Number of steps over which the learning rate is computed
+        decay_rate: float
+            Decreasing rate used for learning rate computation
+        """
+        global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
+                                  name='global_step')
+        opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
+        optimizer = opt.minimize(loss, global_step)
+        return {"gs": global_step, "lrate": lrate, "optim": optimizer}
