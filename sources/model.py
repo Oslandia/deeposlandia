@@ -340,7 +340,7 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, nb_epochs, loss, global_step):
+    def train(self, dataset, nb_epochs):
         """
         """
         train_image_batch, train_label_batch = self.define_batch(label_list,
