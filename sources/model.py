@@ -278,3 +278,55 @@ class ConvolutionalNeuralNetwork(object):
 
         loss = self.compute_loss(network_name, Y, output["logits"], output["y_pred"])
         return self.optimize(network_name, loss)
+
+    def define_batch(self, img_size, n_channels,
+                 labels_of_interest, datapath, dataset_type, scope_name):
+        """Insert images and labels in Tensorflow batches
+
+        Parameters
+        ----------
+        img_size: integer
+            image width/height, in pixels
+        n_channels: integer
+            Number of channels in the images
+        (1 for grey-scaled images, 3 for RGB)
+        labels_of_interest: list
+            List of label indices on which a model will be trained
+        datapath: object
+            String designing the relative path to data
+        dataset_type: object
+            string designing the considered dataset
+        (`training`, `validation` or `testing`)
+        scope_name: object
+            string designing the data preparation scope name
+
+        """
+        INPUT_PATH = os.path.join(datapath, dataset_type, "input_" + str(img_size))
+        OUTPUT_PATH = os.path.join(datapath, dataset_type,
+                                   "output_" + str(img_size))
+        with tf.variable_scope(scope_name) as scope:
+            # Reading image file paths
+            filepaths = os.listdir(INPUT_PATH)
+            filepaths.sort()
+            filepaths = [os.path.join(INPUT_PATH, fp) for fp in filepaths]
+            images = ops.convert_to_tensor(filepaths, dtype=tf.string,
+                                           name=dataset_type+"_images")
+            # Reading labels
+            df_labels = pd.read_csv(os.path.join(OUTPUT_PATH, "labels.csv"))
+            labels = utils.extract_features(df_labels, "label").values
+            labels = labels[:, labels_of_interest]
+            labels = ops.convert_to_tensor(labels, dtype=tf.int16,
+                                           name=dataset_type+"_labels")
+            # Create input queues
+            input_queue = tf.train.slice_input_producer([images, labels],
+                                                        shuffle=False)
+            # Process path and string tensor into an image and a label
+            file_content = tf.read_file(input_queue[0])
+            image = tf.image.decode_jpeg(file_content, channels=n_channels)
+            image.set_shape([img_size, img_size, n_channels])
+            image = tf.div(image, 255) # Data normalization
+            label = input_queue[1]
+            # Collect batches of images before processing
+            return tf.train.batch([image, label],
+                                  batch_size=self._batch_size,
+                                  num_threads=4)
