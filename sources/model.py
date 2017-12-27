@@ -19,6 +19,14 @@
  */
 """
 
+import numpy as np
+import os
+import pandas as pd
+import tensorflow as tf
+from tensorflow.python.framework import ops
+
+import dataset
+import utils
 
 class ConvolutionalNeuralNetwork(object):
 
