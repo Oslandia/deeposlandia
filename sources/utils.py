@@ -128,11 +128,9 @@ def mapillary_label_building(filtered_image, nb_labels):
         number of labels contained into the reference classification
     
     """
-    filtered_data = np.array(filtered_image)
-    avlble_labels = (pd.Series(filtered_data.reshape([-1]))
-                     .value_counts()
-                     .index)
-    return [1 if i in avlble_labels else 0 for i in range(nb_labels)]
+    image_data = np.array(filtered_image)
+    available_labels = np.unique(image_data)
+    return [1 if i in available_labels else 0 for i in range(nb_labels)]
 
 def mapillary_image_size_plot(data, filename):
     """Plot the distribution of the sizes in a bunch of images, as a hexbin
