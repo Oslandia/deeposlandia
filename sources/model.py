@@ -31,13 +31,13 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 batch_size=128, num_labels=65, learning_rate=1e-3):
+                 batch_size=128, nb_labels=65, learning_rate=1e-3):
         self._network_name = network_name
         self._image_size = image_size
         self._nb_channels = nb_channels
+        self._nb_labels = nb_labels
         self._batch_size = batch_size
         self._learning_rate = learning_rate
-        self._num_labels = num_labels
 
     def get_network_name(self):
         return self._network_name
@@ -54,8 +54,8 @@ class ConvolutionalNeuralNetwork(object):
     def get_learning_rate(self):
         return self._learning_rate
     
-    def get_num_labels(self):
-        return self._num_labels
+    def get_nb_labels(self):
+        return self._nb_labels
 
     def create_weights(self, shape):
         return tf.get_variable('weights', shape,
