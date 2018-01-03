@@ -166,8 +166,7 @@ class ConvolutionalNeuralNetwork(object):
             return tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
             # return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
-    def output_layer(self, input_layer, input_layer_dim,
-                     n_output_classes):
+    def output_layer(self, input_layer, input_layer_dim):
         """Build an output layer to a neural network with a sigmoid final
         activation function (softmax if there is only one label to predict);
         return final network scores (logits) as well as predictions
@@ -178,18 +177,16 @@ class ConvolutionalNeuralNetwork(object):
             Previous layer within the neural network (last hidden layer)
         input_layer_dim: integer
             Dimension of the previous neural network layer
-        n_output_classes: integer
-            Dimension of the output layer
 
         """
         with tf.variable_scope(self._network_name + '_output_layer') as scope:
-            w = self.create_weights([input_layer_dim, n_output_classes])
-            b = self.create_biases([n_output_classes])
+            w = self.create_weights([input_layer_dim, self._nb_labels])
+            b = self.create_biases([self._nb_labels])
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             return {"logits": logits, "y_pred": Y_raw_predict}
 
-    def add_layers(self, X, nb_labels):
+    def add_layers(self, X):
         """Build the structure of a convolutional neural network from image data X
         to the last hidden layer, this layer being returned by this method
 
@@ -216,7 +213,7 @@ class ConvolutionalNeuralNetwork(object):
         last_layer_dim = self.get_last_conv_layer_dim(64, 64)
         layer = self.fullyconnected_layer(1, layer, last_layer_dim, 1024, 0.75)
         layer = self.fullyconnected_layer(2, layer, 1024, 1024, 0.75)
-        return self.output_layer(layer, 1024, nb_labels)
+        return self.output_layer(layer, 1024)
 
     def compute_loss(self, y_true, logits, y_raw_p):
         """Define the loss tensor as well as the optimizer; it uses a decaying
