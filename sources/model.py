@@ -324,3 +324,9 @@ class ConvolutionalNeuralNetwork(object):
 
             coord.request_stop()
             coord.join(threads)
+
+    def test(self, dataset):
+        pass
+
+    def summary(self):
+        pass
