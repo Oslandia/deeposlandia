@@ -116,6 +116,22 @@ def mapillary_label_reading(labels):
     """
     return [l['readable'] for l in labels]
 
+def one_hot_encoding(image_filename, nb_labels):
+    """Build a list of integer labels that are contained into a candidate
+    filtered image designed by its name on file system; the labels are
+    recognized starting from image pixels
+
+    Parameters
+    ----------
+    image_filename: object
+        File name of the image that has to be encoded
+    nb_labels: integer
+        number of labels contained into the reference classification
+
+    """
+    image = Image.open(image_filename)
+    return mapillary_label_building(image, nb_labels)
+
 def mapillary_label_building(filtered_image, nb_labels):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
