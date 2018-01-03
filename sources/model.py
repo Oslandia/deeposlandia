@@ -298,7 +298,7 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, nb_epochs):
+    def train(self, dataset, nb_epochs, nb_iter=None):
         """
         """
         batched_images, batched_labels = self.define_batch(dataset, range(dataset.get_nb_class()))
@@ -314,6 +314,9 @@ class ConvolutionalNeuralNetwork(object):
             initial_step = output["gs"].eval(session=sess)
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
+            if nb_iter is None:
+                n_batches = int(len(dataset.image_info) / self._batch_size)
+                nb_iter = n_batches * nb_epochs
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 fd = {X: X_batch, Y: Y_batch}
