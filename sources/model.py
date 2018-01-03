@@ -248,7 +248,7 @@ class ConvolutionalNeuralNetwork(object):
                                   name='global_step')
         opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
         optimizer = opt.minimize(loss, global_step)
-        return {"gs": global_step, "lrate": lrate, "optim": optimizer}
+        return {"gs": global_step, "lrate": self._learning_rate, "optim": optimizer}
 
     def build(self):
         """ Build the convolutional neural network structure from input
