@@ -250,18 +250,12 @@ class ConvolutionalNeuralNetwork(object):
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": self._learning_rate, "optim": optimizer}
 
-    def build(self):
+    def build(self, X, Y):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
         """
-        X = tf.placeholder(tf.float32, name='X',
-                           shape=[None, self._image_size,
-                                  self._image_size, self._nb_channels])
-        Y = tf.placeholder(tf.float32, name='Y', shape=[None, len(label_list)])
-        dropout = tf.placeholder(tf.float32, name='dropout')
-
-        output = self.add_layer(X, len(label_list))
+        output = self.add_layers(X)
 
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
         return self.optimize(loss)
@@ -316,10 +310,13 @@ class ConvolutionalNeuralNetwork(object):
     def train(self, dataset, nb_epochs):
         """
         """
-        train_image_batch, train_label_batch = self.define_batch(label_list,
-                                                                 datapath,
-                                                                 "training")
-        output = self.build()
+        batched_images, batched_labels = self.define_batch(dataset, range(dataset.get_nb_class()))
+
+        X = tf.placeholder(tf.float32, name='X',
+                           shape=[None, self._image_size,
+                                  self._image_size, self._nb_channels])
+        Y = tf.placeholder(tf.float32, name='Y', shape=[None, self._nb_labels])
+        output = self.build(X, Y)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -327,9 +324,8 @@ class ConvolutionalNeuralNetwork(object):
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             for step in range(initial_step, nb_iter):
-                X_batch, Y_batch = sess.run([train_image_batch,
-                                             train_label_batch])
-                fd = {X: X_batch, Y: Y_batch, dropout: drpt, class_w: w_batch}
+                X_batch, Y_batch = sess.run([batched_images, batched_labels])
+                fd = {X: X_batch, Y: Y_batch}
                 sess.run(output["optim"], feed_dict=fd)
 
             coord.request_stop()
