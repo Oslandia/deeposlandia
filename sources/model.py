@@ -163,8 +163,8 @@ class ConvolutionalNeuralNetwork(object):
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             b = self.create_biases([layer_depth])
-            return tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
-            # return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
+            fc = tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
+            return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
     def output_layer(self, input_layer, input_layer_dim):
         """Build an output layer to a neural network with a sigmoid final
