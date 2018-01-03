@@ -54,6 +54,11 @@ class Dataset(object):
         """
         return len(self.class_info)
 
+    def get_nb_images(self):
+        """
+        """
+        return len(self.image_info)
+
     def build_glossary(self, config_filename):
         """Read the Mapillary glossary stored as a json file at the data repository
         root
