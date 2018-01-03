@@ -32,6 +32,8 @@ class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
                  batch_size=128, nb_labels=65, learning_rate=1e-3):
+        """ Class constructor
+        """
         self._network_name = network_name
         self._image_size = image_size
         self._nb_channels = nb_channels
@@ -40,28 +42,58 @@ class ConvolutionalNeuralNetwork(object):
         self._learning_rate = learning_rate
 
     def get_network_name(self):
+        """ `_network_name` getter
+        """
         return self._network_name
 
     def get_image_size(self):
+        """ `_image_size` getter
+        """
         return self._image_size
 
     def get_nb_channels(self):
+        """ `_nb_channels` getter
+        """
         return self._nb_channels
 
     def get_batch_size(self):
+        """ `_batch_size` getter
+        """
         return self._batch_size
     
     def get_learning_rate(self):
+        """ `_learning_rate` getter
+        """
         return self._learning_rate
     
     def get_nb_labels(self):
+        """ `_nb_labels` getter
+        """
         return self._nb_labels
 
     def create_weights(self, shape):
+        """ Create weight variables of dimension `shape`, and initialize them
+        with a random truncated normal draw; this function is typically called
+        when creating neural network layers (convolutional, fully-connected...)
+
+        Parameter:
+        ----------
+        shape: list
+            List of integers describing the weight shapes (ex: [2], [3, 5]...)
+        """
         return tf.get_variable('weights', shape,
                                initializer=tf.truncated_normal_initializer())
 
     def create_biases(self, shape):
+        """ Create biases variables of dimension `shape`, and initialize them
+        as zero-constant; this function is typically called when creating
+        neural network layers (convolutional, fully-connected...)
+
+        Parameter:
+        ----------
+        shape: list
+            List of integers describing the biases shapes (ex: [2], [3, 5]...)
+        """
         return tf.get_variable('biases', shape,
                                initializer=tf.constant_initializer(0.0))
 
@@ -73,6 +105,8 @@ class ConvolutionalNeuralNetwork(object):
 
         Parameters
         ----------
+        counter: integer
+            Convolutional layer counter (for scope name unicity)
         input_layer: tensor
             input tensor, i.e. the placeholder that represents input data if
         the convolutional layer is the first of the network, the previous layer
@@ -86,11 +120,11 @@ class ConvolutionalNeuralNetwork(object):
         previous and current layer depths)
         layer_depth: integer
             current layer channel number
-        conv_strides: list
+        strides: list
             Dimensions of the convolution stride operation defined as [1,a,a,1]
         where a is the shift (in pixels) between each convolution operation
-        counter: integer
-            Convolutional layer counter (for scope name unicity)
+        padding: object
+            String designing the padding mode ('SAME', or 'VALID')
         """
         with tf.variable_scope(self._network_name+'_conv'+str(counter)) as scope:
             w = self.create_weights([kernel_dim, kernel_dim,
@@ -112,13 +146,15 @@ class ConvolutionalNeuralNetwork(object):
             Max pooling layer counter (for scope name unicity)
         input_layer: tensor
             Pooling layer input; output of the previous layer into the network
-        kernel_dim: list
-            Dimension of the pooling kernel, defined as [1, a, a, 1]
-        where a is the main kernel dimension (in pixels)
-        stride: list
-            Dimension of the pooling stride, defined as [1, a, a, 1]
-        where a is the shift between each pooling operation
-
+        kernel_dim: integer
+            Dimension `a` (in pixels) of the pooling kernel, defined as [1, a,
+        a, 1] (only squared kernels are considered)
+        stride: integer
+            Dimension `a` (in pixels) of the pooling stride, defined as [1, a,
+        a, 1], i.e. the shift between each pooling operation; we consider
+        a regular shift (horizontal shift=vertical shift)
+        padding: object
+            String designing the padding mode ('SAME', or 'VALID')
         """
         with tf.variable_scope(self._network_name + '_pool' + str(counter)) as scope:
             return tf.nn.max_pool(input_layer,
@@ -136,7 +172,6 @@ class ConvolutionalNeuralNetwork(object):
         current layer depth
         last_layer_depth: integer
             depth of the last layer in the network
-
         """
         return last_layer_depth * (int(self._image_size/strides) ** 2)
 
@@ -147,6 +182,8 @@ class ConvolutionalNeuralNetwork(object):
 
         Parameters
         ----------
+        counter: integer
+            fully-connected layer counter (for scope name unicity)
         input_layer: tensor
             Fully-connected layer input; output of the previous layer into the network
         last_layer_dim: integer
@@ -155,9 +192,6 @@ class ConvolutionalNeuralNetwork(object):
             full-connected layer depth
         t_dropout: tensor
             tensor corresponding to the neuron keeping probability during dropout operation
-        counter: integer
-            fully-connected layer counter (for scope name unicity)
-
         """
         with tf.variable_scope(self._network_name + '_fc' + str(counter)) as scope:
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
@@ -168,8 +202,8 @@ class ConvolutionalNeuralNetwork(object):
 
     def output_layer(self, input_layer, input_layer_dim):
         """Build an output layer to a neural network with a sigmoid final
-        activation function (softmax if there is only one label to predict);
-        return final network scores (logits) as well as predictions
+        activation function; return final network scores (logits) as well
+        as predictions
 
         Parameters
         ----------
@@ -177,7 +211,6 @@ class ConvolutionalNeuralNetwork(object):
             Previous layer within the neural network (last hidden layer)
         input_layer_dim: integer
             Dimension of the previous neural network layer
-
         """
         with tf.variable_scope(self._network_name + '_output_layer') as scope:
             w = self.create_weights([input_layer_dim, self._nb_labels])
@@ -194,10 +227,7 @@ class ConvolutionalNeuralNetwork(object):
         ----------
         X: tensorflow.placeholder
             Image data with a shape [batch_size, width, height, nb_channels]
-        nb_labels: integer
-            number of output classes (labels)
         """
-
         layer = self.convolutional_layer(1, X, self._nb_channels, 8, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
         layer = self.convolutional_layer(2, layer, 16, 8, 16)
@@ -229,7 +259,6 @@ class ConvolutionalNeuralNetwork(object):
         y_raw_p: tensor
             Raw values computed for outputs (float), before transformation into 0-1
         """
-
         with tf.name_scope(self._network_name + '_loss'):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
@@ -242,7 +271,7 @@ class ConvolutionalNeuralNetwork(object):
         Parameters
         ----------
         loss: tensor
-        Tensor that represents the neural network loss function
+            Tensor that represents the neural network loss function
         """
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
@@ -254,9 +283,14 @@ class ConvolutionalNeuralNetwork(object):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
+        Parameters:
+        -----------
+        X: TensorFlow placeholder
+            Neural network input
+        Y: TensorFlow placeholder
+            Neural network output
         """
         output = self.add_layers(X)
-
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
         return self.optimize(loss)
 
@@ -265,14 +299,14 @@ class ConvolutionalNeuralNetwork(object):
 
         Parameters
         ----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
         labels_of_interest: list
             List of label indices on which a model will be trained
-        datapath: object
-            String designing the relative path to data
         dataset_type: object
-            string designing the considered dataset
-        (`training`, `validation` or `testing`)
-
+            string designing the considered dataset (`training`, `validation`
+        or `testing`)
         """
         scope_name = self._network_name + "_" + dataset_type + "_data_pipe"
         with tf.variable_scope(scope_name) as scope:
@@ -299,7 +333,21 @@ class ConvolutionalNeuralNetwork(object):
                                   num_threads=4)
 
     def train(self, dataset, nb_epochs, nb_iter=None):
-        """
+        """ Train the neural network on a specified dataset, during `nb_epochs`
+
+        Parameters:
+        -----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
+        labels_of_interest: list
+        nb_epochs: integer
+            Number of training epoch (one epoch=every image have been seen by
+        the network); a larger value helps to reach higher
+        accuracy, however the training time will be increased as well
+        nb_iter: integer
+            Number of training iteration, overides nb_epochs if not None
+        (mainly debogging purpose)
         """
         batched_images, batched_labels = self.define_batch(dataset, range(dataset.get_nb_class()))
 
@@ -326,7 +374,17 @@ class ConvolutionalNeuralNetwork(object):
             coord.join(threads)
 
     def test(self, dataset):
+        """ Test the trained neural network on a testing dataset
+
+        Parameters:
+        -----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
+        """
         pass
 
     def summary(self):
+        """ Print the network architecture on the command prompt
+        """
         pass
