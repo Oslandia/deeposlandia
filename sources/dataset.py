@@ -60,8 +60,8 @@ class Dataset(object):
         return len(self.image_info)
 
     def build_glossary(self, config_filename):
-        """Read the Mapillary glossary stored as a json file at the data repository
-        root
+        """Read the Mapillary glossary stored as a json file at the data
+        repository root
 
         """
         with open(config_filename) as config_file:
@@ -89,17 +89,51 @@ class Dataset(object):
         """
         """
         self.image_info = defaultdict()
-        image_dir = os.listdir(os.path.join(datadir, "images"))
-        for image_id, image_filename in enumerate(image_dir):
-            label_filename = image_filename.replace("/images/", "/labels/")
-            label_filename = image_filename.replace(".jpg", ".png")
-            self.add_image(image_id, image_filename, label_filename)
+        utils.make_dir(os.path.join(datadir, "input"))
+        image_dir = os.path.join(datadir, "images")
+        image_list = os.listdir(image_dir)
+        image_list_longname = [os.path.join(image_dir, l) for l in image_list]
+        for image_id, image_filename in enumerate(image_list_longname):
+            label_filename = image_filename.replace("images/", "labels/")
+            label_filename = label_filename.replace(".jpg", ".png")
 
-    def add_image(self, image_id, image_filename, label_filename):
+            # open original images
+            img_in = Image.open(image_filename)
+            old_width, old_height = img_in.size
+            img_out = Image.open(label_filename)
+
+            # resize images (self._image_size*larger_size or larger_size*self._image_size)
+            img_in = utils.resize_image(img_in, self._image_size)
+            img_out = utils.resize_image(img_out, self._image_size)
+
+            # crop images to get self._image_size*self._image_size dimensions
+            crop_pix = np.random.randint(0, 1+max(img_in.size)-self._image_size)
+            final_img_in = utils.mono_crop_image(img_in, crop_pix)
+            final_img_out = utils.mono_crop_image(img_out, crop_pix)
+            resizing_ratio = math.ceil(old_width * old_height
+                                       / (self._image_size**2))
+
+            # save final image
+            new_filename = image_filename.replace("images/", "input/")
+            final_img_in.save(new_filename)
+
+            # label_filename vs label image
+            labels = utils.mapillary_label_building(final_img_out,
+                                                    self.get_nb_class())
+
+            # add to dataset object
+            self.add_image(image_id, image_filename, new_filename,
+                           label_filename, labels)
+
+
+    def add_image(self, image_id, raw_filename, image_filename,
+                  label_filename, labels):
         """
         """
         if image_id in self.image_info.keys():
             print("Image {} already stored into the class set.".format(image_id))
             return None
-        self.image_info[image_id] = {"image_filename": image_filename,
-                                     "label_filename": label_filename}
+        self.image_info[image_id] = {"raw_filename": raw_filename,
+                                     "image_filename": image_filename,
+                                     "label_filename": label_filename,
+                                     "labels": labels}

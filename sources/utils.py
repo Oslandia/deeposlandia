@@ -322,6 +322,15 @@ def resize_image(img, base_size):
         new_size = (int(base_size * old_width / old_height), base_size)
     return img.resize(new_size)
 
+def mono_crop_image(img, crop_pixel):
+    """Crop image `img` so as its dimensions become equal (width=height),
+    without modifying its smallest dimension
+    """
+    if img.width > img.height:
+        return img.crop((crop_pixel, 0, crop_pixel+img.height, img.height))
+    else:
+        return img.crop((0, crop_pixel, img.width, crop_pixel+img.width))
+
 def crop_image(img, coordinates):
     """ Crop image `img` following coordinates `coordinates`; simple overload
     of the Image.crop() procedure
