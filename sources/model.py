@@ -292,7 +292,9 @@ class ConvolutionalNeuralNetwork(object):
         """
         output = self.add_layers(X)
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
-        return self.optimize(loss)
+        op = self.optimize(loss)
+        op["loss"] = loss
+        return op
 
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
@@ -332,7 +334,7 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, nb_epochs, nb_iter=None):
+    def train(self, dataset, nb_epochs, log_step=10, nb_iter=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -345,6 +347,8 @@ class ConvolutionalNeuralNetwork(object):
             Number of training epoch (one epoch=every image have been seen by
         the network); a larger value helps to reach higher
         accuracy, however the training time will be increased as well
+        log_step: integer
+            Training process logging periodicity (quantity of iterations)
         nb_iter: integer
             Number of training iteration, overides nb_epochs if not None
         (mainly debogging purpose)
@@ -360,6 +364,7 @@ class ConvolutionalNeuralNetwork(object):
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             initial_step = output["gs"].eval(session=sess)
+            # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             if nb_iter is None:
@@ -368,8 +373,11 @@ class ConvolutionalNeuralNetwork(object):
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 fd = {X: X_batch, Y: Y_batch}
-                sess.run(output["optim"], feed_dict=fd)
-
+                if (step + 1) % log_step == 0 or step == initial_step:
+                    loss = sess.run([output["loss"]], feed_dict=fd)
+                    utils.logger.info("step: {}, loss={}".format(step, loss))
+                loss = sess.run(output["optim"], feed_dict=fd)
+            # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
 
