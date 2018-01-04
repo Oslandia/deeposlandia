@@ -196,3 +196,34 @@ class Dataset(object):
                                      "image_filename": image_filename,
                                      "label_filename": label_filename,
                                      "labels": labels}
+
+    def save(self, filename):
+        """Save dataset in a json file indicated by `filename`
+
+        Parameter
+        ---------
+        filename: object
+            String designing the relative path where the dataset must be saved
+        """
+        with open(filename, 'w') as fp:
+            json.dump({"image_size": self.image_size,
+                       "classes": self.class_info,
+                       "images": self.image_info},
+                      fp)
+        utils.logger.info("The dataset has been saved into {}".format(filename))
+
+    def load(self, filename):
+        """Load a dataset from a json file indicated by `filename`
+
+        Parameter
+        ---------
+        filename: object
+            String designing the relative path from where the dataset must be
+        loaded
+        """
+        with open(filename) as fp:
+            ds = json.load(fp)
+            self.image_size = ds["image_size"]
+            self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
+            self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+        utils.logger.info("The dataset has been loaded from {}".format(filename))
