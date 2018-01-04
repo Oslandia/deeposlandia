@@ -33,7 +33,7 @@ class Dataset(object):
     def __init__(self, image_size, glossary_filename):
         """ Class constructor
         """
-        self._image_size = image_size
+        self.image_size = image_size
         self.class_info = defaultdict()
         self.build_glossary(glossary_filename)
         self.image_info = defaultdict()
@@ -121,14 +121,13 @@ class Dataset(object):
 
     def populate(self, datadir):
         """ Populate the dataset with images contained into `datadir` directory
-
-        Parameter:
+ 
+       Parameter:
         ----------
         datadir: object
             String designing the relative path of the directory that contains
         new images
         """
-        self.image_info = defaultdict()
         utils.make_dir(os.path.join(datadir, "input"))
         image_dir = os.path.join(datadir, "images")
         image_list = os.listdir(image_dir)
@@ -142,16 +141,16 @@ class Dataset(object):
             old_width, old_height = img_in.size
             img_out = Image.open(label_filename)
 
-            # resize images (self._image_size*larger_size or larger_size*self._image_size)
-            img_in = utils.resize_image(img_in, self._image_size)
-            img_out = utils.resize_image(img_out, self._image_size)
+            # resize images (self.image_size*larger_size or larger_size*self.image_size)
+            img_in = utils.resize_image(img_in, self.image_size)
+            img_out = utils.resize_image(img_out, self.image_size)
 
-            # crop images to get self._image_size*self._image_size dimensions
-            crop_pix = np.random.randint(0, 1+max(img_in.size)-self._image_size)
+            # crop images to get self.image_size*self.image_size dimensions
+            crop_pix = np.random.randint(0, 1+max(img_in.size)-self.image_size)
             final_img_in = utils.mono_crop_image(img_in, crop_pix)
             final_img_out = utils.mono_crop_image(img_out, crop_pix)
             resizing_ratio = math.ceil(old_width * old_height
-                                       / (self._image_size**2))
+                                       / (self.image_size**2))
 
             # save final image
             new_filename = image_filename.replace("images/", "input/")
