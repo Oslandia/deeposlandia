@@ -337,8 +337,8 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, labels, nb_epochs, log_step=10, nb_iter=None,
-              backup_path=None):
+    def train(self, dataset, labels, nb_epochs, log_step=10, save_step=100,
+              nb_iter=None, backup_path=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -354,6 +354,8 @@ class ConvolutionalNeuralNetwork(object):
         accuracy, however the training time will be increased as well
         log_step: integer
             Training process logging periodicity (quantity of iterations)
+        save_step: integer
+            Training process backing up periodicity (quantity of iterations)
         nb_iter: integer
             Number of training iteration, overides nb_epochs if not None
         (mainly debogging purpose)
@@ -377,16 +379,28 @@ class ConvolutionalNeuralNetwork(object):
         with tf.Session() as sess:
             # Initialize TensorFlow variables
             sess.run(tf.global_variables_initializer())
-            # Create backup structures
+            # Create tensorflow graph
             graph_path = os.path.join(backup_path, 'graph', self._network_name)
             writer = tf.summary.FileWriter(graph_path, sess.graph)
-            initial_step = output["gs"].eval(session=sess)
+            # Create folders to store checkpoints
+            saver = tf.train.Saver(max_to_keep=1)
+            ckpt_path = os.path.join(backup_path, 'checkpoints',
+                                     self._network_name)
+            utils.make_dir(os.path.dirname(ckpt_path))
+            utils.make_dir(ckpt_path)
+            ckpt = tf.train.get_checkpoint_state(ckpt_path)
+            # If that checkpoint exists, restore from checkpoint
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                utils.logger.info(("Recover model state "
+                                   "from {}").format(ckpt.model_checkpoint_path))
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             if nb_iter is None:
                 n_batches = int(len(dataset.image_info) / self._batch_size)
                 nb_iter = n_batches * nb_epochs
+            initial_step = output["gs"].eval(session=sess)
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 fd = {X: X_batch, Y: Y_batch}
@@ -396,6 +410,12 @@ class ConvolutionalNeuralNetwork(object):
                                        feed_dict=fd)
                     utils.logger.info("step: {}, loss={}".format(step, loss))
                 loss = sess.run(output["optim"], feed_dict=fd)
+                if (step + 1) % save_step == 0:
+                    save_path = os.path.join(backup_path, 'checkpoints',
+                                             self._network_name, 'epoch')
+                    utils.logger.info(("Checkpoint {}-{} creation"
+                                       "").format(save_path, step))
+                    saver.save(sess, global_step=step, save_path=save_path)
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
