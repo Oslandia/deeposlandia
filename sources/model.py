@@ -318,8 +318,9 @@ class ConvolutionalNeuralNetwork(object):
                          for i in range(dataset.get_nb_images())]
             filepath_tensors = ops.convert_to_tensor(filepaths, dtype=tf.string,
                                                   name=dataset_type+"_images")
-            labels = [dataset.image_info[i]["labels"]
-                         for i in range(dataset.get_nb_images())]
+            labels = [[dataset.image_info[i]["labels"][l]
+                       for l in labels_of_interest]
+                      for i in range(dataset.get_nb_images())]
             label_tensors = ops.convert_to_tensor(labels, dtype=tf.int16,
                                            name=dataset_type+"_labels")
             input_queue = tf.train.slice_input_producer([filepath_tensors,
@@ -336,7 +337,7 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, nb_epochs, log_step=10, nb_iter=None):
+    def train(self, dataset, labels, nb_epochs, log_step=10, nb_iter=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -344,7 +345,8 @@ class ConvolutionalNeuralNetwork(object):
         dataset: Dataset
             Dataset that will feed the neural network; its `_image_size`
         attribute must correspond to those of this class
-        labels_of_interest: list
+        label: list
+            List of label indices on which a model will be trained
         nb_epochs: integer
             Number of training epoch (one epoch=every image have been seen by
         the network); a larger value helps to reach higher
@@ -355,8 +357,9 @@ class ConvolutionalNeuralNetwork(object):
             Number of training iteration, overides nb_epochs if not None
         (mainly debogging purpose)
         """
-        batched_images, batched_labels = self.define_batch(dataset, range(dataset.get_nb_class()))
-
+        # Define image batchs
+        batched_images, batched_labels = self.define_batch(dataset, labels)
+        # Define model inputs and build the network
         X = tf.placeholder(tf.float32, name='X',
                            shape=[None, self._image_size,
                                   self._image_size, self._nb_channels])
