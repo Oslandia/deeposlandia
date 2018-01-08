@@ -292,9 +292,11 @@ class ConvolutionalNeuralNetwork(object):
         """
         output = self.add_layers(X)
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
-        op = self.optimize(loss)
-        op["loss"] = loss
-        return op
+        result = self.optimize(loss)
+        result.update({"loss": loss,
+                       "y_pred": output["y_pred"],
+                       "logits": output["logits"]})
+        return result
 
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
@@ -374,7 +376,9 @@ class ConvolutionalNeuralNetwork(object):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 fd = {X: X_batch, Y: Y_batch}
                 if (step + 1) % log_step == 0 or step == initial_step:
-                    loss = sess.run([output["loss"]], feed_dict=fd)
+                    loss, y = sess.run([output["loss"],
+                                        output["y_pred"]],
+                                       feed_dict=fd)
                     utils.logger.info("step: {}, loss={}".format(step, loss))
                 loss = sess.run(output["optim"], feed_dict=fd)
             # Stop the thread coordinator
