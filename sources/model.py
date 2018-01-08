@@ -337,7 +337,8 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, labels, nb_epochs, log_step=10, nb_iter=None):
+    def train(self, dataset, labels, nb_epochs, log_step=10, nb_iter=None,
+              backup_path=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -356,7 +357,14 @@ class ConvolutionalNeuralNetwork(object):
         nb_iter: integer
             Number of training iteration, overides nb_epochs if not None
         (mainly debogging purpose)
+        backup_path: object
+            String designing the place where must be saved the TensorFlow
+        graph, summary and the model checkpoints
         """
+        # If backup_path is undefined, set it with the dataset image path
+        if backup_path == None:
+            example_filename = dataset.image_info[0]['raw_filename']
+            backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
         batched_images, batched_labels = self.define_batch(dataset, labels)
         # Define model inputs and build the network
@@ -365,9 +373,13 @@ class ConvolutionalNeuralNetwork(object):
                                   self._image_size, self._nb_channels])
         Y = tf.placeholder(tf.float32, name='Y', shape=[None, self._nb_labels])
         output = self.build(X, Y)
-
+        # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
+            # Initialize TensorFlow variables
             sess.run(tf.global_variables_initializer())
+            # Create backup structures
+            graph_path = os.path.join(backup_path, 'graph', self._network_name)
+            writer = tf.summary.FileWriter(graph_path, sess.graph)
             initial_step = output["gs"].eval(session=sess)
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
