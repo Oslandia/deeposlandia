@@ -293,11 +293,58 @@ class ConvolutionalNeuralNetwork(object):
         output = self.add_layers(X)
         loss = self.compute_loss(Y, output["logits"], output["y_pred"])
         result = self.optimize(loss)
+        cm = self.compute_dashboard(Y, output["y_pred"])
         result.update({"loss": loss,
                        "y_pred": output["y_pred"],
-                       "logits": output["logits"]})
+                       "logits": output["logits"],
+                       "conf_mat": cm})
         return result
 
+    def compute_dashboard(self, y_true, y_pred, label="wrapper"):
+        """Compute the global confusion matrix (`y_true` and `y_pred`
+        considered as one-dimension arrays) and the per-label confusion matrix;
+        recursive algorithm that decomposes a 2D-array in multiple 1D-array;
+        return a [1, -1]-shaped array
+
+        Parameters:
+        -----------
+        y_true: tensor
+            True values of y, 1D- or 2D-array (if 2D, trigger a recursive call)
+        y_pred: tensor
+            Predicted values of y, 1D- or 2D-array (if 2D, trigger a recursive
+        call)
+        label: object
+            String designing the label for which confusion matrix is computed:
+        "wrapper" for 2D-array calls (default value), either "global" or
+        "labelX" for 1D-array calls
+        """
+        with tf.name_scope(self._network_name + "_dashboard_" + str(label)):
+            if len(y_true.shape) > 1:
+                yt_resh = tf.reshape(y_true, [-1], name="1D-y-true")
+                yp_resh = tf.reshape(y_pred, [-1], name="1D-y-pred")
+                cmat = self.compute_dashboard(yt_resh, yp_resh, "global")
+                for i in range(y_true.shape[1]):
+                    yti = yt_resh[i:yt_resh.shape[0]:y_true.shape[1]]
+                    ypi = yp_resh[i:yp_resh.shape[0]:y_pred.shape[1]]
+                    cmi = self.compute_dashboard(yti, ypi, "label"+str(i))
+                    cmat = tf.concat([cmat, cmi], axis=1)
+                return cmat
+            else:
+                return self.confusion_matrix(y_true, y_pred)
+
+    def confusion_matrix(self, y_true, y_pred):
+        """ Personnalized confusion matrix computing, that returns a [1,
+        -1]-shaped tensor, to allow further concatenating operations
+
+        Parameters:
+        y_true: tensor
+            True values of y, 1D-array
+        y_pred: tensor
+            Predicted values of y, 1D-array
+        """
+        cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
+        return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
+    
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
 
@@ -404,12 +451,12 @@ class ConvolutionalNeuralNetwork(object):
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 fd = {X: X_batch, Y: Y_batch}
+                sess.run(output["optim"], feed_dict=fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
-                    loss, y = sess.run([output["loss"],
-                                        output["y_pred"]],
-                                       feed_dict=fd)
-                    utils.logger.info("step: {}, loss={}".format(step, loss))
-                loss = sess.run(output["optim"], feed_dict=fd)
+                    loss, cm = sess.run([output["loss"], output["conf_mat"]],
+                                        feed_dict=fd)
+                    utils.logger.info(("step: {}, loss={}, cm={}"
+                                       "").format(step, loss, cm[0,:4]))
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
                                              self._network_name, 'epoch')
