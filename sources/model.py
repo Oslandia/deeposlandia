@@ -131,10 +131,11 @@ class ConvolutionalNeuralNetwork(object):
             w = self.create_weights([kernel_dim, kernel_dim,
                                      input_layer_depth, layer_depth])
             b = self.create_biases([layer_depth])
+            tf.summary.histogram("weight_sum", w)
+            tf.summary.histogram("biases_sum", b)
             conv = tf.nn.conv2d(input_layer, w, strides=strides,
                                 padding=padding)
             return tf.nn.relu(tf.add(conv, b), name=scope.name)
-
     
     def maxpooling_layer(self, counter, input_layer, kernel_dim,
                          stride=2, padding='SAME'):
@@ -198,6 +199,8 @@ class ConvolutionalNeuralNetwork(object):
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             b = self.create_biases([layer_depth])
+            tf.summary.histogram("weights_sum", w)
+            tf.summary.histogram("biases_sum", b)
             fc = tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
             return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
 
@@ -216,8 +219,11 @@ class ConvolutionalNeuralNetwork(object):
         with tf.variable_scope(self._network_name + '_output_layer') as scope:
             w = self.create_weights([input_layer_dim, self._nb_labels])
             b = self.create_biases([self._nb_labels])
+            tf.summary.histogram("weights_sum", w)
+            tf.summary.histogram("biases_sum", b)
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
+            tf.summary.histogram("y_pred_sum", Y_raw_predict)
             return {"logits": logits, "y_pred": Y_raw_predict}
 
     def add_layers(self, X):
@@ -274,6 +280,7 @@ class ConvolutionalNeuralNetwork(object):
         loss: tensor
             Tensor that represents the neural network loss function
         """
+        tf.summary.scalar('loss', loss)
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
         opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
@@ -428,8 +435,10 @@ class ConvolutionalNeuralNetwork(object):
             # Initialize TensorFlow variables
             sess.run(tf.global_variables_initializer())
             # Create tensorflow graph
+            merged_summary = tf.summary.merge_all()
             graph_path = os.path.join(backup_path, 'graph', self._network_name)
-            writer = tf.summary.FileWriter(graph_path, sess.graph)
+            writer = tf.summary.FileWriter(graph_path)
+            writer.add_graph(sess.graph)
             # Create folders to store checkpoints
             saver = tf.train.Saver(max_to_keep=1)
             ckpt_path = os.path.join(backup_path, 'checkpoints',
@@ -456,10 +465,11 @@ class ConvolutionalNeuralNetwork(object):
                 fd = {X: X_batch, Y: Y_batch}
                 sess.run(output["optim"], feed_dict=fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
-                    loss, cm = sess.run([output["loss"], output["conf_mat"]],
-                                        feed_dict=fd)
+                    s, loss, cm = sess.run([merged_summary, output["loss"],
+                                      output["conf_mat"]], feed_dict=fd)
                     utils.logger.info(("step: {}, loss={}, cm={}"
                                        "").format(step, loss, cm[0,:4]))
+                    writer.add_summary(s, step)
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
                                              self._network_name, 'epoch')
