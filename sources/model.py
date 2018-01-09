@@ -269,6 +269,7 @@ class ConvolutionalNeuralNetwork(object):
         with tf.name_scope(self._network_name + '_loss'):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
+            tf.summary.histogram('xent', entropy)
             return tf.reduce_mean(entropy, name="loss")
 
     def optimize(self, loss):
@@ -326,7 +327,7 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
-        with tf.name_scope(self._network_name + "_dashboard_" + str(label)):
+        with tf.name_scope(self._network_name + "_dashboard_" + label):
             if len(y_true.shape) > 1:
                 yt_resh = tf.reshape(y_true, [-1], name="1D-y-true")
                 yp_resh = tf.reshape(y_pred, [-1], name="1D-y-pred")
@@ -338,9 +339,9 @@ class ConvolutionalNeuralNetwork(object):
                     cmat = tf.concat([cmat, cmi], axis=1)
                 return cmat
             else:
-                return self.confusion_matrix(y_true, y_pred)
+                return self.confusion_matrix(y_true, y_pred, label)
 
-    def confusion_matrix(self, y_true, y_pred):
+    def confusion_matrix(self, y_true, y_pred, label):
         """ Personnalized confusion matrix computing, that returns a [1,
         -1]-shaped tensor, to allow further concatenating operations
 
@@ -351,6 +352,10 @@ class ConvolutionalNeuralNetwork(object):
             Predicted values of y, 1D-array
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
+        tf.summary.scalar("tn_"+label, cmat[0,0])
+        tf.summary.scalar("fp_"+label, cmat[0,1])
+        tf.summary.scalar("fn_"+label, cmat[1,0])
+        tf.summary.scalar("tp_"+label, cmat[1,1])
         return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
 
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
