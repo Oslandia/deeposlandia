@@ -36,6 +36,9 @@ import dashboard_building as db
 import glossary_reading as gr
 import utils
 
+from dataset import Dataset
+from model import ConvolutionalNeuralNetwork
+
 def run(nbconv, nbfullyconn, nb_epochs, nb_iter, mode, label_list,
         image_size, weight_policy, start_lr, decay_steps, decay_rate,
         drpt, save_step, log_step, batch_size, name, datapath):
