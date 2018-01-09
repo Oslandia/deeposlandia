@@ -24,6 +24,7 @@ import os
 import pandas as pd
 import tensorflow as tf
 from tensorflow.python.framework import ops
+import time
 
 import dataset
 import utils
@@ -344,7 +345,7 @@ class ConvolutionalNeuralNetwork(object):
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
         return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
-    
+
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
 
@@ -444,6 +445,8 @@ class ConvolutionalNeuralNetwork(object):
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
+            # Train the model
+            start_time = time.time()
             if nb_iter is None:
                 n_batches = int(len(dataset.image_info) / self._batch_size)
                 nb_iter = n_batches * nb_epochs
@@ -463,6 +466,8 @@ class ConvolutionalNeuralNetwork(object):
                     utils.logger.info(("Checkpoint {}-{} creation"
                                        "").format(save_path, step))
                     saver.save(sess, global_step=step, save_path=save_path)
+            utils.logger.info(("Optimization Finished! Total time: {:.2f} "
+                               "seconds").format(time.time() - start_time))
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
