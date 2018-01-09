@@ -357,6 +357,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
+    parser.add_argument('-dn', '--dataset-name', required=False,
+                        default="dataset", nargs='?',
+                        help=("The json dataset filename, "
+                              "without its extension"))
     parser.add_argument('-do', '--dropout', required=False,
                         default=2.0/3, nargs='?',
                         help=("The percentage of dropped out neurons "
@@ -442,7 +446,7 @@ if __name__ == '__main__':
     mapil_glossary = gr.read_glossary(os.path.join(args.datapath, "config.json"))
     nb_labels = gr.label_quantity(mapil_glossary)
     if args.label_list == -1:
-        label_list = [i for i in range(nb_labels)]
+        label_list = [i for i in range(nb_labels-1)]
     else:
         label_list = args.label_list
         if sum([l>=nb_labels for l in args.label_list]) > 0:
@@ -467,18 +471,41 @@ if __name__ == '__main__':
                             "").format(len(args.learning_rate)))
         sys.exit(1)
 
-    if args.prepare_data:
-        utils.mapillary_data_preparation(args.datapath, "training",
-                                         args.image_size, nb_labels)
-        utils.mapillary_data_preparation(args.datapath, "validation",
-                                         args.image_size, nb_labels)
+    # if args.prepare_data:
+    #     utils.mapillary_data_preparation(args.datapath, "training",
+    #                                      args.image_size, nb_labels)
+    #     utils.mapillary_data_preparation(args.datapath, "validation",
+    #                                      args.image_size, nb_labels)
+    # else:
+    #     for n in args.name:
+    #         for w in args.weights:
+    #             run(args.nbconv, args.nbfullyconn, args.nb_epochs,
+    #                 args.training_limit, args.mode, label_list,
+    #                 args.image_size, w, args.learning_rate[0],
+    #                 args.learning_rate[1], args.learning_rate[2],
+    #                 args.dropout, args.save_step, args.log_step,
+    #                 args.batch_size, n, args.datapath)
+
+    dataset_filename = os.path.join(args.datapath, args.dataset_name+'.json')
+    d = Dataset(args.image_size, os.path.join(args.datapath, "config.json"))
+    if os.path.isfile(dataset_filename):
+        d.load(dataset_filename)
     else:
-        for n in args.name:
-            for w in args.weights:
-                run(args.nbconv, args.nbfullyconn, args.nb_epochs,
-                    args.training_limit, args.mode, label_list,
-                    args.image_size, w, args.learning_rate[0],
-                    args.learning_rate[1], args.learning_rate[2],
-                    args.dropout, args.save_step, args.log_step,
-                    args.batch_size, n, args.datapath)
+        d.populate(os.path.join(args.datapath, "validation"))
+        d.save(dataset_filename)
+
+    utils.logger.info(("{} classes in the dataset glossary, {} being focused "
+                       "").format(d.get_nb_class(), len(label_list)))
+    utils.logger.info(("{} images in the training"
+                       "set").format(d.get_nb_images()))
+
+    cnn = ConvolutionalNeuralNetwork(network_name=args.name,
+                                     image_size=args.image_size,
+                                     nb_channels=3,
+                                     batch_size=args.batch_size,
+                                     nb_labels=len(label_list))
+    cnn.train(d, label_list,
+              nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
+              log_step=args.log_step, save_step=args.save_step)
+
     sys.exit(0)
