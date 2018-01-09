@@ -506,7 +506,8 @@ if __name__ == '__main__':
                                      image_size=args.image_size,
                                      nb_channels=3,
                                      batch_size=args.batch_size,
-                                     nb_labels=len(label_list))
+                                     nb_labels=len(label_list),
+                                     learning_rate=1e-2)
     cnn.train(d, label_list,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
               log_step=args.log_step, save_step=args.save_step)
