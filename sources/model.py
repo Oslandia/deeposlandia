@@ -350,13 +350,64 @@ class ConvolutionalNeuralNetwork(object):
             True values of y, 1D-array
         y_pred: tensor
             Predicted values of y, 1D-array
+        label: object
+            String designing the label for which confusion matrix is computed:
+        "wrapper" for 2D-array calls (default value), either "global" or
+        "labelX" for 1D-array calls
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
-        tf.summary.scalar("tn_"+label, cmat[0,0])
-        tf.summary.scalar("fp_"+label, cmat[0,1])
-        tf.summary.scalar("fn_"+label, cmat[1,0])
-        tf.summary.scalar("tp_"+label, cmat[1,1])
+        tn = cmat[0, 0]
+        fp = cmat[0, 1]
+        fn = cmat[1, 0]
+        tp = cmat[1, 1]
+        tf.summary.scalar("tn_"+label, tn)
+        tf.summary.scalar("fp_"+label, fp)
+        tf.summary.scalar("fn_"+label, fn)
+        tf.summary.scalar("tp_"+label, tp)
+        metrics = self.compute_metrics(tn, fp, fn, tp, label)
         return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
+
+    def compute_metrics(self, tn, fp, fn, tp, label):
+        """Compute a wide range of confusion-matrix-related metrics, such as
+        accuracy, precision, recall and so on; create associated summaries for
+        tensorboard monitoring
+
+        Parameters:
+        -----------
+        tn: tensor
+            Number of true negative predictions for current batch and label
+        fp: tensor
+            Number of false positive predictions for current batch and label
+        fn: tensor
+            Number of false negative predictions for current batch and label
+        tp: tensor
+            Number of true positive predictions for current batch and label
+        label: object
+            String designing the label for which confusion matrix is computed:
+        "wrapper" for 2D-array calls (default value), either "global" or
+        "labelX" for 1D-array calls
+        """
+        pos_pred = tf.add(tp, fp)
+        neg_pred = tf.add(tn, fn)
+        acc = tf.divide(tf.add(tn, tp), tn + fp + fn + tp)
+        tpr = tf.divide(tp, tf.add(tp, fn))
+        fpr = tf.divide(fp, tf.add(tn, fp))
+        tnr = tf.divide(tn, tf.add(tn, fp))
+        fnr = tf.divide(fn, tf.add(tp, fn))
+        ppv = tf.divide(tp, tf.add(tp, fp))
+        npv = tf.divide(tn, tf.add(tn, fn))
+        fm = tf.multiply(2, tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr)))
+        tf.summary.scalar("pos_pred_"+label, pos_pred)
+        tf.summary.scalar("neg_pred_"+label, neg_pred)
+        tf.summary.scalar("acc_"+label, acc)
+        tf.summary.scalar("tpr_"+label, tpr)
+        tf.summary.scalar("fpr_"+label, tpr)
+        tf.summary.scalar("tnr_"+label, tpr)
+        tf.summary.scalar("fnr_"+label, tpr)
+        tf.summary.scalar("ppv_"+label, ppv)
+        tf.summary.scalar("npv_"+label, tpr)
+        tf.summary.scalar("f_measure_"+label, fm)
+        return [pos_pred, neg_pred, acc, tpr, ppv, fm]
 
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
