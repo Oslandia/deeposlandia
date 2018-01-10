@@ -396,7 +396,7 @@ class ConvolutionalNeuralNetwork(object):
         fnr = tf.divide(fn, tf.add(tp, fn))
         ppv = tf.divide(tp, tf.add(tp, fp))
         npv = tf.divide(tn, tf.add(tn, fn))
-        fm = tf.multiply(2, tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr)))
+        fm = 2.0 * tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr))
         tf.summary.scalar("pos_pred_"+label, pos_pred)
         tf.summary.scalar("neg_pred_"+label, neg_pred)
         tf.summary.scalar("acc_"+label, acc)
@@ -523,7 +523,7 @@ class ConvolutionalNeuralNetwork(object):
                 if (step + 1) % log_step == 0 or step == initial_step:
                     s, loss, cm = sess.run([merged_summary, output["loss"],
                                       output["conf_mat"]], feed_dict=fd)
-                    utils.logger.info(("step: {}, loss={}, cm={}"
+                    utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
                                        "").format(step, loss, cm[0,:4]))
                     writer.add_summary(s, step)
                 if (step + 1) % save_step == 0:
