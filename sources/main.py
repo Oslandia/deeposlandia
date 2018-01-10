@@ -446,29 +446,8 @@ if __name__ == '__main__':
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
 
-    mapil_glossary = gr.read_glossary(os.path.join(args.datapath, "config.json"))
-    nb_labels = gr.label_quantity(mapil_glossary)
-    if args.label_list == -1:
-        label_list = [i for i in range(nb_labels-1)]
-    else:
-        label_list = args.label_list
-        if sum([l>=nb_labels for l in args.label_list]) > 0:
-            utils.logger.error(("Unsupported label list. "
-                                "Please enter a list of integers comprised"
-                                "between 0 and {}".format(nb_labels)))
-            sys.exit(1)
-
-    if args.glossary_printing:
-        glossary_description = gr.build_category_description(mapil_glossary)
-        nb_images_per_label = gr.count_image_per_label(args.datapath,
-                                                       args.image_size)
-        glossary_description["nb_images"] = nb_images_per_label
-        utils.logger.info(("Data glossary:\n{}"
-                           "").format(glossary_description.iloc[label_list,:]))
-        sys.exit(0)
-
-    if len(args.learning_rate) != 3:
-        utils.logger.error(("There must be 3 learning rate components "
+    if len(args.learning_rate) != 1 and len(args.learning_rate) != 3:
+        utils.logger.error(("There must be 1 or 3 learning rate component(s) "
                             "(start, decay steps and decay rate"
                             "; actually, there is/are {}"
                             "").format(len(args.learning_rate)))
@@ -507,7 +486,8 @@ if __name__ == '__main__':
                                      nb_channels=3,
                                      batch_size=args.batch_size,
                                      nb_labels=len(label_list),
-                                     learning_rate=1e-2)
+                                     learning_rate=args.learning_rate)
+    
     cnn.train(d, label_list,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
               log_step=args.log_step, save_step=args.save_step)

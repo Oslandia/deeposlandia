@@ -284,9 +284,19 @@ class ConvolutionalNeuralNetwork(object):
         tf.summary.scalar('loss', loss)
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
-        opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
+        if len(self._learning_rate) == 1:
+            lr = self._learning_rate
+            opt = tf.train.AdamOptimizer(learning_rate=lr)
+        else:
+            lr = tf.train.exponential_decay(self._learning_rate[0],
+                                            global_step,
+                                            decay_steps=self._learning_rate[1],
+                                            decay_rate=self._learning_rate[2],
+                                            name='learning_rate')
+            tf.summary.scalar("learning_rate", lr)
+            opt = tf.train.AdamOptimizer(learning_rate=lr)
         optimizer = opt.minimize(loss, global_step)
-        return {"gs": global_step, "lrate": self._learning_rate, "optim": optimizer}
+        return {"gs": global_step, "lrate": lr, "optim": optimizer}
 
     def build(self, X, Y):
         """ Build the convolutional neural network structure from input
