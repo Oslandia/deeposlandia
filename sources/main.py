@@ -453,21 +453,6 @@ if __name__ == '__main__':
                             "").format(len(args.learning_rate)))
         sys.exit(1)
 
-    # if args.prepare_data:
-    #     utils.mapillary_data_preparation(args.datapath, "training",
-    #                                      args.image_size, nb_labels)
-    #     utils.mapillary_data_preparation(args.datapath, "validation",
-    #                                      args.image_size, nb_labels)
-    # else:
-    #     for n in args.name:
-    #         for w in args.weights:
-    #             run(args.nbconv, args.nbfullyconn, args.nb_epochs,
-    #                 args.training_limit, args.mode, label_list,
-    #                 args.image_size, w, args.learning_rate[0],
-    #                 args.learning_rate[1], args.learning_rate[2],
-    #                 args.dropout, args.save_step, args.log_step,
-    #                 args.batch_size, n, args.datapath)
-
     dataset_filename = os.path.join(args.datapath, args.dataset_name+'.json')
     d = Dataset(args.image_size, os.path.join(args.datapath, "config.json"))
     if os.path.isfile(dataset_filename):
@@ -475,6 +460,22 @@ if __name__ == '__main__':
     else:
         d.populate(os.path.join(args.datapath, "validation"))
         d.save(dataset_filename)
+
+    if args.label_list == -1:
+        label_list = list(d.class_info.keys())
+    else:
+        label_list = args.label_list
+        if sum([l>=d.get_nb_class() for l in args.label_list]) > 0:
+            utils.logger.error(("Unsupported label list. "
+                                "Please enter a list of integers comprised"
+                                "between 0 and {}".format(nb_labels)))
+            sys.exit(1)
+
+    if args.glossary_printing:
+        glossary = pd.DataFrame(d.class_info).T
+        glossary["popularity"] = d.get_class_popularity()
+        utils.logger.info("Data glossary:\n{}".format(d.class_info))
+        sys.exit(0)
 
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(d.get_nb_class(), len(label_list)))
@@ -487,7 +488,7 @@ if __name__ == '__main__':
                                      batch_size=args.batch_size,
                                      nb_labels=len(label_list),
                                      learning_rate=args.learning_rate)
-    
+
     cnn.train(d, label_list,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
               log_step=args.log_step, save_step=args.save_step)

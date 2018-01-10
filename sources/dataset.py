@@ -76,6 +76,18 @@ class Dataset(object):
         """
         return len(self.image_info)
 
+    def get_class_popularity(self):
+        """
+        """
+        labels = [self.image_info[im]["labels"]
+                  for im in self.image_info.keys()]
+        if self.get_nb_images() == 0:
+            utils.logger.info("No images in the dataset.")
+            return None
+        else:
+            return np.round(np.divide(sum(np.array(labels)),
+                                      self.get_nb_images()), 3)
+
     def build_glossary(self, config_filename):
         """Read the Mapillary glossary stored as a json file at the data
         repository root
