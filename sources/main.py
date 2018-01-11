@@ -3,6 +3,9 @@
 
 """
 /**
+ *   This script aims to train a neural network model in order to read street
+ *   scene images produced by Mapillary (https://www.mapillary.com/dataset/vistas)
+
  *   Raphael Delhome - september 2017
  *
  *   This library is free software; you can redistribute it and/or
