@@ -267,8 +267,6 @@ class ConvolutionalNeuralNetwork(object):
         logits: tensor
             Logits computed by the model (scores associated to each labels for a
         given image)
-        y_raw_p: tensor
-            Raw values computed for outputs (float), before transformation into 0-1
         """
         with tf.name_scope(self._network_name + '_loss'):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
@@ -301,27 +299,6 @@ class ConvolutionalNeuralNetwork(object):
             opt = tf.train.AdamOptimizer(learning_rate=lr)
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": lr, "optim": optimizer}
-
-    def build(self, X, Y):
-        """ Build the convolutional neural network structure from input
-        placeholders to loss function optimization
-
-        Parameters:
-        -----------
-        X: TensorFlow placeholder
-            Neural network input
-        Y: TensorFlow placeholder
-            Neural network output
-        """
-        output = self.add_layers(X)
-        loss = self.compute_loss(Y, output["logits"], output["y_pred"])
-        result = self.optimize(loss)
-        cm = self.compute_dashboard(Y, output["y_pred"])
-        result.update({"loss": loss,
-                       "y_pred": output["y_pred"],
-                       "logits": output["logits"],
-                       "conf_mat": cm})
-        return result
 
     def compute_dashboard(self, y_true, y_pred, label="wrapper"):
         """Compute the global confusion matrix (`y_true` and `y_pred`
@@ -401,6 +378,8 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
+        pos_true = tf.add(tp, fn)
+        neg_true = tf.add(fp, tn)
         pos_pred = tf.add(tp, fp)
         neg_pred = tf.add(tn, fn)
         acc = tf.divide(tf.add(tn, tp), tn + fp + fn + tp)
@@ -411,6 +390,8 @@ class ConvolutionalNeuralNetwork(object):
         ppv = tf.divide(tp, tf.add(tp, fp))
         npv = tf.divide(tn, tf.add(tn, fn))
         fm = 2.0 * tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr))
+        tf.summary.scalar("pos_true_"+label, pos_true)
+        tf.summary.scalar("neg_true_"+label, neg_true)
         tf.summary.scalar("pos_pred_"+label, pos_pred)
         tf.summary.scalar("neg_pred_"+label, neg_pred)
         tf.summary.scalar("acc_"+label, acc)
@@ -422,6 +403,28 @@ class ConvolutionalNeuralNetwork(object):
         tf.summary.scalar("npv_"+label, tpr)
         tf.summary.scalar("f_measure_"+label, fm)
         return [pos_pred, neg_pred, acc, tpr, ppv, fm]
+
+    def build(self, X, Y):
+        """ Build the convolutional neural network structure from input
+        placeholders to loss function optimization
+
+        Parameters:
+        -----------
+        X: TensorFlow placeholder
+            Neural network input
+        Y: TensorFlow placeholder
+            Neural network output
+        """
+        output = self.add_layers(X)
+        loss = self.compute_loss(Y, output["logits"])
+        result = self.optimize(loss)
+        cm = self.compute_dashboard(Y, output["y_pred"])
+        result.update({"loss": loss,
+                       "logits": output["logits"],
+                       "y_raw_pred": output["y_raw_pred"],
+                       "y_pred": output["y_pred"],
+                       "conf_mat": cm})
+        return result
 
     def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
         """Insert images and labels in Tensorflow batches
