@@ -223,8 +223,12 @@ class ConvolutionalNeuralNetwork(object):
             tf.summary.histogram("biases_sum", b)
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
-            tf.summary.histogram("y_pred_sum", Y_raw_predict)
-            return {"logits": logits, "y_pred": Y_raw_predict}
+            Y_pred = tf.round(Y_raw_predict, name="y_pred")
+            tf.summary.histogram("logits_sum", logits)
+            tf.summary.histogram("y_raw_pred_sum", Y_raw_predict)
+            tf.summary.histogram("y_pred_sum", Y_pred)
+            return {"logits": logits, "y_raw_pred": Y_raw_predict,
+                    "y_pred": Y_pred}
 
     def add_layers(self, X):
         """Build the structure of a convolutional neural network from image data X
