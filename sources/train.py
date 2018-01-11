@@ -46,7 +46,7 @@ if __name__ == '__main__':
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
     parser.add_argument('-dn', '--dataset-name', required=False,
-                        default="dataset", nargs='?',
+                        default="training_dataset", nargs='?',
                         help=("The json dataset filename, "
                               "without its extension"))
     parser.add_argument('-do', '--dropout', required=False,
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', required=False, default="train",
                         nargs='?', help=("The network running mode"
                                          "('train', 'test', 'both')"))
-    parser.add_argument('-n', '--name', default=["cnn_mapil"], nargs='+',
+    parser.add_argument('-n', '--name', default="cnn_mapil", nargs='?',
                         help=("The model name that will be used for results, "
                               "checkout and graph storage on file system"))
     parser.add_argument('-p', '--prepare-data', action="store_true",
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     if os.path.isfile(dataset_filename):
         d.load(dataset_filename)
     else:
-        d.populate(os.path.join(args.datapath, "validation"))
+        d.populate(os.path.join(args.datapath, "training"))
         d.save(dataset_filename)
 
     if args.label_list == -1:
@@ -177,5 +177,5 @@ if __name__ == '__main__':
     cnn.train(d, label_list,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
               log_step=args.log_step, save_step=args.save_step)
-
+    
     sys.exit(0)
