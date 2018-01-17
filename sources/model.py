@@ -471,8 +471,9 @@ class ConvolutionalNeuralNetwork(object):
             images.set_shape([self._image_size,
                              self._image_size,
                              self._nb_channels])
-            images = tf.div(images, 255) # Data normalization
-            return tf.train.batch([images, input_queue[1]],
+            norm_images = tf.image.per_image_standardization(images)
+            tf.summary.histogram("image", norm_images)
+            return tf.train.batch([norm_images, input_queue[1]],
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
