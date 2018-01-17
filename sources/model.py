@@ -246,24 +246,17 @@ class ConvolutionalNeuralNetwork(object):
         dropout: tensor
             Probability of keeping a neuron during a training step (dropout)
         """
-        layer = self.convolutional_layer(1, X, self._nb_channels, 8, 16)
+        tf.summary.histogram("input", X)
+        tf.summary.image("input", X)
+        layer = self.convolutional_layer(1, X, self._nb_channels, 4, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
-        layer = self.convolutional_layer(2, layer, 16, 8, 16)
+        layer = self.convolutional_layer(3, layer, 16, 4, 32)
         layer = self.maxpooling_layer(2, layer, 2, 2)
-        layer = self.convolutional_layer(3, layer, 16, 8, 32)
-        layer = self.maxpooling_layer(3, layer, 2, 2)
-        layer = self.convolutional_layer(4, layer, 32, 8, 32)
-        layer = self.maxpooling_layer(4, layer, 2, 2)
-        layer = self.convolutional_layer(5, layer, 32, 8, 64)
-        layer = self.maxpooling_layer(5, layer, 2, 2)
-        layer = self.convolutional_layer(6, layer, 64, 8, 64)
-        layer = self.maxpooling_layer(6, layer, 2, 2)
-        last_layer_dim = self.get_last_conv_layer_dim(64, 64)
-        layer = self.fullyconnected_layer(1, layer, last_layer_dim, 1024, 0.75)
-        layer = self.fullyconnected_layer(2, layer, 1024, 1024, 0.75)
-        return self.output_layer(layer, 1024)
+        last_layer_dim = self.get_last_conv_layer_dim(4, 32) # pool mult, depth
+        layer = self.fullyconnected_layer(1, layer, last_layer_dim, 128, dropout)
+        return self.output_layer(layer, 128)
 
-    def compute_loss(self, y_true, logits, y_raw_p):
+    def compute_loss(self, y_true, logits):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
