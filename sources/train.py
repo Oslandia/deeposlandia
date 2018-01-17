@@ -103,9 +103,9 @@ if __name__ == '__main__':
                               "'centeredglobal', 'centeredbatch'"))
     args = parser.parse_args()
 
-    if args.image_size < 256 or args.image_size > 2048:
+    if args.image_size > 1024:
         utils.logger.error(("Unsupported image size. Please provide a "
-                            "reasonable image size (between 256 and 2048"))
+                            "reasonable image size (less than 1024)"))
         sys.exit(1)
 
     if args.mode not in ["train", "test", "both"]:
