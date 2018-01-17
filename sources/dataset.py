@@ -20,6 +20,7 @@
 """
 
 from collections import defaultdict
+import cv2
 from PIL import Image
 import json
 import math
@@ -220,8 +221,7 @@ class Dataset(object):
         with open(filename, 'w') as fp:
             json.dump({"image_size": self.image_size,
                        "classes": self.class_info,
-                       "images": self.image_info},
-                      fp)
+                       "images": self.image_info}, fp)
         utils.logger.info("The dataset has been saved into {}".format(filename))
 
     def load(self, filename):
@@ -239,3 +239,112 @@ class Dataset(object):
             self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
             self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
+
+class ShapeDataset(Dataset):
+
+    def __init__(self, image_size, nb_classes):
+        """ Class constructor
+        """
+        self.image_size = image_size
+        self.class_info = defaultdict()
+        self.build_glossary(nb_classes)
+        self.image_info = defaultdict()
+        self.pixel_mean = [0, 0, 0]
+        self.pixel_std = [1, 1, 1]
+
+    def build_glossary(self, nb_classes):
+        """
+        """
+        self.add_class(0, "square", [0, 10, 10])
+        if nb_classes > 1:
+            self.add_class(1, "circle", [200, 10, 50])
+        if nb_classes > 2:
+            self.add_class(2, "triangle", [100, 50, 50])
+        if nb_classes > 3:
+            utils.logger.warning("Only three classes are considered.")
+
+    def generate_labels(self, nb_images):
+        """
+        """
+        raw_labels = [np.random.choice(np.arange(nb_images),
+                                            int(nb_images/2),
+                                            replace=False)
+                      for i in range(self.get_nb_class())]
+        labels = np.zeros([nb_images, self.get_nb_class()], dtype=int)
+        for i in range(self.get_nb_class()):
+            labels[raw_labels[i], i] = 1
+        return labels.tolist()
+
+    def populate(self, datapath, nb_images=10000, buf=8):
+        """
+        """
+        # Generate random shape label
+        shape_gen = self.generate_labels(nb_images)
+        for i, image_label in enumerate(shape_gen):
+            bg_color = np.random.randint(0, 255, 3).tolist()
+            shape_specs = []
+            for l in image_label:
+                if l:
+                    shape_color = np.random.randint(0, 255, 3).tolist()
+                    x, y = np.random.randint(buf, self.image_size - buf - 1, 2).tolist()
+                    shape_size = np.random.randint(buf, self.image_size // 4)
+                    shape_specs.append([shape_color, x, y, shape_size])
+                else:
+                    shape_specs.append([None, None, None, None])
+            self.add_image(i, bg_color, shape_specs, image_label)
+            self.draw_image(i, datapath)
+        self.compute_mean_pixel()
+
+    def add_image(self, image_id, background, specifications, labels):
+        """
+        """
+        if image_id in self.image_info.keys():
+            print("Image {} already stored into the class set.".format(image_id))
+            return None
+        self.image_info[image_id] = {"background": background,
+                                     "shape_specs": specifications,
+                                     "labels": labels}
+
+    def draw_image(self, image_id, datapath):
+        """Draws a shape from the given specs."""
+        utils.make_dir(datapath[:datapath.rfind("/")])
+        utils.make_dir(datapath)
+        image_info = self.image_info[image_id]
+
+        image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
+        image = image * np.array(image_info["background"], dtype=np.uint8)
+
+        # Get the center x, y and the size s
+        if image_info["labels"][0]:
+            color, x, y, s = image_info["shape_specs"][0]
+            color = tuple(map(int, color))
+            image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
+        if image_info["labels"][1]:
+            color, x, y, s = image_info["shape_specs"][1]
+            color = tuple(map(int, color))
+            image = cv2.circle(image, (x, y), s, color, -1)
+        if image_info["labels"][2]:
+            color, x, y, s = image_info["shape_specs"][2]
+            color = tuple(map(int, color))
+            x, y, s = map(int, (x, y, s))
+            points = np.array([[(x, y - s),
+                                (x - s / math.sin(math.radians(60)), y + s),
+                                (x + s / math.sin(math.radians(60)), y + s),]],
+                              dtype=np.int32)
+            image = cv2.fillPoly(image, points, color)
+        image_filename = os.path.join(datapath, "shape_{:05}.png".format(image_id))
+        self.image_info[image_id]["image_filename"] = image_filename
+        cv2.imwrite(image_filename, image)
+
+    def compute_mean_pixel(self):
+        """
+        """
+        mean_pixels, std_pixels = [], []
+        for image_id in self.image_info.keys():
+            image_filename = self.image_info[image_id]["image_filename"]
+            mean_pixels.append(np.mean(np.array(Image.open(image_filename)),
+                                       axis=(0,1)))
+            std_pixels.append(np.std(np.array(Image.open(image_filename)),
+                                     axis=(0,1)))
+        self.pixel_mean = np.mean(np.array(mean_pixels), axis=0)
+        self.pixel_std = np.std(np.array(std_pixels), axis=0)
