@@ -27,7 +27,7 @@ import os
 import pandas as pd
 import sys
 
-from dataset import Dataset
+from dataset import Dataset, ShapeDataset
 from model import ConvolutionalNeuralNetwork
 import utils
 
@@ -42,11 +42,13 @@ if __name__ == '__main__':
                         nargs='?', default=2,
                         help=("The number of convolutional layers "
                               "that must be inserted into the network"))
-    parser.add_argument('-d', '--datapath', required=False,
+    parser.add_argument('-d', '--dataset', required=True, nargs='?',
+                        help="""The dataset type (either Mapillary or shape""")
+    parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
     parser.add_argument('-dn', '--dataset-name', required=False,
-                        default="training_dataset", nargs='?',
+                        default="training", nargs='?',
                         help=("The json dataset filename, "
                               "without its extension"))
     parser.add_argument('-do', '--dropout', required=False,
@@ -138,12 +140,26 @@ if __name__ == '__main__':
                             "").format(len(args.learning_rate)))
         sys.exit(1)
 
-    dataset_filename = os.path.join(args.datapath, args.dataset_name+'.json')
-    d = Dataset(args.image_size, os.path.join(args.datapath, "config.json"))
+    dataset_filename = os.path.join(args.datapath,
+                                    args.dataset + '_'
+                                    + args.dataset_name + '_'
+                                    + str(args.image_size) + '.json')
+    if args.dataset == "mapillary":
+        d = Dataset(args.image_size, os.path.join(args.datapath,
+                                                  "config.json"))
+    elif args.dataset == "shape":
+        d = ShapeDataset(args.image_size, 3)
+    else:
+        utils.logger.error(("Unsupported dataset type. Please choose "
+                            "'mapillary' or 'shape'"))
+        sys.exit(1)
+
     if os.path.isfile(dataset_filename):
         d.load(dataset_filename)
     else:
-        d.populate(os.path.join(args.datapath, "training"))
+        d.populate(os.path.join(args.datapath,
+                                args.dataset + '_' + str(args.image_size),
+                                args.dataset_name))
         d.save(dataset_filename)
 
     if args.label_list == -1:
