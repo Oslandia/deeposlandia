@@ -548,7 +548,7 @@ class ConvolutionalNeuralNetwork(object):
                 sess.run(output["optim"], feed_dict=fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
                     s, loss, cm = sess.run([merged_summary, output["loss"],
-                                      output["conf_mat"]], feed_dict=fd)
+                                            output["conf_mat"]], feed_dict=fd)
                     utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
                                        "").format(step, loss, cm[0,:4]))
                     writer.add_summary(s, step)
