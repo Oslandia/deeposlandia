@@ -29,6 +29,7 @@ def make_dir(path):
     """
     try:
         os.mkdir(path)
+        logger.info("Path {} created.".format(path))
     except OSError:
         pass
 
@@ -116,6 +117,22 @@ def mapillary_label_reading(labels):
     """
     return [l['readable'] for l in labels]
 
+def one_hot_encoding(image_filename, nb_labels):
+    """Build a list of integer labels that are contained into a candidate
+    filtered image designed by its name on file system; the labels are
+    recognized starting from image pixels
+
+    Parameters
+    ----------
+    image_filename: object
+        File name of the image that has to be encoded
+    nb_labels: integer
+        number of labels contained into the reference classification
+
+    """
+    image = Image.open(image_filename)
+    return mapillary_label_building(image, nb_labels)
+
 def mapillary_label_building(filtered_image, nb_labels):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
@@ -128,11 +145,9 @@ def mapillary_label_building(filtered_image, nb_labels):
         number of labels contained into the reference classification
     
     """
-    filtered_data = np.array(filtered_image)
-    avlble_labels = (pd.Series(filtered_data.reshape([-1]))
-                     .value_counts()
-                     .index)
-    return [1 if i in avlble_labels else 0 for i in range(nb_labels)]
+    image_data = np.array(filtered_image)
+    available_labels = np.unique(image_data)
+    return [1 if i in available_labels else 0 for i in range(nb_labels)]
 
 def mapillary_image_size_plot(data, filename):
     """Plot the distribution of the sizes in a bunch of images, as a hexbin
@@ -307,6 +322,15 @@ def resize_image(img, base_size):
     else:
         new_size = (int(base_size * old_width / old_height), base_size)
     return img.resize(new_size)
+
+def mono_crop_image(img, crop_pixel):
+    """Crop image `img` so as its dimensions become equal (width=height),
+    without modifying its smallest dimension
+    """
+    if img.width > img.height:
+        return img.crop((crop_pixel, 0, crop_pixel+img.height, img.height))
+    else:
+        return img.crop((0, crop_pixel, img.width, crop_pixel+img.width))
 
 def crop_image(img, coordinates):
     """ Crop image `img` following coordinates `coordinates`; simple overload
