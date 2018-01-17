@@ -19,6 +19,7 @@
  */
 """
 
+import math
 import numpy as np
 import os
 import pandas as pd
@@ -82,8 +83,12 @@ class ConvolutionalNeuralNetwork(object):
         shape: list
             List of integers describing the weight shapes (ex: [2], [3, 5]...)
         """
-        return tf.get_variable('weights', shape,
-                               initializer=tf.truncated_normal_initializer())
+        w = tf.Variable(tf.truncated_normal(shape,
+                                            stddev=1.0/math.sqrt(shape[0])),
+                        name="weights",
+                        trainable=True)
+        tf.summary.histogram("weights", w)
+        return w
 
     def create_biases(self, shape):
         """ Create biases variables of dimension `shape`, and initialize them
@@ -95,8 +100,9 @@ class ConvolutionalNeuralNetwork(object):
         shape: list
             List of integers describing the biases shapes (ex: [2], [3, 5]...)
         """
-        return tf.get_variable('biases', shape,
-                               initializer=tf.constant_initializer(0.0))
+        b = tf.Variable(0.0, name="biases", trainable=True)
+        tf.summary.histogram("biases", b)
+        return b
 
     def convolutional_layer(self, counter, input_layer,
                             input_layer_depth, kernel_dim,
@@ -131,11 +137,12 @@ class ConvolutionalNeuralNetwork(object):
             w = self.create_weights([kernel_dim, kernel_dim,
                                      input_layer_depth, layer_depth])
             b = self.create_biases([layer_depth])
-            tf.summary.histogram("weight_sum", w)
-            tf.summary.histogram("biases_sum", b)
             conv = tf.nn.conv2d(input_layer, w, strides=strides,
                                 padding=padding)
-            return tf.nn.relu(tf.add(conv, b), name=scope.name)
+            tf.summary.histogram("conv", conv)
+            relu_conv = tf.nn.relu(tf.add(conv, b), name=scope.name)
+            tf.summary.histogram("conv_activation", relu_conv)
+            return relu_conv
     
     def maxpooling_layer(self, counter, input_layer, kernel_dim,
                          stride=2, padding='SAME'):
@@ -199,10 +206,11 @@ class ConvolutionalNeuralNetwork(object):
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             b = self.create_biases([layer_depth])
-            tf.summary.histogram("weights_sum", w)
-            tf.summary.histogram("biases_sum", b)
-            fc = tf.nn.relu(tf.add(tf.matmul(reshaped, w), b), name='relu')
-            return tf.nn.dropout(fc, t_dropout, name='relu_with_dropout')
+            fc = tf.add(tf.matmul(reshaped, w), b, name="raw_fc")
+            tf.summary.histogram("fc", fc)
+            relu_fc = tf.nn.relu(fc, name="relu_fc")
+            tf.summary.histogram("fc_activation", relu_fc)
+            return tf.nn.dropout(relu_fc, t_dropout, name='relu_with_dropout')
 
     def output_layer(self, input_layer, input_layer_dim):
         """Build an output layer to a neural network with a sigmoid final
@@ -219,16 +227,13 @@ class ConvolutionalNeuralNetwork(object):
         with tf.variable_scope(self._network_name + '_output_layer') as scope:
             w = self.create_weights([input_layer_dim, self._nb_labels])
             b = self.create_biases([self._nb_labels])
-            tf.summary.histogram("weights_sum", w)
-            tf.summary.histogram("biases_sum", b)
             logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
             Y_pred = tf.round(Y_raw_predict, name="y_pred")
-            tf.summary.histogram("logits_sum", logits)
-            tf.summary.histogram("y_raw_pred_sum", Y_raw_predict)
-            tf.summary.histogram("y_pred_sum", Y_pred)
-            return {"logits": logits, "y_raw_pred": Y_raw_predict,
-                    "y_pred": Y_pred}
+            tf.summary.histogram("logits", logits)
+            tf.summary.histogram("y_raw_pred", Y_raw_predict)
+            tf.summary.histogram("y_pred", Y_pred)
+            return {"logits": logits, "y_raw_pred": Y_raw_predict, "y_pred": Y_pred}
 
     def add_layers(self, X):
         """Build the structure of a convolutional neural network from image data X
@@ -272,7 +277,9 @@ class ConvolutionalNeuralNetwork(object):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
             tf.summary.histogram('xent', entropy)
-            return tf.reduce_mean(entropy, name="loss")
+            mean_entropy = tf.reduce_mean(entropy, name="loss")
+            tf.summary.scalar('loss', mean_entropy)
+            return entropy, mean_entropy
 
     def optimize(self, loss):
         """Define the loss tensor as well as the optimizer; it uses a decaying
@@ -283,7 +290,6 @@ class ConvolutionalNeuralNetwork(object):
         loss: tensor
             Tensor that represents the neural network loss function
         """
-        tf.summary.scalar('loss', loss)
         global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
                                   name='global_step')
         if len(self._learning_rate) == 1:
@@ -490,6 +496,7 @@ class ConvolutionalNeuralNetwork(object):
         backup_path: object
             String designing the place where must be saved the TensorFlow
         graph, summary and the model checkpoints
+
         """
         # If backup_path is undefined, set it with the dataset image path
         if backup_path == None:
