@@ -43,7 +43,7 @@ if __name__ == '__main__':
                         help=("The number of convolutional layers "
                               "that must be inserted into the network"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
-                        help="""The dataset type (either Mapillary or shape""")
+                        help="""The dataset type (either mapillary or shape""")
     parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="""The relative path towards data directory""")
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', required=False, default="train",
                         nargs='?', help=("The network running mode"
                                          "('train', 'test', 'both')"))
-    parser.add_argument('-n', '--name', default="cnn_mapil", nargs='?',
+    parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("The model name that will be used for results, "
                               "checkout and graph storage on file system"))
     parser.add_argument('-p', '--prepare-data', action="store_true",
