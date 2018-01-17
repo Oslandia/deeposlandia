@@ -52,7 +52,7 @@ if __name__ == '__main__':
                         help=("The json dataset filename, "
                               "without its extension"))
     parser.add_argument('-do', '--dropout', required=False,
-                        default=2.0/3, nargs='?',
+                        default=1.0, nargs='?',
                         help=("The percentage of dropped out neurons "
                               "during training"))
     parser.add_argument('-e', '--nb-epochs', required=False, type=int,
@@ -190,8 +190,9 @@ if __name__ == '__main__':
                                      nb_labels=len(label_list),
                                      learning_rate=args.learning_rate)
 
-    cnn.train(d, label_list,
+    cnn.train(d, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
-              log_step=args.log_step, save_step=args.save_step)
+              log_step=args.log_step, save_step=args.save_step,
+              backup_path=args.datapath)
     
     sys.exit(0)

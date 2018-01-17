@@ -235,14 +235,16 @@ class ConvolutionalNeuralNetwork(object):
             tf.summary.histogram("y_pred", Y_pred)
             return {"logits": logits, "y_raw_pred": Y_raw_predict, "y_pred": Y_pred}
 
-    def add_layers(self, X):
+    def add_layers(self, X, dropout):
         """Build the structure of a convolutional neural network from image data X
         to the last hidden layer, this layer being returned by this method
 
         Parameters
         ----------
-        X: tensorflow.placeholder
+        X: tensor
             Image data with a shape [batch_size, width, height, nb_channels]
+        dropout: tensor
+            Probability of keeping a neuron during a training step (dropout)
         """
         layer = self.convolutional_layer(1, X, self._nb_channels, 8, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
@@ -410,22 +412,25 @@ class ConvolutionalNeuralNetwork(object):
         tf.summary.scalar("f_measure_"+label, fm)
         return [pos_pred, neg_pred, acc, tpr, ppv, fm]
 
-    def build(self, X, Y):
+    def build(self, X, Y, dropout):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
         Parameters:
         -----------
-        X: TensorFlow placeholder
+        X: tensor
             Neural network input
-        Y: TensorFlow placeholder
+        Y: tensor
             Neural network output
+        dropout: tensor
+            Probability of keeping a neuron during a training step (dropout)
         """
-        output = self.add_layers(X)
-        loss = self.compute_loss(Y, output["logits"])
+        output = self.add_layers(X, dropout)
+        entropy, loss = self.compute_loss(Y, output["logits"])
         result = self.optimize(loss)
         cm = self.compute_dashboard(Y, output["y_pred"])
-        result.update({"loss": loss,
+        result.update({"entropy": entropy,
+                       "loss": loss,
                        "logits": output["logits"],
                        "y_raw_pred": output["y_raw_pred"],
                        "y_pred": output["y_pred"],
@@ -471,8 +476,8 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, labels, nb_epochs, log_step=10, save_step=100,
-              nb_iter=None, backup_path=None):
+    def train(self, dataset, labels, keep_proba, nb_epochs,
+              log_step=10, save_step=100, nb_iter=None, backup_path=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -482,6 +487,8 @@ class ConvolutionalNeuralNetwork(object):
         attribute must correspond to those of this class
         label: list
             List of label indices on which a model will be trained
+        keep_proba: float
+            Probability of keeping a neuron during a training step (dropout)
         nb_epochs: integer
             Number of training epoch (one epoch=every image have been seen by
         the network); a larger value helps to reach higher
@@ -509,7 +516,8 @@ class ConvolutionalNeuralNetwork(object):
                            shape=[None, self._image_size,
                                   self._image_size, self._nb_channels])
         Y = tf.placeholder(tf.float32, name='Y', shape=[None, self._nb_labels])
-        output = self.build(X, Y)
+        dropout = tf.placeholder(tf.float32, name="dropout")
+        output = self.build(X, Y, dropout)
         # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
             # Initialize TensorFlow variables
@@ -542,7 +550,7 @@ class ConvolutionalNeuralNetwork(object):
             initial_step = output["gs"].eval(session=sess)
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
-                fd = {X: X_batch, Y: Y_batch}
+                fd = {X: X_batch, Y: Y_batch, dropout: keep_proba}
                 sess.run(output["optim"], feed_dict=fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
                     s, loss, cm = sess.run([merged_summary, output["loss"],
