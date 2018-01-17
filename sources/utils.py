@@ -29,6 +29,7 @@ def make_dir(path):
     """
     try:
         os.mkdir(path)
+        logger.info("Path {} created.".format(path))
     except OSError:
         pass
 
