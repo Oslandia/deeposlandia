@@ -466,8 +466,8 @@ class ConvolutionalNeuralNetwork(object):
                                                          label_tensors],
                                                         shuffle=True)
             file_content = tf.read_file(input_queue[0])
-            images = tf.image.decode_jpeg(file_content,
-                                          channels=self._nb_channels)
+            images = tf.image.decode_image(file_content,
+                                           channels=self._nb_channels)
             images.set_shape([self._image_size,
                              self._image_size,
                              self._nb_channels])
