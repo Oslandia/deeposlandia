@@ -253,7 +253,13 @@ class ShapeDataset(Dataset):
         self.pixel_std = [1, 1, 1]
 
     def build_glossary(self, nb_classes):
-        """
+        """Read the shape glossary stored as a json file at the data
+        repository root
+
+        Parameter:
+        ----------
+        nb_classes: integer
+            Number of shape types (either 1, 2 or 3, warning if more)
         """
         self.add_class(0, "square", [0, 10, 10])
         if nb_classes > 1:
@@ -264,7 +270,14 @@ class ShapeDataset(Dataset):
             utils.logger.warning("Only three classes are considered.")
 
     def generate_labels(self, nb_images):
-        """
+        """ Generate random shape labels in order to prepare shape image
+        generation; use numpy to generate random indices for each labels, these
+        indices will be the positive examples; return a 2D-list
+
+        Parameter:
+        ----------
+        nb_images: integer
+            Number of images to label in the dataset
         """
         raw_labels = [np.random.choice(np.arange(nb_images),
                                             int(nb_images/2),
@@ -276,9 +289,18 @@ class ShapeDataset(Dataset):
         return labels.tolist()
 
     def populate(self, datapath, nb_images=10000, buf=8):
+        """ Populate the dataset with images contained into `datadir` directory
+
+       Parameter:
+        ----------
+        datapath: object
+            String designing the relative path of the directory that contains
+        new images
+        nb_images: integer
+            Number of images that must be added in the dataset
+        buf: integer
+            Minimal number of pixels between shape base point and image borders
         """
-        """
-        # Generate random shape label
         shape_gen = self.generate_labels(nb_images)
         for i, image_label in enumerate(shape_gen):
             bg_color = np.random.randint(0, 255, 3).tolist()
@@ -296,7 +318,25 @@ class ShapeDataset(Dataset):
         self.compute_mean_pixel()
 
     def add_image(self, image_id, background, specifications, labels):
-        """
+        """ Add a new image to the dataset with image id `image_id`; an image
+        in the dataset is represented by an id, a list of shape specifications,
+        a background color and a list of 0-1 labels (1 if the i-th class is on
+        the image, 0 otherwise)
+
+        Parameters:
+        -----------
+        image_id: integer
+            Id of the new image
+        background: list
+            List of three integer between 0 and 255 that designs the image
+        background color
+        specifications: list
+            Image specifications, as a list of shapes (color, coordinates and
+        size)
+        labels: list
+            List of 0-1 values, the i-th value being 1 if the i-th class is on
+        the new image, 0 otherwise; the label list length correspond to the
+        number of classes in the dataset
         """
         if image_id in self.image_info.keys():
             print("Image {} already stored into the class set.".format(image_id))
@@ -306,7 +346,16 @@ class ShapeDataset(Dataset):
                                      "labels": labels}
 
     def draw_image(self, image_id, datapath):
-        """Draws a shape from the given specs."""
+        """Draws an image from the specifications of its shapes and saves it on
+        the file system to `datapath`
+
+        Parameters
+        ----------
+        image_id: integer
+            Image id
+        datapath: object
+            String that characterizes the repository in which images will be stored
+        """
         utils.make_dir(datapath[:datapath.rfind("/")])
         utils.make_dir(datapath)
         image_info = self.image_info[image_id]
@@ -337,7 +386,8 @@ class ShapeDataset(Dataset):
         cv2.imwrite(image_filename, image)
 
     def compute_mean_pixel(self):
-        """
+        """Compute mean and standard deviation of dataset images, for each
+        RGB-channel
         """
         mean_pixels, std_pixels = [], []
         for image_id in self.image_info.keys():
