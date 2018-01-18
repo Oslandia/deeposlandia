@@ -38,10 +38,6 @@ if __name__ == '__main__':
                         nargs='?', default=20,
                         help=("The number of images that must be contained "
                               "into a single batch"))
-    parser.add_argument('-c', '--nbconv', required=False, type=int,
-                        nargs='?', default=2,
-                        help=("The number of convolutional layers "
-                              "that must be inserted into the network"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
                         help="""The dataset type (either mapillary or shape""")
     parser.add_argument('-dp', '--datapath', required=False,
@@ -59,10 +55,6 @@ if __name__ == '__main__':
                         default=5, nargs='?',
                         help=("The number of training epochs (one epoch means "
                               "scanning each training image once)"))
-    parser.add_argument('-f', '--nbfullyconn', required=False, type=int,
-                        nargs='?', default=1,
-                        help=("The number of fully-connected layers "
-                              "that must be inserted into the network"))
     parser.add_argument('-g', '--glossary-printing', action="store_true",
                         help=("True if the program must only "
                               "print the glossary, false otherwise)"))
@@ -73,15 +65,9 @@ if __name__ == '__main__':
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("The log periodicity during training process"))
-    parser.add_argument('-m', '--mode', required=False, default="train",
-                        nargs='?', help=("The network running mode"
-                                         "('train', 'test', 'both')"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("The model name that will be used for results, "
                               "checkout and graph storage on file system"))
-    parser.add_argument('-p', '--prepare-data', action="store_true",
-                        help=("True if the data must be prepared, "
-                              "false otherwise"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
@@ -106,11 +92,6 @@ if __name__ == '__main__':
     if args.image_size > 1024:
         utils.logger.error(("Unsupported image size. Please provide a "
                             "reasonable image size (less than 1024)"))
-        sys.exit(1)
-
-    if args.mode not in ["train", "test", "both"]:
-        utils.logger.error(("Unsupported running mode. "
-                            "Please choose amongst 'train', 'test' or 'both'."))
         sys.exit(1)
 
     weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
