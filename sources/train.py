@@ -78,6 +78,9 @@ if __name__ == '__main__':
     parser.add_argument('-ss', '--save-step', nargs="?",
                         default=100, type=int,
                         help=("The save periodicity during training process"))
+    parser.add_argument('-vs', '--validation-step', nargs="?",
+                        default=200, type=int,
+                        help=("The validation periodicity during training process"))
     parser.add_argument('-t', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
@@ -114,66 +117,56 @@ if __name__ == '__main__':
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
 
-    if len(args.learning_rate) != 1 and len(args.learning_rate) != 3:
-        utils.logger.error(("There must be 1 or 3 learning rate component(s) "
-                            "(start, decay steps and decay rate"
-                            "; actually, there is/are {}"
-                            "").format(len(args.learning_rate)))
-        sys.exit(1)
+    # Data path and repository management
+    dataset_repo = os.path.join(args.datapath, args.dataset)
+    instance_name = args.dataset_name + '_' + str(args.image_size)
+    utils.make_dir(dataset_repo)
+    utils.make_dir(os.path.join(dataset_repo, instance_name))
+    dataset_filename = os.path.join(dataset_repo, instance_name + '.json')
 
-    dataset_filename = os.path.join(args.datapath,
-                                    args.dataset + '_'
-                                    + args.dataset_name + '_'
-                                    + str(args.image_size) + '.json')
+    # Dataset creation
     if args.dataset == "mapillary":
-        d = Dataset(args.image_size, os.path.join(args.datapath,
-                                                  "config.json"))
+        train_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
     elif args.dataset == "shape":
-        d = ShapeDataset(args.image_size, 3)
+        train_dataset = ShapeDataset(args.image_size, 3)
     else:
-        utils.logger.error(("Unsupported dataset type. Please choose "
-                            "'mapillary' or 'shape'"))
+        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
         sys.exit(1)
 
+    validation_dataset = None
+    
+    # Dataset populating/loading (depends on the existence of a specification file)
     if os.path.isfile(dataset_filename):
         d.load(dataset_filename)
     else:
-        d.populate(os.path.join(args.datapath,
-                                args.dataset + '_' + str(args.image_size),
-                                args.dataset_name))
+        d.populate(os.path.join(args.datapath, args.dataset, instance_name))
         d.save(dataset_filename)
 
+    # Glossary management (are all the labels required?)
     if args.label_list == -1:
         label_list = list(d.class_info.keys())
     else:
         label_list = args.label_list
         if sum([l>=d.get_nb_class() for l in args.label_list]) > 0:
-            utils.logger.error(("Unsupported label list. "
-                                "Please enter a list of integers comprised"
+            utils.logger.error(("Unsupported label list. Please enter a list of integers comprised"
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
-
     if args.glossary_printing:
         glossary = pd.DataFrame(d.class_info).T
         glossary["popularity"] = d.get_class_popularity()
         utils.logger.info("Data glossary:\n{}".format(d.class_info))
         sys.exit(0)
 
+    # Convolutional Neural Network creation and training
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(d.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(d.get_nb_images()))
-
-    cnn = ConvolutionalNeuralNetwork(network_name=args.name,
-                                     image_size=args.image_size,
-                                     nb_channels=3,
-                                     batch_size=args.batch_size,
-                                     nb_labels=len(label_list),
-                                     learning_rate=args.learning_rate)
-
-    cnn.train(d, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, nb_iter=args.training_limit,
-              log_step=args.log_step, save_step=args.save_step,
-              backup_path=args.datapath)
+    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
+                                     nb_channels=3, batch_size=args.batch_size,
+                                     nb_labels=len(label_list), learning_rate=args.learning_rate)
+    cnn.train(train_dataset, val_dataset, label_list, keep_proba=args.dropout,
+              nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
+              save_step=args.save_step, backup_path=dataset_repo, validation_step=args.validation_step)
     
     sys.exit(0)

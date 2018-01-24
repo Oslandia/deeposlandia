@@ -470,13 +470,14 @@ class ConvolutionalNeuralNetwork(object):
                                   batch_size=self._batch_size,
                                   num_threads=4)
 
-    def train(self, dataset, labels, keep_proba, nb_epochs,
-              log_step=10, save_step=100, nb_iter=None, backup_path=None):
+    def train(self, train_dataset, labels, keep_proba, nb_epochs,
+              log_step=10, save_step=100, nb_iter=None, backup_path=None,
+              validation_step=200, val_dataset):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
         -----------
-        dataset: Dataset
+        train_dataset: Dataset
             Dataset that will feed the neural network; its `_image_size`
         attribute must correspond to those of this class
         label: list
@@ -497,14 +498,16 @@ class ConvolutionalNeuralNetwork(object):
         backup_path: object
             String designing the place where must be saved the TensorFlow
         graph, summary and the model checkpoints
+        validation_step: integer
+            Validation periodicity (quantity of iterations)
 
         """
         # If backup_path is undefined, set it with the dataset image path
         if backup_path == None:
-            example_filename = dataset.image_info[0]['raw_filename']
+            example_filename = train_dataset.image_info[0]['raw_filename']
             backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
-        batched_images, batched_labels = self.define_batch(dataset, labels)
+        batched_images, batched_labels = self.define_batch(train_dataset, labels)
         # Define model inputs and build the network
         X = tf.placeholder(tf.float32, name='X',
                            shape=[None, self._image_size,
@@ -539,7 +542,7 @@ class ConvolutionalNeuralNetwork(object):
             # Train the model
             start_time = time.time()
             if nb_iter is None:
-                n_batches = int(len(dataset.image_info) / self._batch_size)
+                n_batches = int(len(train_dataset.image_info) / self._batch_size)
                 nb_iter = n_batches * nb_epochs
             initial_step = output["gs"].eval(session=sess)
             for step in range(initial_step, nb_iter):
@@ -558,12 +561,26 @@ class ConvolutionalNeuralNetwork(object):
                     utils.logger.info(("Checkpoint {}-{} creation"
                                        "").format(save_path, step))
                     saver.save(sess, global_step=step, save_path=save_path)
+                if (step + 1) % validation_step == 0:
+                    self.validate(val_dataset)
             utils.logger.info(("Optimization Finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
 
+    def validate(self, dataset):
+        """ Validate the trained neural network on a validation dataset
+
+        Parameters:
+        -----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
+
+        """
+        pass
+        
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
 
