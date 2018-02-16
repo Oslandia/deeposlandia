@@ -36,37 +36,33 @@ if __name__ == '__main__':
                                                   "ork on street-scene images"))
     parser.add_argument('-b', '--batch-size', required=False, type=int,
                         nargs='?', default=20,
-                        help=("The number of images that must be contained "
+                        help=("Number of images that must be contained "
                               "into a single batch"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
-                        help="""The dataset type (either mapillary or shape""")
+                        help="Dataset type (either mapillary or shape")
     parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
-                        help="""The relative path towards data directory""")
-    parser.add_argument('-dn', '--dataset-name', required=False,
-                        default="training", nargs='?',
-                        help=("The json dataset filename, "
-                              "without its extension"))
+                        help="Relative path towards data directory")
     parser.add_argument('-do', '--dropout', required=False,
                         default=1.0, nargs='?',
-                        help=("The percentage of dropped out neurons "
+                        help=("Percentage of dropped out neurons "
                               "during training"))
     parser.add_argument('-e', '--nb-epochs', required=False, type=int,
                         default=5, nargs='?',
-                        help=("The number of training epochs (one epoch means "
+                        help=("Number of training epochs (one epoch means "
                               "scanning each training image once)"))
     parser.add_argument('-g', '--glossary-printing', action="store_true",
                         help=("True if the program must only "
                               "print the glossary, false otherwise)"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
-                        help=("The list of label indices that "
+                        help=("List of label indices that "
                               "will be considered during training process"))
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
-                        help=("The log periodicity during training process"))
+                        help=("Log periodicity during training process"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
-                        help=("The model name that will be used for results, "
+                        help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
                         default=[0.01, 1000, 0.95], type=float,
@@ -74,19 +70,23 @@ if __name__ == '__main__':
                               "decay steps and decay rate)"))
     parser.add_argument('-s', '--image-size', nargs="?",
                         default=512, type=int,
-                        help=("The desired size of images (width = height)"))
+                        help=("Desired size of images (width = height)"))
     parser.add_argument('-ss', '--save-step', nargs="?",
                         default=100, type=int,
-                        help=("The save periodicity during training process"))
+                        help=("Save periodicity during training process"))
+    parser.add_argument('-vb', '--val-batch-size', type=int, default=100,
+                        help=("Number of images that must be contained "
+                              "into a single batch for validation dataset"))
     parser.add_argument('-vs', '--validation-step', nargs="?",
                         default=200, type=int,
-                        help=("The validation periodicity during training process"))
+                        help=("Validation metric computing periodicity "
+                              "during training process"))
     parser.add_argument('-t', '--training-limit', default=None, type=int,
                         help=("Number of training iteration, "
                               "if not specified the model run during "
                               "nb-epochs * nb-batchs iterations"))
     parser.add_argument('-w', '--weights', default=["base"], nargs='+',
-                        help=("The weight policy to apply on label "
+                        help=("Weight policy to apply on label "
                               "contributions to loss: either 'base' "
                               "(default case), 'global', 'batch', "
                               "'centeredglobal', 'centeredbatch'"))
