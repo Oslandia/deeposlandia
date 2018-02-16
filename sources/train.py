@@ -96,7 +96,12 @@ if __name__ == '__main__':
         utils.logger.error(("Unsupported image size. Please provide a "
                             "reasonable image size (less than 1024)"))
         sys.exit(1)
-
+    if len(args.learning_rate) != 1 and len(args.learning_rate) != 3:
+        utils.logger.error(("There must be 1 or 3 learning rate component(s) "
+                            "(start, decay steps and decay rate"
+                            "; actually, there is/are {}"
+                            "").format(len(args.learning_rate)))
+        sys.exit(1)
     weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
     if sum([w in weights for w in args.weights]) != len(args.weights):
         utils.logger.error(("Unsupported weighting policy. Please choose "
