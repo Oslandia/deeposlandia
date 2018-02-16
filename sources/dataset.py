@@ -132,7 +132,7 @@ class Dataset(object):
                                      "category": category,
                                      "color": color}
 
-    def populate(self, datadir):
+    def populate(self, datadir, nb_images=None):
         """ Populate the dataset with images contained into `datadir` directory
  
        Parameter:
@@ -140,10 +140,12 @@ class Dataset(object):
         datadir: object
             String designing the relative path of the directory that contains
         new images
+        nb_images: integer
+            Number of images to be considered in the dataset; if None, consider the whole repository
         """
         datadir = datadir[:datadir.rfind('_')]
         image_dir = os.path.join(datadir, "images")
-        image_list = os.listdir(image_dir)
+        image_list = os.listdir(image_dir)[:range(nb_images)]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         for image_id, image_filename in enumerate(image_list_longname):
             label_filename = image_filename.replace("images/", "labels/")
