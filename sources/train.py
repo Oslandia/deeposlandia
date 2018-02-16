@@ -119,10 +119,13 @@ if __name__ == '__main__':
 
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
-    instance_name = args.dataset_name + '_' + str(args.image_size)
+    training_name = "training_" + str(args.image_size)
+    validation_name = "validation_" + str(args.image_size)
     utils.make_dir(dataset_repo)
-    utils.make_dir(os.path.join(dataset_repo, instance_name))
-    dataset_filename = os.path.join(dataset_repo, instance_name + '.json')
+    utils.make_dir(os.path.join(dataset_repo, training_name))
+    utils.make_dir(os.path.join(dataset_repo, validation_name))
+    training_filename = os.path.join(dataset_repo, training_name + '.json')
+    validation_filename = os.path.join(dataset_repo, validation_name + '.json')
 
     # Dataset creation
     if args.dataset == "mapillary":

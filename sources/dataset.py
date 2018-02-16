@@ -141,7 +141,7 @@ class Dataset(object):
             String designing the relative path of the directory that contains
         new images
         """
-        utils.make_dir(os.path.join(datadir, "input"))
+        datadir = datadir[:datadir.rfind('_')]
         image_dir = os.path.join(datadir, "images")
         image_list = os.listdir(image_dir)
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
@@ -356,8 +356,6 @@ class ShapeDataset(Dataset):
         datapath: object
             String that characterizes the repository in which images will be stored
         """
-        utils.make_dir(datapath[:datapath.rfind("/")])
-        utils.make_dir(datapath)
         image_info = self.image_info[image_id]
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
