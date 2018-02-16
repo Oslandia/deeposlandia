@@ -33,7 +33,7 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 batch_size=128, nb_labels=65, learning_rate=1e-3):
+                 batch_size=20, val_batch_size=100, nb_labels=65, learning_rate=1e-3):
         """ Class constructor
         """
         self._network_name = network_name
@@ -41,6 +41,7 @@ class ConvolutionalNeuralNetwork(object):
         self._nb_channels = nb_channels
         self._nb_labels = nb_labels
         self._batch_size = batch_size
+        self._val_batch_size = val_batch_size
         self._learning_rate = learning_rate
 
     def get_network_name(self):
@@ -430,7 +431,7 @@ class ConvolutionalNeuralNetwork(object):
                        "conf_mat": cm})
         return result
 
-    def define_batch(self, dataset, labels_of_interest, dataset_type="train"):
+    def define_batch(self, dataset, labels_of_interest, dataset_type="training"):
         """Insert images and labels in Tensorflow batches
 
         Parameters
@@ -445,6 +446,10 @@ class ConvolutionalNeuralNetwork(object):
         or `testing`)
         """
         scope_name = self._network_name + "_" + dataset_type + "_data_pipe"
+        if dataset_type == "training":
+            batch_size = self._batch_size
+        else:
+            batch_size = self._val_batch_size
         with tf.variable_scope(scope_name) as scope:
             filepaths = [dataset.image_info[i]["image_filename"]
                          for i in range(dataset.get_nb_images())]
@@ -467,19 +472,21 @@ class ConvolutionalNeuralNetwork(object):
             norm_images = tf.image.per_image_standardization(images)
             tf.summary.histogram("image", norm_images)
             return tf.train.batch([norm_images, input_queue[1]],
-                                  batch_size=self._batch_size,
+                                  batch_size=batch_size,
                                   num_threads=4)
 
-    def train(self, train_dataset, labels, keep_proba, nb_epochs,
+    def train(self, train_dataset, val_dataset, labels, keep_proba, nb_epochs,
               log_step=10, save_step=100, nb_iter=None, backup_path=None,
-              validation_step=200, val_dataset):
+              validation_step=200):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
         -----------
         train_dataset: Dataset
-            Dataset that will feed the neural network; its `_image_size`
+            Dataset that will train the neural network; its `_image_size`
         attribute must correspond to those of this class
+        validation_dataset: Dataset
+            Validation dataset, to control the training process
         label: list
             List of label indices on which a model will be trained
         keep_proba: float

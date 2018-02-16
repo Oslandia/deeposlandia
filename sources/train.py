@@ -171,9 +171,11 @@ if __name__ == '__main__':
                        "set").format(train_dataset.get_nb_images()))
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
                                      nb_channels=3, batch_size=args.batch_size,
+                                     val_batch_size=args.val_batch_size,
                                      nb_labels=len(label_list), learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
-              save_step=args.save_step, backup_path=dataset_repo, validation_step=args.validation_step)
+              save_step=args.save_step, backup_path=dataset_repo,
+              validation_step=args.validation_step)
     
     sys.exit(0)
