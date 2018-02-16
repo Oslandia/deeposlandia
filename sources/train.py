@@ -116,7 +116,6 @@ if __name__ == '__main__':
                            "weighted with respect to label popularity within "
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
-
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     training_name = "training_" + str(args.image_size)
@@ -130,45 +129,50 @@ if __name__ == '__main__':
     # Dataset creation
     if args.dataset == "mapillary":
         train_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
-    elif args.dataset == "shape":
+        validation_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
+    elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size, 3)
+        validation_dataset = ShapeDataset(args.image_size, 3)
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
         sys.exit(1)
-
-    validation_dataset = None
     
     # Dataset populating/loading (depends on the existence of a specification file)
-    if os.path.isfile(dataset_filename):
-        d.load(dataset_filename)
+    if os.path.isfile(training_filename):
+        train_dataset.load(training_filename)
     else:
-        d.populate(os.path.join(args.datapath, args.dataset, instance_name))
-        d.save(dataset_filename)
+        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=18000)
+        train_dataset.save(training_filename)
+    if os.path.isfile(validation_filename):
+        validation_dataset.load(validation_filename)
+    else:
+        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=2000)
+        validation_dataset.save(validation_filename)
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
-        label_list = list(d.class_info.keys())
+        label_list = list(train_dataset.class_info.keys())
     else:
         label_list = args.label_list
-        if sum([l>=d.get_nb_class() for l in args.label_list]) > 0:
+        if sum([l>=train_dataset.get_nb_class() for l in args.label_list]) > 0:
             utils.logger.error(("Unsupported label list. Please enter a list of integers comprised"
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
     if args.glossary_printing:
-        glossary = pd.DataFrame(d.class_info).T
-        glossary["popularity"] = d.get_class_popularity()
-        utils.logger.info("Data glossary:\n{}".format(d.class_info))
+        glossary = pd.DataFrame(train_dataset.class_info).T
+        glossary["popularity"] = train_dataset.get_class_popularity()
+        utils.logger.info("Data glossary:\n{}".format(train_dataset.class_info))
         sys.exit(0)
 
     # Convolutional Neural Network creation and training
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
-                       "").format(d.get_nb_class(), len(label_list)))
+                       "").format(train_dataset.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
-                       "set").format(d.get_nb_images()))
+                       "set").format(train_dataset.get_nb_images()))
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
                                      nb_channels=3, batch_size=args.batch_size,
                                      nb_labels=len(label_list), learning_rate=args.learning_rate)
-    cnn.train(train_dataset, val_dataset, label_list, keep_proba=args.dropout,
+    cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, backup_path=dataset_repo, validation_step=args.validation_step)
     
