@@ -353,10 +353,6 @@ class ConvolutionalNeuralNetwork(object):
         fp = cmat[0, 1]
         fn = cmat[1, 0]
         tp = cmat[1, 1]
-        tf.summary.scalar("tn_"+label, tn)
-        tf.summary.scalar("fp_"+label, fp)
-        tf.summary.scalar("fn_"+label, fn)
-        tf.summary.scalar("tp_"+label, tp)
         metrics = self.compute_metrics(tn, fp, fn, tp, label)
         return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
 
@@ -380,6 +376,10 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
+        tf.summary.scalar("tn_" + label, tn)
+        tf.summary.scalar("fp_" + label, fp)
+        tf.summary.scalar("fn_" + label, fn)
+        tf.summary.scalar("tp_" + label, tp)
         pos_true = tf.add(tp, fn)
         neg_true = tf.add(fp, tn)
         pos_pred = tf.add(tp, fp)
