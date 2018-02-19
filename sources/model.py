@@ -101,7 +101,7 @@ class ConvolutionalNeuralNetwork(object):
         shape: list
             List of integers describing the biases shapes (ex: [2], [3, 5]...)
         """
-        b = tf.Variable(0.0, name="biases", trainable=True)
+        b = tf.Variable(tf.zeros(shape), name="biases", trainable=True)
         tf.summary.histogram("biases", b)
         return b
 
