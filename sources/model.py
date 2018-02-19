@@ -514,7 +514,8 @@ class ConvolutionalNeuralNetwork(object):
             example_filename = train_dataset.image_info[0]['raw_filename']
             backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
-        batched_images, batched_labels = self.define_batch(train_dataset, labels)
+        batched_images, batched_labels = self.define_batch(train_dataset, labels, "training")
+        batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels, "validation")
         # Define model inputs and build the network
         X = tf.placeholder(tf.float32, name='X',
                            shape=[None, self._image_size,
@@ -522,27 +523,31 @@ class ConvolutionalNeuralNetwork(object):
         Y = tf.placeholder(tf.float32, name='Y', shape=[None, self._nb_labels])
         dropout = tf.placeholder(tf.float32, name="dropout")
         output = self.build(X, Y, dropout)
+        # Set up train and validation summaries
+        summary = tf.summary.merge_all()
+        # Create tensorflow graph
+        graph_path = os.path.join(backup_path, 'graph', self._network_name)
+        train_writer = tf.summary.FileWriter(os.path.join(graph_path, "training"))
+        val_writer = tf.summary.FileWriter(os.path.join(graph_path, "validation"))
+        # Create folders to store checkpoints
+        saver = tf.train.Saver(max_to_keep=1)
+        ckpt_path = os.path.join(backup_path, 'checkpoints',
+                                 self._network_name)
+        utils.make_dir(os.path.dirname(ckpt_path))
+        utils.make_dir(ckpt_path)
+        ckpt = tf.train.get_checkpoint_state(ckpt_path)
+        # If that checkpoint exists, restore from checkpoint
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            utils.logger.info(("Recover model state from {}"
+                               "").format(ckpt.model_checkpoint_path))
+
         # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
+            train_writer.add_graph(sess.graph)
+            val_writer.add_graph(sess.graph)
             # Initialize TensorFlow variables
             sess.run(tf.global_variables_initializer())
-            # Create tensorflow graph
-            merged_summary = tf.summary.merge_all()
-            graph_path = os.path.join(backup_path, 'graph', self._network_name)
-            writer = tf.summary.FileWriter(graph_path)
-            writer.add_graph(sess.graph)
-            # Create folders to store checkpoints
-            saver = tf.train.Saver(max_to_keep=1)
-            ckpt_path = os.path.join(backup_path, 'checkpoints',
-                                     self._network_name)
-            utils.make_dir(os.path.dirname(ckpt_path))
-            utils.make_dir(ckpt_path)
-            ckpt = tf.train.get_checkpoint_state(ckpt_path)
-            # If that checkpoint exists, restore from checkpoint
-            if ckpt and ckpt.model_checkpoint_path:
-                saver.restore(sess, ckpt.model_checkpoint_path)
-                utils.logger.info(("Recover model state "
-                                   "from {}").format(ckpt.model_checkpoint_path))
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
@@ -557,26 +562,29 @@ class ConvolutionalNeuralNetwork(object):
                 fd = {X: X_batch, Y: Y_batch, dropout: keep_proba}
                 sess.run(output["optim"], feed_dict=fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
-                    s, loss, cm = sess.run([merged_summary, output["loss"],
-                                            output["conf_mat"]], feed_dict=fd)
+                    s, loss, cm = sess.run([summary, output["loss"], output["conf_mat"]],
+                                           feed_dict=fd)
+                    train_writer.add_summary(s, step)
                     utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
                                        "").format(step, loss, cm[0,:4]))
-                    writer.add_summary(s, step)
+                if (step + 1) % validation_step == 0:
+                    self.validate(batched_val_images, batched_val_labels, sess,
+                                  X, Y, dropout, len(val_dataset.image_info),
+                                  step + 1, summary, val_writer, output)
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
-                                             self._network_name, 'epoch')
+                                             self._network_name, 'step')
                     utils.logger.info(("Checkpoint {}-{} creation"
                                        "").format(save_path, step))
                     saver.save(sess, global_step=step, save_path=save_path)
-                if (step + 1) % validation_step == 0:
-                    self.validate(val_dataset)
             utils.logger.info(("Optimization Finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
 
-    def validate(self, dataset):
+    def validate(self, batched_val_images, batched_val_labels, sess, X, Y, dropout, n_val_images,
+                 train_step, summary, writer, output):
         """ Validate the trained neural network on a validation dataset
 
         Parameters:
@@ -584,9 +592,28 @@ class ConvolutionalNeuralNetwork(object):
         dataset: Dataset
             Dataset that will feed the neural network; its `_image_size`
         attribute must correspond to those of this class
+        labels: list
+        sess: tf.Session
+        X : tf.placeholder
+        Y: tf.placeholder
+        dropout: tf.placeholder
+        n_val_images: integer
+        train_step: integer
+        summary: tf.summary
+        writer: tf.fileWriter
+        output: dict
 
         """
-        pass
+        n_batches = int(n_val_images / self._val_batch_size)
+        for step in range(n_batches):
+            sess.run(tf.local_variables_initializer())
+            X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
+            fd = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0}
+            vs, vloss, vcm = sess.run([summary, output["loss"],
+                                       output["conf_mat"]], feed_dict=fd)
+            utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm={}"
+                               "").format(step, vloss, vcm[0,:4]))
+            writer.add_summary(vs, train_step)
         
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
