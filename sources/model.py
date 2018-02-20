@@ -235,7 +235,6 @@ class ConvolutionalNeuralNetwork(object):
             Y_pred = tf.round(Y_raw_predict, name="y_pred")
             tf.summary.histogram("logits", logits)
             tf.summary.histogram("y_raw_pred", Y_raw_predict)
-            tf.summary.histogram("y_pred", Y_pred)
             return {"logits": logits, "y_raw_pred": Y_raw_predict, "y_pred": Y_pred}
 
     def add_layers(self, X, dropout):
@@ -299,7 +298,6 @@ class ConvolutionalNeuralNetwork(object):
                                             decay_steps=self._learning_rate[1],
                                             decay_rate=self._learning_rate[2],
                                             name='learning_rate')
-            tf.summary.scalar("learning_rate", lr)
             opt = tf.train.AdamOptimizer(learning_rate=lr)
         optimizer = opt.minimize(loss, global_step)
         return {"gs": global_step, "lrate": lr, "optim": optimizer}
@@ -488,7 +486,6 @@ class ConvolutionalNeuralNetwork(object):
                              self._image_size,
                              self._nb_channels])
             norm_images = tf.image.per_image_standardization(images)
-            tf.summary.histogram("image", norm_images)
             return tf.train.batch([norm_images, input_queue[1]],
                                   batch_size=batch_size,
                                   num_threads=4)
