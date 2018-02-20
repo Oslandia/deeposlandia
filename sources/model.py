@@ -43,6 +43,8 @@ class ConvolutionalNeuralNetwork(object):
         self._batch_size = batch_size
         self._val_batch_size = val_batch_size
         self._learning_rate = learning_rate
+        self._value_ops = {}
+        self._update_ops = {}
 
     def get_network_name(self):
         """ `_network_name` getter
@@ -273,8 +275,8 @@ class ConvolutionalNeuralNetwork(object):
             entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
                                                               logits=logits)
             tf.summary.histogram('xent', entropy)
-            mean_entropy = tf.reduce_mean(entropy, name="loss")
-            tf.summary.scalar('loss', mean_entropy)
+            mean_entropy = tf.reduce_mean(entropy, name="mean_entropy")
+            self.add_summary(mean_entropy, "loss")
             return entropy, mean_entropy
 
     def optimize(self, loss):
@@ -350,9 +352,13 @@ class ConvolutionalNeuralNetwork(object):
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
         tn = cmat[0, 0]
+        self.add_summary(tn, "tn_" + label)
         fp = cmat[0, 1]
+        self.add_summary(fp, "fp_" + label)
         fn = cmat[1, 0]
+        self.add_summary(fn, "fn_" + label)
         tp = cmat[1, 1]
+        self.add_summary(tp, "tp_" + label)
         metrics = self.compute_metrics(tn, fp, fn, tp, label)
         return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
 
@@ -376,35 +382,47 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
-        tf.summary.scalar("tn_" + label, tn)
-        tf.summary.scalar("fp_" + label, fp)
-        tf.summary.scalar("fn_" + label, fn)
-        tf.summary.scalar("tp_" + label, tp)
         pos_true = tf.add(tp, fn)
+        self.add_summary(pos_true, "pos_true_"+label)
         neg_true = tf.add(fp, tn)
+        self.add_summary(neg_true, "neg_true_"+label)
         pos_pred = tf.add(tp, fp)
+        self.add_summary(pos_pred, "pos_pred_"+label)
         neg_pred = tf.add(tn, fn)
+        self.add_summary(neg_pred, "neg_pred_"+label)
         acc = tf.divide(tf.add(tn, tp), tn + fp + fn + tp)
+        self.add_summary(acc, "acc_"+label)
         tpr = tf.divide(tp, tf.add(tp, fn))
+        self.add_summary(tpr, "tpr_"+label)
         fpr = tf.divide(fp, tf.add(tn, fp))
+        self.add_summary(fpr, "fpr_"+label)
         tnr = tf.divide(tn, tf.add(tn, fp))
+        self.add_summary(tnr, "tnr_"+label)
         fnr = tf.divide(fn, tf.add(tp, fn))
+        self.add_summary(fnr, "fnr_"+label)
         ppv = tf.divide(tp, tf.add(tp, fp))
+        self.add_summary(ppv, "ppv_"+label)
         npv = tf.divide(tn, tf.add(tn, fn))
+        self.add_summary(npv, "npv_"+label)
         fm = 2.0 * tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr))
-        tf.summary.scalar("pos_true_"+label, pos_true)
-        tf.summary.scalar("neg_true_"+label, neg_true)
-        tf.summary.scalar("pos_pred_"+label, pos_pred)
-        tf.summary.scalar("neg_pred_"+label, neg_pred)
-        tf.summary.scalar("acc_"+label, acc)
-        tf.summary.scalar("tpr_"+label, tpr)
-        tf.summary.scalar("fpr_"+label, tpr)
-        tf.summary.scalar("tnr_"+label, tpr)
-        tf.summary.scalar("fnr_"+label, tpr)
-        tf.summary.scalar("ppv_"+label, ppv)
-        tf.summary.scalar("npv_"+label, tpr)
-        tf.summary.scalar("f_measure_"+label, fm)
+        self.add_summary(fm, "fm_"+label)
         return [pos_pred, neg_pred, acc, tpr, ppv, fm]
+
+    def add_summary(self, metric, name):
+        """ Add a TensorFlow scalar summary to the parameter metric, in order to monitor it in TensorBoard
+
+        Parameter
+        ---------
+        metric: tensor
+            metric to monitor by adding a tf.Summary
+        name: object
+            string designing the name of the metric (plotting purpose in TensorBoard)
+        """
+        summary = tf.summary.scalar(name, metric)
+        metric_value, metric_update = tf.metrics.mean(metric, name='mean_' + name + '_op')
+        mean_summary = tf.summary.scalar('mean_'+name, metric_value, collections=["update"])
+        self._value_ops[name] = metric_value
+        self._update_ops[name] = metric_update
 
     def build(self, X, Y, dropout):
         """ Build the convolutional neural network structure from input
@@ -525,6 +543,7 @@ class ConvolutionalNeuralNetwork(object):
         output = self.build(X, Y, dropout)
         # Set up train and validation summaries
         summary = tf.summary.merge_all()
+        update_summary = tf.summary.merge_all("update")
         # Create tensorflow graph
         graph_path = os.path.join(backup_path, 'graph', self._network_name)
         train_writer = tf.summary.FileWriter(os.path.join(graph_path, "training"))
@@ -547,7 +566,8 @@ class ConvolutionalNeuralNetwork(object):
             train_writer.add_graph(sess.graph)
             val_writer.add_graph(sess.graph)
             # Initialize TensorFlow variables
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.global_variables_initializer()) # training variable
+            sess.run(tf.local_variables_initializer()) # validation variable (values, ops)
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
@@ -570,7 +590,8 @@ class ConvolutionalNeuralNetwork(object):
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
                                   X, Y, dropout, len(val_dataset.image_info),
-                                  step + 1, summary, val_writer, output)
+                                  step + 1, update_summary, val_writer, output)
+                    # of update_summary
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
                                              self._network_name, 'step')
@@ -609,11 +630,18 @@ class ConvolutionalNeuralNetwork(object):
             sess.run(tf.local_variables_initializer())
             X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
             fd = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0}
-            vs, vloss, vcm = sess.run([summary, output["loss"],
-                                       output["conf_mat"]], feed_dict=fd)
-            utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm={}"
-                               "").format(step, vloss, vcm[0,:4]))
-            writer.add_summary(vs, train_step)
+            sess.run([self._update_ops["loss"], self._update_ops["tn_global"],
+                      self._update_ops["fp_global"], self._update_ops["fn_global"],
+                      self._update_ops["tp_global"]], feed_dict=fd)
+        vloss, vtn, vfp, vfn, vtp, vsum = sess.run([self._value_ops["loss"],
+                                                    self._value_ops["tn_global"],
+                                                    self._value_ops["fp_global"],
+                                                    self._value_ops["fn_global"],
+                                                    self._value_ops["tp_global"],
+                                                    summary])
+        writer.add_summary(vsum, train_step)
+        utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm=[{},{},{},{}]"
+                           "").format(train_step, vloss, vtn, vfp, vfn, vtp))
         
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
