@@ -46,11 +46,16 @@ class ConvolutionalNeuralNetwork(object):
         self._value_ops = {}
         self._update_ops = {}
         self._X = tf.placeholder(tf.float32, name='X',
-                                 shape=[None, self._image_size, self._image_size, self._nb_channels])
+                                 shape=[None, self._image_size,
+                                        self._image_size, self._nb_channels])
         self._Y = tf.placeholder(tf.float32, name='Y',
                                  shape=[None, self._nb_labels])
         self._dropout = tf.placeholder(tf.float32, name="dropout")
         self._is_training = tf.placeholder(tf.bool, name="is_training")
+        self.add_layers_3_1()
+        self.compute_loss()
+        self.optimize()
+        self._cm = self.compute_dashboard(self._Y, self._Y_pred)
 
     def get_network_name(self):
         """ `_network_name` getter
@@ -244,120 +249,86 @@ class ConvolutionalNeuralNetwork(object):
         with tf.variable_scope(self._network_name + '_output_layer') as scope:
             w = self.create_weights([input_layer_dim, self._nb_labels])
             b = self.create_biases([self._nb_labels])
-            logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
-            Y_raw_predict = tf.nn.sigmoid(logits, name="y_pred_raw")
-            Y_pred = tf.round(Y_raw_predict, name="y_pred")
-            tf.summary.histogram("logits", logits)
-            tf.summary.histogram("y_raw_pred", Y_raw_predict)
-            return {"logits": logits, "y_raw_pred": Y_raw_predict, "y_pred": Y_pred}
+            self._logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
+            self._Y_raw_predict = tf.nn.sigmoid(self._logits, name="y_pred_raw")
+            self._Y_pred = tf.round(self._Y_raw_predict, name="y_pred")
+            tf.summary.histogram("logits", self._logits)
+            tf.summary.histogram("y_raw_pred", self._Y_raw_predict)
 
-    def add_layers_3_1(self, input_layer, dropout, is_training):
+    def add_layers_3_1(self):
         """Build the structure of a convolutional neural network from image data `input_layer`
         to the last hidden layer, this layer being returned by this method; build a neural network
         with 3 convolutional+pooling layers and 1 fully-connected layer
 
-        Parameters
-        ----------
-        input_layer: tensor
-            Image data with a shape [batch_size, width, height, nb_channels]
-        dropout: tensor
-            Probability of keeping a neuron during a training step (dropout)
-        is_training: tensor
-            Boolean tensor that indicates the phase (training, or not); if training, batch
-        normalization on batch statistics, otherwise batch normalization on population statistics
-        (see `tf.layers.batch_normalization()` doc)
         """
-        tf.summary.histogram("input", input_layer)
-        tf.summary.image("input", input_layer)
-        layer = self.convolutional_layer(1, is_training, input_layer, self._nb_channels, 7, 16)
+        tf.summary.histogram("input", self._X)
+        tf.summary.image("input", self._X)
+        layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
-        layer = self.convolutional_layer(2, is_training, layer, 16, 5, 32)
+        layer = self.convolutional_layer(2, self._is_training, layer, 16, 5, 32)
         layer = self.maxpooling_layer(2, layer, 2, 2)
-        layer = self.convolutional_layer(3, is_training, layer, 32, 3, 64)
+        layer = self.convolutional_layer(3, self._is_training, layer, 32, 3, 64)
         layer = self.maxpooling_layer(3, layer, 2, 2)
         last_layer_dim = self.get_last_conv_layer_dim(8, 64) # pool mult, depth
-        layer = self.fullyconnected_layer(1, is_training, layer, last_layer_dim, 512, dropout)
+        layer = self.fullyconnected_layer(1, self._is_training, layer, last_layer_dim, 512, self._dropout)
         return self.output_layer(layer, 512)
 
-    def add_layers_6_2(self, input_layer, dropout, is_training):
+    def add_layers_6_2(self):
         """Build the structure of a convolutional neural network from image data `input_layer`
         to the last hidden layer, this layer being returned by this method; build a neural network
         with 6 convolutional+pooling layers and 2 fully-connected layers
 
-        Parameters
-        ----------
-        input_layer: tensor
-            Image data with a shape [batch_size, width, height, nb_channels]
-        dropout: tensor
-            Probability of keeping a neuron during a training step (dropout)
-        is_training: tensor
-            Boolean tensor that indicates the phase (training, or not); if training, batch
-        normalization on batch statistics, otherwise batch normalization on population statistics
-        (see `tf.layers.batch_normalization()` doc)
         """
-        tf.summary.histogram("input", input_layer)
-        tf.summary.image("input", input_layer)
-        layer = self.convolutional_layer(1, is_training, input_layer, self._nb_channels, 7, 16)
+        tf.summary.histogram("input", self._X)
+        tf.summary.image("input", self._X)
+        layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
-        layer = self.convolutional_layer(2, is_training, layer, 16, 7, 32)
+        layer = self.convolutional_layer(2, self._is_training, layer, 16, 7, 32)
         layer = self.maxpooling_layer(2, layer, 2, 2)
-        layer = self.convolutional_layer(3, is_training, layer, 32, 5, 64)
+        layer = self.convolutional_layer(3, self._is_training, layer, 32, 5, 64)
         layer = self.maxpooling_layer(3, layer, 2, 2)
-        layer = self.convolutional_layer(4, is_training, layer, 64, 5, 128)
+        layer = self.convolutional_layer(4, self._is_training, layer, 64, 5, 128)
         layer = self.maxpooling_layer(4, layer, 2, 2)
-        layer = self.convolutional_layer(5, is_training, layer, 128, 3, 256)
+        layer = self.convolutional_layer(5, self._is_training, layer, 128, 3, 256)
         layer = self.maxpooling_layer(5, layer, 2, 2)
-        layer = self.convolutional_layer(6, is_training, layer, 256, 3, 256)
+        layer = self.convolutional_layer(6, self._is_training, layer, 256, 3, 256)
         layer = self.maxpooling_layer(6, layer, 2, 2)
         last_layer_dim = self.get_last_conv_layer_dim(64, 256) # pool mult, depth
-        layer = self.fullyconnected_layer(1, is_training, layer, last_layer_dim, 1024, dropout)
-        layer = self.fullyconnected_layer(2, is_training, layer, 1024, 512, dropout)
+        layer = self.fullyconnected_layer(1, self._is_training, layer, last_layer_dim, 1024, self._dropout)
+        layer = self.fullyconnected_layer(2, self._is_training, layer, 1024, 512, self._dropout)
         return self.output_layer(layer, 512)
 
-    def compute_loss(self, y_true, logits):
+    def compute_loss(self):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
-        Parameters
-        ----------
-        y_true: tensor
-            True labels (1 if the i-th label is true for j-th image, 0 otherwise)
-        logits: tensor
-            Logits computed by the model (scores associated to each labels for a
-        given image)
         """
         with tf.name_scope(self._network_name + '_loss'):
-            entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
-                                                              logits=logits)
-            tf.summary.histogram('xent', entropy)
-            mean_entropy = tf.reduce_mean(entropy, name="mean_entropy")
-            self.add_summary(mean_entropy, "loss")
-            return entropy, mean_entropy
+            self._entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._Y,
+                                                                    logits=self._logits)
+            tf.summary.histogram('xent', self._entropy)
+            self._loss = tf.reduce_mean(self._entropy, name="mean_entropy")
+            self.add_summary(self._loss, "loss")
 
-    def optimize(self, loss):
+    def optimize(self):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
-        Parameters
-        ----------
-        loss: tensor
-            Tensor that represents the neural network loss function
         """
-        global_step = tf.Variable(0, dtype=tf.int32, trainable=False,
-                                  name='global_step')
+        self._global_step = tf.Variable(0, dtype=tf.int32,
+                                        trainable=False, name='global_step')
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
             if len(self._learning_rate) == 1:
-                lr = self._learning_rate
-                opt = tf.train.AdamOptimizer(learning_rate=lr)
+                self._lr = self._learning_rate
+                opt = tf.train.AdamOptimizer(learning_rate=self._lr)
             else:
-                lr = tf.train.exponential_decay(self._learning_rate[0],
-                                                global_step,
-                                                decay_steps=self._learning_rate[1],
-                                                decay_rate=self._learning_rate[2],
-                                                name='learning_rate')
-                opt = tf.train.AdamOptimizer(learning_rate=lr)
-        optimizer = opt.minimize(loss, global_step)
-        return {"gs": global_step, "lrate": lr, "optim": optimizer}
+                self._lr = tf.train.exponential_decay(self._learning_rate[0],
+                                                      self._global_step,
+                                                      decay_steps=self._learning_rate[1],
+                                                      decay_rate=self._learning_rate[2],
+                                                      name='learning_rate')
+                opt = tf.train.AdamOptimizer(learning_rate=self._lr)
+        self._optimizer = opt.minimize(self._loss, self._global_step)
 
     def compute_dashboard(self, y_true, y_pred, label="wrapper"):
         """Compute the global confusion matrix (`y_true` and `y_pred`
@@ -479,23 +450,6 @@ class ConvolutionalNeuralNetwork(object):
         self._value_ops[name] = metric_value
         self._update_ops[name] = metric_update
 
-    def build(self):
-        """ Build the convolutional neural network structure from input
-        placeholders to loss function optimization
-
-        """
-        output = self.add_layers_3_1(self._X, self._dropout, self._is_training)
-        entropy, loss = self.compute_loss(self._Y, output["logits"])
-        result = self.optimize(loss)
-        cm = self.compute_dashboard(self._Y, output["y_pred"])
-        result.update({"entropy": entropy,
-                       "loss": loss,
-                       "logits": output["logits"],
-                       "y_raw_pred": output["y_raw_pred"],
-                       "y_pred": output["y_pred"],
-                       "conf_mat": cm})
-        return result
-
     def define_batch(self, dataset, labels_of_interest, dataset_type="training"):
         """Insert images and labels in Tensorflow batches
 
@@ -580,7 +534,6 @@ class ConvolutionalNeuralNetwork(object):
         # Define image batchs
         batched_images, batched_labels = self.define_batch(train_dataset, labels, "training")
         batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels, "validation")
-        output = self.build()
         # Set up train and validation summaries
         summary = tf.summary.merge_all()
         update_summary = tf.summary.merge_all("update")
@@ -616,14 +569,14 @@ class ConvolutionalNeuralNetwork(object):
             if nb_iter is None:
                 n_batches = int(len(train_dataset.image_info) / self._batch_size)
                 nb_iter = n_batches * nb_epochs
-            initial_step = output["gs"].eval(session=sess)
+            initial_step = self._global_step.eval(session=sess)
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 train_fd = {self._X: X_batch, self._Y: Y_batch,
                             self._dropout: keep_proba, self._is_training: True}
-                sess.run(output["optim"], feed_dict=train_fd)
+                sess.run(self._optimizer, feed_dict=train_fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
-                    s, loss, cm = sess.run([summary, output["loss"], output["conf_mat"]],
+                    s, loss, cm = sess.run([summary, self._loss, self._cm],
                                            feed_dict=train_fd)
                     train_writer.add_summary(s, step)
                     utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
@@ -631,7 +584,7 @@ class ConvolutionalNeuralNetwork(object):
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
                                   len(val_dataset.image_info), step + 1,
-                                  update_summary, val_writer, output)
+                                  update_summary, val_writer)
                     # of update_summary
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
@@ -646,7 +599,7 @@ class ConvolutionalNeuralNetwork(object):
             coord.join(threads)
 
     def validate(self, batched_val_images, batched_val_labels, sess,
-                 n_val_images, train_step, summary, writer, output):
+                 n_val_images, train_step, summary, writer):
         """ Validate the trained neural network on a validation dataset
 
         Parameters:
@@ -660,7 +613,6 @@ class ConvolutionalNeuralNetwork(object):
         train_step: integer
         summary: tf.summary
         writer: tf.fileWriter
-        output: dict
 
         """
         n_batches = int(n_val_images / self._val_batch_size)
