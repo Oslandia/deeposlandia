@@ -64,6 +64,11 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
+    parser.add_argument('-ns', '--network-size', required=True,
+                        help=("Neural network size, either 'small' or 'medium'"
+                              "('small' refers to 3 conv/pool blocks and 1 "
+                              "fully-connected layer, and 'medium' refers to 6"
+                              "conv/pool blocks and 2 fully-connected layers)"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
@@ -121,6 +126,13 @@ if __name__ == '__main__':
                            "weighted with respect to label popularity within "
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
+
+    if not args.network_size in ["small", "medium"]:
+        utils.logger.error("Unsupported network size description")
+        utils.logger.utils(("Please use this parameter with 'small' or "
+                            "'medium' values"))
+        sys.exit(1)
+
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     training_name = "training_" + str(args.image_size)
@@ -177,7 +189,8 @@ if __name__ == '__main__':
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
                                      nb_channels=3, batch_size=args.batch_size,
                                      val_batch_size=args.val_batch_size,
-                                     nb_labels=len(label_list), learning_rate=args.learning_rate)
+                                     nb_labels=len(label_list), netsize=args.network_size,
+                                     learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, backup_path=dataset_repo,

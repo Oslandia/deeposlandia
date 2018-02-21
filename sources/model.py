@@ -33,7 +33,8 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 batch_size=20, val_batch_size=100, nb_labels=65, learning_rate=1e-3):
+                 batch_size=20, val_batch_size=100, nb_labels=65,
+                 netsize="small", learning_rate=1e-3):
         """ Class constructor
         """
         self._network_name = network_name
@@ -52,7 +53,10 @@ class ConvolutionalNeuralNetwork(object):
                                  shape=[None, self._nb_labels])
         self._dropout = tf.placeholder(tf.float32, name="dropout")
         self._is_training = tf.placeholder(tf.bool, name="is_training")
-        self.add_layers_3_1()
+        if netsize == "small":
+            self.add_layers_3_1()
+        else:
+            self.add_layers_6_2()
         self.compute_loss()
         self.optimize()
         self._cm = self.compute_dashboard(self._Y, self._Y_pred)
