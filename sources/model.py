@@ -45,6 +45,12 @@ class ConvolutionalNeuralNetwork(object):
         self._learning_rate = learning_rate
         self._value_ops = {}
         self._update_ops = {}
+        self._X = tf.placeholder(tf.float32, name='X',
+                                 shape=[None, self._image_size, self._image_size, self._nb_channels])
+        self._Y = tf.placeholder(tf.float32, name='Y',
+                                 shape=[None, self._nb_labels])
+        self._dropout = tf.placeholder(tf.float32, name="dropout")
+        self._is_training = tf.placeholder(tf.bool, name="is_training")
 
     def get_network_name(self):
         """ `_network_name` getter
@@ -245,14 +251,14 @@ class ConvolutionalNeuralNetwork(object):
             tf.summary.histogram("y_raw_pred", Y_raw_predict)
             return {"logits": logits, "y_raw_pred": Y_raw_predict, "y_pred": Y_pred}
 
-    def add_layers_3_1(self, X, dropout, is_training):
-        """Build the structure of a convolutional neural network from image data X
+    def add_layers_3_1(self, input_layer, dropout, is_training):
+        """Build the structure of a convolutional neural network from image data `input_layer`
         to the last hidden layer, this layer being returned by this method; build a neural network
         with 3 convolutional+pooling layers and 1 fully-connected layer
 
         Parameters
         ----------
-        X: tensor
+        input_layer: tensor
             Image data with a shape [batch_size, width, height, nb_channels]
         dropout: tensor
             Probability of keeping a neuron during a training step (dropout)
@@ -261,9 +267,9 @@ class ConvolutionalNeuralNetwork(object):
         normalization on batch statistics, otherwise batch normalization on population statistics
         (see `tf.layers.batch_normalization()` doc)
         """
-        tf.summary.histogram("input", X)
-        tf.summary.image("input", X)
-        layer = self.convolutional_layer(1, is_training, X, self._nb_channels, 7, 16)
+        tf.summary.histogram("input", input_layer)
+        tf.summary.image("input", input_layer)
+        layer = self.convolutional_layer(1, is_training, input_layer, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
         layer = self.convolutional_layer(2, is_training, layer, 16, 5, 32)
         layer = self.maxpooling_layer(2, layer, 2, 2)
@@ -273,14 +279,14 @@ class ConvolutionalNeuralNetwork(object):
         layer = self.fullyconnected_layer(1, is_training, layer, last_layer_dim, 512, dropout)
         return self.output_layer(layer, 512)
 
-    def add_layers_6_2(self, X, dropout, is_training):
-        """Build the structure of a convolutional neural network from image data X
+    def add_layers_6_2(self, input_layer, dropout, is_training):
+        """Build the structure of a convolutional neural network from image data `input_layer`
         to the last hidden layer, this layer being returned by this method; build a neural network
         with 6 convolutional+pooling layers and 2 fully-connected layers
 
         Parameters
         ----------
-        X: tensor
+        input_layer: tensor
             Image data with a shape [batch_size, width, height, nb_channels]
         dropout: tensor
             Probability of keeping a neuron during a training step (dropout)
@@ -289,9 +295,9 @@ class ConvolutionalNeuralNetwork(object):
         normalization on batch statistics, otherwise batch normalization on population statistics
         (see `tf.layers.batch_normalization()` doc)
         """
-        tf.summary.histogram("input", X)
-        tf.summary.image("input", X)
-        layer = self.convolutional_layer(1, is_training, X, self._nb_channels, 7, 16)
+        tf.summary.histogram("input", input_layer)
+        tf.summary.image("input", input_layer)
+        layer = self.convolutional_layer(1, is_training, input_layer, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
         layer = self.convolutional_layer(2, is_training, layer, 16, 7, 32)
         layer = self.maxpooling_layer(2, layer, 2, 2)
@@ -473,27 +479,15 @@ class ConvolutionalNeuralNetwork(object):
         self._value_ops[name] = metric_value
         self._update_ops[name] = metric_update
 
-    def build(self, X, Y, dropout, is_training):
+    def build(self):
         """ Build the convolutional neural network structure from input
         placeholders to loss function optimization
 
-        Parameters:
-        -----------
-        X: tensor
-            Neural network input
-        Y: tensor
-            Neural network output
-        dropout: tensor
-            Probability of keeping a neuron during a training step (dropout)
-        is_training: tensor
-            Boolean tensor that indicates the phase (training, or not); if training, batch
-        normalization on batch statistics, otherwise batch normalization on population statistics
-        (see `tf.layers.batch_normalization()` doc)
         """
-        output = self.add_layers_3_1(X, dropout, is_training)
-        entropy, loss = self.compute_loss(Y, output["logits"])
+        output = self.add_layers_3_1(self._X, self._dropout, self._is_training)
+        entropy, loss = self.compute_loss(self._Y, output["logits"])
         result = self.optimize(loss)
-        cm = self.compute_dashboard(Y, output["y_pred"])
+        cm = self.compute_dashboard(self._Y, output["y_pred"])
         result.update({"entropy": entropy,
                        "loss": loss,
                        "logits": output["logits"],
@@ -586,14 +580,7 @@ class ConvolutionalNeuralNetwork(object):
         # Define image batchs
         batched_images, batched_labels = self.define_batch(train_dataset, labels, "training")
         batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels, "validation")
-        # Define model inputs and build the network
-        X = tf.placeholder(tf.float32, name='X',
-                           shape=[None, self._image_size,
-                                  self._image_size, self._nb_channels])
-        Y = tf.placeholder(tf.float32, name='Y', shape=[None, self._nb_labels])
-        dropout = tf.placeholder(tf.float32, name="dropout")
-        is_training = tf.placeholder(tf.bool, name="is_training")
-        output = self.build(X, Y, dropout, is_training)
+        output = self.build()
         # Set up train and validation summaries
         summary = tf.summary.merge_all()
         update_summary = tf.summary.merge_all("update")
@@ -632,18 +619,19 @@ class ConvolutionalNeuralNetwork(object):
             initial_step = output["gs"].eval(session=sess)
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
-                fd = {X: X_batch, Y: Y_batch, dropout: keep_proba, is_training: True}
-                sess.run(output["optim"], feed_dict=fd)
+                train_fd = {self._X: X_batch, self._Y: Y_batch,
+                            self._dropout: keep_proba, self._is_training: True}
+                sess.run(output["optim"], feed_dict=train_fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
                     s, loss, cm = sess.run([summary, output["loss"], output["conf_mat"]],
-                                           feed_dict=fd)
+                                           feed_dict=train_fd)
                     train_writer.add_summary(s, step)
                     utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
                                        "").format(step, loss, cm[0,:4]))
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
-                                  X, Y, dropout, is_training, len(val_dataset.image_info),
-                                  step + 1, update_summary, val_writer, output)
+                                  len(val_dataset.image_info), step + 1,
+                                  update_summary, val_writer, output)
                     # of update_summary
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
@@ -657,8 +645,8 @@ class ConvolutionalNeuralNetwork(object):
             coord.request_stop()
             coord.join(threads)
 
-    def validate(self, batched_val_images, batched_val_labels, sess, X, Y, dropout, is_training, n_val_images,
-                 train_step, summary, writer, output):
+    def validate(self, batched_val_images, batched_val_labels, sess,
+                 n_val_images, train_step, summary, writer, output):
         """ Validate the trained neural network on a validation dataset
 
         Parameters:
@@ -668,10 +656,6 @@ class ConvolutionalNeuralNetwork(object):
         attribute must correspond to those of this class
         labels: list
         sess: tf.Session
-        X : tf.placeholder
-        Y: tf.placeholder
-        dropout: tf.placeholder
-        is_training: tf.placeholder
         n_val_images: integer
         train_step: integer
         summary: tf.summary
@@ -683,10 +667,11 @@ class ConvolutionalNeuralNetwork(object):
         for step in range(n_batches):
             sess.run(tf.local_variables_initializer())
             X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
-            fd = {X: X_val_batch, Y: Y_val_batch, dropout: 1.0, is_training: False}
+            val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
+                      self._dropout: 1.0, self._is_training: False}
             sess.run([self._update_ops["loss"], self._update_ops["tn_global"],
                       self._update_ops["fp_global"], self._update_ops["fn_global"],
-                      self._update_ops["tp_global"]], feed_dict=fd)
+                      self._update_ops["tp_global"]], feed_dict=val_fd)
         vloss, vtn, vfp, vfn, vtp, vsum = sess.run([self._value_ops["loss"],
                                                     self._value_ops["tn_global"],
                                                     self._value_ops["fp_global"],
