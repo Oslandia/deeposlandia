@@ -608,16 +608,16 @@ class ConvolutionalNeuralNetwork(object):
         utils.make_dir(os.path.dirname(ckpt_path))
         utils.make_dir(ckpt_path)
         ckpt = tf.train.get_checkpoint_state(ckpt_path)
-        # If that checkpoint exists, restore from checkpoint
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-            utils.logger.info(("Recover model state from {}"
-                               "").format(ckpt.model_checkpoint_path))
 
         # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
             train_writer.add_graph(sess.graph)
             val_writer.add_graph(sess.graph)
+            # If checkpoint exists, restore model from it
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                utils.logger.info(("Recover model state from {}"
+                                   "").format(ckpt.model_checkpoint_path))
             # Initialize TensorFlow variables
             sess.run(tf.global_variables_initializer()) # training variable
             sess.run(tf.local_variables_initializer()) # validation variable (values, ops)
