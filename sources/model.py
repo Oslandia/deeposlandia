@@ -43,7 +43,6 @@ class ConvolutionalNeuralNetwork(object):
         self._nb_labels = nb_labels
         self._batch_size = batch_size
         self._val_batch_size = val_batch_size
-        self._learning_rate = learning_rate
         self._value_ops = {}
         self._update_ops = {}
         self._X = tf.placeholder(tf.float32, name='X',
@@ -58,7 +57,7 @@ class ConvolutionalNeuralNetwork(object):
         else:
             self.add_layers_6_2()
         self.compute_loss()
-        self.optimize()
+        self.optimize(learning_rate)
         self._cm = self.compute_dashboard(self._Y, self._Y_pred)
 
     def get_network_name(self):
@@ -314,24 +313,28 @@ class ConvolutionalNeuralNetwork(object):
             self._loss = tf.reduce_mean(self._entropy, name="mean_entropy")
             self.add_summary(self._loss, "loss")
 
-    def optimize(self):
+    def optimize(self, learning_rate):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
+        Parameter
+        ---------
+        learning_rate: float or list
+            Either a constant learning rate or a list of learning rate floating components
+        (starting learning rate, decay step and decay rate)
         """
         self._global_step = tf.Variable(0, dtype=tf.int32,
                                         trainable=False, name='global_step')
+        if len(learning_rate) == 1:
+            self._learning_rate = learning_rate
+        else:
+            self._learning_rate = tf.train.exponential_decay(learning_rate[0],
+                                                             self._global_step,
+                                                             decay_steps=learning_rate[1],
+                                                             decay_rate=learning_rate[2],
+                                                             name='learning_rate')
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-            if len(self._learning_rate) == 1:
-                self._lr = self._learning_rate
-                opt = tf.train.AdamOptimizer(learning_rate=self._lr)
-            else:
-                self._lr = tf.train.exponential_decay(self._learning_rate[0],
-                                                      self._global_step,
-                                                      decay_steps=self._learning_rate[1],
-                                                      decay_rate=self._learning_rate[2],
-                                                      name='learning_rate')
-                opt = tf.train.AdamOptimizer(learning_rate=self._lr)
+            opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
         self._optimizer = opt.minimize(self._loss, self._global_step)
 
     def compute_dashboard(self, y_true, y_pred, label="wrapper"):
