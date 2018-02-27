@@ -143,8 +143,8 @@ class Dataset(object):
         nb_images: integer
             Number of images to be considered in the dataset; if None, consider the whole repository
         """
-        datadir = datadir[:datadir.rfind('_')]
-        image_dir = os.path.join(datadir, "images")
+        raw_datadir = datadir[:datadir.rfind('_')]
+        image_dir = os.path.join(raw_datadir, "images")
         image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         for image_id, image_filename in enumerate(image_list_longname):
@@ -168,7 +168,7 @@ class Dataset(object):
                                        / (self.image_size**2))
 
             # save final image
-            new_filename = image_filename.replace("images/", "input/")
+            new_filename = os.path.join(datadir, image_filename.split('/')[-1])
             final_img_in.save(new_filename)
 
             # label_filename vs label image
