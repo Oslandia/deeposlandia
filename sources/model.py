@@ -560,14 +560,14 @@ class ConvolutionalNeuralNetwork(object):
         with tf.Session() as sess:
             train_writer.add_graph(sess.graph)
             val_writer.add_graph(sess.graph)
+            # Initialize TensorFlow variables
+            sess.run(tf.global_variables_initializer()) # training variable
+            sess.run(tf.local_variables_initializer()) # validation variable (values, ops)
             # If checkpoint exists, restore model from it
             if ckpt and ckpt.model_checkpoint_path:
                 saver.restore(sess, ckpt.model_checkpoint_path)
                 utils.logger.info(("Recover model state from {}"
                                    "").format(ckpt.model_checkpoint_path))
-            # Initialize TensorFlow variables
-            sess.run(tf.global_variables_initializer()) # training variable
-            sess.run(tf.local_variables_initializer()) # validation variable (values, ops)
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
