@@ -54,6 +54,10 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--glossary-printing', action="store_true",
                         help=("True if the program must only "
                               "print the glossary, false otherwise)"))
+    parser.add_argument('-it', '--nb-training-image', type=int,
+                        help=("Number of training images"))
+    parser.add_argument('-iv', '--nb-validation-image', type=int,
+                        help=("Number of validation images"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
                         help=("List of label indices that "
@@ -153,17 +157,17 @@ if __name__ == '__main__':
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
         sys.exit(1)
-    
+
     # Dataset populating/loading (depends on the existence of a specification file)
     if os.path.isfile(training_filename):
         train_dataset.load(training_filename)
     else:
-        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=18000)
+        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=args.nb_training_image)
         train_dataset.save(training_filename)
     if os.path.isfile(validation_filename):
         validation_dataset.load(validation_filename)
     else:
-        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=2000)
+        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=args.nb_validation_image)
         validation_dataset.save(validation_filename)
 
     # Glossary management (are all the labels required?)
