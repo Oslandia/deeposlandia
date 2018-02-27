@@ -145,7 +145,7 @@ class Dataset(object):
         """
         datadir = datadir[:datadir.rfind('_')]
         image_dir = os.path.join(datadir, "images")
-        image_list = os.listdir(image_dir)[:range(nb_images)]
+        image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         for image_id, image_filename in enumerate(image_list_longname):
             label_filename = image_filename.replace("images/", "labels/")
