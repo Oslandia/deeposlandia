@@ -155,7 +155,7 @@ class Dataset(object):
         final_img_in = utils.mono_crop_image(img_in, crop_pix)
 
         # save final image
-        new_in_filename = os.path.join(datadir, image_filename.split('/')[-1])
+        new_in_filename = os.path.join(datadir, 'images', image_filename.split('/')[-1])
         final_img_in.save(new_in_filename)
 
         # label_filename vs label image
@@ -166,7 +166,7 @@ class Dataset(object):
             img_out = utils.resize_image(img_out, self.image_size)
             final_img_out = utils.mono_crop_image(img_out, crop_pix)
             labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
-            new_out_filename = os.path.join(datadir, label_filename.split('/')[-1])
+            new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
             final_img_out.save(new_out_filename)
         else:
             label_filename = None

@@ -140,9 +140,10 @@ if __name__ == '__main__':
     dataset_repo = os.path.join(args.datapath, args.dataset)
     training_name = "training_" + str(args.image_size)
     validation_name = "validation_" + str(args.image_size)
-    utils.make_dir(dataset_repo)
-    utils.make_dir(os.path.join(dataset_repo, training_name))
-    utils.make_dir(os.path.join(dataset_repo, validation_name))
+    os.makedirs(os.path.join(dataset_repo, training_name, 'images'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, training_name, 'labels'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, validation_name, 'images'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, validation_name, 'labels'), exist_ok=True)
     training_filename = os.path.join(dataset_repo, training_name + '.json')
     validation_filename = os.path.join(dataset_repo, validation_name + '.json')
 
