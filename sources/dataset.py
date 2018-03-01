@@ -19,15 +19,19 @@
  */
 """
 
-from collections import defaultdict
-import cv2
-from PIL import Image
+import os
 import json
 import math
+from collections import defaultdict
+from multiprocessing import Pool
+
+import cv2
+from PIL import Image
+
 import numpy as np
-import os
 
 import utils
+
 
 class Dataset(object):
 
