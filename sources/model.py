@@ -628,9 +628,7 @@ class ConvolutionalNeuralNetwork(object):
             X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
             val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
                       self._dropout: 1.0, self._is_training: False}
-            sess.run([self._update_ops["loss"], self._update_ops["tn_global"],
-                      self._update_ops["fp_global"], self._update_ops["fn_global"],
-                      self._update_ops["tp_global"]], feed_dict=val_fd)
+            sess.run(list(self._update_ops.values()), feed_dict=val_fd)
         vloss, vtn, vfp, vfn, vtp, vsum = sess.run([self._value_ops["loss"],
                                                     self._value_ops["tn_global"],
                                                     self._value_ops["fp_global"],
