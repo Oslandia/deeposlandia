@@ -55,7 +55,7 @@ class Dataset(object):
             print("Class {} not in the dataset glossary".format(class_id))
             return None
         return self.class_info[class_id]
-    
+
     def get_image(self, image_id):
         """ `image_info` getter, return only the information for one image
 
@@ -136,84 +136,69 @@ class Dataset(object):
                                      "category": category,
                                      "color": color}
 
+    def _preprocess(self, datadir, image_filename, labelling=True):
+        """Resize/crop then save the training & label images
+
+        :param datadir: str
+        :param image_filaname: str
+        :param labelling: boolean
+        :return: dict - Key/values with the filenames and label ids
+        """
+        # open original images
+        img_in = Image.open(image_filename)
+
+        # resize images (self.image_size*larger_size or larger_size*self.image_size)
+        img_in = utils.resize_image(img_in, self.image_size)
+
+        # crop images to get self.image_size*self.image_size dimensions
+        crop_pix = np.random.randint(0, 1 + max(img_in.size) - self.image_size)
+        final_img_in = utils.mono_crop_image(img_in, crop_pix)
+
+        # save final image
+        new_in_filename = os.path.join(datadir, image_filename.split('/')[-1])
+        final_img_in.save(new_in_filename)
+
+        # label_filename vs label image
+        if labelling:
+            label_filename = image_filename.replace("images/", "labels/")
+            label_filename = label_filename.replace(".jpg", ".png")
+            img_out = Image.open(label_filename)
+            img_out = utils.resize_image(img_out, self.image_size)
+            final_img_out = utils.mono_crop_image(img_out, crop_pix)
+            labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
+            new_out_filename = os.path.join(datadir, label_filename.split('/')[-1])
+            final_img_out.save(new_out_filename)
+        else:
+            label_filename = None
+            labels = [0 for i in range(self.get_nb_class())]
+
+        return {"raw_filename": image_filename,
+                "image_filename": new_in_filename,
+                "label_filename": new_out_filename,
+                "labels": labels}
+
     def populate(self, datadir, nb_images=None, labelling=True):
         """ Populate the dataset with images contained into `datadir` directory
- 
-       Parameter:
+
+        Parameters
         ----------
-        datadir: object
+        datadir : object
             String designing the relative path of the directory that contains
         new images
-        nb_images: integer
-            Number of images to be considered in the dataset; if None, consider the whole repository
+        nb_images : integer
+            Number of images to be considered in the dataset; if None, consider the whole
+        repository
+        labelling: boolean
+            If True labels are recovered from dataset, otherwise dummy label are generated
         """
         raw_datadir = datadir[:datadir.rfind('_')]
         image_dir = os.path.join(raw_datadir, "images")
         image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
-        for image_id, image_filename in enumerate(image_list_longname):
-            # open original image
-            img_in = Image.open(image_filename)
+        with Pool() as p:
+            labels = p.starmap(self._resize, [(datadir, x) for x in image_list_longname])
 
-            # resize image (self.image_size*larger_size or larger_size*self.image_size)
-            img_in = utils.resize_image(img_in, self.image_size)
-
-            # crop image to get self.image_size*self.image_size dimensions
-            crop_pix = np.random.randint(0, 1+max(img_in.size)-self.image_size)
-            final_img_in = utils.mono_crop_image(img_in, crop_pix)
-
-            # save final image
-            new_filename = os.path.join(datadir, image_filename.split('/')[-1])
-            final_img_in.save(new_filename)
-
-            # label_filename vs label image
-            if labelling:
-                label_filename = image_filename.replace("images/", "labels/")
-                label_filename = label_filename.replace(".jpg", ".png")
-                img_out = Image.open(label_filename)
-                img_out = utils.resize_image(img_out, self.image_size)
-                final_img_out = utils.mono_crop_image(img_out, crop_pix)
-                labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
-            else:
-                label_filename = None
-                labels = [0 for i in range(self.get_nb_class())]
-
-            # add to dataset object
-            self.add_image(image_id, image_filename, new_filename,
-                           label_filename, labels)
-
-
-    def add_image(self, image_id, raw_filename, image_filename,
-                  label_filename, labels):
-        """ Add a new image to the dataset with image id `image_id`; an image
-                  in the dataset is represented by an id, an original filename,
-                  a new version filename (the image is preprocessed), a label
-                  filename for getting ground truth description and a list of
-                  0-1 labels (1 if the i-th class is on the image, 0 otherwise)
-
-        Parameters:
-        -----------
-        image_id: integer
-            Id of the new image
-        raw_filename: object
-            String designing the new image original name on the file system
-        image_filename: object
-            String designing the new preprocessed image name on the file system
-        label_filename: object
-            String designing the new image ground-truth-version name on the
-        file system
-        labels: list
-            List of 0-1 values, the i-th value being 1 if the i-th class is on
-        the new image, 0 otherwise; the label list length correspond to the
-        number of classes in the dataset
-        """
-        if image_id in self.image_info.keys():
-            print("Image {} already stored into the class set.".format(image_id))
-            return None
-        self.image_info[image_id] = {"raw_filename": raw_filename,
-                                     "image_filename": image_filename,
-                                     "label_filename": label_filename,
-                                     "labels": labels}
+        self.image_info = {k: v for k,v in enumerate(labels)}
 
     def save(self, filename):
         """Save dataset in a json file indicated by `filename`
