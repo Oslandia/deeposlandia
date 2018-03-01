@@ -636,8 +636,9 @@ class ConvolutionalNeuralNetwork(object):
                                                     self._value_ops["tp_global"],
                                                     summary])
         writer.add_summary(vsum, train_step)
-        utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm=[{},{},{},{}]"
-                           "").format(train_step, vloss, vtn, vfp, vfn, vtp))
+        utils.logger.info(("(validation) step: {}, loss={:5.3f}, cm=[{}, {}, "
+                           "{}, {}]").format(train_step, vloss, int(vtn),
+                                             int(vfp), int(vfn), int(vtp)))
         
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
