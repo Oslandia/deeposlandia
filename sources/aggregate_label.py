@@ -1,9 +1,13 @@
 """Image resizing and aggregation labels
 
 Can pass this script with the GNU command 'parallel' in order to process the
-images in parallel.
+images in parallel. Let image you have a text file `image.list`:
 
 cat image.list | parallel "python aggregate_label.py -s=256 -k={}"
+
+Or alternatively, without this text file:
+
+ls <image_repository> | sed -e 's/\.jpg$//' | parallel "python aggregate_label.py -s=256 -k={}"
 """
 
 import os
@@ -32,6 +36,9 @@ def _split_object_label(df):
       - motorcycle, bicycle
       - car
       - others
+
+    :param df: pandas dataframe - Mapillary labels
+    :return: pandas dataframe - modified Mapillary labels
     """
     df = df.copy()
     mask_vehicle = df['name'].str.split('--').apply(lambda x: 'vehicle' in x)
@@ -47,6 +54,9 @@ def _split_construction_label(df):
     - construction
     - flat
     - barrier
+
+    :param df: pandas dataframe - Mapillary labels
+    :return: pandas dataframe - modified Mapillary labels
     """
     df = df.copy()
     mask_barrier = df['name'].str.split('--').apply(lambda x: 'barrier' in x)
@@ -58,6 +68,9 @@ def _split_construction_label(df):
 
 def read_config(datadir):
     """Read the mapillary configuration JSON file
+
+    :param datadir: string - path to data repository
+    :return: dict - Mapillary glossary
     """
     with open(os.path.join(datadir, DATASET, 'config.json'), 'r') as fobj:
         return json.load(fobj)
@@ -67,6 +80,9 @@ def config_as_dataframe(config):
     """JSON labels data into a DataFrame.
 
     Add some metadata. Group some labels (in order to have less classes)
+
+    :param config: dict - Mapillary glossary
+    :return: pandas dataframe - Mapillary labels
     """
     df = pd.DataFrame(config['labels'])
     df['id'] = range(df.shape[0])
@@ -79,6 +95,9 @@ def config_as_dataframe(config):
 
 def resize(key, size, datadir):
     """
+    :param key: string - image name, without its extension
+    :param size: integer - image size, in pixels
+    :param datadir: string - path to data repository
     Returns
     -------
     Two resized images (train and labels)
@@ -103,9 +122,8 @@ def resize(key, size, datadir):
 def group_image_label(image, df):
     """Group the labels
 
-    image : PIL.Image
-    df : DataFrame
-        grouped labels
+    :param image: PIL.Image
+    :param df: DataFrame - grouped labels
 
     Returns
     -------
@@ -123,6 +141,13 @@ def group_image_label(image, df):
 
 
 def save_images(train_img, label_img, key, datadir, size):
+    """
+    :param train_img: PIL.Image - training image
+    :param label_img: PIL.Image - labelled training image
+    :param key: string - image name, without its extension
+    :param size: integer - image size, in pixels
+    :param datadir: string - path to data repository
+    """
     train_dir = os.path.join(
         datadir, DATASET, 'training_label_aggregate', 'images_' + str(size))
     label_dir = os.path.join(
@@ -134,6 +159,11 @@ def save_images(train_img, label_img, key, datadir, size):
 
 
 def main(key, size, datadir):
+    """
+    :param key: string - image name, without its extension
+    :param size: integer - image size, in pixels
+    :param datadir: string - path to data repository
+    """
     config = read_config(datadir)
     df = config_as_dataframe(config)
     df.to_csv(os.path.join(datadir, DATASET, 'config_agg_' + str(size) + '.csv'), index=False)
