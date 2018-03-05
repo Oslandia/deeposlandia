@@ -69,11 +69,19 @@ class Dataset(object):
             return None
         return self.image_info[image_id]
 
-    def get_nb_class(self):
-        """ `class_info` getter, return the size of `class_info`, i.e. the
-        number of class in the dataset
+    @property
+    def label_ids(self):
+        """Return the list of labels ids taken into account in the dataset
+
+        They can be grouped.
+
+        Returns
+        -------
+        list
+            List of label ids
         """
-        return len(self.class_info)
+        return [label_id for label_id, attr in self.class_info.items()
+                if attr['is_evaluate']]
 
     def get_nb_images(self):
         """ `image_info` getter, return the size of `image_info`, i.e. the
@@ -165,7 +173,7 @@ class Dataset(object):
             img_out = Image.open(label_filename)
             img_out = utils.resize_image(img_out, self.image_size)
             final_img_out = utils.mono_crop_image(img_out, crop_pix)
-            labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
+            labels = utils.mapillary_label_building(final_img_out, self.label_ids)
             new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
             final_img_out.save(new_out_filename)
         else:

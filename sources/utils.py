@@ -133,21 +133,25 @@ def one_hot_encoding(image_filename, nb_labels):
     image = Image.open(image_filename)
     return mapillary_label_building(image, nb_labels)
 
-def mapillary_label_building(filtered_image, nb_labels):
+def mapillary_label_building(filtered_image, label_ids):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
     Parameters
     ----------
-    filtered_image: np.array
+    filtered_image : np.array
         Image to label, under the numpy.array format
-    nb_labels: integer
-        number of labels contained into the reference classification
-    
+    label_ids : list
+        List of labels ids contained into the reference classification
+
+    Returns
+    -------
+    dict
+        label ids occur or not in the image
     """
     image_data = np.array(filtered_image)
     available_labels = np.unique(image_data)
-    return [1 if i in available_labels else 0 for i in range(nb_labels)]
+    return {i: 1 if i in available_labels else 0 for i in label_ids}
 
 def mapillary_image_size_plot(data, filename):
     """Plot the distribution of the sizes in a bunch of images, as a hexbin
