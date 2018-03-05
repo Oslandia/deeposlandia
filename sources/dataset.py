@@ -118,42 +118,73 @@ class Dataset(object):
         """
         with open(config_filename) as config_file:
             glossary = json.load(config_file)
-        if "labels" not in glossary.keys():
+        if "labels" not in glossary:
             print("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            if label["evaluate"]:
-                name_items = label["name"].split('--')
-                category = '-'.join(name_items[:-1])
-                self.add_class(lab_id, name_items[-1], label["color"], category)
+            lab_id = lab_id if 'id' not in label else label['id']
+            name_items = label["name"].split('--')
+            category = '-'.join(name_items[:-1])
+            self.add_class(lab_id, name_items[-1], label["color"],
+                           label['evaluate'], category, label.get('aggregate'))
 
-    def add_class(self, class_id, class_name, color, category=None):
+    def add_class(self, class_id, class_name, color, is_evaluate,
+                  category=None, aggregate=None):
         """ Add a new class to the dataset with class id `class_id`
 
-        Parameters:
-        -----------
-        class_id: integer
+        Parameters
+        ----------
+        class_id : integer
             Id of the new class
-        class_name: object
+        class_name : str
             String designing the new class name
-        color: list
+        color : list
             List of three integers (between 0 and 255) that characterizes the
-        class (useful for semantic segmentation result printing)
-        category: object
+            class (useful for semantic segmentation result printing)
+        is_evaluate: bool
+        category : str
             String designing the category of the dataset class
+        aggregate: list (optional)
+            List of class ids aggregated by the current class_id
         """
-        if class_id in self.class_info.keys():
+        if class_id in self.class_info:
             print("Class {} already stored into the class set.".format(class_id))
             return None
         self.class_info[class_id] = {"name": class_name,
                                      "category": category,
+                                     "is_evaluate": is_evaluate,
+                                     "aggregate": aggregate,
                                      "color": color}
 
-    def _preprocess(self, datadir, image_filename, labelling=True):
+    def group_image_label(self, image):
+        """Group the labels
+
+        If the label ids 4, 5 and 6 belong to the same group, they will be turned
+        into the label id 4.
+
+        Parameters
+        ----------
+        image : PIL.Image
+
+        Returns
+        -------
+        PIL.Image
+        """
+        # turn all label ids into the lowest digits/label id according to its "group"
+        # (manually built)
+        a = np.array(image)
+        for root_id, label in self.class_info.items():
+            for label_id, _ in label['aggregate']:
+                mask = a == label_id
+                a[mask] = root_id
+        return Image.fromarray(a, mode=image.mode)
+
+    def _preprocess(self, datadir, image_filename, aggregate, labelling=True):
         """Resize/crop then save the training & label images
 
         :param datadir: str
         :param image_filaname: str
+        :param aggregate: boolean
         :param labelling: boolean
         :return: dict - Key/values with the filenames and label ids
         """
@@ -178,6 +209,10 @@ class Dataset(object):
             img_out = Image.open(label_filename)
             img_out = utils.resize_image(img_out, self.image_size)
             final_img_out = utils.mono_crop_image(img_out, crop_pix)
+            # group some labels
+            if aggregate:
+                final_img_out = self.group_image_label(final_img_out)
+
             labels = utils.mapillary_label_building(final_img_out, self.label_ids)
             new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
             final_img_out.save(new_out_filename)
@@ -190,7 +225,7 @@ class Dataset(object):
                 "label_filename": new_out_filename,
                 "labels": labels}
 
-    def populate(self, datadir, nb_images=None, labelling=True):
+    def populate(self, datadir, nb_images=None, aggregate=False, labelling=True):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -201,15 +236,18 @@ class Dataset(object):
         nb_images : integer
             Number of images to be considered in the dataset; if None, consider the whole
         repository
+        aggregate : bool
+            Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
         labelling: boolean
             If True labels are recovered from dataset, otherwise dummy label are generated
         """
-        raw_datadir = datadir[:datadir.rfind('_')]
+        raw_datadir, folder = os.path.split(datadir)
+        raw_datadir = os.path.join(raw_datadir, folder.split('_')[0])
         image_dir = os.path.join(raw_datadir, "images")
         image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         with Pool() as p:
-            labels = p.starmap(self._resize, [(datadir, x) for x in image_list_longname])
+            labels = p.starmap(self._preprocess, [(datadir, x, aggregate, labelling) for x in image_list_longname])
 
         self.image_info = {k: v for k,v in enumerate(labels)}
 
