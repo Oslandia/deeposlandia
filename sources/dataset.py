@@ -83,6 +83,11 @@ class Dataset(object):
         return [label_id for label_id, attr in self.class_info.items()
                 if attr['is_evaluate']]
 
+    def get_nb_class(self):
+        """Return the number of labels
+        """
+        return len(self.label_ids)
+
     def get_nb_images(self):
         """ `image_info` getter, return the size of `image_info`, i.e. the
         number of images in the dataset
