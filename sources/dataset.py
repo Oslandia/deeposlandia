@@ -97,8 +97,8 @@ class Dataset(object):
     def get_class_popularity(self):
         """
         """
-        labels = [self.image_info[im]["labels"]
-                  for im in self.image_info.keys()]
+        labels = [list(self.image_info[im]["labels"].keys())
+                  for im in self.image_info]
         if self.get_nb_images() == 0:
             utils.logger.info("No images in the dataset.")
             return None
