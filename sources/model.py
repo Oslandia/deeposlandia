@@ -382,16 +382,27 @@ class ConvolutionalNeuralNetwork(object):
         "labelX" for 1D-array calls
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
-        tn = cmat[0, 0]
+        norm_cmat = self.normalize_cm(cmat)
+        tn = norm_cmat[0, 0]
         self.add_summary(tn, "tn_" + label)
-        fp = cmat[0, 1]
+        fp = norm_cmat[0, 1]
         self.add_summary(fp, "fp_" + label)
-        fn = cmat[1, 0]
+        fn = norm_cmat[1, 0]
         self.add_summary(fn, "fn_" + label)
-        tp = cmat[1, 1]
+        tp = norm_cmat[1, 1]
         self.add_summary(tp, "tp_" + label)
         metrics = self.compute_metrics(tn, fp, fn, tp, label)
-        return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
+        return tf.reshape(norm_cmat, [1, -1], name="reshaped_cmat")
+
+    def normalize_cm(self, confusion_matrix):
+        """Normalize the confusion matrix tensor so as to get items comprised between 0 and 1
+
+        :param confusion_matrix: tensor - confusion matrix of shape [2, 2]
+        :return: tensor - normalized confusion matrix (shape [2, 2])
+        """
+        image_quantity = tf.cond(self._is_training, lambda: self._batch_size, lambda: 200)
+        normalizer = tf.multiply(self._nb_labels, image_quantity)
+        return tf.divide(confusion_matrix, normalizer, "norm_cmat")
 
     def compute_metrics(self, tn, fp, fn, tp, label):
         """Compute a wide range of confusion-matrix-related metrics, such as
