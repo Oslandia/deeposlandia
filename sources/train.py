@@ -34,6 +34,8 @@ import utils
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
+    parser.add_argument('-al', '--aggregate-label', action='store_true',
+                        help="Aggregate some labels")
     parser.add_argument('-b', '--batch-size', required=False, type=int,
                         nargs='?', default=20,
                         help=("Number of images that must be contained "
@@ -96,8 +98,6 @@ if __name__ == '__main__':
                               "contributions to loss: either 'base' "
                               "(default case), 'global', 'batch', "
                               "'centeredglobal', 'centeredbatch'"))
-    parser.add_argument('-al', '--aggregate-label', action='store_true',
-                        help="Aggregate some labels")
     args = parser.parse_args()
 
     if args.image_size > 1024:
