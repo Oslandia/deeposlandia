@@ -699,7 +699,7 @@ class ConvolutionalNeuralNetwork(object):
                 test_fd = {self._X: X_test_batch, self._Y: Y_test_batch,
                             self._dropout: 1.0, self._is_training: False,
                             self._batch_size: batch_size}
-                y_pred[step:step+batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
+                y_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
                 print(y_pred[step:step+batch_size,:])
                 print(Y_test_batch)
                 sess.run(list(self._update_ops.values()), feed_dict=test_fd)
