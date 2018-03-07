@@ -188,13 +188,14 @@ if __name__ == '__main__':
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
-                                     nb_channels=3, batch_size=args.batch_size,
-                                     nb_labels=len(label_list), netsize=args.network_size,
+                                     nb_channels=3, nb_labels=len(label_list),
+                                     netsize=args.network_size,
                                      learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
-              save_step=args.save_step, backup_path=dataset_repo,
-              validation_step=args.validation_step,
-              validation_size=args.nb_validation_image)
+              nb_epochs=args.nb_epochs, batch_size=args.batch_size,
+              validation_size=args.nb_validation_image,
+              nb_iter=args.training_limit, log_step=args.log_step,
+              save_step=args.save_step, validation_step=args.validation_step,
+              backup_path=dataset_repo)
     
     sys.exit(0)
