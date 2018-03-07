@@ -33,7 +33,7 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 nb_labels=65, netsize="small", learning_rate=1e-3):
+                 nb_labels=65, netsize="small", learning_rate=[1e-3]):
         """ Class constructor
         """
         self._network_name = network_name
@@ -319,7 +319,7 @@ class ConvolutionalNeuralNetwork(object):
         self._global_step = tf.Variable(0, dtype=tf.int32,
                                         trainable=False, name='global_step')
         if len(learning_rate) == 1:
-            self._learning_rate = learning_rate
+            self._learning_rate = learning_rate[0]
         else:
             self._learning_rate = tf.train.exponential_decay(learning_rate[0],
                                                              self._global_step,
