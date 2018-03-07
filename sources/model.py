@@ -19,6 +19,7 @@
  */
 """
 
+import json
 import math
 import numpy as np
 import os
@@ -665,24 +666,28 @@ class ConvolutionalNeuralNetwork(object):
             backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
         batched_images, batched_labels = self.define_batch(dataset, labels, batch_size, "testing")
-        # Create folders to store checkpoints
+        # Create folders to store checkpoints and save inference results
         saver = tf.train.Saver(max_to_keep=1)
         ckpt_path = os.path.join(backup_path, 'checkpoints', self._network_name)
         ckpt = tf.train.get_checkpoint_state(ckpt_path)
+        result_dir = os.path.join(backup_path, "results", self._network_name)
+        utils.make_dir(os.path.dirname(result_dir))
+        utils.make_dir(result_dir)
 
         y_pred = np.zeros([dataset.get_nb_images(), self._nb_labels])
         # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
             # Initialize TensorFlow variables
-            sess.run(tf.global_variables_initializer()) # training variable
+            sess.run(tf.global_variables_initializer()) # training variables
+            sess.run(tf.local_variables_initializer()) # testing variables (value, update ops)
             # If checkpoint exists, restore model from it
             if ckpt and ckpt.model_checkpoint_path:
                 saver.restore(sess, ckpt.model_checkpoint_path)
                 utils.logger.info(("Recover model state from {}"
                                    "").format(ckpt.model_checkpoint_path))
-                train_step = self._global_step.eval(session=sess)
             else:
                 utils.logger.warning("No trained model.")
+            train_step = self._global_step.eval(session=sess)
             # Open a thread coordinator to use TensorFlow batching process
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
@@ -695,20 +700,26 @@ class ConvolutionalNeuralNetwork(object):
                             self._dropout: 1.0, self._is_training: False,
                             self._batch_size: batch_size}
                 y_pred[step:step+batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
-                print(y_pred)
-                if (step + 1) % log_step == 0:
-                    loss, cm = sess.run([self._loss, self._cm],
-                                        feed_dict=test_fd)
-                    utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
-                                       "{:1.2f}, {:1.2f}, {:1.2f}]"
-                                       "").format(step, loss, cm[0,0],
-                                                  cm[0,1], cm[0,2], cm[0,3]))
+                print(y_pred[step:step+batch_size,:])
+                print(Y_test_batch)
+                sess.run(list(self._update_ops.values()), feed_dict=test_fd)
+                loss, cm = sess.run([self._loss, self._cm],
+                                    feed_dict=test_fd)
+                utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+                                   "{:1.2f}, {:1.2f}, {:1.2f}]"
+                                   "").format(step, loss, cm[0,0],
+                                              cm[0,1], cm[0,2], cm[0,3]))
+            result_dict = {"train_step": int(train_step),
+                           "y_pred": y_pred.tolist()}
+            test_dashboard = sess.run(list(self._value_ops.values()))
+            result_dict.update(dict(zip(list(self._value_ops.keys()), [float(a) for a in test_dashboard])))
             utils.logger.info(("Inference finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
-        return y_pred
+            with open(os.path.join(result_dir, "inference_"+str(train_step)+".json"), "w") as f:
+                json.dump(result_dict, f, allow_nan=True)
 
     def summary(self):
         """ Print the network architecture on the command prompt

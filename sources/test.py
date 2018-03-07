@@ -110,7 +110,6 @@ if __name__ == '__main__':
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=args.network_size)
-
     cnn.test(testing_dataset, labels=label_list, batch_size=args.batch_size,
              log_step=args.log_step, backup_path=dataset_repo)
 
