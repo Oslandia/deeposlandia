@@ -641,11 +641,11 @@ class ConvolutionalNeuralNetwork(object):
                   self._dropout: 1.0, self._is_training: False}
         vloss, vcm, vsum = sess.run([self._loss, self._cm, summary], feed_dict=val_fd)
         writer.add_summary(vsum, train_step)
-        utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+        utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm=[{:1.2f}, "
                            "{:1.2f}, {:1.2f}, {:1.2f}]"
                            "").format(train_step, vloss, vcm[0,0],
                                       vcm[0,1], vcm[0,2], vcm[0,3]))
-        
+
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
 
