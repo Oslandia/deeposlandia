@@ -33,16 +33,13 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 batch_size=20, val_batch_size=100, nb_labels=65,
-                 netsize="small", learning_rate=1e-3):
+                 nb_labels=65, netsize="small", learning_rate=1e-3):
         """ Class constructor
         """
         self._network_name = network_name
         self._image_size = image_size
         self._nb_channels = nb_channels
         self._nb_labels = nb_labels
-        self._batch_size = batch_size
-        self._val_batch_size = val_batch_size
         self._value_ops = {}
         self._update_ops = {}
         self._X = tf.placeholder(tf.float32, name='X',
@@ -52,6 +49,7 @@ class ConvolutionalNeuralNetwork(object):
                                  shape=[None, self._nb_labels])
         self._dropout = tf.placeholder(tf.float32, name="dropout")
         self._is_training = tf.placeholder(tf.bool, name="is_training")
+        self._batch_size = tf.placeholder(tf.int32, name="batch_size")
         if netsize == "small":
             self.add_layers_3_1()
         else:
@@ -74,11 +72,6 @@ class ConvolutionalNeuralNetwork(object):
         """ `_nb_channels` getter
         """
         return self._nb_channels
-
-    def get_batch_size(self):
-        """ `_batch_size` getter
-        """
-        return self._batch_size
     
     def get_learning_rate(self):
         """ `_learning_rate` getter
@@ -384,16 +377,26 @@ class ConvolutionalNeuralNetwork(object):
         "labelX" for 1D-array calls
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
-        tn = cmat[0, 0]
+        norm_cmat = self.normalize_cm(cmat)
+        tn = norm_cmat[0, 0]
         self.add_summary(tn, "tn_" + label)
-        fp = cmat[0, 1]
+        fp = norm_cmat[0, 1]
         self.add_summary(fp, "fp_" + label)
-        fn = cmat[1, 0]
+        fn = norm_cmat[1, 0]
         self.add_summary(fn, "fn_" + label)
-        tp = cmat[1, 1]
+        tp = norm_cmat[1, 1]
         self.add_summary(tp, "tp_" + label)
         metrics = self.compute_metrics(tn, fp, fn, tp, label)
-        return tf.reshape(cmat, [1, -1], name="reshaped_cmat")
+        return tf.reshape(norm_cmat, [1, -1], name="reshaped_cmat")
+
+    def normalize_cm(self, confusion_matrix):
+        """Normalize the confusion matrix tensor so as to get items comprised between 0 and 1
+
+        :param confusion_matrix: tensor - confusion matrix of shape [2, 2]
+        :return: tensor - normalized confusion matrix (shape [2, 2])
+        """
+        normalizer = tf.multiply(self._nb_labels, self._batch_size)
+        return tf.divide(confusion_matrix, normalizer, "norm_cmat")
 
     def compute_metrics(self, tn, fp, fn, tp, label):
         """Compute a wide range of confusion-matrix-related metrics, such as
@@ -457,7 +460,8 @@ class ConvolutionalNeuralNetwork(object):
         self._value_ops[name] = metric_value
         self._update_ops[name] = metric_update
 
-    def define_batch(self, dataset, labels_of_interest, dataset_type="training"):
+    def define_batch(self, dataset, labels_of_interest, batch_size,
+                     dataset_type="training"):
         """Insert images and labels in Tensorflow batches
 
         Parameters
@@ -467,15 +471,13 @@ class ConvolutionalNeuralNetwork(object):
         attribute must correspond to those of this class
         labels_of_interest: list
             List of label indices on which a model will be trained
+        batch_size: integer
+            Number of images to set in each batch
         dataset_type: object
             string designing the considered dataset (`training`, `validation`
         or `testing`)
         """
         scope_name = self._network_name + "_" + dataset_type + "_data_pipe"
-        if dataset_type == "training":
-            batch_size = self._batch_size
-        else:
-            batch_size = self._val_batch_size
         with tf.variable_scope(scope_name) as scope:
             filepaths = [dataset.image_info[i]["image_filename"]
                          for i in range(dataset.get_nb_images())]
@@ -501,8 +503,8 @@ class ConvolutionalNeuralNetwork(object):
                                   num_threads=4)
 
     def train(self, train_dataset, val_dataset, labels, keep_proba, nb_epochs,
-              log_step=10, save_step=100, nb_iter=None, backup_path=None,
-              validation_step=200):
+              batch_size=20, validation_size=200, log_step=10, save_step=100,
+              validation_step=200, nb_iter=None, backup_path=None):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -539,8 +541,10 @@ class ConvolutionalNeuralNetwork(object):
             example_filename = train_dataset.image_info[0]['raw_filename']
             backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
-        batched_images, batched_labels = self.define_batch(train_dataset, labels, "training")
-        batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels, "validation")
+        batched_images, batched_labels = self.define_batch(train_dataset, labels,
+                                                           batch_size, "training")
+        batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels,
+                                                                   validation_size, "validation")
         # Set up train and validation summaries
         summary = tf.summary.merge_all()
         update_summary = tf.summary.merge_all("update")
@@ -574,24 +578,26 @@ class ConvolutionalNeuralNetwork(object):
             # Train the model
             start_time = time.time()
             if nb_iter is None:
-                n_batches = int(len(train_dataset.image_info) / self._batch_size)
+                n_batches = int(len(train_dataset.image_info) / batch_size)
                 nb_iter = n_batches * nb_epochs
             initial_step = self._global_step.eval(session=sess)
             for step in range(initial_step, nb_iter):
                 X_batch, Y_batch = sess.run([batched_images, batched_labels])
                 train_fd = {self._X: X_batch, self._Y: Y_batch,
-                            self._dropout: keep_proba, self._is_training: True}
+                            self._dropout: keep_proba, self._is_training: True,
+                            self._batch_size: batch_size}
                 sess.run(self._optimizer, feed_dict=train_fd)
                 if (step + 1) % log_step == 0 or step == initial_step:
                     s, loss, cm = sess.run([summary, self._loss, self._cm],
                                            feed_dict=train_fd)
                     train_writer.add_summary(s, step)
-                    utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
-                                       "").format(step, loss, cm[0,:4]))
+                    utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+                                       "{:1.2f}, {:1.2f}, {:1.2f}]"
+                                       "").format(step, loss, cm[0,0],
+                                                  cm[0,1], cm[0,2], cm[0,3]))
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
-                                  len(val_dataset.image_info), step + 1,
-                                  update_summary, val_writer)
+                                  validation_size, step + 1, summary, val_writer)
                     # of update_summary
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
@@ -622,25 +628,17 @@ class ConvolutionalNeuralNetwork(object):
         writer: tf.fileWriter
 
         """
-        n_batches = int(n_val_images / self._val_batch_size)
-        for step in range(n_batches):
-            sess.run(tf.local_variables_initializer())
-            X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
-            val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
-                      self._dropout: 1.0, self._is_training: False}
-            sess.run([self._update_ops["loss"], self._update_ops["tn_global"],
-                      self._update_ops["fp_global"], self._update_ops["fn_global"],
-                      self._update_ops["tp_global"]], feed_dict=val_fd)
-        vloss, vtn, vfp, vfn, vtp, vsum = sess.run([self._value_ops["loss"],
-                                                    self._value_ops["tn_global"],
-                                                    self._value_ops["fp_global"],
-                                                    self._value_ops["fn_global"],
-                                                    self._value_ops["tp_global"],
-                                                    summary])
+        X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
+        val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
+                  self._dropout: 1.0, self._is_training: False,
+                  self._batch_size: n_val_images}
+        vloss, vcm, vsum = sess.run([self._loss, self._cm, summary], feed_dict=val_fd)
         writer.add_summary(vsum, train_step)
-        utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm=[{},{},{},{}]"
-                           "").format(train_step, vloss, vtn, vfp, vfn, vtp))
-        
+        utils.logger.info(("(validation) step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+                           "{:1.2f}, {:1.2f}, {:1.2f}]"
+                           "").format(train_step, vloss, vcm[0,0],
+                                      vcm[0,1], vcm[0,2], vcm[0,3]))
+
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
 

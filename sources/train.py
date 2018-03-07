@@ -83,9 +83,6 @@ if __name__ == '__main__':
     parser.add_argument('-ss', '--save-step', nargs="?",
                         default=100, type=int,
                         help=("Save periodicity during training process"))
-    parser.add_argument('-vb', '--val-batch-size', type=int, default=100,
-                        help=("Number of images that must be contained "
-                              "into a single batch for validation dataset"))
     parser.add_argument('-vs', '--validation-step', nargs="?",
                         default=200, type=int,
                         help=("Validation metric computing periodicity "
@@ -191,13 +188,14 @@ if __name__ == '__main__':
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
-                                     nb_channels=3, batch_size=args.batch_size,
-                                     val_batch_size=args.val_batch_size,
-                                     nb_labels=len(label_list), netsize=args.network_size,
+                                     nb_channels=3, nb_labels=len(label_list),
+                                     netsize=args.network_size,
                                      learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, nb_iter=args.training_limit, log_step=args.log_step,
-              save_step=args.save_step, backup_path=dataset_repo,
-              validation_step=args.validation_step)
+              nb_epochs=args.nb_epochs, batch_size=args.batch_size,
+              validation_size=args.nb_validation_image,
+              nb_iter=args.training_limit, log_step=args.log_step,
+              save_step=args.save_step, validation_step=args.validation_step,
+              backup_path=dataset_repo)
     
     sys.exit(0)
