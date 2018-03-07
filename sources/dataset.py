@@ -309,11 +309,11 @@ class ShapeDataset(Dataset):
         nb_classes: integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(0, "square", [0, 10, 10])
+        self.add_class(0, "square", True, [0, 10, 10])
         if nb_classes > 1:
-            self.add_class(1, "circle", [200, 10, 50])
+            self.add_class(1, "circle", True, [200, 10, 50])
         if nb_classes > 2:
-            self.add_class(2, "triangle", [100, 50, 50])
+            self.add_class(2, "triangle", True, [100, 50, 50])
         if nb_classes > 3:
             utils.logger.warning("Only three classes are considered.")
 
