@@ -33,8 +33,7 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 batch_size=20, val_batch_size=100, nb_labels=65,
-                 netsize="small", learning_rate=1e-3):
+                 batch_size=20, nb_labels=65, netsize="small", learning_rate=1e-3):
         """ Class constructor
         """
         self._network_name = network_name
@@ -42,7 +41,6 @@ class ConvolutionalNeuralNetwork(object):
         self._nb_channels = nb_channels
         self._nb_labels = nb_labels
         self._batch_size = batch_size
-        self._val_batch_size = val_batch_size
         self._value_ops = {}
         self._update_ops = {}
         self._X = tf.placeholder(tf.float32, name='X',
@@ -457,7 +455,8 @@ class ConvolutionalNeuralNetwork(object):
         self._value_ops[name] = metric_value
         self._update_ops[name] = metric_update
 
-    def define_batch(self, dataset, labels_of_interest, dataset_type="training"):
+    def define_batch(self, dataset, labels_of_interest, nb_images=None,
+                     dataset_type="training"):
         """Insert images and labels in Tensorflow batches
 
         Parameters
@@ -475,7 +474,7 @@ class ConvolutionalNeuralNetwork(object):
         if dataset_type == "training":
             batch_size = self._batch_size
         else:
-            batch_size = self._val_batch_size
+            batch_size = dataset.get_nb_images() if nb_images is None else nb_images
         with tf.variable_scope(scope_name) as scope:
             filepaths = [dataset.image_info[i]["image_filename"]
                          for i in range(dataset.get_nb_images())]
@@ -502,7 +501,7 @@ class ConvolutionalNeuralNetwork(object):
 
     def train(self, train_dataset, val_dataset, labels, keep_proba, nb_epochs,
               log_step=10, save_step=100, nb_iter=None, backup_path=None,
-              validation_step=200):
+              validation_step=200, validation_size=200):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -540,7 +539,9 @@ class ConvolutionalNeuralNetwork(object):
             backup_path = "/".join(example_filename.split("/")[:2])
         # Define image batchs
         batched_images, batched_labels = self.define_batch(train_dataset, labels, "training")
-        batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels, "validation")
+        batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels,
+                                                                   validation_size,
+                                                                   "validation")
         # Set up train and validation summaries
         summary = tf.summary.merge_all()
         update_summary = tf.summary.merge_all("update")
