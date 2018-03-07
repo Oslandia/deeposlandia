@@ -591,8 +591,8 @@ class ConvolutionalNeuralNetwork(object):
                                        "").format(step, loss, cm[0,:4]))
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
-                                  len(val_dataset.image_info), step + 1,
-                                  update_summary, val_writer)
+                                  val_dataset.get_nb_images(), step + 1,
+                                  summary, val_writer)
                     # of update_summary
                 if (step + 1) % save_step == 0:
                     save_path = os.path.join(backup_path, 'checkpoints',
@@ -623,23 +623,15 @@ class ConvolutionalNeuralNetwork(object):
         writer: tf.fileWriter
 
         """
-        n_batches = int(n_val_images / self._val_batch_size)
-        for step in range(n_batches):
-            sess.run(tf.local_variables_initializer())
-            X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
-            val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
-                      self._dropout: 1.0, self._is_training: False}
-            sess.run(list(self._update_ops.values()), feed_dict=val_fd)
-        vloss, vtn, vfp, vfn, vtp, vsum = sess.run([self._value_ops["loss"],
-                                                    self._value_ops["tn_global"],
-                                                    self._value_ops["fp_global"],
-                                                    self._value_ops["fn_global"],
-                                                    self._value_ops["tp_global"],
-                                                    summary])
+        X_val_batch, Y_val_batch = sess.run([batched_val_images, batched_val_labels])
+        val_fd = {self._X: X_val_batch, self._Y: Y_val_batch,
+                  self._dropout: 1.0, self._is_training: False}
+        vloss, vcm, vsum = sess.run([self._loss, self._cm, summary], feed_dict=val_fd)
         writer.add_summary(vsum, train_step)
-        utils.logger.info(("(validation) step: {}, loss={:5.3f}, cm=[{}, {}, "
-                           "{}, {}]").format(train_step, vloss, int(vtn),
-                                             int(vfp), int(vfn), int(vtp)))
+        utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+                           "{:1.2f}, {:1.2f}, {:1.2f}]"
+                           "").format(train_step, vloss, vcm[0,0],
+                                      vcm[0,1], vcm[0,2], vcm[0,3]))
         
     def test(self, dataset):
         """ Test the trained neural network on a testing dataset
