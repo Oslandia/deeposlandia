@@ -598,8 +598,10 @@ class ConvolutionalNeuralNetwork(object):
                     s, loss, cm = sess.run([summary, self._loss, self._cm],
                                            feed_dict=train_fd)
                     train_writer.add_summary(s, step)
-                    utils.logger.info(("step: {}, loss={:5.4f}, cm={}"
-                                       "").format(step, loss, cm[0,:4]))
+                    utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
+                                       "{:1.2f}, {:1.2f}, {:1.2f}]"
+                                       "").format(step, loss, cm[0,0],
+                                                  cm[0,1], cm[0,2], cm[0,3]))
                 if (step + 1) % validation_step == 0:
                     self.validate(batched_val_images, batched_val_labels, sess,
                                   val_dataset.get_nb_images(), step + 1,
