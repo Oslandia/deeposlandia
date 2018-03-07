@@ -712,7 +712,11 @@ class ConvolutionalNeuralNetwork(object):
             result_dict = {"train_step": int(train_step),
                            "y_pred": y_pred.tolist()}
             test_dashboard = sess.run(list(self._value_ops.values()))
-            result_dict.update(dict(zip(list(self._value_ops.keys()), [float(a) for a in test_dashboard])))
+            result_dict.update(dict(zip(list(self._value_ops.keys()),
+                                        [float(a) for a in test_dashboard])))
+            utils.logger.info(("average cm=[{:1.2f}, {:1.2f}, {:1.2f}, {:1.2f}]"
+                               "").format(result_dict["tn_global"], result_dict["fp_global"],
+                                          result_dict["fn_global"], result_dict["tp_global"]))
             utils.logger.info(("Inference finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
             # Stop the thread coordinator
