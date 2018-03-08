@@ -159,12 +159,12 @@ if __name__ == '__main__':
 
     # Dataset populating/loading (depends on the existence of a specification file)
     if os.path.isfile(training_filename):
-        train_dataset.load(training_filename)
+        train_dataset.load(training_filename, args.nb_training_image)
     else:
         train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=args.nb_training_image)
         train_dataset.save(training_filename)
     if os.path.isfile(validation_filename):
-        validation_dataset.load(validation_filename)
+        validation_dataset.load(validation_filename, args.nb_validation_image)
     else:
         validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=args.nb_validation_image)
         validation_dataset.save(validation_filename)

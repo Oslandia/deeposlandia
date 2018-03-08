@@ -225,7 +225,7 @@ class Dataset(object):
                        "images": self.image_info}, fp)
         utils.logger.info("The dataset has been saved into {}".format(filename))
 
-    def load(self, filename):
+    def load(self, filename, nb_images=None):
         """Load a dataset from a json file indicated by `filename`
 
         Parameter
@@ -233,12 +233,17 @@ class Dataset(object):
         filename: object
             String designing the relative path from where the dataset must be
         loaded
+        nb_images: integer
+            Number of images that must be loaded (if None, the whole dataset is loaded)
         """
         with open(filename) as fp:
             ds = json.load(fp)
             self.image_size = ds["image_size"]
             self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
-            self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+            if nb_images is None:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+            else:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class ShapeDataset(Dataset):

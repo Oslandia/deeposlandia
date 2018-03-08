@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     # Dataset populating/loading (depends on the existence of a specification file)
     if os.path.isfile(testing_filename):
-        testing_dataset.load(testing_filename)
+        testing_dataset.load(testing_filename, args.nb_testing_image)
     else:
         testing_dataset.populate(os.path.join(args.datapath, args.dataset, testing_name),
                                  nb_images=args.nb_testing_image, labelling=False)
