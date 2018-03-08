@@ -54,9 +54,9 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--glossary-printing', action="store_true",
                         help=("True if the program must only "
                               "print the glossary, false otherwise)"))
-    parser.add_argument('-it', '--nb-training-image', type=int,
+    parser.add_argument('-it', '--nb-training-image', type=int, default=18000,
                         help=("Number of training images"))
-    parser.add_argument('-iv', '--nb-validation-image', type=int,
+    parser.add_argument('-iv', '--nb-validation-image', type=int, default=200,
                         help=("Number of validation images"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
-    parser.add_argument('-ns', '--network-size', required=True,
+    parser.add_argument('-ns', '--network-size', default='small',
                         help=("Neural network size, either 'small' or 'medium'"
                               "('small' refers to 3 conv/pool blocks and 1 "
                               "fully-connected layer, and 'medium' refers to 6"
