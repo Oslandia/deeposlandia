@@ -132,7 +132,7 @@ class Dataset(object):
                                      "category": category,
                                      "color": color}
 
-    def populate(self, datadir, nb_images=None):
+    def populate(self, datadir, nb_images=None, labelling=True):
         """ Populate the dataset with images contained into `datadir` directory
  
        Parameter:
@@ -148,32 +148,31 @@ class Dataset(object):
         image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         for image_id, image_filename in enumerate(image_list_longname):
-            label_filename = image_filename.replace("images/", "labels/")
-            label_filename = label_filename.replace(".jpg", ".png")
-
-            # open original images
+            # open original image
             img_in = Image.open(image_filename)
-            old_width, old_height = img_in.size
-            img_out = Image.open(label_filename)
 
-            # resize images (self.image_size*larger_size or larger_size*self.image_size)
+            # resize image (self.image_size*larger_size or larger_size*self.image_size)
             img_in = utils.resize_image(img_in, self.image_size)
-            img_out = utils.resize_image(img_out, self.image_size)
 
-            # crop images to get self.image_size*self.image_size dimensions
+            # crop image to get self.image_size*self.image_size dimensions
             crop_pix = np.random.randint(0, 1+max(img_in.size)-self.image_size)
             final_img_in = utils.mono_crop_image(img_in, crop_pix)
-            final_img_out = utils.mono_crop_image(img_out, crop_pix)
-            resizing_ratio = math.ceil(old_width * old_height
-                                       / (self.image_size**2))
 
             # save final image
             new_filename = os.path.join(datadir, image_filename.split('/')[-1])
             final_img_in.save(new_filename)
 
             # label_filename vs label image
-            labels = utils.mapillary_label_building(final_img_out,
-                                                    self.get_nb_class())
+            if labelling:
+                label_filename = image_filename.replace("images/", "labels/")
+                label_filename = label_filename.replace(".jpg", ".png")
+                img_out = Image.open(label_filename)
+                img_out = utils.resize_image(img_out, self.image_size)
+                final_img_out = utils.mono_crop_image(img_out, crop_pix)
+                labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
+            else:
+                label_filename = None
+                labels = [0 for i in range(self.get_nb_class())]
 
             # add to dataset object
             self.add_image(image_id, image_filename, new_filename,
@@ -226,7 +225,7 @@ class Dataset(object):
                        "images": self.image_info}, fp)
         utils.logger.info("The dataset has been saved into {}".format(filename))
 
-    def load(self, filename):
+    def load(self, filename, nb_images=None):
         """Load a dataset from a json file indicated by `filename`
 
         Parameter
@@ -234,12 +233,17 @@ class Dataset(object):
         filename: object
             String designing the relative path from where the dataset must be
         loaded
+        nb_images: integer
+            Number of images that must be loaded (if None, the whole dataset is loaded)
         """
         with open(filename) as fp:
             ds = json.load(fp)
             self.image_size = ds["image_size"]
             self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
-            self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+            if nb_images is None:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+            else:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class ShapeDataset(Dataset):

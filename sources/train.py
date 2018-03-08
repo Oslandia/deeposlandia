@@ -54,9 +54,9 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--glossary-printing', action="store_true",
                         help=("True if the program must only "
                               "print the glossary, false otherwise)"))
-    parser.add_argument('-it', '--nb-training-image', type=int,
+    parser.add_argument('-it', '--nb-training-image', type=int, default=18000,
                         help=("Number of training images"))
-    parser.add_argument('-iv', '--nb-validation-image', type=int,
+    parser.add_argument('-iv', '--nb-validation-image', type=int, default=200,
                         help=("Number of validation images"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
-    parser.add_argument('-ns', '--network-size', required=True,
+    parser.add_argument('-ns', '--network-size', default='small',
                         help=("Neural network size, either 'small' or 'medium'"
                               "('small' refers to 3 conv/pool blocks and 1 "
                               "fully-connected layer, and 'medium' refers to 6"
@@ -134,6 +134,8 @@ if __name__ == '__main__':
                             "'medium' values"))
         sys.exit(1)
 
+    # Instance name (name + image size + network size)
+    instance_name = args.name + "_" + str(args.image_size) + "_" + args.network_size
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     training_name = "training_" + str(args.image_size)
@@ -157,12 +159,12 @@ if __name__ == '__main__':
 
     # Dataset populating/loading (depends on the existence of a specification file)
     if os.path.isfile(training_filename):
-        train_dataset.load(training_filename)
+        train_dataset.load(training_filename, args.nb_training_image)
     else:
         train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=args.nb_training_image)
         train_dataset.save(training_filename)
     if os.path.isfile(validation_filename):
-        validation_dataset.load(validation_filename)
+        validation_dataset.load(validation_filename, args.nb_validation_image)
     else:
         validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=args.nb_validation_image)
         validation_dataset.save(validation_filename)
@@ -187,12 +189,12 @@ if __name__ == '__main__':
                        "").format(train_dataset.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
-    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
+    cnn = ConvolutionalNeuralNetwork(network_name=instance_name, image_size=args.image_size,
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=args.network_size,
                                      learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, batch_size=args.batch_size,
+              nb_epochs=args.nb_epochs, batch_size=min(args.batch_size, args.nb_training_image),
               validation_size=args.nb_validation_image,
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,

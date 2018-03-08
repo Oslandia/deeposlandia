@@ -19,6 +19,7 @@
  */
 """
 
+import json
 import math
 import numpy as np
 import os
@@ -33,7 +34,7 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 nb_labels=65, netsize="small", learning_rate=1e-3):
+                 nb_labels=65, netsize="small", learning_rate=[1e-3]):
         """ Class constructor
         """
         self._network_name = network_name
@@ -319,7 +320,7 @@ class ConvolutionalNeuralNetwork(object):
         self._global_step = tf.Variable(0, dtype=tf.int32,
                                         trainable=False, name='global_step')
         if len(learning_rate) == 1:
-            self._learning_rate = learning_rate
+            self._learning_rate = learning_rate[0]
         else:
             self._learning_rate = tf.train.exponential_decay(learning_rate[0],
                                                              self._global_step,
@@ -514,7 +515,7 @@ class ConvolutionalNeuralNetwork(object):
         attribute must correspond to those of this class
         validation_dataset: Dataset
             Validation dataset, to control the training process
-        label: list
+        labels: list
             List of label indices on which a model will be trained
         keep_proba: float
             Probability of keeping a neuron during a training step (dropout)
@@ -522,6 +523,8 @@ class ConvolutionalNeuralNetwork(object):
             Number of training epoch (one epoch=every image have been seen by
         the network); a larger value helps to reach higher
         accuracy, however the training time will be increased as well
+        batch_size: integer
+            Number of image per testing batchs
         log_step: integer
             Training process logging periodicity (quantity of iterations)
         save_step: integer
@@ -639,16 +642,87 @@ class ConvolutionalNeuralNetwork(object):
                            "").format(train_step, vloss, vcm[0,0],
                                       vcm[0,1], vcm[0,2], vcm[0,3]))
 
-    def test(self, dataset):
+    def test(self, dataset, labels, batch_size=20, log_step=10, backup_path=None):
         """ Test the trained neural network on a testing dataset
 
         Parameters:
         -----------
         dataset: Dataset
             Dataset that will feed the neural network; its `_image_size`
-        attribute must correspond to those of this class
+        labels: list
+            List of label indices on which a model will be trained
+        batch_size: integer
+            Number of image per testing batchs
+        log_step: integer
+            Training process logging periodicity (quantity of iterations)
+        backup_path: object
+            String designing the place where must be saved the TensorFlow
+        graph, summary and the model checkpoints
+
         """
-        pass
+        # If backup_path is undefined, set it with the dataset image path
+        if backup_path == None:
+            example_filename = train_dataset.image_info[0]['raw_filename']
+            backup_path = "/".join(example_filename.split("/")[:2])
+        # Define image batchs
+        batched_images, batched_labels = self.define_batch(dataset, labels, batch_size, "testing")
+        # Create folders to store checkpoints and save inference results
+        saver = tf.train.Saver(max_to_keep=1)
+        ckpt_path = os.path.join(backup_path, 'checkpoints', self._network_name)
+        ckpt = tf.train.get_checkpoint_state(ckpt_path)
+        result_dir = os.path.join(backup_path, "results", self._network_name)
+        utils.make_dir(os.path.dirname(result_dir))
+        utils.make_dir(result_dir)
+
+        y_raw_pred = np.zeros([dataset.get_nb_images(), self._nb_labels])
+        y_pred = np.zeros([dataset.get_nb_images(), self._nb_labels])
+        # Open a TensorFlow session to train the model with the batched dataset
+        with tf.Session() as sess:
+            # Initialize TensorFlow variables
+            sess.run(tf.global_variables_initializer()) # training variables
+            sess.run(tf.local_variables_initializer()) # testing variables (value, update ops)
+            # If checkpoint exists, restore model from it
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                utils.logger.info(("Recover model state from {}"
+                                   "").format(ckpt.model_checkpoint_path))
+            else:
+                utils.logger.warning("No trained model.")
+            train_step = self._global_step.eval(session=sess)
+            # Open a thread coordinator to use TensorFlow batching process
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=coord)
+            # Test the trained model
+            start_time = time.time()
+            n_batches = int(len(dataset.image_info) / batch_size)
+            for step in range(n_batches):
+                X_test_batch, Y_test_batch = sess.run([batched_images, batched_labels])
+                test_fd = {self._X: X_test_batch, self._Y: Y_test_batch,
+                            self._dropout: 1.0, self._is_training: False,
+                            self._batch_size: batch_size}
+                y_raw_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
+                y_pred[step:step+batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
+            utils.logger.info(("Inference finished! Total time: {:.2f} "
+                               "seconds").format(time.time() - start_time))
+
+            # Stop the thread coordinator
+            coord.request_stop()
+            coord.join(threads)
+
+        label_name = [dataset.class_info[k]['name'] for k in range(len(dataset.class_info))]
+        label_occurrence = sum(y_pred)
+        label_popularity = pd.DataFrame({"name": label_name, "occurrence": label_occurrence})
+        utils.logger.info(("In the {} images of the testing set, the label occurrences "
+                           "are as follows:").format(len(dataset.image_info)))
+        utils.logger.info(label_popularity.sort_values("occurrence", ascending=False))
+        # Build output structures
+        prediction_keys = [dataset.image_info[k]['image_filename'] for k in
+                           range(len(dataset.image_info))]
+        predictions = dict(zip(prediction_keys, y_raw_pred.tolist()))
+        result_dict = {"train_step": int(train_step),
+                       "predictions": predictions}
+        with open(os.path.join(result_dir, "inference_"+str(train_step)+".json"), "w") as f:
+            json.dump(result_dict, f, allow_nan=True)
 
     def summary(self):
         """ Print the network architecture on the command prompt
