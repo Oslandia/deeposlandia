@@ -113,7 +113,7 @@ if __name__ == '__main__':
     cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=image_size,
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=network_size)
-    cnn.test(testing_dataset, labels=label_list, batch_size=args.batch_size,
+    cnn.test(testing_dataset, labels=label_list, batch_size=min(args.batch_size, args.nb_testing_image),
              log_step=args.log_step, backup_path=dataset_repo)
 
     sys.exit(0)

@@ -194,7 +194,7 @@ if __name__ == '__main__':
                                      netsize=args.network_size,
                                      learning_rate=args.learning_rate)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, batch_size=args.batch_size,
+              nb_epochs=args.nb_epochs, batch_size=min(args.batch_size, args.nb_training_image),
               validation_size=args.nb_validation_image,
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,
