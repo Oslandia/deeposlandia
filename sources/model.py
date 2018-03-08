@@ -674,6 +674,7 @@ class ConvolutionalNeuralNetwork(object):
         utils.make_dir(os.path.dirname(result_dir))
         utils.make_dir(result_dir)
 
+        y_raw_pred = np.zeros([dataset.get_nb_images(), self._nb_labels])
         y_pred = np.zeros([dataset.get_nb_images(), self._nb_labels])
         # Open a TensorFlow session to train the model with the batched dataset
         with tf.Session() as sess:
@@ -699,29 +700,29 @@ class ConvolutionalNeuralNetwork(object):
                 test_fd = {self._X: X_test_batch, self._Y: Y_test_batch,
                             self._dropout: 1.0, self._is_training: False,
                             self._batch_size: batch_size}
-                y_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
-                sess.run(list(self._update_ops.values()), feed_dict=test_fd)
-                loss, cm = sess.run([self._loss, self._cm],
-                                    feed_dict=test_fd)
-                utils.logger.info(("step: {}, loss={:5.4f}, cm=[{:1.2f}, "
-                                   "{:1.2f}, {:1.2f}, {:1.2f}]"
-                                   "").format(step, loss, cm[0,0],
-                                              cm[0,1], cm[0,2], cm[0,3]))
-            result_dict = {"train_step": int(train_step),
-                           "y_pred": y_pred.tolist()}
-            test_dashboard = sess.run(list(self._value_ops.values()))
-            result_dict.update(dict(zip(list(self._value_ops.keys()),
-                                        [float(a) for a in test_dashboard])))
-            utils.logger.info(("average cm=[{:1.2f}, {:1.2f}, {:1.2f}, {:1.2f}]"
-                               "").format(result_dict["tn_global"], result_dict["fp_global"],
-                                          result_dict["fn_global"], result_dict["tp_global"]))
+                y_raw_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
+                y_pred[step:step+batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
             utils.logger.info(("Inference finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
+
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
-            with open(os.path.join(result_dir, "inference_"+str(train_step)+".json"), "w") as f:
-                json.dump(result_dict, f, allow_nan=True)
+
+        label_name = [dataset.class_info[k]['name'] for k in range(len(dataset.class_info))]
+        label_occurrence = sum(y_pred)
+        label_popularity = pd.DataFrame({"name": label_name, "occurrence": label_occurrence})
+        utils.logger.info(("In the {} images of the testing set, the label occurrences "
+                           "are as follows:").format(len(dataset.image_info)))
+        utils.logger.info(label_popularity.sort_values("occurrence", ascending=False))
+        # Build output structures
+        prediction_keys = [dataset.image_info[k]['image_filename'] for k in
+                           range(len(dataset.image_info))]
+        predictions = dict(zip(prediction_keys, y_raw_pred.tolist()))
+        result_dict = {"train_step": int(train_step),
+                       "predictions": predictions}
+        with open(os.path.join(result_dir, "inference_"+str(train_step)+".json"), "w") as f:
+            json.dump(result_dict, f, allow_nan=True)
 
     def summary(self):
         """ Print the network architecture on the command prompt

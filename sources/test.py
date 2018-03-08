@@ -94,7 +94,7 @@ if __name__ == '__main__':
         testing_dataset.load(testing_filename)
     else:
         testing_dataset.populate(os.path.join(args.datapath, args.dataset, testing_name),
-                                 nb_images=args.nb_testing_image)
+                                 nb_images=args.nb_testing_image, labelling=False)
         testing_dataset.save(testing_filename)
 
     # Glossary management (are all the labels required?)
