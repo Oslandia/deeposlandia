@@ -134,6 +134,8 @@ if __name__ == '__main__':
                             "'medium' values"))
         sys.exit(1)
 
+    # Instance name (name + image size + network size)
+    instance_name = args.name + "_" + str(args.image_size) + "_" + args.network_size
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     training_name = "training_" + str(args.image_size)
@@ -187,7 +189,7 @@ if __name__ == '__main__':
                        "").format(train_dataset.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
-    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
+    cnn = ConvolutionalNeuralNetwork(network_name=instance_name, image_size=args.image_size,
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=args.network_size,
                                      learning_rate=args.learning_rate)

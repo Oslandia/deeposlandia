@@ -700,8 +700,6 @@ class ConvolutionalNeuralNetwork(object):
                             self._dropout: 1.0, self._is_training: False,
                             self._batch_size: batch_size}
                 y_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
-                print(y_pred[step:step+batch_size,:])
-                print(Y_test_batch)
                 sess.run(list(self._update_ops.values()), feed_dict=test_fd)
                 loss, cm = sess.run([self._loss, self._cm],
                                     feed_dict=test_fd)

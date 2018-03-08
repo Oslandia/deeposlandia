@@ -54,34 +54,37 @@ if __name__ == '__main__':
                         help=("Log periodicity during testing process"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
-                              "checkout and graph storage on file system"))
-    parser.add_argument('-ns', '--network-size', default="small",
-                        help=("Neural network size, either 'small' or 'medium'"
-                              "('small' refers to 3 conv/pool blocks and 1 "
-                              "fully-connected layer, and 'medium' refers to 6"
-                              "conv/pool blocks and 2 fully-connected layers)"))
-    parser.add_argument('-s', '--image-size', nargs="?",
-                        default=512, type=int,
-                        help=("Desired size of images (width = height)"))
+                              "checkout and graph storage on file system"
+                              "expected format: "
+                              "<instance-name>_<image-size>_<network-size>"))
     args = parser.parse_args()
 
-    if args.image_size > 1024:
+    # instance name decomposition (instance name = name + image size + network size)
+    _, image_size, network_size = args.name.split('_')
+    image_size = int(image_size)
+
+    if image_size > 1024:
         utils.logger.error(("Unsupported image size. Please provide a "
                             "reasonable image size (less than 1024)"))
         sys.exit(1)
 
+    if not network_size in ["small", "medium"]:
+        utils.logger.error(("Unsupported network size. "
+                            "Please choose 'small' or 'medium'."))
+        sys.exit(1)
+
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
-    testing_name = "testing_" + str(args.image_size)
+    testing_name = "testing_" + str(image_size)
     utils.make_dir(dataset_repo)
     utils.make_dir(os.path.join(dataset_repo, testing_name))
     testing_filename = os.path.join(dataset_repo, testing_name + '.json')
 
     # Dataset creation
     if args.dataset == "mapillary":
-        testing_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
+        testing_dataset = Dataset(image_size, os.path.join(args.datapath, args.dataset, "config.json"))
     elif args.dataset == "shapes":
-        testing_dataset = ShapeDataset(args.image_size, 3)
+        testing_dataset = ShapeDataset(image_size, 3)
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
         sys.exit(1)
@@ -107,9 +110,9 @@ if __name__ == '__main__':
     # Convolutional Neural Network creation
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(testing_dataset.get_nb_class(), len(label_list)))
-    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=args.image_size,
+    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=image_size,
                                      nb_channels=3, nb_labels=len(label_list),
-                                     netsize=args.network_size)
+                                     netsize=network_size)
     cnn.test(testing_dataset, labels=label_list, batch_size=args.batch_size,
              log_step=args.log_step, backup_path=dataset_repo)
 
