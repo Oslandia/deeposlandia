@@ -76,8 +76,7 @@ if __name__ == '__main__':
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     testing_name = "testing_" + str(image_size)
-    utils.make_dir(dataset_repo)
-    utils.make_dir(os.path.join(dataset_repo, testing_name))
+    os.makedirs(os.path.join(dataset_repo, testing_name, "images"), exist_ok=True)
     testing_filename = os.path.join(dataset_repo, testing_name + '.json')
 
     # Dataset creation
