@@ -335,7 +335,7 @@ class ShapeDataset(Dataset):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
-    def populate(self, datapath, nb_images=10000, aggregate=False, buf=8):
+    def populate(self, datapath, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
        Parameter:
@@ -344,8 +344,10 @@ class ShapeDataset(Dataset):
             String designing the relative path of the directory that contains new images
         nb_images: integer
             Number of images that must be added in the dataset
-        aggregate : bool
+        aggregate: bool
             Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
+        labelling: boolean
+            Dummy parameter: in this dataset, labels are always generated, as images are drawed with them
         buf: integer
             Minimal number of pixels between shape base point and image borders
         """
