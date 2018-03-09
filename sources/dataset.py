@@ -429,7 +429,7 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
-        image_filename = os.path.join(datapath, "shape_{:05}.png".format(image_id))
+        image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
 
