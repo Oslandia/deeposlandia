@@ -217,8 +217,8 @@ class Dataset(object):
             new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
             final_img_out.save(new_out_filename)
         else:
-            label_filename = None
-            labels = [0 for i in range(self.get_nb_class())]
+            new_out_filename = None
+            labels = {i: 0 for i in range(self.get_nb_class())}
 
         return {"raw_filename": image_filename,
                 "image_filename": new_in_filename,
@@ -248,7 +248,6 @@ class Dataset(object):
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
         with Pool() as p:
             labels = p.starmap(self._preprocess, [(datadir, x, aggregate, labelling) for x in image_list_longname])
-
         self.image_info = {k: v for k,v in enumerate(labels)}
 
     def save(self, filename):
@@ -334,7 +333,7 @@ class ShapeDataset(Dataset):
         labels = np.zeros([nb_images, self.get_nb_class()], dtype=int)
         for i in range(self.get_nb_class()):
             labels[raw_labels[i], i] = 1
-        return labels.tolist()
+        return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
     def populate(self, datapath, nb_images=10000, aggregate=False, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
@@ -354,7 +353,7 @@ class ShapeDataset(Dataset):
         for i, image_label in enumerate(shape_gen):
             bg_color = np.random.randint(0, 255, 3).tolist()
             shape_specs = []
-            for l in image_label:
+            for l in image_label.items():
                 if l:
                     shape_color = np.random.randint(0, 255, 3).tolist()
                     x, y = np.random.randint(buf, self.image_size - buf - 1, 2).tolist()
