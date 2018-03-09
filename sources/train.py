@@ -190,9 +190,9 @@ if __name__ == '__main__':
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
     if args.glossary_printing:
-        glossary = pd.DataFrame(train_dataset.class_info).T
+        glossary = pd.DataFrame(train_dataset.labels)
         glossary["popularity"] = train_dataset.get_class_popularity()
-        utils.logger.info("Data glossary:\n{}".format(train_dataset.class_info))
+        utils.logger.info("Data glossary:\n{}".format(glossary))
         sys.exit(0)
 
     # Convolutional Neural Network creation and training
