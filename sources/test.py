@@ -76,8 +76,7 @@ if __name__ == '__main__':
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
     testing_name = "testing_" + str(image_size)
-    utils.make_dir(dataset_repo)
-    utils.make_dir(os.path.join(dataset_repo, testing_name))
+    os.makedirs(os.path.join(dataset_repo, testing_name, "images"), exist_ok=True)
     testing_filename = os.path.join(dataset_repo, testing_name + '.json')
 
     # Dataset creation
@@ -99,7 +98,7 @@ if __name__ == '__main__':
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
-        label_list = list(testing_dataset.class_info.keys())
+        label_list = testing_dataset.label_ids
     else:
         label_list = args.label_list
         if sum([l>=testing_dataset.get_nb_class() for l in args.label_list]) > 0:

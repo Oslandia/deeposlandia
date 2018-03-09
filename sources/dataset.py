@@ -19,15 +19,19 @@
  */
 """
 
-from collections import defaultdict
-import cv2
-from PIL import Image
+import os
 import json
 import math
+from collections import defaultdict
+from multiprocessing import Pool
+
+import cv2
+from PIL import Image
+
 import numpy as np
-import os
 
 import utils
+
 
 class Dataset(object):
 
@@ -51,7 +55,7 @@ class Dataset(object):
             print("Class {} not in the dataset glossary".format(class_id))
             return None
         return self.class_info[class_id]
-    
+
     def get_image(self, image_id):
         """ `image_info` getter, return only the information for one image
 
@@ -65,11 +69,30 @@ class Dataset(object):
             return None
         return self.image_info[image_id]
 
-    def get_nb_class(self):
-        """ `class_info` getter, return the size of `class_info`, i.e. the
-        number of class in the dataset
+    @property
+    def label_ids(self):
+        """Return the list of labels ids taken into account in the dataset
+
+        They can be grouped.
+
+        Returns
+        -------
+        list
+            List of label ids
         """
-        return len(self.class_info)
+        return [label_id for label_id, attr in self.class_info.items()
+                if attr['is_evaluate']]
+
+    @property
+    def labels(self):
+        """Return the description of class that will be evaluated during the process
+        """
+        return [attr for _, attr in self.class_info.items() if attr["is_evaluate"]]
+
+    def get_nb_class(self):
+        """Return the number of labels
+        """
+        return len(self.label_ids)
 
     def get_nb_images(self):
         """ `image_info` getter, return the size of `image_info`, i.e. the
@@ -78,7 +101,8 @@ class Dataset(object):
         return len(self.image_info)
 
     def get_class_popularity(self):
-        """
+        """Return the class popularity in the current dataset, *i.e.* the proportion of images that
+        contain corresponding object
         """
         labels = [self.image_info[im]["labels"]
                   for im in self.image_info.keys()]
@@ -86,7 +110,7 @@ class Dataset(object):
             utils.logger.info("No images in the dataset.")
             return None
         else:
-            return np.round(np.divide(sum(np.array(labels)),
+            return np.round(np.divide(sum(np.array([list(l.values()) for l in labels])),
                                       self.get_nb_images()), 3)
 
     def build_glossary(self, config_filename):
@@ -101,115 +125,137 @@ class Dataset(object):
         """
         with open(config_filename) as config_file:
             glossary = json.load(config_file)
-        if "labels" not in glossary.keys():
+        if "labels" not in glossary:
             print("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            if label["evaluate"]:
-                name_items = label["name"].split('--')
-                category = '-'.join(name_items[:-1])
-                self.add_class(lab_id, name_items[-1], label["color"], category)
+            lab_id = lab_id if 'id' not in label else label['id']
+            name_items = label["name"].split('--')
+            category = '-'.join(name_items)
+            self.add_class(lab_id, name_items, label["color"],
+                           label['evaluate'], category, label.get('aggregate'))
 
-    def add_class(self, class_id, class_name, color, category=None):
+    def add_class(self, class_id, class_name, color, is_evaluate,
+                  category=None, aggregate=None):
         """ Add a new class to the dataset with class id `class_id`
 
-        Parameters:
-        -----------
-        class_id: integer
+        Parameters
+        ----------
+        class_id : integer
             Id of the new class
-        class_name: object
+        class_name : str
             String designing the new class name
-        color: list
+        color : list
             List of three integers (between 0 and 255) that characterizes the
-        class (useful for semantic segmentation result printing)
-        category: object
+            class (useful for semantic segmentation result printing)
+        is_evaluate: bool
+        category : str
             String designing the category of the dataset class
+        aggregate: list (optional)
+            List of class ids aggregated by the current class_id
         """
-        if class_id in self.class_info.keys():
+        if class_id in self.class_info:
             print("Class {} already stored into the class set.".format(class_id))
             return None
         self.class_info[class_id] = {"name": class_name,
                                      "category": category,
+                                     "is_evaluate": is_evaluate,
+                                     "aggregate": aggregate,
                                      "color": color}
 
-    def populate(self, datadir, nb_images=None, labelling=True):
-        """ Populate the dataset with images contained into `datadir` directory
- 
-       Parameter:
+    def group_image_label(self, image):
+        """Group the labels
+
+        If the label ids 4, 5 and 6 belong to the same group, they will be turned
+        into the label id 4.
+
+        Parameters
         ----------
-        datadir: object
+        image : PIL.Image
+
+        Returns
+        -------
+        PIL.Image
+        """
+        # turn all label ids into the lowest digits/label id according to its "group"
+        # (manually built)
+        a = np.array(image)
+        for root_id, label in self.class_info.items():
+            for label_id, _ in label['aggregate']:
+                mask = a == label_id
+                a[mask] = root_id
+        return Image.fromarray(a, mode=image.mode)
+
+    def _preprocess(self, datadir, image_filename, aggregate, labelling=True):
+        """Resize/crop then save the training & label images
+
+        :param datadir: str
+        :param image_filaname: str
+        :param aggregate: boolean
+        :param labelling: boolean
+        :return: dict - Key/values with the filenames and label ids
+        """
+        # open original images
+        img_in = Image.open(image_filename)
+
+        # resize images (self.image_size*larger_size or larger_size*self.image_size)
+        img_in = utils.resize_image(img_in, self.image_size)
+
+        # crop images to get self.image_size*self.image_size dimensions
+        crop_pix = np.random.randint(0, 1 + max(img_in.size) - self.image_size)
+        final_img_in = utils.mono_crop_image(img_in, crop_pix)
+
+        # save final image
+        new_in_filename = os.path.join(datadir, 'images', image_filename.split('/')[-1])
+        final_img_in.save(new_in_filename)
+
+        # label_filename vs label image
+        if labelling:
+            label_filename = image_filename.replace("images/", "labels/")
+            label_filename = label_filename.replace(".jpg", ".png")
+            img_out = Image.open(label_filename)
+            img_out = utils.resize_image(img_out, self.image_size)
+            final_img_out = utils.mono_crop_image(img_out, crop_pix)
+            # group some labels
+            if aggregate:
+                final_img_out = self.group_image_label(final_img_out)
+
+            labels = utils.mapillary_label_building(final_img_out, self.label_ids)
+            new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
+            final_img_out.save(new_out_filename)
+        else:
+            new_out_filename = None
+            labels = {i: 0 for i in range(self.get_nb_class())}
+
+        return {"raw_filename": image_filename,
+                "image_filename": new_in_filename,
+                "label_filename": new_out_filename,
+                "labels": labels}
+
+    def populate(self, datadir, nb_images=None, aggregate=False, labelling=True):
+        """ Populate the dataset with images contained into `datadir` directory
+
+        Parameters
+        ----------
+        datadir : object
             String designing the relative path of the directory that contains
         new images
-        nb_images: integer
-            Number of images to be considered in the dataset; if None, consider the whole repository
+        nb_images : integer
+            Number of images to be considered in the dataset; if None, consider the whole
+        repository
+        aggregate : bool
+            Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
+        labelling: boolean
+            If True labels are recovered from dataset, otherwise dummy label are generated
         """
-        raw_datadir = datadir[:datadir.rfind('_')]
+        raw_datadir, folder = os.path.split(datadir)
+        raw_datadir = os.path.join(raw_datadir, folder.split('_')[0])
         image_dir = os.path.join(raw_datadir, "images")
         image_list = os.listdir(image_dir)[:nb_images]
         image_list_longname = [os.path.join(image_dir, l) for l in image_list]
-        for image_id, image_filename in enumerate(image_list_longname):
-            # open original image
-            img_in = Image.open(image_filename)
-
-            # resize image (self.image_size*larger_size or larger_size*self.image_size)
-            img_in = utils.resize_image(img_in, self.image_size)
-
-            # crop image to get self.image_size*self.image_size dimensions
-            crop_pix = np.random.randint(0, 1+max(img_in.size)-self.image_size)
-            final_img_in = utils.mono_crop_image(img_in, crop_pix)
-
-            # save final image
-            new_filename = os.path.join(datadir, image_filename.split('/')[-1])
-            final_img_in.save(new_filename)
-
-            # label_filename vs label image
-            if labelling:
-                label_filename = image_filename.replace("images/", "labels/")
-                label_filename = label_filename.replace(".jpg", ".png")
-                img_out = Image.open(label_filename)
-                img_out = utils.resize_image(img_out, self.image_size)
-                final_img_out = utils.mono_crop_image(img_out, crop_pix)
-                labels = utils.mapillary_label_building(final_img_out, self.get_nb_class())
-            else:
-                label_filename = None
-                labels = [0 for i in range(self.get_nb_class())]
-
-            # add to dataset object
-            self.add_image(image_id, image_filename, new_filename,
-                           label_filename, labels)
-
-
-    def add_image(self, image_id, raw_filename, image_filename,
-                  label_filename, labels):
-        """ Add a new image to the dataset with image id `image_id`; an image
-                  in the dataset is represented by an id, an original filename,
-                  a new version filename (the image is preprocessed), a label
-                  filename for getting ground truth description and a list of
-                  0-1 labels (1 if the i-th class is on the image, 0 otherwise)
-
-        Parameters:
-        -----------
-        image_id: integer
-            Id of the new image
-        raw_filename: object
-            String designing the new image original name on the file system
-        image_filename: object
-            String designing the new preprocessed image name on the file system
-        label_filename: object
-            String designing the new image ground-truth-version name on the
-        file system
-        labels: list
-            List of 0-1 values, the i-th value being 1 if the i-th class is on
-        the new image, 0 otherwise; the label list length correspond to the
-        number of classes in the dataset
-        """
-        if image_id in self.image_info.keys():
-            print("Image {} already stored into the class set.".format(image_id))
-            return None
-        self.image_info[image_id] = {"raw_filename": raw_filename,
-                                     "image_filename": image_filename,
-                                     "label_filename": label_filename,
-                                     "labels": labels}
+        with Pool() as p:
+            labels = p.starmap(self._preprocess, [(datadir, x, aggregate, labelling) for x in image_list_longname])
+        self.image_info = {k: v for k,v in enumerate(labels)}
 
     def save(self, filename):
         """Save dataset in a json file indicated by `filename`
@@ -244,6 +290,8 @@ class Dataset(object):
                 self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
             else:
                 self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
+            for img_id, info in self.image_info.items():
+                info['labels'] = {int(k): v for k, v in info['labels'].items()}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class ShapeDataset(Dataset):
@@ -267,11 +315,11 @@ class ShapeDataset(Dataset):
         nb_classes: integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(0, "square", [0, 10, 10])
+        self.add_class(0, "square", True, [0, 10, 10])
         if nb_classes > 1:
-            self.add_class(1, "circle", [200, 10, 50])
+            self.add_class(1, "circle", True, [200, 10, 50])
         if nb_classes > 2:
-            self.add_class(2, "triangle", [100, 50, 50])
+            self.add_class(2, "triangle", True, [100, 50, 50])
         if nb_classes > 3:
             utils.logger.warning("Only three classes are considered.")
 
@@ -292,18 +340,21 @@ class ShapeDataset(Dataset):
         labels = np.zeros([nb_images, self.get_nb_class()], dtype=int)
         for i in range(self.get_nb_class()):
             labels[raw_labels[i], i] = 1
-        return labels.tolist()
+        return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
-    def populate(self, datapath, nb_images=10000, buf=8):
+    def populate(self, datapath, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
        Parameter:
         ----------
         datapath: object
-            String designing the relative path of the directory that contains
-        new images
+            String designing the relative path of the directory that contains new images
         nb_images: integer
             Number of images that must be added in the dataset
+        aggregate: bool
+            Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
+        labelling: boolean
+            Dummy parameter: in this dataset, labels are always generated, as images are drawed with them
         buf: integer
             Minimal number of pixels between shape base point and image borders
         """
@@ -311,7 +362,7 @@ class ShapeDataset(Dataset):
         for i, image_label in enumerate(shape_gen):
             bg_color = np.random.randint(0, 255, 3).tolist()
             shape_specs = []
-            for l in image_label:
+            for l in image_label.items():
                 if l:
                     shape_color = np.random.randint(0, 255, 3).tolist()
                     x, y = np.random.randint(buf, self.image_size - buf - 1, 2).tolist()
@@ -385,7 +436,7 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
-        image_filename = os.path.join(datapath, "shape_{:05}.png".format(image_id))
+        image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
 

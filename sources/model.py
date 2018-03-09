@@ -709,7 +709,7 @@ class ConvolutionalNeuralNetwork(object):
             coord.request_stop()
             coord.join(threads)
 
-        label_name = [dataset.class_info[k]['name'] for k in range(len(dataset.class_info))]
+        label_name = [dataset.class_info[k]['name'] for k in range(dataset.get_nb_class())]
         label_occurrence = sum(y_pred)
         label_popularity = pd.DataFrame({"name": label_name, "occurrence": label_occurrence})
         utils.logger.info(("In the {} images of the testing set, the label occurrences "

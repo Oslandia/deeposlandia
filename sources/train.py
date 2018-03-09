@@ -34,6 +34,8 @@ import utils
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
+    parser.add_argument('-al', '--aggregate-label', action='store_true',
+                        help="Aggregate some labels")
     parser.add_argument('-b', '--batch-size', required=False, type=int,
                         nargs='?', default=20,
                         help=("Number of images that must be contained "
@@ -138,18 +140,23 @@ if __name__ == '__main__':
     instance_name = args.name + "_" + str(args.image_size) + "_" + args.network_size
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
-    training_name = "training_" + str(args.image_size)
-    validation_name = "validation_" + str(args.image_size)
-    utils.make_dir(dataset_repo)
-    utils.make_dir(os.path.join(dataset_repo, training_name))
-    utils.make_dir(os.path.join(dataset_repo, validation_name))
+    suffix = "" if not args.aggregate_label else "aggregate_"
+    training_name = "training_" + suffix + str(args.image_size)
+    validation_name = "validation_" + suffix + str(args.image_size)
+    os.makedirs(os.path.join(dataset_repo, training_name, 'images'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, training_name, 'labels'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, validation_name, 'images'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_repo, validation_name, 'labels'), exist_ok=True)
     training_filename = os.path.join(dataset_repo, training_name + '.json')
     validation_filename = os.path.join(dataset_repo, validation_name + '.json')
 
     # Dataset creation
+    config = 'config.json'
+    if args.aggregate_label:
+        config = 'config_aggregate.json'
     if args.dataset == "mapillary":
-        train_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
-        validation_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, "config.json"))
+        train_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, config))
+        validation_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, config))
     elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size, 3)
         validation_dataset = ShapeDataset(args.image_size, 3)
@@ -161,17 +168,21 @@ if __name__ == '__main__':
     if os.path.isfile(training_filename):
         train_dataset.load(training_filename, args.nb_training_image)
     else:
-        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name), nb_images=args.nb_training_image)
+        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name),
+                               nb_images=args.nb_training_image,
+                               aggregate=args.aggregate_label)
         train_dataset.save(training_filename)
     if os.path.isfile(validation_filename):
         validation_dataset.load(validation_filename, args.nb_validation_image)
     else:
-        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name), nb_images=args.nb_validation_image)
+        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name),
+                                    nb_images=args.nb_validation_image,
+                                    aggregate=args.aggregate_label)
         validation_dataset.save(validation_filename)
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
-        label_list = list(train_dataset.class_info.keys())
+        label_list = train_dataset.label_ids
     else:
         label_list = args.label_list
         if sum([l>=train_dataset.get_nb_class() for l in args.label_list]) > 0:
@@ -179,9 +190,9 @@ if __name__ == '__main__':
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
     if args.glossary_printing:
-        glossary = pd.DataFrame(train_dataset.class_info).T
+        glossary = pd.DataFrame(train_dataset.labels)
         glossary["popularity"] = train_dataset.get_class_popularity()
-        utils.logger.info("Data glossary:\n{}".format(train_dataset.class_info))
+        utils.logger.info("Data glossary:\n{}".format(glossary))
         sys.exit(0)
 
     # Convolutional Neural Network creation and training
@@ -199,5 +210,4 @@ if __name__ == '__main__':
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,
               backup_path=dataset_repo)
-    
     sys.exit(0)
