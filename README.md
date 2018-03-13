@@ -195,7 +195,7 @@ tensorboard --port 6006 --logdir=n1:<datapath>/<dataset>/graph/<network-name-1>,
 An example of visualization for scalar variables (*e.g.* loss, learning rate,
 true positives...) is provided in the following figure:
 
-[-> tensorboard example](./images/tensorboard_example.png)
+![-> tensorboard example](./images/tensorboard_example.png)
 
 ___
 
