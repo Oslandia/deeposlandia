@@ -1,7 +1,11 @@
 cv2
-logging
 matplotlib
 numpy
 pandas
 PIL
 tensorflow
+ipython
+keras
+jupyter
+matplotlib
+h5py
