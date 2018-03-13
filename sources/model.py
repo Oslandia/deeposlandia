@@ -152,7 +152,7 @@ class ConvolutionalNeuralNetwork(object):
         padding: object
             String designing the padding mode ('SAME', or 'VALID')
         """
-        with tf.variable_scope(self._network_name+'_conv'+str(counter)) as scope:
+        with tf.variable_scope('conv'+str(counter)) as scope:
             w = self.create_weights([kernel_dim, kernel_dim,
                                      input_layer_depth, layer_depth])
             conv = tf.nn.conv2d(input_layer, w, strides=strides,
@@ -184,7 +184,7 @@ class ConvolutionalNeuralNetwork(object):
         padding: object
             String designing the padding mode ('SAME', or 'VALID')
         """
-        with tf.variable_scope(self._network_name + '_pool' + str(counter)) as scope:
+        with tf.variable_scope('pool' + str(counter)) as scope:
             return tf.nn.max_pool(input_layer,
                                   ksize=[1, kernel_dim, kernel_dim, 1],
                                   strides=[1,stride,stride,1], padding=padding)
@@ -225,7 +225,7 @@ class ConvolutionalNeuralNetwork(object):
         t_dropout: tensor
             tensor corresponding to the neuron keeping probability during dropout operation
         """
-        with tf.variable_scope(self._network_name + '_fc' + str(counter)) as scope:
+        with tf.variable_scope('fc' + str(counter)) as scope:
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             fc = tf.matmul(reshaped, w, name="raw_fc")
@@ -247,7 +247,7 @@ class ConvolutionalNeuralNetwork(object):
         input_layer_dim: integer
             Dimension of the previous neural network layer
         """
-        with tf.variable_scope(self._network_name + '_output_layer') as scope:
+        with tf.variable_scope('output_layer') as scope:
             w = self.create_weights([input_layer_dim, self._nb_labels])
             b = self.create_biases([self._nb_labels])
             self._logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
@@ -304,7 +304,7 @@ class ConvolutionalNeuralNetwork(object):
         learning rate following the equation
 
         """
-        with tf.name_scope(self._network_name + '_loss'):
+        with tf.name_scope('loss'):
             self._entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._Y,
                                                                     logits=self._logits)
             tf.summary.histogram('xent', self._entropy)
@@ -353,7 +353,7 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
-        with tf.name_scope(self._network_name + "_dashboard_" + label):
+        with tf.name_scope("dashboard_" + label):
             if len(y_true.shape) > 1:
                 yt_resh = tf.reshape(y_true, [-1], name="1D-y-true")
                 yp_resh = tf.reshape(y_pred, [-1], name="1D-y-pred")
@@ -482,8 +482,7 @@ class ConvolutionalNeuralNetwork(object):
             string designing the considered dataset (`training`, `validation`
         or `testing`)
         """
-        scope_name = self._network_name + "_" + dataset_type + "_data_pipe"
-        with tf.variable_scope(scope_name) as scope:
+        with tf.variable_scope(dataset_type + "_data_pipe") as scope:
             filepaths = [dataset.image_info[i]["image_filename"]
                          for i in range(dataset.get_nb_images())]
             filepath_tensors = ops.convert_to_tensor(filepaths, dtype=tf.string,
