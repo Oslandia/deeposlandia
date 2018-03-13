@@ -70,6 +70,10 @@ if __name__ == '__main__':
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("Log periodicity during training process"))
+    parser.add_argument('-m', '--monitoring', type=int, default=1,
+                        help=("Monitoring level: 0=no monitoring, 1=monitor"
+                              " important scalar variables, 2=monitor all "
+                              "scalar variables, 3=full-monitoring"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
@@ -107,12 +111,19 @@ if __name__ == '__main__':
         utils.logger.error(("Unsupported image size. Please provide a "
                             "reasonable image size (less than 1024)"))
         sys.exit(1)
+
     if len(args.learning_rate) != 1 and len(args.learning_rate) != 3:
         utils.logger.error(("There must be 1 or 3 learning rate component(s) "
                             "(start, decay steps and decay rate"
                             "; actually, there is/are {}"
                             "").format(len(args.learning_rate)))
         sys.exit(1)
+
+    if not args.monitoring in range(4):
+        utils.logger.error(("Monitoring level must be comprised between 0 "
+                            "(no monitoring) and 3 (full-monitoring)."))
+        sys.exit(1)
+
     weights = ["base", "global", "batch", "centeredbatch", "centeredglobal"] 
     if sum([w in weights for w in args.weights]) != len(args.weights):
         utils.logger.error(("Unsupported weighting policy. Please choose "
@@ -206,7 +217,8 @@ if __name__ == '__main__':
     cnn = ConvolutionalNeuralNetwork(network_name=instance_name, image_size=args.image_size,
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=args.network_size,
-                                     learning_rate=args.learning_rate)
+                                     learning_rate=args.learning_rate,
+                                     monitoring_level=args.monitoring)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, batch_size=min(args.batch_size, args.nb_training_image),
               validation_size=args.nb_validation_image,

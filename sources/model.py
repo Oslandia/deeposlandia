@@ -34,7 +34,8 @@ import utils
 class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 nb_labels=65, netsize="small", learning_rate=[1e-3]):
+                 nb_labels=65, netsize="small", learning_rate=[1e-3],
+                 monitoring_level=1):
         """ Class constructor
         """
         self._network_name = network_name
@@ -51,6 +52,7 @@ class ConvolutionalNeuralNetwork(object):
         self._dropout = tf.placeholder(tf.float32, name="dropout")
         self._is_training = tf.placeholder(tf.bool, name="is_training")
         self._batch_size = tf.placeholder(tf.int32, name="batch_size")
+        self._monitoring = monitoring_level
         if netsize == "small":
             self.add_layers_3_1()
         else:
@@ -102,7 +104,8 @@ class ConvolutionalNeuralNetwork(object):
                                             stddev=1.0/math.sqrt(shape[0])),
                         name="weights",
                         trainable=True)
-        tf.summary.histogram("weights", w)
+        if self._monitoring >= 3:
+            tf.summary.histogram("weights", w)
         return w
 
     def create_biases(self, shape):
@@ -116,7 +119,8 @@ class ConvolutionalNeuralNetwork(object):
             List of integers describing the biases shapes (ex: [2], [3, 5]...)
         """
         b = tf.Variable(tf.zeros(shape), name="biases", trainable=True)
-        tf.summary.histogram("biases", b)
+        if self._monitoring >= 3:
+            tf.summary.histogram("biases", b)
         return b
 
     def convolutional_layer(self, counter, is_training, input_layer,
@@ -157,10 +161,11 @@ class ConvolutionalNeuralNetwork(object):
                                      input_layer_depth, layer_depth])
             conv = tf.nn.conv2d(input_layer, w, strides=strides,
                                 padding=padding)
-            tf.summary.histogram("conv", conv)
             batched_conv = tf.layers.batch_normalization(conv, training=is_training)
             relu_conv = tf.nn.relu(batched_conv, name=scope.name)
-            tf.summary.histogram("conv_activation", relu_conv)
+            if self._monitoring >= 3:
+                tf.summary.histogram("conv", conv)
+                tf.summary.histogram("conv_activation", relu_conv)
             return relu_conv
     
     def maxpooling_layer(self, counter, input_layer, kernel_dim,
@@ -229,10 +234,11 @@ class ConvolutionalNeuralNetwork(object):
             reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
             w = self.create_weights([last_layer_dim, layer_depth])
             fc = tf.matmul(reshaped, w, name="raw_fc")
-            tf.summary.histogram("fc", fc)
             batched_fc = tf.layers.batch_normalization(fc, training=is_training)
             relu_fc = tf.nn.relu(batched_fc, name="relu_fc")
-            tf.summary.histogram("fc_activation", relu_fc)
+            if self._monitoring >= 3:
+                tf.summary.histogram("fc", fc)
+                tf.summary.histogram("fc_activation", relu_fc)
             return tf.nn.dropout(relu_fc, t_dropout, name='relu_with_dropout')
 
     def output_layer(self, input_layer, input_layer_dim):
@@ -253,8 +259,9 @@ class ConvolutionalNeuralNetwork(object):
             self._logits = tf.add(tf.matmul(input_layer, w), b, name="logits")
             self._Y_raw_predict = tf.nn.sigmoid(self._logits, name="y_pred_raw")
             self._Y_pred = tf.round(self._Y_raw_predict, name="y_pred")
-            tf.summary.histogram("logits", self._logits)
-            tf.summary.histogram("y_raw_pred", self._Y_raw_predict)
+            if self._monitoring >= 3:
+                tf.summary.histogram("logits", self._logits)
+                tf.summary.histogram("y_raw_pred", self._Y_raw_predict)
 
     def add_layers_3_1(self):
         """Build the structure of a convolutional neural network from image data `input_layer`
@@ -262,8 +269,9 @@ class ConvolutionalNeuralNetwork(object):
         with 3 convolutional+pooling layers and 1 fully-connected layer
 
         """
-        tf.summary.histogram("input", self._X)
-        tf.summary.image("input", self._X)
+        if self._monitoring >= 3:
+            tf.summary.histogram("input", self._X)
+            tf.summary.image("input", self._X)
         layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
         layer = self.convolutional_layer(2, self._is_training, layer, 16, 5, 32)
@@ -280,8 +288,9 @@ class ConvolutionalNeuralNetwork(object):
         with 6 convolutional+pooling layers and 2 fully-connected layers
 
         """
-        tf.summary.histogram("input", self._X)
-        tf.summary.image("input", self._X)
+        if self._monitoring >= 3:
+            tf.summary.histogram("input", self._X)
+            tf.summary.image("input", self._X)
         layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 7, 16)
         layer = self.maxpooling_layer(1, layer, 2, 2)
         layer = self.convolutional_layer(2, self._is_training, layer, 16, 7, 32)
@@ -307,9 +316,11 @@ class ConvolutionalNeuralNetwork(object):
         with tf.name_scope('loss'):
             self._entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._Y,
                                                                     logits=self._logits)
-            tf.summary.histogram('xent', self._entropy)
+            if self._monitoring >= 3:
+                tf.summary.histogram('xent', self._entropy)
             self._loss = tf.reduce_mean(self._entropy, name="mean_entropy")
-            self.add_summary(self._loss, "loss")
+            if self._monitoring >= 1:
+                self.add_summary(self._loss, "loss")
 
     def optimize(self, learning_rate):
         """Define the loss tensor as well as the optimizer; it uses a decaying
@@ -384,15 +395,19 @@ class ConvolutionalNeuralNetwork(object):
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
         norm_cmat = self.normalize_cm(cmat)
         tn = norm_cmat[0, 0]
-        self.add_summary(tn, "tn_" + label)
         fp = norm_cmat[0, 1]
-        self.add_summary(fp, "fp_" + label)
         fn = norm_cmat[1, 0]
-        self.add_summary(fn, "fn_" + label)
         tp = norm_cmat[1, 1]
-        self.add_summary(tp, "tp_" + label)
-        metrics = self.compute_metrics(tn, fp, fn, tp, label)
-        return tf.reshape(norm_cmat, [1, -1], name="reshaped_cmat")
+        normresh_cmat = tf.reshape(norm_cmat, [1, -1], name="reshaped_cmat")
+        if self._monitoring >= 1:
+            self.add_summary(tn, "tn_" + label)
+            self.add_summary(fp, "fp_" + label)
+            self.add_summary(fn, "fn_" + label)
+            self.add_summary(tp, "tp_" + label)
+            metrics = self.compute_metrics(tn, fp, fn, tp, label)
+            metrics = tf.reshape(metrics, shape=[1, -1])
+            normresh_cmat = tf.concat([normresh_cmat, metrics], 1)
+        return normresh_cmat
 
     def normalize_cm(self, confusion_matrix):
         """Normalize the confusion matrix tensor so as to get items comprised between 0 and 1
@@ -423,31 +438,34 @@ class ConvolutionalNeuralNetwork(object):
         "wrapper" for 2D-array calls (default value), either "global" or
         "labelX" for 1D-array calls
         """
-        pos_true = tf.add(tp, fn)
-        self.add_summary(pos_true, "pos_true_"+label)
-        neg_true = tf.add(fp, tn)
-        self.add_summary(neg_true, "neg_true_"+label)
-        pos_pred = tf.add(tp, fp)
-        self.add_summary(pos_pred, "pos_pred_"+label)
-        neg_pred = tf.add(tn, fn)
-        self.add_summary(neg_pred, "neg_pred_"+label)
         acc = tf.divide(tf.add(tn, tp), tn + fp + fn + tp)
         self.add_summary(acc, "acc_"+label)
-        tpr = tf.divide(tp, tf.add(tp, fn))
-        self.add_summary(tpr, "tpr_"+label)
-        fpr = tf.divide(fp, tf.add(tn, fp))
-        self.add_summary(fpr, "fpr_"+label)
-        tnr = tf.divide(tn, tf.add(tn, fp))
-        self.add_summary(tnr, "tnr_"+label)
-        fnr = tf.divide(fn, tf.add(tp, fn))
-        self.add_summary(fnr, "fnr_"+label)
-        ppv = tf.divide(tp, tf.add(tp, fp))
-        self.add_summary(ppv, "ppv_"+label)
-        npv = tf.divide(tn, tf.add(tn, fn))
-        self.add_summary(npv, "npv_"+label)
-        fm = 2.0 * tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr))
-        self.add_summary(fm, "fm_"+label)
-        return [pos_pred, neg_pred, acc, tpr, ppv, fm]
+        if self._monitoring < 2:
+            return [acc]
+        else:
+            pos_true = tf.add(tp, fn)
+            neg_true = tf.add(fp, tn)
+            pos_pred = tf.add(tp, fp)
+            neg_pred = tf.add(tn, fn)
+            tpr = tf.divide(tp, pos_true)
+            fpr = tf.divide(fp, neg_true)
+            tnr = tf.divide(tn, neg_true)
+            fnr = tf.divide(fn, pos_true)
+            ppv = tf.divide(tp, pos_pred)
+            npv = tf.divide(tn, neg_pred)
+            fm = 2.0 * tf.divide(tf.multiply(ppv, tpr), tf.add(ppv, tpr))
+            self.add_summary(pos_true, "pos_true_"+label)
+            self.add_summary(neg_true, "neg_true_"+label)
+            self.add_summary(pos_pred, "pos_pred_"+label)
+            self.add_summary(neg_pred, "neg_pred_"+label)
+            self.add_summary(tpr, "tpr_"+label)
+            self.add_summary(fpr, "fpr_"+label)
+            self.add_summary(tnr, "tnr_"+label)
+            self.add_summary(fnr, "fnr_"+label)
+            self.add_summary(ppv, "ppv_"+label)
+            self.add_summary(npv, "npv_"+label)
+            self.add_summary(fm, "fm_"+label)
+            return [acc, pos_pred, neg_pred, tpr, ppv, fm]
 
     def add_summary(self, metric, name):
         """ Add a TensorFlow scalar summary to the parameter metric, in order to monitor it in TensorBoard
@@ -555,9 +573,8 @@ class ConvolutionalNeuralNetwork(object):
                                                            batch_size, "training")
         batched_val_images, batched_val_labels = self.define_batch(val_dataset, labels,
                                                                    validation_size, "validation")
-        # Set up train and validation summaries
+        # Set up merged summary
         summary = tf.summary.merge_all()
-        update_summary = tf.summary.merge_all("update")
         # Create tensorflow graph
         graph_path = os.path.join(backup_path, 'graph', self._network_name)
         train_writer = tf.summary.FileWriter(os.path.join(graph_path, "training"))
