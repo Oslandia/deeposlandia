@@ -40,6 +40,9 @@ if __name__ == '__main__':
                         nargs='?', default=20,
                         help=("Number of images that must be contained "
                               "into a single batch"))
+    parser.add_argument('-c', '--chrono', action='store_true',
+                        help=("Measure the training phase execution time "
+                              "and store it in a json file"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
                         help="Dataset type (either mapillary or shape")
     parser.add_argument('-dp', '--datapath', required=False,
@@ -209,5 +212,5 @@ if __name__ == '__main__':
               validation_size=args.nb_validation_image,
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,
-              backup_path=dataset_repo)
+              backup_path=dataset_repo, timing=args.chrono)
     sys.exit(0)

@@ -58,6 +58,10 @@ class ConvolutionalNeuralNetwork(object):
         self.compute_loss()
         self.optimize(learning_rate)
         self._cm = self.compute_dashboard(self._Y, self._Y_pred)
+        self._chrono = {"monitoring": {},
+                        "validation": {},
+                        "backprop": {},
+                        "backup": {}}
 
     def get_network_name(self):
         """ `_network_name` getter
@@ -505,7 +509,8 @@ class ConvolutionalNeuralNetwork(object):
 
     def train(self, train_dataset, val_dataset, labels, keep_proba, nb_epochs,
               batch_size=20, validation_size=200, log_step=10, save_step=100,
-              validation_step=200, nb_iter=None, backup_path=None):
+              validation_step=200, nb_iter=None, backup_path=None,
+              timing=False):
         """ Train the neural network on a specified dataset, during `nb_epochs`
 
         Parameters:
@@ -529,14 +534,17 @@ class ConvolutionalNeuralNetwork(object):
             Training process logging periodicity (quantity of iterations)
         save_step: integer
             Training process backing up periodicity (quantity of iterations)
+        validation_step: integer
+            Validation periodicity (quantity of iterations)
         nb_iter: integer
             Number of training iteration, overides nb_epochs if not None
         (mainly debogging purpose)
         backup_path: object
             String designing the place where must be saved the TensorFlow
         graph, summary and the model checkpoints
-        validation_step: integer
-            Validation periodicity (quantity of iterations)
+        timing: boolean
+            If true, training phase execution time is measured and stored in a json file under
+        <backup_path>/chronos/ repository
 
         """
         # If backup_path is undefined, set it with the dataset image path
@@ -589,8 +597,13 @@ class ConvolutionalNeuralNetwork(object):
                 train_fd = {self._X: X_batch, self._Y: Y_batch,
                             self._dropout: keep_proba, self._is_training: True,
                             self._batch_size: batch_size}
+                start_backp = time.time()
                 sess.run(self._optimizer, feed_dict=train_fd)
+                end_backp = time.time()
+                if timing:
+                    self._chrono["backprop"][step] = end_backp - start_backp
                 if (step + 1) % log_step == 0 or step == initial_step:
+                    start_monit = time.time()
                     s, loss, cm = sess.run([summary, self._loss, self._cm],
                                            feed_dict=train_fd)
                     train_writer.add_summary(s, step)
@@ -598,21 +611,42 @@ class ConvolutionalNeuralNetwork(object):
                                        "{:1.2f}, {:1.2f}, {:1.2f}]"
                                        "").format(step, loss, cm[0,0],
                                                   cm[0,1], cm[0,2], cm[0,3]))
+                    end_monit = time.time()
+                    if timing:
+                        self._chrono["monitoring"][step] = end_monit - start_monit
                 if (step + 1) % validation_step == 0:
+                    start_valid = time.time()
                     self.validate(batched_val_images, batched_val_labels, sess,
                                   validation_size, step + 1, summary, val_writer)
-                    # of update_summary
+                    end_valid = time.time()
+                    if timing:
+                        self._chrono["validation"][step] = end_valid - start_valid
                 if (step + 1) % save_step == 0:
+                    start_backup = time.time()
                     save_path = os.path.join(backup_path, 'checkpoints',
                                              self._network_name, 'step')
                     utils.logger.info(("Checkpoint {}-{} creation"
                                        "").format(save_path, step))
                     saver.save(sess, global_step=step, save_path=save_path)
+                    end_backup = time.time()
+                    if timing:
+                        self._chrono["backup"][step] = end_backup - start_backup
+            end_time = time.time()
+            total_time = end_time - start_time
             utils.logger.info(("Optimization Finished! Total time: {:.2f} "
-                               "seconds").format(time.time() - start_time))
+                               "seconds").format(total_time))
+            if timing:
+                self._chrono["total"] = total_time
             # Stop the thread coordinator
             coord.request_stop()
             coord.join(threads)
+            if timing:
+                chrono_dir = os.path.join(backup_path, "chronos")
+                utils.make_dir(chrono_dir)
+                chrono_file = os.path.join(chrono_dir,
+                                           self._network_name+"_chrono.json")
+                with open(chrono_file, 'w') as written_file:
+                    json.dump(self._chrono, fp=written_file, indent=4)
 
     def validate(self, batched_val_images, batched_val_labels, sess,
                  n_val_images, train_step, summary, writer):
