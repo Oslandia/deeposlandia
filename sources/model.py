@@ -393,7 +393,7 @@ class ConvolutionalNeuralNetwork(object):
         "labelX" for 1D-array calls
         """
         cmat = tf.confusion_matrix(y_true, y_pred, num_classes=2, name="cmat")
-        norm_cmat = self.normalize_cm(cmat)
+        norm_cmat = self.normalize_cm(cmat, label)
         tn = norm_cmat[0, 0]
         fp = norm_cmat[0, 1]
         fn = norm_cmat[1, 0]
@@ -409,13 +409,25 @@ class ConvolutionalNeuralNetwork(object):
             normresh_cmat = tf.concat([normresh_cmat, metrics], 1)
         return normresh_cmat
 
-    def normalize_cm(self, confusion_matrix):
+    def normalize_cm(self, confusion_matrix, label):
         """Normalize the confusion matrix tensor so as to get items comprised between 0 and 1
 
-        :param confusion_matrix: tensor - confusion matrix of shape [2, 2]
-        :return: tensor - normalized confusion matrix (shape [2, 2])
+        Parameters
+        ----------
+        confusion_matrix: tensor
+            Confusion matrix of shape [2, 2]
+        label: object
+            Reference to the label of interest (either `global` or `labelX`, with X between 0 and
+        `self._nb_labels`)
+        Return
+        ------
+        tensor
+            Normalized confusion matrix (shape [2, 2])
         """
-        normalizer = tf.multiply(self._nb_labels, self._batch_size)
+        if label == "global":
+            normalizer = tf.multiply(self._nb_labels, self._batch_size)
+        else:
+            normalizer = self._batch_size
         return tf.divide(confusion_matrix, normalizer, "norm_cmat")
 
     def compute_metrics(self, tn, fp, fn, tp, label):
