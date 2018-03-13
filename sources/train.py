@@ -34,7 +34,7 @@ import utils
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
-    parser.add_argument('-al', '--aggregate-label', action='store_true',
+    parser.add_argument('-a', '--aggregate-label', action='store_true',
                         help="Aggregate some labels")
     parser.add_argument('-b', '--batch-size', required=False, type=int,
                         nargs='?', default=20,

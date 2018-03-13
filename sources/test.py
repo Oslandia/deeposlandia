@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="Relative path towards data directory")
-    parser.add_argument('-i', '--nb-testing-image', type=int,
+    parser.add_argument('-i', '--nb-testing-image', type=int, default=5000
                         help=("Number of testing images"))
     parser.add_argument('-l', '--label-list', required=False, nargs="+",
                         default=-1, type=int,
