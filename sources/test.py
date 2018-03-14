@@ -6,6 +6,7 @@ import sys
 
 from dataset import MapillaryDataset, ShapeDataset
 from feature_detection import FeatureDetectionModel
+from semantic_segmentation import SemanticSegmentationModel
 
 import utils
 
@@ -36,6 +37,9 @@ if __name__ == '__main__':
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("Log periodicity during testing process"))
+    parser.add_argument('-M', '--model', required=True,
+                        help=("Type of model to train, either "
+                              "'feature_detection' or 'semantic_segmentation'"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"
@@ -95,16 +99,28 @@ if __name__ == '__main__':
         label_list = args.label_list
         if sum([l>=testing_dataset.get_nb_class() for l in args.label_list]) > 0:
             utils.logger.error(("Unsupported label list. Please enter a list of integers comprised"
-                                "between 0 and {}".format(nb_labels)))
+                                "between 0 and {}".format(len(label_list))))
             sys.exit(1)
-
-    # Convolutional Neural Network creation
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(testing_dataset.get_nb_class(), len(label_list)))
-    cnn = FeatureDetectionModel(network_name=args.name, image_size=image_size,
-                                nb_channels=3, nb_labels=len(label_list),
-                                netsize=network_size)
-    cnn.test(testing_dataset, labels=label_list, batch_size=min(args.batch_size, args.nb_testing_image),
-             log_step=args.log_step, backup_path=folders["output"])
 
-    sys.exit(0)
+    if args.model == "feature_detection":
+        fdm = FeatureDetectionModel(network_name=args.name, image_size=image_size,
+                                    nb_channels=3, nb_labels=len(label_list),
+                                    netsize=network_size)
+        fdm.test(testing_dataset, labels=label_list,
+                 batch_size=min(args.batch_size, args.nb_testing_image),
+                 log_step=args.log_step, backup_path=folders["output"])
+        sys.exit(0)
+    elif args.model == "semantic_segmentation":
+        ssm = FeatureDetectionModel(network_name=args.name, image_size=image_size,
+                                    nb_channels=3, nb_labels=len(label_list),
+                                    netsize=network_size)
+        ssm.test(testing_dataset, labels=label_list,
+                 batch_size=min(args.batch_size, args.nb_testing_image),
+                 log_step=args.log_step, backup_path=folders["output"])
+        sys.exit(0)
+    else:
+        utils.logger.error(("Unknown type of model. Please use "
+                            "'feature_detection' or 'semantic_segmentation'"))
+        sys.exit(1)
