@@ -5,7 +5,8 @@ import pandas as pd
 import sys
 
 from dataset import MapillaryDataset, ShapeDataset
-from model import ConvolutionalNeuralNetwork
+from feature_detection import FeatureDetectionModel
+
 import utils
 
 if __name__ == '__main__':
@@ -100,9 +101,9 @@ if __name__ == '__main__':
     # Convolutional Neural Network creation
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(testing_dataset.get_nb_class(), len(label_list)))
-    cnn = ConvolutionalNeuralNetwork(network_name=args.name, image_size=image_size,
-                                     nb_channels=3, nb_labels=len(label_list),
-                                     netsize=network_size)
+    cnn = FeatureDetectionModel(network_name=args.name, image_size=image_size,
+                                nb_channels=3, nb_labels=len(label_list),
+                                netsize=network_size)
     cnn.test(testing_dataset, labels=label_list, batch_size=min(args.batch_size, args.nb_testing_image),
              log_step=args.log_step, backup_path=folders["output"])
 

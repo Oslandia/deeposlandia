@@ -9,145 +9,27 @@ from tensorflow.python.framework import ops
 import time
 
 import dataset
+from cnn_model import ConvolutionalNeuralNetwork
 import utils
 
-class ConvolutionalNeuralNetwork(object):
+class FeatureDetectionModel(ConvolutionalNeuralNetwork):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
                  nb_labels=65, netsize="small", learning_rate=[1e-3],
                  monitoring_level=1):
         """ Class constructor
         """
-        self._network_name = network_name
-        self._image_size = image_size
-        self._nb_channels = nb_channels
-        self._nb_labels = nb_labels
-        self._value_ops = {}
-        self._update_ops = {}
-        self._X = tf.placeholder(tf.float32, name='X',
-                                 shape=[None, self._image_size,
-                                        self._image_size, self._nb_channels])
+        ConvolutionalNeuralNetwork.__init__(self, network_name, image_size, nb_channels,
+                                            nb_labels, learning_rate, monitoring_level)
         self._Y = tf.placeholder(tf.float32, name='Y',
                                  shape=[None, self._nb_labels])
-        self._dropout = tf.placeholder(tf.float32, name="dropout")
-        self._is_training = tf.placeholder(tf.bool, name="is_training")
-        self._batch_size = tf.placeholder(tf.int32, name="batch_size")
-        self._monitoring = monitoring_level
         if netsize == "small":
             self.add_layers_3_1()
         else:
             self.add_layers_6_2()
         self.compute_loss()
-        self.optimize(learning_rate)
+        self.optimize()
         self._cm = self.compute_dashboard(self._Y, self._Y_pred)
-        self._chrono = {"monitoring": {},
-                        "validation": {},
-                        "backprop": {},
-                        "backup": {}}
-
-    def create_weights(self, shape):
-        """ Create weight variables of dimension `shape`, and initialize them
-        with a random truncated normal draw; this function is typically called
-        when creating neural network layers (convolutional, fully-connected...)
-
-        Parameter:
-        ----------
-        shape: list
-            List of integers describing the weight shapes (ex: [2], [3, 5]...)
-        """
-        w = tf.Variable(tf.truncated_normal(shape,
-                                            stddev=1.0/math.sqrt(shape[0])),
-                        name="weights",
-                        trainable=True)
-        if self._monitoring >= 3:
-            tf.summary.histogram("weights", w)
-        return w
-
-    def create_biases(self, shape):
-        """ Create biases variables of dimension `shape`, and initialize them
-        as zero-constant; this function is typically called when creating
-        neural network layers (convolutional, fully-connected...)
-
-        Parameter:
-        ----------
-        shape: list
-            List of integers describing the biases shapes (ex: [2], [3, 5]...)
-        """
-        b = tf.Variable(tf.zeros(shape), name="biases", trainable=True)
-        if self._monitoring >= 3:
-            tf.summary.histogram("biases", b)
-        return b
-
-    def convolutional_layer(self, counter, is_training, input_layer,
-                            input_layer_depth, kernel_dim,
-                            layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
-        """Build a convolutional layer as a Tensorflow object,
-        for a convolutional neural network
-
-        Parameters
-        ----------
-        counter: integer
-            Convolutional layer counter (for scope name unicity)
-        is_training: tensor
-            Boolean tensor that indicates the phase (training, or not); if training, batch
-        normalization on batch statistics, otherwise batch normalization on population statistics
-        (see `tf.layers.batch_normalization()` doc)
-        input_layer: tensor
-            input tensor, i.e. the placeholder that represents input data if
-        the convolutional layer is the first of the network, the previous layer
-        output otherwise
-        input_layer_depth: integer
-            input tensor channel number (3 for RGB images, more if another
-        convolutional layer precedes the current one)
-        kernel_dim: integer
-            Dimension of the convolution kernel (only the first one, the kernel
-        being considered as squared; and its last dimensions being given by
-        previous and current layer depths)
-        layer_depth: integer
-            current layer channel number
-        strides: list
-            Dimensions of the convolution stride operation defined as [1,a,a,1]
-        where a is the shift (in pixels) between each convolution operation
-        padding: object
-            String designing the padding mode ('SAME', or 'VALID')
-        """
-        with tf.variable_scope('conv'+str(counter)) as scope:
-            w = self.create_weights([kernel_dim, kernel_dim,
-                                     input_layer_depth, layer_depth])
-            conv = tf.nn.conv2d(input_layer, w, strides=strides,
-                                padding=padding)
-            batched_conv = tf.layers.batch_normalization(conv, training=is_training)
-            relu_conv = tf.nn.relu(batched_conv, name=scope.name)
-            if self._monitoring >= 3:
-                tf.summary.histogram("conv", conv)
-                tf.summary.histogram("conv_activation", relu_conv)
-            return relu_conv
-    
-    def maxpooling_layer(self, counter, input_layer, kernel_dim,
-                         stride=2, padding='SAME'):
-        """Build a max pooling layer as a Tensorflow object,
-        into the convolutional neural network
-
-        Parameters
-        ----------
-        counter: integer
-            Max pooling layer counter (for scope name unicity)
-        input_layer: tensor
-            Pooling layer input; output of the previous layer into the network
-        kernel_dim: integer
-            Dimension `a` (in pixels) of the pooling kernel, defined as [1, a,
-        a, 1] (only squared kernels are considered)
-        stride: integer
-            Dimension `a` (in pixels) of the pooling stride, defined as [1, a,
-        a, 1], i.e. the shift between each pooling operation; we consider
-        a regular shift (horizontal shift=vertical shift)
-        padding: object
-            String designing the padding mode ('SAME', or 'VALID')
-        """
-        with tf.variable_scope('pool' + str(counter)) as scope:
-            return tf.nn.max_pool(input_layer,
-                                  ksize=[1, kernel_dim, kernel_dim, 1],
-                                  strides=[1,stride,stride,1], padding=padding)
 
     def get_last_conv_layer_dim(self, strides, last_layer_depth):
         """Consider the current layer depth as the function of previous layer
@@ -162,39 +44,6 @@ class ConvolutionalNeuralNetwork(object):
             depth of the last layer in the network
         """
         return last_layer_depth * (int(self._image_size/strides) ** 2)
-
-    def fullyconnected_layer(self, counter, is_training, input_layer,
-                             last_layer_dim, layer_depth, t_dropout=1.0):
-        """Build a fully-connected layer as a tensor, into the convolutional
-                       neural network
-
-        Parameters
-        ----------
-        counter: integer
-            fully-connected layer counter (for scope name unicity)
-        is_training: tensor
-            Boolean tensor that indicates the phase (training, or not); if training, batch
-        normalization on batch statistics, otherwise batch normalization on population statistics
-        (see `tf.layers.batch_normalization()` doc)
-        input_layer: tensor
-            Fully-connected layer input; output of the previous layer into the network
-        last_layer_dim: integer
-            previous layer depth, into the network
-        layer_depth: integer
-            full-connected layer depth
-        t_dropout: tensor
-            tensor corresponding to the neuron keeping probability during dropout operation
-        """
-        with tf.variable_scope('fc' + str(counter)) as scope:
-            reshaped = tf.reshape(input_layer, [-1, last_layer_dim])
-            w = self.create_weights([last_layer_dim, layer_depth])
-            fc = tf.matmul(reshaped, w, name="raw_fc")
-            batched_fc = tf.layers.batch_normalization(fc, training=is_training)
-            relu_fc = tf.nn.relu(batched_fc, name="relu_fc")
-            if self._monitoring >= 3:
-                tf.summary.histogram("fc", fc)
-                tf.summary.histogram("fc_activation", relu_fc)
-            return tf.nn.dropout(relu_fc, t_dropout, name='relu_with_dropout')
 
     def output_layer(self, input_layer, input_layer_dim):
         """Build an output layer to a neural network with a sigmoid final
@@ -277,26 +126,11 @@ class ConvolutionalNeuralNetwork(object):
             if self._monitoring >= 1:
                 self.add_summary(self._loss, "loss")
 
-    def optimize(self, learning_rate):
+    def optimize(self):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
 
-        Parameter
-        ---------
-        learning_rate: float or list
-            Either a constant learning rate or a list of learning rate floating components
-        (starting learning rate, decay step and decay rate)
         """
-        self._global_step = tf.Variable(0, dtype=tf.int32,
-                                        trainable=False, name='global_step')
-        if len(learning_rate) == 1:
-            self._learning_rate = learning_rate[0]
-        else:
-            self._learning_rate = tf.train.exponential_decay(learning_rate[0],
-                                                             self._global_step,
-                                                             decay_steps=learning_rate[1],
-                                                             decay_rate=learning_rate[2],
-                                                             name='learning_rate')
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
             opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
         self._optimizer = opt.minimize(self._loss, self._global_step)
@@ -740,8 +574,3 @@ class ConvolutionalNeuralNetwork(object):
                        "predictions": predictions}
         with open(os.path.join(result_dir, "inference_"+str(train_step)+".json"), "w") as f:
             json.dump(result_dict, f, allow_nan=True)
-
-    def summary(self):
-        """ Print the network architecture on the command prompt
-        """
-        pass

@@ -4,8 +4,10 @@ import os
 import pandas as pd
 import sys
 
+
 from dataset import MapillaryDataset, ShapeDataset
-from model import ConvolutionalNeuralNetwork
+from feature_detection import FeatureDetectionModel
+
 import utils
 
 if __name__ == '__main__':
@@ -198,11 +200,11 @@ if __name__ == '__main__':
                        "").format(train_dataset.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
-    cnn = ConvolutionalNeuralNetwork(network_name=instance_name, image_size=args.image_size,
-                                     nb_channels=3, nb_labels=len(label_list),
-                                     netsize=args.network_size,
-                                     learning_rate=args.learning_rate,
-                                     monitoring_level=args.monitoring)
+    cnn = FeatureDetectionModel(network_name=instance_name, image_size=args.image_size,
+                                nb_channels=3, nb_labels=len(label_list),
+                                netsize=args.network_size,
+                                learning_rate=args.learning_rate,
+                                monitoring_level=args.monitoring)
     cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
               nb_epochs=args.nb_epochs, batch_size=min(args.batch_size, args.nb_training_image),
               validation_size=args.nb_validation_image,
