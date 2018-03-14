@@ -54,31 +54,113 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
         pass
 
     def compute_loss(self):
-        """
+        """Define the loss tensor
+
         """
         pass
 
     def optimize(self):
-        """
+        """Define the optimizer; it may use a decaying learning rate following the equation
+
         """
         pass
 
-    def define_batch(self):
-        """
+    def define_batch(self, dataset, labels_of_interest, batch_size,
+                     dataset_type="training"):
+        """Insert images and labels in Tensorflow batches
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
+        labels_of_interest: list
+            List of label indices on which a model will be trained
+        batch_size: integer
+            Number of images to set in each batch
+        dataset_type: object
+            string designing the considered dataset (`training`, `validation`
+        or `testing`)
         """
         pass
 
-    def train(self):
-        """
+    def train(self, train_dataset, val_dataset, labels, keep_proba, nb_epochs,
+              batch_size=20, validation_size=200, log_step=10, save_step=100,
+              validation_step=200, nb_iter=None, backup_path=None,
+              timing=False):
+        """ Train the neural network on a specified dataset, during `nb_epochs`
+
+        Parameters:
+        -----------
+        train_dataset: Dataset
+            Dataset that will train the neural network; its `_image_size`
+        attribute must correspond to those of this class
+        validation_dataset: Dataset
+            Validation dataset, to control the training process
+        labels: list
+            List of label indices on which a model will be trained
+        keep_proba: float
+            Probability of keeping a neuron during a training step (dropout)
+        nb_epochs: integer
+            Number of training epoch (one epoch=every image have been seen by
+        the network); a larger value helps to reach higher
+        accuracy, however the training time will be increased as well
+        batch_size: integer
+            Number of image per testing batchs
+        log_step: integer
+            Training process logging periodicity (quantity of iterations)
+        save_step: integer
+            Training process backing up periodicity (quantity of iterations)
+        validation_step: integer
+            Validation periodicity (quantity of iterations)
+        nb_iter: integer
+            Number of training iteration, overides nb_epochs if not None
+        (mainly debogging purpose)
+        backup_path: object
+            String designing the place where must be saved the TensorFlow
+        graph, summary and the model checkpoints
+        timing: boolean
+            If true, training phase execution time is measured and stored in a json file under
+        <backup_path>/chronos/ repository
+
         """
         pass
 
-    def validate(self):
-        """
+    def validate(self, batched_val_images, batched_val_labels, sess,
+                 n_val_images, train_step, summary, writer):
+        """ Validate the trained neural network on a validation dataset
+
+        Parameters:
+        -----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        attribute must correspond to those of this class
+        labels: list
+        sess: tf.Session
+        n_val_images: integer
+        train_step: integer
+        summary: tf.summary
+        writer: tf.fileWriter
+
         """
         pass
 
-    def test(self):
-        """
+    def test(self, dataset, labels, batch_size=20, log_step=10, backup_path=None):
+        """ Test the trained neural network on a testing dataset
+
+        Parameters:
+        -----------
+        dataset: Dataset
+            Dataset that will feed the neural network; its `_image_size`
+        labels: list
+            List of label indices on which a model will be trained
+        batch_size: integer
+            Number of image per testing batchs
+        log_step: integer
+            Training process logging periodicity (quantity of iterations)
+        backup_path: object
+            String designing the place where must be saved the TensorFlow
+        graph, summary and the model checkpoints
+
         """
         pass
