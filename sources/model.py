@@ -762,8 +762,8 @@ class ConvolutionalNeuralNetwork(object):
                 test_fd = {self._X: X_test_batch, self._Y: Y_test_batch,
                             self._dropout: 1.0, self._is_training: False,
                             self._batch_size: batch_size}
-                y_raw_pred[step:step+batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
-                y_pred[step:step+batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
+                y_raw_pred[step*batch_size:(step+1)*batch_size,:] = sess.run(self._Y_raw_predict, feed_dict=test_fd)
+                y_pred[step*batch_size:(step+1)*batch_size,:] = sess.run(self._Y_pred, feed_dict=test_fd)
             utils.logger.info(("Inference finished! Total time: {:.2f} "
                                "seconds").format(time.time() - start_time))
 
