@@ -170,6 +170,55 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
                 tf.summary.histogram("conv_activation", relu_conv)
             return relu_conv
     
+    def convolution_transposal_layer(self, counter, is_training, input_layer,
+                                     input_layer_depth, kernel_dim,
+                                     layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
+        """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
+        network
+
+        Parameters
+        ----------
+        counter: integer
+            Convolutional layer counter (for scope name unicity)
+        is_training: tensor
+            Boolean tensor that indicates the phase (training, or not); if training, batch
+        normalization on batch statistics, otherwise batch normalization on population statistics
+        (see `tf.layers.batch_normalization()` doc)
+        input_layer: tensor
+            input tensor, i.e. the placeholder that represents input data if
+        the convolutional layer is the first of the network, the previous layer
+        output otherwise
+        input_layer_depth: integer
+            input tensor channel number (3 for RGB images, more if another
+        convolutional layer precedes the current one)
+        kernel_dim: integer
+            Dimension of the convolution kernel (only the first one, the kernel
+        being considered as squared; and its last dimensions being given by
+        previous and current layer depths)
+        layer_depth: integer
+            current layer channel number
+        strides: list
+            Dimensions of the convolution stride operation defined as [1,a,a,1]
+        where a is the shift (in pixels) between each convolution operation
+        padding: object
+            String designing the padding mode ('SAME', or 'VALID')
+
+        """
+        with tf.variable_scope('transconv'+str(counter)) as scope:
+            w = self.create_weights([kernel_dim, kernel_dim,
+                                     layer_depth, input_layer_depth])
+            batch_size = tf.shape(input_layer)[0]
+            layer_size = strides[1] * tf.shape(input_layer)[1]
+            tconv = tf.nn.conv2d_transpose(input_layer, w,
+                                           output_shape=[batch_size, layer_size, layer_size, layer_depth],
+                                           strides=strides, padding=padding)
+            batched_tconv = tf.layers.batch_normalization(tconv, training=is_training)
+            relu_tconv = tf.nn.relu(batched_tconv, name=scope.name)
+            if self._monitoring >= 3:
+                tf.summary.histogram("tconv", tconv)
+                tf.summary.histogram("tconv_activation", relu_tconv)
+            return relu_tconv
+
     def maxpooling_layer(self, counter, input_layer, kernel_dim,
                          stride=2, padding='SAME'):
         """Build a max pooling layer as a Tensorflow object,
