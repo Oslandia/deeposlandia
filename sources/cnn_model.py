@@ -279,6 +279,21 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
             return tf.nn.dropout(relu_fc, t_dropout, name='relu_with_dropout')
 
     @abc.abstractmethod
+    def output_layer(self, input_layer, input_layer_dim):
+        """Build an output layer to a neural network with a sigmoid final
+        activation function; return final network scores (logits) as well
+        as predictions
+
+        Parameters
+        ----------
+        input_layer: tensor
+            Previous layer within the neural network (last hidden layer)
+        input_layer_dim: integer
+            Dimension of the previous neural network layer
+        """
+        return
+
+    @abc.abstractmethod
     def compute_loss(self):
         """Define the loss tensor
 
@@ -289,6 +304,27 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
     def optimize(self):
         """Define the optimizer; it may use a decaying learning rate following the equation
 
+        """
+        return
+
+    @abc.abstractmethod
+    def compute_dashboard(self, y_true, y_pred, label="wrapper"):
+        """Compute the global confusion matrix (`y_true` and `y_pred`
+        considered as one-dimension arrays) and the per-label confusion matrix;
+        recursive algorithm that decomposes a 2D-array in multiple 1D-array;
+        return a [1, -1]-shaped array
+
+        Parameters:
+        -----------
+        y_true: tensor
+            True values of y, 1D- or 2D-array (if 2D, trigger a recursive call)
+        y_pred: tensor
+            Predicted values of y, 1D- or 2D-array (if 2D, trigger a recursive
+        call)
+        label: object
+            String designing the label for which confusion matrix is computed:
+        "wrapper" for 2D-array calls (default value), either "global" or
+        "labelX" for 1D-array calls
         """
         return
 
