@@ -43,7 +43,7 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
                                             nb_labels, learning_rate, monitoring_level)
         self._Y = tf.placeholder(tf.int8, name='Y',
                                  shape=[None, self._image_size,
-                                        self._image_size, self._nb_channels])
+                                        self._image_size, self.get_nb_labels()])
         self.add_layers()
         self.compute_loss()
         self.optimize()
