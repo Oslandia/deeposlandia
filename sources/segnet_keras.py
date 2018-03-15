@@ -30,8 +30,7 @@ print("VALIDATION STEPS {}".format(VALIDATION_STEPS))
 CLASSES = 11
 EPOCHS = 30
 DATADIR = "../data/mapillary"
-OUTPUT_DIR = osp.join(DATADIR, 'segnet-output', 'run-{}'.format(_now.strftime("%Y-%m-%dT%H:%M")))
-OUTPUT_DIR = OUTPUT_DIR
+OUTPUT_DIR = osp.join(DATADIR, 'semantic_segmentation', 'run-{}'.format(_now.strftime("%Y-%m-%dT%H:%M")))
 CONFIG = osp.join(DATADIR, 'config_aggregate.json')
 TRAINING = osp.join(DATADIR, "training_aggregate_{}".format(SIZE))
 VALIDATION = osp.join(DATADIR, "validation_aggregate_{}".format(SIZE))
