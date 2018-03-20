@@ -34,6 +34,8 @@ import utils
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
                                                   "ork on street-scene images"))
+    parser.add_argument('-a', '--aggregate-label', action='store_true',
+                        help="Aggregate some labels")
     parser.add_argument('-b', '--batch-size', required=False, type=int,
                         nargs='?', default=20,
                         help=("Number of images that must be contained "
@@ -49,6 +51,10 @@ if __name__ == '__main__':
                         default=-1, type=int,
                         help=("List of label indices that "
                               "will be considered during testing process"))
+    parser.add_argument('-M', '--model',
+                        help=("Research problem that is addressed, "
+                              "either 'feature_detection' or "
+                              "'semantic_segmentation'"))
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("Log periodicity during testing process"))
@@ -56,11 +62,13 @@ if __name__ == '__main__':
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"
                               "expected format: "
-                              "<instance-name>_<image-size>_<network-size>"))
+                              "<instance-name>_<image-size>_<network-size>_"
+                              "<batch-size>_<full/aggregated>_<dropout-rate>_"
+                              "<learning-rate>"))
     args = parser.parse_args()
 
     # instance name decomposition (instance name = name + image size + network size)
-    _, image_size, network_size = args.name.split('_')
+    _, image_size, network_size, _, aggregate_value, _, _ = args.name.split('_')
     image_size = int(image_size)
 
     if image_size > 1024:
@@ -73,15 +81,20 @@ if __name__ == '__main__':
                             "Please choose 'small' or 'medium'."))
         sys.exit(1)
 
+    if not args.model in ["feature_detection", "semantic_segmentation"]:
+        utils.logger.error("Unsupported model. Please consider ")
+        utils.logger.utils(("'feature_detection' or 'semantic_segmentation'"))
+        sys.exit(1)
+
     # Data path and repository management
-    dataset_repo = os.path.join(args.datapath, args.dataset)
-    testing_name = "testing_" + str(image_size)
-    os.makedirs(os.path.join(dataset_repo, testing_name, "images"), exist_ok=True)
-    testing_filename = os.path.join(dataset_repo, testing_name + '.json')
+    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
+                                    image_size, args.model)
 
     # Dataset creation
     if args.dataset == "mapillary":
-        testing_dataset = Dataset(image_size, os.path.join(args.datapath, args.dataset, "config.json"))
+        config_name = "config.json" if aggregate_value == 'full' else "config_aggregate.json"
+        config_path = os.path.join(folders["input"], config_name)
+        testing_dataset = Dataset(image_size, config_path)
     elif args.dataset == "shapes":
         testing_dataset = ShapeDataset(image_size, 3)
     else:
@@ -89,12 +102,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
-    if os.path.isfile(testing_filename):
-        testing_dataset.load(testing_filename, args.nb_testing_image)
+    if os.path.isfile(folders["testing_config"]):
+        testing_dataset.load(folders["testing_config"], args.nb_testing_image)
     else:
-        testing_dataset.populate(os.path.join(args.datapath, args.dataset, testing_name),
+        input_image_dir = os.path.join(folders["input"], "testing")
+        testing_dataset.populate(folders["prepro_testing"], input_image_dir,
                                  nb_images=args.nb_testing_image, labelling=False)
-        testing_dataset.save(testing_filename)
+        testing_dataset.save(folders["testing_config"])
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
@@ -113,6 +127,6 @@ if __name__ == '__main__':
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=network_size)
     cnn.test(testing_dataset, labels=label_list, batch_size=min(args.batch_size, args.nb_testing_image),
-             log_step=args.log_step, backup_path=dataset_repo)
+             log_step=args.log_step, backup_path=folders["output"])
 
     sys.exit(0)

@@ -588,7 +588,7 @@ class ConvolutionalNeuralNetwork(object):
         # Set up merged summary
         summary = tf.summary.merge_all()
         # Create tensorflow graph
-        graph_path = os.path.join(backup_path, 'graph', self._network_name)
+        graph_path = os.path.join(backup_path, 'logs', self._network_name)
         train_writer = tf.summary.FileWriter(os.path.join(graph_path, "training"))
         val_writer = tf.summary.FileWriter(os.path.join(graph_path, "validation"))
         # Create folders to store checkpoints
