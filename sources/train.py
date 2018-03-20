@@ -176,10 +176,11 @@ if __name__ == '__main__':
     os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
     os.makedirs(backup_path, exist_ok=True)
 
-    # Instance name (name + image size + network size + batch_size + aggregate? + dropout + learning_rate)
-    instance_name = (args.name + "_" + str(args.image_size) + "_" + args.network_size
-                     + "_" + str(args.batch_size) + "_" + aggregate_value
-                     + "_" + str(args.dropout) + "_" + utils.list_to_str(args.learning_rate))
+    # Instance name (name + image size + network size + batch_size + aggregate? + dropout +
+    # learning_rate)
+    instance_args = [args.name, args.image_size, args.network_size, args.batch_size,
+                     aggregate_value, args.dropout, utils.list_to_str(args.learning_rate)]
+    instance_name = utils.list_to_str(instance_args, "_")
 
     # Dataset creation
     if args.dataset == "mapillary":
