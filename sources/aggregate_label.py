@@ -25,8 +25,15 @@ def _split_object_label(df):
       - car
       - others
 
-    :param df: pandas dataframe - Mapillary labels
-    :return: pandas dataframe - modified Mapillary labels
+    Parameters
+    ----------
+    df : pandas dataframe
+        Mapillary labels
+
+    Returns
+    -------
+    pandas dataframe
+        Modified Mapillary labels
     """
     df = df.copy()
     mask_vehicle = df['name'].str.split('--').apply(lambda x: 'vehicle' in x)
@@ -43,8 +50,15 @@ def _split_construction_label(df):
     - flat
     - barrier
 
-    :param df: pandas dataframe - Mapillary labels
-    :return: pandas dataframe - modified Mapillary labels
+    Parameters
+    ----------
+    df : pandas dataframe
+        Mapillary labels
+
+    Returns
+    -------
+    pandas dataframe
+        Modified Mapillary labels
     """
     df = df.copy()
     mask_barrier = df['name'].str.split('--').apply(lambda x: 'barrier' in x)
@@ -57,8 +71,15 @@ def _split_construction_label(df):
 def read_config(datadir):
     """Read the mapillary configuration JSON file
 
-    :param datadir: string - path to data repository
-    :return: dict - Mapillary glossary
+    Parameters
+    ----------
+    datadir : string
+        Path to data repository
+
+    Returns
+    -------
+    dict
+        Mapillary glossary
     """
     with open(os.path.join(datadir, DATASET, 'config.json'), 'r') as fobj:
         return json.load(fobj)
@@ -69,8 +90,15 @@ def config_as_dataframe(config):
 
     Add some metadata. Group some labels (in order to have less classes)
 
-    :param config: dict - Mapillary glossary
-    :return: pandas dataframe - Mapillary labels
+    Parameters
+    ----------
+    config : dict
+        Mapillary glossary
+
+    Returns
+    -------
+    pandas dataframe
+        Mapillary labels
     """
     df = pd.DataFrame(config['labels'])
     df['id'] = range(df.shape[0])

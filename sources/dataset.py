@@ -189,11 +189,17 @@ class Dataset(object):
     def _preprocess(self, image_filename, output_dir, aggregate, labelling=True):
         """Resize/crop then save the training & label images
 
-        :param image_filaname: str
-        :param output_dir: str
-        :param aggregate: boolean
-        :param labelling: boolean
-        :return: dict - Key/values with the filenames and label ids
+        Parameters
+        ----------
+        datadir : str
+        image_filaname : str
+        aggregate : boolean
+        labelling : boolean
+        
+        Returns
+        -------
+        dict
+            Key/values with the filenames and label ids
         """
         # open original images
         img_in = Image.open(image_filename)
