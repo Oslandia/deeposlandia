@@ -74,6 +74,10 @@ if __name__ == '__main__':
                         help=("Monitoring level: 0=no monitoring, 1=monitor"
                               " important scalar variables, 2=monitor all "
                               "scalar variables, 3=full-monitoring"))
+    parser.add_argument('-M', '--model',
+                        help=("Research problem that is addressed, "
+                              "either 'feature_detection' or "
+                              "'semantic_segmentation'"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
@@ -150,27 +154,39 @@ if __name__ == '__main__':
                             "'medium' values"))
         sys.exit(1)
 
-    # Instance name (name + image size + network size)
-    instance_name = args.name + "_" + str(args.image_size) + "_" + args.network_size
+    if not args.model in ["feature_detection", "semantic_segmentation"]:
+        utils.logger.error("Unsupported model. Please consider ")
+        utils.logger.utils(("'feature_detection' or 'semantic_segmentation'"))
+        sys.exit(1)
+
     # Data path and repository management
     dataset_repo = os.path.join(args.datapath, args.dataset)
-    suffix = "" if not args.aggregate_label else "aggregate_"
-    training_name = "training_" + suffix + str(args.image_size)
-    validation_name = "validation_" + suffix + str(args.image_size)
-    os.makedirs(os.path.join(dataset_repo, training_name, 'images'), exist_ok=True)
-    os.makedirs(os.path.join(dataset_repo, training_name, 'labels'), exist_ok=True)
-    os.makedirs(os.path.join(dataset_repo, validation_name, 'images'), exist_ok=True)
-    os.makedirs(os.path.join(dataset_repo, validation_name, 'labels'), exist_ok=True)
-    training_filename = os.path.join(dataset_repo, training_name + '.json')
-    validation_filename = os.path.join(dataset_repo, validation_name + '.json')
+    input_repo = os.path.join(dataset_repo, "input")
+    aggregate_value = "full" if not args.aggregate_label else "aggregate"
+    preprocessed_repo = str(args.image_size) + "_" + aggregate_value
+    preprocessed_path = os.path.join(dataset_repo, "preprocessed", preprocessed_repo)
+    training_filename = os.path.join(preprocessed_path, "training.json")
+    validation_filename = os.path.join(preprocessed_path, "validation.json")
+    preprocessed_training_path = os.path.join(preprocessed_path, "training")
+    preprocessed_validation_path = os.path.join(preprocessed_path, "validation")
+    backup_path = os.path.join(dataset_repo, "output", args.model)
+    os.makedirs(os.path.join(preprocessed_training_path, "images"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_training_path, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
+    os.makedirs(backup_path, exist_ok=True)
+
+    # Instance name (name + image size + network size + batch_size + aggregate? + dropout + learning_rate)
+    instance_name = (args.name + "_" + str(args.image_size) + "_" + args.network_size
+                     + "_" + str(args.batch_size) + "_" + aggregate_value
+                     + "_" + str(args.dropout) + "_" + str(args.learning_rate))
 
     # Dataset creation
-    config = 'config.json'
-    if args.aggregate_label:
-        config = 'config_aggregate.json'
     if args.dataset == "mapillary":
-        train_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, config))
-        validation_dataset = Dataset(args.image_size, os.path.join(args.datapath, args.dataset, config))
+        config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
+        config_path = os.path.join(input_repo, config_name)
+        train_dataset = Dataset(args.image_size, config_path)
+        validation_dataset = Dataset(args.image_size, config_path)
     elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size, 3)
         validation_dataset = ShapeDataset(args.image_size, 3)
@@ -182,14 +198,16 @@ if __name__ == '__main__':
     if os.path.isfile(training_filename):
         train_dataset.load(training_filename, args.nb_training_image)
     else:
-        train_dataset.populate(os.path.join(args.datapath, args.dataset, training_name),
+        input_image_dir = os.path.join(input_repo, "training")
+        train_dataset.populate(input_image_dir, preprocessed_training_path,
                                nb_images=args.nb_training_image,
                                aggregate=args.aggregate_label)
         train_dataset.save(training_filename)
     if os.path.isfile(validation_filename):
         validation_dataset.load(validation_filename, args.nb_validation_image)
     else:
-        validation_dataset.populate(os.path.join(args.datapath, args.dataset, validation_name),
+        input_image_dir = os.path.join(input_repo, "validation")
+        validation_dataset.populate(input_image_dir, preprocessed_validation_path,
                                     nb_images=args.nb_validation_image,
                                     aggregate=args.aggregate_label)
         validation_dataset.save(validation_filename)
@@ -224,5 +242,5 @@ if __name__ == '__main__':
               validation_size=args.nb_validation_image,
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,
-              backup_path=dataset_repo, timing=args.chrono)
+              backup_path=backup_path, timing=args.chrono)
     sys.exit(0)

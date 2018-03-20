@@ -186,11 +186,11 @@ class Dataset(object):
                 a[mask] = root_id
         return Image.fromarray(a, mode=image.mode)
 
-    def _preprocess(self, datadir, image_filename, aggregate, labelling=True):
+    def _preprocess(self, image_filename, output_dir, aggregate, labelling=True):
         """Resize/crop then save the training & label images
 
-        :param datadir: str
         :param image_filaname: str
+        :param output_dir: str
         :param aggregate: boolean
         :param labelling: boolean
         :return: dict - Key/values with the filenames and label ids
@@ -206,7 +206,7 @@ class Dataset(object):
         final_img_in = utils.mono_crop_image(img_in, crop_pix)
 
         # save final image
-        new_in_filename = os.path.join(datadir, 'images', image_filename.split('/')[-1])
+        new_in_filename = os.path.join(output_dir, 'images', image_filename.split('/')[-1])
         final_img_in.save(new_in_filename)
 
         # label_filename vs label image
@@ -221,7 +221,7 @@ class Dataset(object):
                 final_img_out = self.group_image_label(final_img_out)
 
             labels = utils.mapillary_label_building(final_img_out, self.label_ids)
-            new_out_filename = os.path.join(datadir, 'labels', label_filename.split('/')[-1])
+            new_out_filename = os.path.join(output_dir, 'labels', label_filename.split('/')[-1])
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
@@ -232,14 +232,15 @@ class Dataset(object):
                 "label_filename": new_out_filename,
                 "labels": labels}
 
-    def populate(self, datadir, nb_images=None, aggregate=False, labelling=True):
+    def populate(self, input_dir, output_dir, nb_images=None, aggregate=False, labelling=True):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
         ----------
-        datadir : object
-            String designing the relative path of the directory that contains
-        new images
+        input_dir : str
+            Path of the directory that contains input images
+        output_dir : str
+            Path of the directory where the preprocessed image must be saved
         nb_images : integer
             Number of images to be considered in the dataset; if None, consider the whole
         repository
@@ -248,13 +249,10 @@ class Dataset(object):
         labelling: boolean
             If True labels are recovered from dataset, otherwise dummy label are generated
         """
-        raw_datadir, folder = os.path.split(datadir)
-        raw_datadir = os.path.join(raw_datadir, folder.split('_')[0])
-        image_dir = os.path.join(raw_datadir, "images")
-        image_list = os.listdir(image_dir)[:nb_images]
-        image_list_longname = [os.path.join(image_dir, l) for l in image_list]
+        image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
+        image_list_longname = [os.path.join(input_dir, "images", l) for l in image_list]
         with Pool() as p:
-            labels = p.starmap(self._preprocess, [(datadir, x, aggregate, labelling) for x in image_list_longname])
+            labels = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling) for x in image_list_longname])
         self.image_info = {k: v for k,v in enumerate(labels)}
 
     def save(self, filename):
