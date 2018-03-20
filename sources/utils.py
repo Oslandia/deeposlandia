@@ -377,3 +377,18 @@ def split_list(l, nb_partitions):
     """
     return [l[i:(i+len(l)/nb_partitions)]
             for i in range(0, len(l), int(len(l)/nb_partitions))]
+
+def list_to_str(l):
+    """Transform the input list into a ready-to-print string
+
+    Parameters
+    ----------
+    l: list
+        Input list that must be transformed
+
+    Returns
+    -------
+    str
+        Printable version of input list
+    """
+    return '-'.join([str(i) for i in l])

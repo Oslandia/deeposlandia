@@ -179,7 +179,7 @@ if __name__ == '__main__':
     # Instance name (name + image size + network size + batch_size + aggregate? + dropout + learning_rate)
     instance_name = (args.name + "_" + str(args.image_size) + "_" + args.network_size
                      + "_" + str(args.batch_size) + "_" + aggregate_value
-                     + "_" + str(args.dropout) + "_" + str(args.learning_rate))
+                     + "_" + str(args.dropout) + "_" + utils.list_to_str(args.learning_rate))
 
     # Dataset creation
     if args.dataset == "mapillary":
