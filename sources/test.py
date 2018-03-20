@@ -62,7 +62,9 @@ if __name__ == '__main__':
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"
                               "expected format: "
-                              "<instance-name>_<image-size>_<network-size>"))
+                              "<instance-name>_<image-size>_<network-size>_"
+                              "<batch-size>_<full/aggregated>_<dropout-rate>_"
+                              "<learning-rate>"))
     args = parser.parse_args()
 
     # instance name decomposition (instance name = name + image size + network size)
