@@ -394,3 +394,50 @@ def list_to_str(seq, sep='-'):
         Printable version of input list
     """
     return sep.join(str(i) for i in seq)
+
+def prepare_folders(datapath, dataset, aggregate_value, image_size, model):
+    """Data path and repository management ; create all the folders needed to accomplish the
+    current instance training/testing
+
+    Parameters
+    ----------
+    datapath : str
+        Data root directory, contain all used the datasets
+    dataset : str
+        Dataset name, *e.g.* `mapillary` or `shapes`
+    aggregate_value : str
+        Indicates the label aggregation status, either `full` or `aggregated`
+    image_size : int
+        Size of the considered images (height and width are equal)
+    model : str
+        Research problem that is tackled, *e.g.* `feature_detection` or `semantic_segmentation`
+
+    Returns
+    -------
+    dict
+        All the meaningful folders and dataset configuration file as a dictionary
+    """
+    dataset_repo = os.path.join(datapath, dataset)
+    input_repo = os.path.join(dataset_repo, "input")
+    preprocessed_repo = str(image_size) + "_" + aggregate_value
+    preprocessed_path = os.path.join(dataset_repo, "preprocessed", preprocessed_repo)
+    training_filename = os.path.join(preprocessed_path, "training.json")
+    validation_filename = os.path.join(preprocessed_path, "validation.json")
+    testing_filename = os.path.join(preprocessed_path, "testing.json")
+    preprocessed_training_path = os.path.join(preprocessed_path, "training")
+    preprocessed_validation_path = os.path.join(preprocessed_path, "validation")
+    preprocessed_testing_path = os.path.join(preprocessed_path, "testing")
+    backup_path = os.path.join(dataset_repo, "output", model)
+    os.makedirs(os.path.join(preprocessed_training_path, "images"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_training_path, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
+    os.makedirs(backup_path, exist_ok=True)
+    return {"input": input_repo,
+            "prepro_training": preprocessed_training_path,
+            "prepro_validation": preprocessed_validation_path,
+            "prepro_testing": preprocessed_testing_path,
+            "training_config": training_filename,
+            "validation_config": validation_filename,
+            "testing_config": testing_filename,
+            "output": backup_path}

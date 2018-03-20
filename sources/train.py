@@ -160,21 +160,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Data path and repository management
-    dataset_repo = os.path.join(args.datapath, args.dataset)
-    input_repo = os.path.join(dataset_repo, "input")
-    aggregate_value = "full" if not args.aggregate_label else "aggregate"
-    preprocessed_repo = str(args.image_size) + "_" + aggregate_value
-    preprocessed_path = os.path.join(dataset_repo, "preprocessed", preprocessed_repo)
-    training_filename = os.path.join(preprocessed_path, "training.json")
-    validation_filename = os.path.join(preprocessed_path, "validation.json")
-    preprocessed_training_path = os.path.join(preprocessed_path, "training")
-    preprocessed_validation_path = os.path.join(preprocessed_path, "validation")
-    backup_path = os.path.join(dataset_repo, "output", args.model)
-    os.makedirs(os.path.join(preprocessed_training_path, "images"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_training_path, "labels"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
-    os.makedirs(backup_path, exist_ok=True)
+    aggregate_value = "full" if not args.aggregate_label else "aggregated"
+    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
+                                    args.image_size, args.model)
 
     # Instance name (name + image size + network size + batch_size + aggregate? + dropout +
     # learning_rate)
@@ -185,7 +173,7 @@ if __name__ == '__main__':
     # Dataset creation
     if args.dataset == "mapillary":
         config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
-        config_path = os.path.join(input_repo, config_name)
+        config_path = os.path.join(folders["input"], config_name)
         train_dataset = Dataset(args.image_size, config_path)
         validation_dataset = Dataset(args.image_size, config_path)
     elif args.dataset == "shapes":
@@ -196,22 +184,22 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
-    if os.path.isfile(training_filename):
-        train_dataset.load(training_filename, args.nb_training_image)
+    if os.path.isfile(folders["training_config"]):
+        train_dataset.load(folders["training_config"], args.nb_training_image)
     else:
-        input_image_dir = os.path.join(input_repo, "training")
-        train_dataset.populate(preprocessed_training_path, input_image_dir,
+        input_image_dir = os.path.join(folders["input"], "training")
+        train_dataset.populate(folders["prepro_training"], input_image_dir,
                                nb_images=args.nb_training_image,
                                aggregate=args.aggregate_label)
-        train_dataset.save(training_filename)
-    if os.path.isfile(validation_filename):
-        validation_dataset.load(validation_filename, args.nb_validation_image)
+        train_dataset.save(folders["training_config"])
+    if os.path.isfile(folders["validation_config"]):
+        validation_dataset.load(folders["validation_config"], args.nb_validation_image)
     else:
-        input_image_dir = os.path.join(input_repo, "validation")
-        validation_dataset.populate(preprocessed_validation_path, input_image_dir,
+        input_image_dir = os.path.join(folders["input"], "validation")
+        validation_dataset.populate(folders["prepro_validation"], input_image_dir,
                                     nb_images=args.nb_validation_image,
                                     aggregate=args.aggregate_label)
-        validation_dataset.save(validation_filename)
+        validation_dataset.save(folders["validation_config"])
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
@@ -243,5 +231,5 @@ if __name__ == '__main__':
               validation_size=args.nb_validation_image,
               nb_iter=args.training_limit, log_step=args.log_step,
               save_step=args.save_step, validation_step=args.validation_step,
-              backup_path=backup_path, timing=args.chrono)
+              backup_path=folders["output"], timing=args.chrono)
     sys.exit(0)

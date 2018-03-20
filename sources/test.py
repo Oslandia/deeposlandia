@@ -85,20 +85,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Data path and repository management
-    dataset_repo = os.path.join(args.datapath, args.dataset)
-    input_repo = os.path.join(dataset_repo, "input")
-    preprocessed_repo = str(image_size) + "_" + aggregate_value
-    preprocessed_path = os.path.join(dataset_repo, "preprocessed", preprocessed_repo)
-    testing_filename = os.path.join(preprocessed_path, "testing.json")
-    preprocessed_testing_path = os.path.join(preprocessed_path, "testing")
-    backup_path = os.path.join(dataset_repo, "output", args.model)
-    os.makedirs(os.path.join(preprocessed_testing_path, "images"), exist_ok=True)
-    os.makedirs(backup_path, exist_ok=True)
+    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
+                                    image_size, args.model)
 
     # Dataset creation
     if args.dataset == "mapillary":
         config_name = "config.json" if aggregate_value == 'full' else "config_aggregate.json"
-        config_path = os.path.join(input_repo, config_name)
+        config_path = os.path.join(folders["input"], config_name)
         testing_dataset = Dataset(image_size, config_path)
     elif args.dataset == "shapes":
         testing_dataset = ShapeDataset(image_size, 3)
@@ -107,13 +100,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
-    if os.path.isfile(testing_filename):
-        testing_dataset.load(testing_filename, args.nb_testing_image)
+    if os.path.isfile(folders["testing_config"]):
+        testing_dataset.load(folders["testing_config"], args.nb_testing_image)
     else:
-        input_image_dir = os.path.join(input_repo, "testing")
-        testing_dataset.populate(preprocessed_testing_path, input_image_dir,
+        input_image_dir = os.path.join(folders["input"], "testing")
+        testing_dataset.populate(folders["prepro_testing"], input_image_dir,
                                  nb_images=args.nb_testing_image, labelling=False)
-        testing_dataset.save(testing_filename)
+        testing_dataset.save(folders["testing_config"])
 
     # Glossary management (are all the labels required?)
     if args.label_list == -1:
@@ -132,6 +125,6 @@ if __name__ == '__main__':
                                      nb_channels=3, nb_labels=len(label_list),
                                      netsize=network_size)
     cnn.test(testing_dataset, labels=label_list, batch_size=min(args.batch_size, args.nb_testing_image),
-             log_step=args.log_step, backup_path=backup_path)
+             log_step=args.log_step, backup_path=folders["output"])
 
     sys.exit(0)
