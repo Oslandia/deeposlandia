@@ -232,15 +232,15 @@ class Dataset(object):
                 "label_filename": new_out_filename,
                 "labels": labels}
 
-    def populate(self, input_dir, output_dir, nb_images=None, aggregate=False, labelling=True):
+    def populate(self, output_dir, input_dir, nb_images=None, aggregate=False, labelling=True):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
         ----------
-        input_dir : str
-            Path of the directory that contains input images
         output_dir : str
             Path of the directory where the preprocessed image must be saved
+        input_dir : str
+            Path of the directory that contains input images
         nb_images : integer
             Number of images to be considered in the dataset; if None, consider the whole
         repository
@@ -340,13 +340,15 @@ class ShapeDataset(Dataset):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
-    def populate(self, datapath, nb_images=10000, aggregate=False, labelling=True, buf=8):
+    def populate(self, output_dir, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
        Parameter:
         ----------
-        datapath: object
-            String designing the relative path of the directory that contains new images
+        output_dir : str
+            Path of the directory where the preprocessed image must be saved
+        input_dir : str
+            Path of the directory that contains input images
         nb_images: integer
             Number of images that must be added in the dataset
         aggregate: bool
@@ -369,7 +371,7 @@ class ShapeDataset(Dataset):
                 else:
                     shape_specs.append([None, None, None, None])
             self.add_image(i, bg_color, shape_specs, image_label)
-            self.draw_image(i, datapath)
+            self.draw_image(i, output_dir)
         self.compute_mean_pixel()
 
     def add_image(self, image_id, background, specifications, labels):

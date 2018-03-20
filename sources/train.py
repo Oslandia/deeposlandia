@@ -200,7 +200,7 @@ if __name__ == '__main__':
         train_dataset.load(training_filename, args.nb_training_image)
     else:
         input_image_dir = os.path.join(input_repo, "training")
-        train_dataset.populate(input_image_dir, preprocessed_training_path,
+        train_dataset.populate(preprocessed_training_path, input_image_dir,
                                nb_images=args.nb_training_image,
                                aggregate=args.aggregate_label)
         train_dataset.save(training_filename)
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         validation_dataset.load(validation_filename, args.nb_validation_image)
     else:
         input_image_dir = os.path.join(input_repo, "validation")
-        validation_dataset.populate(input_image_dir, preprocessed_validation_path,
+        validation_dataset.populate(preprocessed_validation_path, input_image_dir,
                                     nb_images=args.nb_validation_image,
                                     aggregate=args.aggregate_label)
         validation_dataset.save(validation_filename)

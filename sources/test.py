@@ -111,7 +111,7 @@ if __name__ == '__main__':
         testing_dataset.load(testing_filename, args.nb_testing_image)
     else:
         input_image_dir = os.path.join(input_repo, "testing")
-        testing_dataset.populate(input_image_dir, preprocessed_testing_path,
+        testing_dataset.populate(preprocessed_testing_path, input_image_dir,
                                  nb_images=args.nb_testing_image, labelling=False)
         testing_dataset.save(testing_filename)
 
