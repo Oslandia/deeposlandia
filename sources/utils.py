@@ -379,12 +379,12 @@ def split_list(l, nb_partitions):
             for i in range(0, len(l), int(len(l)/nb_partitions))]
 
 def list_to_str(seq, sep='-'):
-    """Transform the input list into a ready-to-print string
+    """Transform the input sequence into a ready-to-print string
 
     Parameters
     ----------
-    seq : list
-        Input list that must be transformed
+    seq : list, tuple, dict
+        Input sequence that must be transformed
     sep : str
         Separator that must appears between each `seq` items
 
