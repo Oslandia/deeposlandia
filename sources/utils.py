@@ -378,17 +378,19 @@ def split_list(l, nb_partitions):
     return [l[i:(i+len(l)/nb_partitions)]
             for i in range(0, len(l), int(len(l)/nb_partitions))]
 
-def list_to_str(l):
+def list_to_str(seq, sep='-'):
     """Transform the input list into a ready-to-print string
 
     Parameters
     ----------
-    l: list
+    seq : list
         Input list that must be transformed
+    sep : str
+        Separator that must appears between each `seq` items
 
     Returns
     -------
     str
         Printable version of input list
     """
-    return '-'.join([str(i) for i in l])
+    return sep.join(str(i) for i in seq)
