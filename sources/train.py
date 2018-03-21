@@ -149,14 +149,14 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if not args.network_size in ["small", "medium"]:
-        utils.logger.error("Unsupported network size description")
-        utils.logger.utils(("Please use this parameter with 'small' or "
+        utils.logger.error(("Unsupported network size description"
+                            "Please use this parameter with 'small' or "
                             "'medium' values"))
         sys.exit(1)
 
     if not args.model in ["feature_detection", "semantic_segmentation"]:
-        utils.logger.error("Unsupported model. Please consider ")
-        utils.logger.utils(("'feature_detection' or 'semantic_segmentation'"))
+        utils.logger.error(("Unsupported model. Please consider "
+                            "'feature_detection' or 'semantic_segmentation'"))
         sys.exit(1)
 
     # Data path and repository management
