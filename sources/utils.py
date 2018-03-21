@@ -432,6 +432,7 @@ def prepare_folders(datapath, dataset, aggregate_value, image_size, model):
     os.makedirs(os.path.join(preprocessed_training_path, "labels"), exist_ok=True)
     os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
     os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(preprocessed_testing_path, "images"), exist_ok=True)
     os.makedirs(backup_path, exist_ok=True)
     return {"input": input_repo,
             "prepro_training": preprocessed_training_path,
