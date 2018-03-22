@@ -378,7 +378,6 @@ class ShapeDataset(Dataset):
                     shape_specs.append([None, None, None, None])
             self.add_image(i, bg_color, shape_specs, image_label)
             self.draw_image(i, output_dir)
-        self.compute_mean_pixel()
 
     def add_image(self, image_id, background, specifications, labels):
         """ Add a new image to the dataset with image id `image_id`; an image
@@ -445,17 +444,3 @@ class ShapeDataset(Dataset):
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
-
-    def compute_mean_pixel(self):
-        """Compute mean and standard deviation of dataset images, for each
-        RGB-channel
-        """
-        mean_pixels, std_pixels = [], []
-        for image_id in self.image_info.keys():
-            image_filename = self.image_info[image_id]["image_filename"]
-            mean_pixels.append(np.mean(np.array(Image.open(image_filename)),
-                                       axis=(0,1)))
-            std_pixels.append(np.std(np.array(Image.open(image_filename)),
-                                     axis=(0,1)))
-        self.pixel_mean = np.mean(np.array(mean_pixels), axis=0)
-        self.pixel_std = np.std(np.array(std_pixels), axis=0)
