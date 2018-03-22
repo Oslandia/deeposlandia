@@ -315,8 +315,6 @@ class ShapeDataset(Dataset):
         """
         Dataset.__init__(self, image_size)
         self.build_glossary(nb_classes)
-        self.pixel_mean = [0, 0, 0]
-        self.pixel_std = [1, 1, 1]
 
     def build_glossary(self, nb_classes):
         """Read the shape glossary stored as a json file at the data
