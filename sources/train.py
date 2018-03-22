@@ -27,7 +27,7 @@ import os
 import pandas as pd
 import sys
 
-from dataset import Dataset, ShapeDataset
+from dataset import MapillaryDataset, ShapeDataset
 from model import ConvolutionalNeuralNetwork
 import utils
 
@@ -174,8 +174,8 @@ if __name__ == '__main__':
     if args.dataset == "mapillary":
         config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
         config_path = os.path.join(folders["input"], config_name)
-        train_dataset = Dataset(args.image_size, config_path)
-        validation_dataset = Dataset(args.image_size, config_path)
+        train_dataset = MapillaryDataset(args.image_size, config_path)
+        validation_dataset = MapillaryDataset(args.image_size, config_path)
     elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size, 3)
         validation_dataset = ShapeDataset(args.image_size, 3)

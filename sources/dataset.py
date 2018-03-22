@@ -32,15 +32,12 @@ import numpy as np
 
 import utils
 
-
 class Dataset(object):
-
-    def __init__(self, image_size, glossary_filename):
-        """ Class constructor
-        """
+    """
+    """
+    def __init__(self, image_size):
         self.image_size = image_size
         self.class_info = defaultdict()
-        self.build_glossary(glossary_filename)
         self.image_info = defaultdict()
 
     def get_class(self, class_id):
@@ -113,27 +110,6 @@ class Dataset(object):
             return np.round(np.divide(sum(np.array([list(l.values()) for l in labels])),
                                       self.get_nb_images()), 3)
 
-    def build_glossary(self, config_filename):
-        """Read the Mapillary glossary stored as a json file at the data
-        repository root
-
-        Parameter:
-        ----------
-        config_filename: object
-            String designing the relative path of the dataset glossary
-        (based on Mapillary dataset)
-        """
-        with open(config_filename) as config_file:
-            glossary = json.load(config_file)
-        if "labels" not in glossary:
-            print("There is no 'label' key in the provided glossary.")
-            return None
-        for lab_id, label in enumerate(glossary["labels"]):
-            lab_id = lab_id if 'id' not in label else label['id']
-            name_items = label["name"].split('--')
-            category = '-'.join(name_items)
-            self.add_class(lab_id, name_items, label["color"],
-                           label['evaluate'], category, label.get('aggregate'))
 
     def add_class(self, class_id, class_name, color, is_evaluate,
                   category=None, aggregate=None):
@@ -162,6 +138,73 @@ class Dataset(object):
                                      "is_evaluate": is_evaluate,
                                      "aggregate": aggregate,
                                      "color": color}
+
+    def save(self, filename):
+        """Save dataset in a json file indicated by `filename`
+
+        Parameter
+        ---------
+        filename: object
+            String designing the relative path where the dataset must be saved
+        """
+        with open(filename, 'w') as fp:
+            json.dump({"image_size": self.image_size,
+                       "classes": self.class_info,
+                       "images": self.image_info}, fp)
+        utils.logger.info("The dataset has been saved into {}".format(filename))
+
+    def load(self, filename, nb_images=None):
+        """Load a dataset from a json file indicated by `filename`
+
+        Parameter
+        ---------
+        filename: object
+            String designing the relative path from where the dataset must be
+        loaded
+        nb_images: integer
+            Number of images that must be loaded (if None, the whole dataset is loaded)
+        """
+        with open(filename) as fp:
+            ds = json.load(fp)
+            self.image_size = ds["image_size"]
+            self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
+            if nb_images is None:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
+            else:
+                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
+            for img_id, info in self.image_info.items():
+                info['labels'] = {int(k): v for k, v in info['labels'].items()}
+        utils.logger.info("The dataset has been loaded from {}".format(filename))
+
+class MapillaryDataset(Dataset):
+
+    def __init__(self, image_size, glossary_filename):
+        """ Class constructor
+        """
+        Dataset.__init__(self, image_size)
+        self.build_glossary(glossary_filename)
+
+    def build_glossary(self, config_filename):
+        """Read the Mapillary glossary stored as a json file at the data
+        repository root
+
+        Parameter:
+        ----------
+        config_filename: object
+            String designing the relative path of the dataset glossary
+        (based on Mapillary dataset)
+        """
+        with open(config_filename) as config_file:
+            glossary = json.load(config_file)
+        if "labels" not in glossary:
+            print("There is no 'label' key in the provided glossary.")
+            return None
+        for lab_id, label in enumerate(glossary["labels"]):
+            lab_id = lab_id if 'id' not in label else label['id']
+            name_items = label["name"].split('--')
+            category = '-'.join(name_items)
+            self.add_class(lab_id, name_items, label["color"],
+                           label['evaluate'], category, label.get('aggregate'))
 
     def group_image_label(self, image):
         """Group the labels
@@ -261,52 +304,13 @@ class Dataset(object):
             labels = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling) for x in image_list_longname])
         self.image_info = {k: v for k,v in enumerate(labels)}
 
-    def save(self, filename):
-        """Save dataset in a json file indicated by `filename`
-
-        Parameter
-        ---------
-        filename: object
-            String designing the relative path where the dataset must be saved
-        """
-        with open(filename, 'w') as fp:
-            json.dump({"image_size": self.image_size,
-                       "classes": self.class_info,
-                       "images": self.image_info}, fp)
-        utils.logger.info("The dataset has been saved into {}".format(filename))
-
-    def load(self, filename, nb_images=None):
-        """Load a dataset from a json file indicated by `filename`
-
-        Parameter
-        ---------
-        filename: object
-            String designing the relative path from where the dataset must be
-        loaded
-        nb_images: integer
-            Number of images that must be loaded (if None, the whole dataset is loaded)
-        """
-        with open(filename) as fp:
-            ds = json.load(fp)
-            self.image_size = ds["image_size"]
-            self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
-            if nb_images is None:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
-            else:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
-            for img_id, info in self.image_info.items():
-                info['labels'] = {int(k): v for k, v in info['labels'].items()}
-        utils.logger.info("The dataset has been loaded from {}".format(filename))
-
 class ShapeDataset(Dataset):
 
     def __init__(self, image_size, nb_classes):
         """ Class constructor
         """
-        self.image_size = image_size
-        self.class_info = defaultdict()
+        Dataset.__init__(self, image_size)
         self.build_glossary(nb_classes)
-        self.image_info = defaultdict()
         self.pixel_mean = [0, 0, 0]
         self.pixel_std = [1, 1, 1]
 
