@@ -306,6 +306,10 @@ class MapillaryDataset(Dataset):
 
 class ShapeDataset(Dataset):
 
+    SQUARE_COLOR = [0, 10, 10]
+    CIRCLE_COLOR = [200, 10, 50]
+    TRIANGLE_COLOR = [200, 130, 130]
+
     def __init__(self, image_size, nb_classes):
         """ Class constructor
         """
@@ -323,11 +327,11 @@ class ShapeDataset(Dataset):
         nb_classes: integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(0, "square", [0, 10, 10], True)
+        self.add_class(0, "square", ShapeDataset.SQUARE_COLOR, True)
         if nb_classes > 1:
-            self.add_class(1, "circle", [200, 10, 50], True)
+            self.add_class(1, "circle", ShapeDataset.CIRCLE_COLOR, True)
         if nb_classes > 2:
-            self.add_class(2, "triangle", [100, 50, 50], True)
+            self.add_class(2, "triangle", ShapeDataset.TRIANGLE_COLOR, True)
         if nb_classes > 3:
             utils.logger.warning("Only three classes are considered.")
 
@@ -426,16 +430,19 @@ class ShapeDataset(Dataset):
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
+        labelled_image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8) * 255
 
         # Get the center x, y and the size s
         if image_info["labels"][0]:
             color, x, y, s = image_info["shape_specs"][0]
             color = tuple(map(int, color))
             image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
+            labelled_image = cv2.rectangle(labelled_image, (x - s, y - s), (x + s, y + s), self.class_info[0]["color"], -1)
         if image_info["labels"][1]:
             color, x, y, s = image_info["shape_specs"][1]
             color = tuple(map(int, color))
             image = cv2.circle(image, (x, y), s, color, -1)
+            labelled_image = cv2.circle(labelled_image, (x, y), s, self.class_info[1]["color"], -1)
         if image_info["labels"][2]:
             color, x, y, s = image_info["shape_specs"][2]
             color = tuple(map(int, color))
@@ -445,6 +452,10 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
+            labelled_image = cv2.fillPoly(labelled_image, points, self.class_info[2]["color"])
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
+        label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
+        self.image_info[image_id]["label_filename"] = label_filename
+        cv2.imwrite(label_filename, labelled_image)
