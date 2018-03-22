@@ -65,31 +65,6 @@ class ConvolutionalNeuralNetwork(object):
                         "backprop": {},
                         "backup": {}}
 
-    def get_network_name(self):
-        """ `_network_name` getter
-        """
-        return self._network_name
-
-    def get_image_size(self):
-        """ `_image_size` getter
-        """
-        return self._image_size
-
-    def get_nb_channels(self):
-        """ `_nb_channels` getter
-        """
-        return self._nb_channels
-    
-    def get_learning_rate(self):
-        """ `_learning_rate` getter
-        """
-        return self._learning_rate
-    
-    def get_nb_labels(self):
-        """ `_nb_labels` getter
-        """
-        return self._nb_labels
-
     def create_weights(self, shape):
         """ Create weight variables of dimension `shape`, and initialize them
         with a random truncated normal draw; this function is typically called
