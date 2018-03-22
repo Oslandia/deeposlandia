@@ -17,28 +17,12 @@ import sys
 DATASET = ["training", "validation", "testing"]
 IMAGE_TYPES = ["images", "instances", "labels"]
 
-def make_dir(path):
-    """ Create a directory if there isn't one already.
-
-    Parameters
-    ----------
-    path: object
-        string corresponding to the relative path from the current working
-    space to the directory that has to be created
-    
-    """
-    try:
-        os.mkdir(path)
-        logger.info("Path {} created.".format(path))
-    except OSError:
-        pass
-
 # Define the logger for the current project
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
 ch_stdout = logging.StreamHandler(sys.stdout)
-make_dir("../log")
+os.makedirs("../log", exist_ok=True)
 ch_logfile = logging.FileHandler("../log/cnn_log.log")
 ch_stdout.setFormatter(formatter)
 ch_logfile.setFormatter(formatter)
@@ -243,8 +227,8 @@ def mapillary_data_preparation(datapath, dataset, size, nb_labels):
     INPUT_PATH = os.path.join(datapath, dataset, "input_" + str(size))
     LABEL_PATH = os.path.join(datapath, dataset, "labels")
     OUTPUT_PATH = os.path.join(datapath, dataset, "output_" + str(size))
-    make_dir(INPUT_PATH)
-    make_dir(OUTPUT_PATH)
+    os.makedirs(INPUT_PATH, exists=True)
+    os.makedirs(OUTPUT_PATH, exists=True)
     image_files = os.listdir(IMAGE_PATH)
     train_label_descr = (["name", "raw_image",
                           "old_width", "old_height", "pixel_ratio"] +
