@@ -25,8 +25,15 @@ class FeatureDetectionModel(ConvolutionalNeuralNetwork):
                                  shape=[None, self._nb_labels])
         if netsize == "small":
             self.add_layers_3_1()
-        else:
+        elif netsize == "medium":
             self.add_layers_6_2()
+        elif netsize == "vgg":
+            self.add_vgg_layers()
+        elif netsize == "inception":
+            self.add_inception_layers()
+        else:
+            utils.logger.error("Unsupported network.")
+            sys.exit(1)
         self.compute_loss()
         self.optimize()
         self._cm = self.compute_dashboard(self._Y, self._Y_pred)
@@ -111,6 +118,36 @@ class FeatureDetectionModel(ConvolutionalNeuralNetwork):
         layer = self.fullyconnected_layer(1, self._is_training, layer, last_layer_dim, 1024, self._dropout)
         layer = self.fullyconnected_layer(2, self._is_training, layer, 1024, 512, self._dropout)
         return self.output_layer(layer, 512)
+
+    def add_vgg_layers(self):
+        """Build the structure of a convolutional neural network from image data `input_layer`
+        to the last hidden layer on the model of a similar manner than VGG-net (see Simonyan &
+        Zisserman, Very Deep Convolutional Networks for Large-Scale Image Recognition, arXiv
+        technical report, 2014) ; not necessarily the *same* structure, as the input shape is not
+        necessarily identical
+
+        Returns
+        -------
+        tensor
+            Output layer of the neural network, *i.e.* a 1 X 1 X nb_class structure that contains
+        model predictions
+        """
+        layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 3, 64)
+        layer = self.maxpooling_layer(1, layer, 2, 2)
+        layer = self.convolutional_layer(2, self._is_training, layer, 64, 3, 128)
+        layer = self.maxpooling_layer(2, layer, 2, 2)
+        layer = self.convolutional_layer(3, self._is_training, layer, 128, 3, 256)
+        layer = self.convolutional_layer(4, self._is_training, layer, 256, 3, 256)
+        layer = self.maxpooling_layer(3, layer, 2, 2)
+        layer = self.convolutional_layer(5, self._is_training, layer, 256, 3, 512)
+        layer = self.convolutional_layer(6, self._is_training, layer, 512, 3, 512)
+        layer = self.maxpooling_layer(4, layer, 2, 2)
+        layer = self.convolutional_layer(7, self._is_training, layer, 512, 3, 512)
+        layer = self.convolutional_layer(8, self._is_training, layer, 512, 3, 512)
+        layer = self.maxpooling_layer(5, layer, 2, 2)
+        last_layer_dim = self.get_last_conv_layer_dim(32, 512)
+        layer = self.fullyconnected_layer(1, self._is_training, layer, last_layer_dim, 1024, self._dropout)
+        return self.output_layer(layer, 1024)
 
     def compute_loss(self):
         """Define the loss tensor as well as the optimizer; it uses a decaying
