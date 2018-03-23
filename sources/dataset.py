@@ -49,7 +49,7 @@ class Dataset(object):
             Id of the dataset class that must be returned
         """
         if not class_id in self.class_info.keys():
-            print("Class {} not in the dataset glossary".format(class_id))
+            utils.logger.error("Class {} not in the dataset glossary".format(class_id))
             return None
         return self.class_info[class_id]
 
@@ -62,7 +62,7 @@ class Dataset(object):
             Id of the dataset image that must be returned
         """
         if not image_id in self.image_info.keys():
-            print("Image {} not in the dataset".format(image_id))
+            utils.logger.error("Image {} not in the dataset".format(image_id))
             return None
         return self.image_info[image_id]
 
@@ -104,7 +104,7 @@ class Dataset(object):
         labels = [self.image_info[im]["labels"]
                   for im in self.image_info.keys()]
         if self.get_nb_images() == 0:
-            utils.logger.info("No images in the dataset.")
+            utils.logger.error("No images in the dataset.")
             return None
         else:
             return np.round(np.divide(sum(np.array([list(l.values()) for l in labels])),
@@ -131,7 +131,7 @@ class Dataset(object):
             List of class ids aggregated by the current class_id
         """
         if class_id in self.class_info:
-            print("Class {} already stored into the class set.".format(class_id))
+            utils.logger.error("Class {} already stored into the class set.".format(class_id))
             return None
         self.class_info[class_id] = {"name": class_name,
                                      "category": category,
@@ -210,7 +210,7 @@ class MapillaryDataset(Dataset):
         with open(config_filename) as config_file:
             glossary = json.load(config_file)
         if "labels" not in glossary:
-            print("There is no 'label' key in the provided glossary.")
+            utils.logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
             lab_id = lab_id if 'id' not in label else label['id']
@@ -420,7 +420,7 @@ class ShapeDataset(Dataset):
         number of classes in the dataset
         """
         if image_id in self.image_info.keys():
-            print("Image {} already stored into the class set.".format(image_id))
+            utils.logger.error("Image {} already stored into the class set.".format(image_id))
             return None
         self.image_info[image_id] = {"background": background,
                                      "shape_specs": specifications,
