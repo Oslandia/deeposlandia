@@ -1,8 +1,8 @@
-cv2
+opencv-python
 matplotlib
 numpy
 pandas
-PIL
+pillow
 tensorflow
 ipython
 keras
