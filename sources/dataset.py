@@ -43,9 +43,9 @@ class Dataset(object):
     def get_class(self, class_id):
         """ `class_info` getter, return only one class
 
-        Parameters:
-        -----------
-        class_id: integer
+        Parameters
+        ----------
+        class_id : integer
             Id of the dataset class that must be returned
         """
         if not class_id in self.class_info.keys():
@@ -56,9 +56,9 @@ class Dataset(object):
     def get_image(self, image_id):
         """ `image_info` getter, return only the information for one image
 
-        Parameters:
-        -----------
-        image_id: integer
+        Parameters
+        ----------
+        image_id : integer
             Id of the dataset image that must be returned
         """
         if not image_id in self.image_info.keys():
@@ -124,10 +124,10 @@ class Dataset(object):
         color : list
             List of three integers (between 0 and 255) that characterizes the
             class (useful for semantic segmentation result printing)
-        is_evaluate: bool
+        is_evaluate : bool
         category : str
             String designing the category of the dataset class
-        aggregate: list (optional)
+        aggregate : list (optional)
             List of class ids aggregated by the current class_id
         """
         if class_id in self.class_info:
@@ -142,9 +142,9 @@ class Dataset(object):
     def save(self, filename):
         """Save dataset in a json file indicated by `filename`
 
-        Parameter
-        ---------
-        filename: object
+        Parameters
+        ----------
+        filename : str
             String designing the relative path where the dataset must be saved
         """
         with open(filename, 'w') as fp:
@@ -156,12 +156,12 @@ class Dataset(object):
     def load(self, filename, nb_images=None):
         """Load a dataset from a json file indicated by `filename`
 
-        Parameter
-        ---------
-        filename: object
+        Parameters
+        ----------
+        filename : str
             String designing the relative path from where the dataset must be
         loaded
-        nb_images: integer
+        nb_images : integer
             Number of images that must be loaded (if None, the whole dataset is loaded)
         """
         with open(filename) as fp:
@@ -177,9 +177,22 @@ class Dataset(object):
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class MapillaryDataset(Dataset):
+    """Dataset structure that gathers all information related to the Mapillary images
+
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
+    glossary_filename : str
+        Name of the Mapillary input glossary, that contains every information about Mapillary
+    classes
+
+    """
 
     def __init__(self, image_size, glossary_filename):
-        """ Class constructor
+        """ Class constructor ; instanciates a MapillaryDataset as a standard Dataset which is
+        completed by a glossary file that describes the dataset classes
         """
         Dataset.__init__(self, image_size)
         self.build_glossary(glossary_filename)
@@ -188,9 +201,9 @@ class MapillaryDataset(Dataset):
         """Read the Mapillary glossary stored as a json file at the data
         repository root
 
-        Parameter:
+        Parameters
         ----------
-        config_filename: object
+        config_filename : str
             String designing the relative path of the dataset glossary
         (based on Mapillary dataset)
         """
@@ -320,9 +333,9 @@ class ShapeDataset(Dataset):
         """Read the shape glossary stored as a json file at the data
         repository root
 
-        Parameter:
+        Parameters
         ----------
-        nb_classes: integer
+        nb_classes : integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
         self.add_class(0, "square", ShapeDataset.SQUARE_COLOR, True)
@@ -338,9 +351,9 @@ class ShapeDataset(Dataset):
         generation; use numpy to generate random indices for each labels, these
         indices will be the positive examples; return a 2D-list
 
-        Parameter:
+        Parameters
         ----------
-        nb_images: integer
+        nb_images : integer
             Number of images to label in the dataset
         """
         raw_labels = [np.random.choice(np.arange(nb_images),
@@ -355,7 +368,7 @@ class ShapeDataset(Dataset):
     def populate(self, output_dir, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
-       Parameter:
+        Parameters
         ----------
         output_dir : str
             Path of the directory where the preprocessed image must be saved
@@ -391,17 +404,17 @@ class ShapeDataset(Dataset):
         a background color and a list of 0-1 labels (1 if the i-th class is on
         the image, 0 otherwise)
 
-        Parameters:
-        -----------
-        image_id: integer
+        Parameters
+        ----------
+        image_id : integer
             Id of the new image
-        background: list
+        background : list
             List of three integer between 0 and 255 that designs the image
         background color
-        specifications: list
+        specifications : list
             Image specifications, as a list of shapes (color, coordinates and
         size)
-        labels: list
+        labels : list
             List of 0-1 values, the i-th value being 1 if the i-th class is on
         the new image, 0 otherwise; the label list length correspond to the
         number of classes in the dataset
@@ -419,9 +432,9 @@ class ShapeDataset(Dataset):
 
         Parameters
         ----------
-        image_id: integer
+        image_id : integer
             Image id
-        datapath: object
+        datapath : str
             String that characterizes the repository in which images will be stored
         """
         image_info = self.image_info[image_id]
