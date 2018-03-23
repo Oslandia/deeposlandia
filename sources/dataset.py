@@ -166,14 +166,14 @@ class Dataset(object):
         """
         with open(filename) as fp:
             ds = json.load(fp)
-            self.image_size = ds["image_size"]
-            self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
-            if nb_images is None:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
-            else:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
-            for img_id, info in self.image_info.items():
-                info['labels'] = {int(k): v for k, v in info['labels'].items()}
+        self.image_size = ds["image_size"]
+        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"].keys()}
+        if nb_images is None:
+            self.image_info = {int(k): ds["images"][k] for k in ds["images"].keys()}
+        else:
+            self.image_info = {int(k): ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
+        for img_id, info in self.image_info.items():
+            info['labels'] = {int(k): v for k, v in info['labels'].items()}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class MapillaryDataset(Dataset):
