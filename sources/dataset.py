@@ -318,6 +318,21 @@ class MapillaryDataset(Dataset):
         self.image_info = {k: v for k,v in enumerate(labels)}
 
 class ShapeDataset(Dataset):
+    """Dataset structure that gathers all information related to a randomly-generated shape Dataset
+
+    In such a dataset, a set of images is generated with either a square, or a circle or a
+    triangle, or two of them, or all of them. A random background color is applied, and shape color
+    itself is also randomly generated.
+
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
+    nb_classes : int
+        Number of shape types that must be integrated into the dataset (only 1, 2 and 3 are supported)
+
+    """
 
     SQUARE_COLOR = [0, 10, 10]
     CIRCLE_COLOR = [200, 10, 50]
