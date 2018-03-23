@@ -33,7 +33,16 @@ import numpy as np
 import utils
 
 class Dataset(object):
-    """
+    """Generic class that describes the behavior of a Dataset object: it is initialized at least
+    with an image size, its class are added always through the same manner, it can be serialized (save) and
+    deserialized (load) from/to a `.json` file
+
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
+
     """
     def __init__(self, image_size):
         self.image_size = image_size
