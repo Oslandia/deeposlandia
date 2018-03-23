@@ -194,7 +194,7 @@ class MapillaryDataset(Dataset):
         """ Class constructor ; instanciates a MapillaryDataset as a standard Dataset which is
         completed by a glossary file that describes the dataset classes
         """
-        Dataset.__init__(self, image_size)
+        super().__init__(self, image_size)
         self.build_glossary(glossary_filename)
 
     def build_glossary(self, config_filename):
@@ -326,7 +326,7 @@ class ShapeDataset(Dataset):
     def __init__(self, image_size, nb_classes):
         """ Class constructor
         """
-        Dataset.__init__(self, image_size)
+        super().__init__(self, image_size)
         self.build_glossary(nb_classes)
 
     def build_glossary(self, nb_classes):
