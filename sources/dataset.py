@@ -69,7 +69,7 @@ class Dataset(object):
         image_id : integer
             Id of the dataset image that must be returned
         """
-        if not image_id in self.image_info.keys():
+        if not image_id in self.image_info:
             utils.logger.error("Image {} not in the dataset".format(image_id))
             return None
         return self.image_info[image_id]
@@ -109,8 +109,7 @@ class Dataset(object):
         """Return the class popularity in the current dataset, *i.e.* the proportion of images that
         contain corresponding object
         """
-        labels = [self.image_info[im]["labels"]
-                  for im in self.image_info.keys()]
+        labels = [self.image_info[im]["labels"] for im in self.image_info]
         if self.get_nb_images() == 0:
             utils.logger.error("No images in the dataset.")
             return None
@@ -175,9 +174,9 @@ class Dataset(object):
         with open(filename) as fp:
             ds = json.load(fp)
         self.image_size = ds["image_size"]
-        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"].keys()}
+        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"]}
         if nb_images is None:
-            self.image_info = {int(k): ds["images"][k] for k in ds["images"].keys()}
+            self.image_info = {int(k): ds["images"][k] for k in ds["images"]}
         else:
             self.image_info = {int(k): ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
         for img_id, info in self.image_info.items():
@@ -442,7 +441,7 @@ class ShapeDataset(Dataset):
         the new image, 0 otherwise; the label list length correspond to the
         number of classes in the dataset
         """
-        if image_id in self.image_info.keys():
+        if image_id in self.image_info:
             utils.logger.error("Image {} already stored into the class set.".format(image_id))
             return None
         self.image_info[image_id] = {"background": background,
