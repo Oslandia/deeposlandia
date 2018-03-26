@@ -161,7 +161,8 @@ class Dataset(object):
         utils.logger.info("The dataset has been saved into {}".format(filename))
 
     def load(self, filename, nb_images=None):
-        """Load a dataset from a json file indicated by `filename`
+        """Load a dataset from a json file indicated by `filename` ; use dict comprehension instead
+        of direct assignments in order to convert dict keys to integers
 
         Parameters
         ----------
@@ -178,7 +179,8 @@ class Dataset(object):
         if nb_images is None:
             self.image_info = {int(k): ds["images"][k] for k in ds["images"]}
         else:
-            self.image_info = {int(k): ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
+            self.image_info = {int(k): v for idx, (k, v) in enumerate(ds["images"].items())
+                               if idx < nb_images}
         for img_id, info in self.image_info.items():
             info['labels'] = {int(k): v for k, v in info['labels'].items()}
         utils.logger.info("The dataset has been loaded from {}".format(filename))
