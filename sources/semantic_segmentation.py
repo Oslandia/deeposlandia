@@ -240,8 +240,8 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
         saver = tf.train.Saver(max_to_keep=1)
         ckpt_path = os.path.join(backup_path, 'checkpoints',
                                  self._network_name)
-        utils.make_dir(os.path.dirname(ckpt_path))
-        utils.make_dir(ckpt_path)
+        os.makedirs(os.path.dirname(ckpt_path), exist_ok=True)
+        os.makedirs(ckpt_path, exist_ok=True)
         ckpt = tf.train.get_checkpoint_state(ckpt_path)
 
         # Open a TensorFlow session to train the model with the batched dataset
@@ -315,7 +315,7 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
             coord.join(threads)
             if timing:
                 chrono_dir = os.path.join(backup_path, "chronos")
-                utils.make_dir(chrono_dir)
+                os.makedirs(chrono_dir, exist_ok=True)
                 chrono_file = os.path.join(chrono_dir,
                                            self._network_name+"_chrono.json")
                 with open(chrono_file, 'w') as written_file:
@@ -384,7 +384,7 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
             coord.join(threads)
             if timing:
                 chrono_dir = os.path.join(backup_path, "chronos")
-                utils.make_dir(chrono_dir)
+                os.makedirs(chrono_dir, exist_ok=True)
                 chrono_file = os.path.join(chrono_dir,
                                            self._network_name+"_chrono.json")
                 with open(chrono_file, 'w') as written_file:
