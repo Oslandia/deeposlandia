@@ -11,7 +11,7 @@ import numpy as np
 
 import utils
 
-class Dataset(object):
+class Dataset:
     """Generic class that describes the behavior of a Dataset object: it is initialized at least
     with an image size, its class are added always through the same manner, it can be serialized (save) and
     deserialized (load) from/to a `.json` file
