@@ -1,33 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""/**
- *   This script aims to test a neural network model in order to detect
- *   objects from street-scene (based on Mapillary Vistas dataset)
-
- *   Raphael Delhome - september 2017
- *
- *   This library is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU Library General Public
- *   License as published by the Free Software Foundation; either
- *   version 2 of the License, or (at your option) any later version.
- *   
- *   This library is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *   Library General Public License for more details.
- *   You should have received a copy of the GNU Library General Public
- *   License along with this library; if not, see <http://www.gnu.org/licenses/>
- */
-
-"""
 
 import argparse
 import os
 import pandas as pd
 import sys
 
-from dataset import Dataset, ShapeDataset
+from dataset import MapillaryDataset, ShapeDataset
 from model import ConvolutionalNeuralNetwork
 import utils
 
@@ -94,7 +71,7 @@ if __name__ == '__main__':
     if args.dataset == "mapillary":
         config_name = "config.json" if aggregate_value == 'full' else "config_aggregate.json"
         config_path = os.path.join(folders["input"], config_name)
-        testing_dataset = Dataset(image_size, config_path)
+        testing_dataset = MapillaryDataset(image_size, config_path)
     elif args.dataset == "shapes":
         testing_dataset = ShapeDataset(image_size, 3)
     else:

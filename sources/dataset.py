@@ -1,28 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-/**
- *   Raphael Delhome - december 2017
- *
- *   This library is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU Library General Public
- *   License as published by the Free Software Foundation; either
- *   version 2 of the License, or (at your option) any later version.
- *   
- *   This library is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *   Library General Public License for more details.
- *   You should have received a copy of the GNU Library General Public
- *   License along with this library; if not, see <http://www.gnu.org/licenses/>
- */
-"""
 
 import os
 import json
 import math
-from collections import defaultdict
 from multiprocessing import Pool
 
 import cv2
@@ -32,40 +11,46 @@ import numpy as np
 
 import utils
 
+class Dataset:
+    """Generic class that describes the behavior of a Dataset object: it is initialized at least
+    with an image size, its class are added always through the same manner, it can be serialized (save) and
+    deserialized (load) from/to a `.json` file
 
-class Dataset(object):
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
 
-    def __init__(self, image_size, glossary_filename):
-        """ Class constructor
-        """
+    """
+    def __init__(self, image_size):
         self.image_size = image_size
-        self.class_info = defaultdict()
-        self.build_glossary(glossary_filename)
-        self.image_info = defaultdict()
+        self.class_info = {}
+        self.image_info = {}
 
     def get_class(self, class_id):
         """ `class_info` getter, return only one class
 
-        Parameters:
-        -----------
-        class_id: integer
+        Parameters
+        ----------
+        class_id : integer
             Id of the dataset class that must be returned
         """
         if not class_id in self.class_info.keys():
-            print("Class {} not in the dataset glossary".format(class_id))
+            utils.logger.error("Class {} not in the dataset glossary".format(class_id))
             return None
         return self.class_info[class_id]
 
     def get_image(self, image_id):
         """ `image_info` getter, return only the information for one image
 
-        Parameters:
-        -----------
-        image_id: integer
+        Parameters
+        ----------
+        image_id : integer
             Id of the dataset image that must be returned
         """
-        if not image_id in self.image_info.keys():
-            print("Image {} not in the dataset".format(image_id))
+        if not image_id in self.image_info:
+            utils.logger.error("Image {} not in the dataset".format(image_id))
             return None
         return self.image_info[image_id]
 
@@ -104,36 +89,14 @@ class Dataset(object):
         """Return the class popularity in the current dataset, *i.e.* the proportion of images that
         contain corresponding object
         """
-        labels = [self.image_info[im]["labels"]
-                  for im in self.image_info.keys()]
+        labels = [self.image_info[im]["labels"] for im in self.image_info]
         if self.get_nb_images() == 0:
-            utils.logger.info("No images in the dataset.")
+            utils.logger.error("No images in the dataset.")
             return None
         else:
             return np.round(np.divide(sum(np.array([list(l.values()) for l in labels])),
                                       self.get_nb_images()), 3)
 
-    def build_glossary(self, config_filename):
-        """Read the Mapillary glossary stored as a json file at the data
-        repository root
-
-        Parameter:
-        ----------
-        config_filename: object
-            String designing the relative path of the dataset glossary
-        (based on Mapillary dataset)
-        """
-        with open(config_filename) as config_file:
-            glossary = json.load(config_file)
-        if "labels" not in glossary:
-            print("There is no 'label' key in the provided glossary.")
-            return None
-        for lab_id, label in enumerate(glossary["labels"]):
-            lab_id = lab_id if 'id' not in label else label['id']
-            name_items = label["name"].split('--')
-            category = '-'.join(name_items)
-            self.add_class(lab_id, name_items, label["color"],
-                           label['evaluate'], category, label.get('aggregate'))
 
     def add_class(self, class_id, class_name, color, is_evaluate,
                   category=None, aggregate=None):
@@ -148,20 +111,102 @@ class Dataset(object):
         color : list
             List of three integers (between 0 and 255) that characterizes the
             class (useful for semantic segmentation result printing)
-        is_evaluate: bool
+        is_evaluate : bool
         category : str
             String designing the category of the dataset class
-        aggregate: list (optional)
+        aggregate : list (optional)
             List of class ids aggregated by the current class_id
         """
         if class_id in self.class_info:
-            print("Class {} already stored into the class set.".format(class_id))
+            utils.logger.error("Class {} already stored into the class set.".format(class_id))
             return None
         self.class_info[class_id] = {"name": class_name,
                                      "category": category,
                                      "is_evaluate": is_evaluate,
                                      "aggregate": aggregate,
                                      "color": color}
+
+    def save(self, filename):
+        """Save dataset in a json file indicated by `filename`
+
+        Parameters
+        ----------
+        filename : str
+            String designing the relative path where the dataset must be saved
+        """
+        with open(filename, 'w') as fp:
+            json.dump({"image_size": self.image_size,
+                       "classes": self.class_info,
+                       "images": self.image_info}, fp)
+        utils.logger.info("The dataset has been saved into {}".format(filename))
+
+    def load(self, filename, nb_images=None):
+        """Load a dataset from a json file indicated by `filename` ; use dict comprehension instead
+        of direct assignments in order to convert dict keys to integers
+
+        Parameters
+        ----------
+        filename : str
+            String designing the relative path from where the dataset must be
+        loaded
+        nb_images : integer
+            Number of images that must be loaded (if None, the whole dataset is loaded)
+        """
+        with open(filename) as fp:
+            ds = json.load(fp)
+        self.image_size = ds["image_size"]
+        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"]}
+        if nb_images is None:
+            self.image_info = {int(k): ds["images"][k] for k in ds["images"]}
+        else:
+            self.image_info = {int(k): v for idx, (k, v) in enumerate(ds["images"].items())
+                               if idx < nb_images}
+        for img_id, info in self.image_info.items():
+            info['labels'] = {int(k): v for k, v in info['labels'].items()}
+        utils.logger.info("The dataset has been loaded from {}".format(filename))
+
+class MapillaryDataset(Dataset):
+    """Dataset structure that gathers all information related to the Mapillary images
+
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
+    glossary_filename : str
+        Name of the Mapillary input glossary, that contains every information about Mapillary
+    classes
+
+    """
+
+    def __init__(self, image_size, glossary_filename):
+        """ Class constructor ; instanciates a MapillaryDataset as a standard Dataset which is
+        completed by a glossary file that describes the dataset classes
+        """
+        super().__init__(image_size)
+        self.build_glossary(glossary_filename)
+
+    def build_glossary(self, config_filename):
+        """Read the Mapillary glossary stored as a json file at the data
+        repository root
+
+        Parameters
+        ----------
+        config_filename : str
+            String designing the relative path of the dataset glossary
+        (based on Mapillary dataset)
+        """
+        with open(config_filename) as config_file:
+            glossary = json.load(config_file)
+        if "labels" not in glossary:
+            utils.logger.error("There is no 'label' key in the provided glossary.")
+            return None
+        for lab_id, label in enumerate(glossary["labels"]):
+            lab_id = lab_id if 'id' not in label else label['id']
+            name_items = label["name"].split('--')
+            category = '-'.join(name_items)
+            self.add_class(lab_id, name_items, label["color"],
+                           label['evaluate'], category, label.get('aggregate'))
 
     def group_image_label(self, image):
         """Group the labels
@@ -261,69 +306,50 @@ class Dataset(object):
             labels = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling) for x in image_list_longname])
         self.image_info = {k: v for k,v in enumerate(labels)}
 
-    def save(self, filename):
-        """Save dataset in a json file indicated by `filename`
-
-        Parameter
-        ---------
-        filename: object
-            String designing the relative path where the dataset must be saved
-        """
-        with open(filename, 'w') as fp:
-            json.dump({"image_size": self.image_size,
-                       "classes": self.class_info,
-                       "images": self.image_info}, fp)
-        utils.logger.info("The dataset has been saved into {}".format(filename))
-
-    def load(self, filename, nb_images=None):
-        """Load a dataset from a json file indicated by `filename`
-
-        Parameter
-        ---------
-        filename: object
-            String designing the relative path from where the dataset must be
-        loaded
-        nb_images: integer
-            Number of images that must be loaded (if None, the whole dataset is loaded)
-        """
-        with open(filename) as fp:
-            ds = json.load(fp)
-            self.image_size = ds["image_size"]
-            self.class_info = {int(k):ds["classes"][k] for k in ds["classes"].keys()}
-            if nb_images is None:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys()}
-            else:
-                self.image_info = {int(k):ds["images"][k] for k in ds["images"].keys() if int(k) < nb_images}
-            for img_id, info in self.image_info.items():
-                info['labels'] = {int(k): v for k, v in info['labels'].items()}
-        utils.logger.info("The dataset has been loaded from {}".format(filename))
-
 class ShapeDataset(Dataset):
+    """Dataset structure that gathers all information related to a randomly-generated shape Dataset
+
+    In such a dataset, a set of images is generated with either a square, or a circle or a
+    triangle, or two of them, or all of them. A random background color is applied, and shape color
+    itself is also randomly generated.
+
+    Attributes
+    ----------
+    image_size : int
+        Size of considered images (height=width), raw images will be resized during the
+    preprocessing
+    nb_classes : int
+        Number of shape types that must be integrated into the dataset (only 1, 2 and 3 are supported)
+
+    """
+
+    SQUARE = 0
+    SQUARE_COLOR = (0, 10, 10)
+    CIRCLE = 1
+    CIRCLE_COLOR = (200, 10, 50)
+    TRIANGLE = 2
+    TRIANGLE_COLOR = (200, 130, 130)
 
     def __init__(self, image_size, nb_classes):
         """ Class constructor
         """
-        self.image_size = image_size
-        self.class_info = defaultdict()
+        super().__init__(image_size)
         self.build_glossary(nb_classes)
-        self.image_info = defaultdict()
-        self.pixel_mean = [0, 0, 0]
-        self.pixel_std = [1, 1, 1]
 
     def build_glossary(self, nb_classes):
         """Read the shape glossary stored as a json file at the data
         repository root
 
-        Parameter:
+        Parameters
         ----------
-        nb_classes: integer
+        nb_classes : integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(0, "square", [0, 10, 10], True)
+        self.add_class(0, "square", self.SQUARE_COLOR, True)
         if nb_classes > 1:
-            self.add_class(1, "circle", [200, 10, 50], True)
+            self.add_class(1, "circle", self.CIRCLE_COLOR, True)
         if nb_classes > 2:
-            self.add_class(2, "triangle", [100, 50, 50], True)
+            self.add_class(2, "triangle", self.TRIANGLE_COLOR, True)
         if nb_classes > 3:
             utils.logger.warning("Only three classes are considered.")
 
@@ -332,9 +358,9 @@ class ShapeDataset(Dataset):
         generation; use numpy to generate random indices for each labels, these
         indices will be the positive examples; return a 2D-list
 
-        Parameter:
+        Parameters
         ----------
-        nb_images: integer
+        nb_images : integer
             Number of images to label in the dataset
         """
         raw_labels = [np.random.choice(np.arange(nb_images),
@@ -349,7 +375,7 @@ class ShapeDataset(Dataset):
     def populate(self, output_dir, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
-       Parameter:
+        Parameters
         ----------
         output_dir : str
             Path of the directory where the preprocessed image must be saved
@@ -378,7 +404,6 @@ class ShapeDataset(Dataset):
                     shape_specs.append([None, None, None, None])
             self.add_image(i, bg_color, shape_specs, image_label)
             self.draw_image(i, output_dir)
-        self.compute_mean_pixel()
 
     def add_image(self, image_id, background, specifications, labels):
         """ Add a new image to the dataset with image id `image_id`; an image
@@ -386,23 +411,23 @@ class ShapeDataset(Dataset):
         a background color and a list of 0-1 labels (1 if the i-th class is on
         the image, 0 otherwise)
 
-        Parameters:
-        -----------
-        image_id: integer
+        Parameters
+        ----------
+        image_id : integer
             Id of the new image
-        background: list
+        background : list
             List of three integer between 0 and 255 that designs the image
         background color
-        specifications: list
+        specifications : list
             Image specifications, as a list of shapes (color, coordinates and
         size)
-        labels: list
+        labels : list
             List of 0-1 values, the i-th value being 1 if the i-th class is on
         the new image, 0 otherwise; the label list length correspond to the
         number of classes in the dataset
         """
-        if image_id in self.image_info.keys():
-            print("Image {} already stored into the class set.".format(image_id))
+        if image_id in self.image_info:
+            utils.logger.error("Image {} already stored into the class set.".format(image_id))
             return None
         self.image_info[image_id] = {"background": background,
                                      "shape_specs": specifications,
@@ -414,27 +439,30 @@ class ShapeDataset(Dataset):
 
         Parameters
         ----------
-        image_id: integer
+        image_id : integer
             Image id
-        datapath: object
+        datapath : str
             String that characterizes the repository in which images will be stored
         """
         image_info = self.image_info[image_id]
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
+        labelled_image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8) * 255
 
         # Get the center x, y and the size s
-        if image_info["labels"][0]:
-            color, x, y, s = image_info["shape_specs"][0]
+        if image_info["labels"][self.SQUARE]:
+            color, x, y, s = image_info["shape_specs"][self.SQUARE]
             color = tuple(map(int, color))
             image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
-        if image_info["labels"][1]:
-            color, x, y, s = image_info["shape_specs"][1]
+            labelled_image = cv2.rectangle(labelled_image, (x - s, y - s), (x + s, y + s), self.class_info[self.SQUARE]["color"], -1)
+        if image_info["labels"][self.CIRCLE]:
+            color, x, y, s = image_info["shape_specs"][self.CIRCLE]
             color = tuple(map(int, color))
             image = cv2.circle(image, (x, y), s, color, -1)
-        if image_info["labels"][2]:
-            color, x, y, s = image_info["shape_specs"][2]
+            labelled_image = cv2.circle(labelled_image, (x, y), s, self.class_info[self.CIRCLE]["color"], -1)
+        if image_info["labels"][self.TRIANGLE]:
+            color, x, y, s = image_info["shape_specs"][self.TRIANGLE]
             color = tuple(map(int, color))
             x, y, s = map(int, (x, y, s))
             points = np.array([[(x, y - s),
@@ -442,20 +470,10 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
+            labelled_image = cv2.fillPoly(labelled_image, points, self.class_info[self.TRIANGLE]["color"])
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
-
-    def compute_mean_pixel(self):
-        """Compute mean and standard deviation of dataset images, for each
-        RGB-channel
-        """
-        mean_pixels, std_pixels = [], []
-        for image_id in self.image_info.keys():
-            image_filename = self.image_info[image_id]["image_filename"]
-            mean_pixels.append(np.mean(np.array(Image.open(image_filename)),
-                                       axis=(0,1)))
-            std_pixels.append(np.std(np.array(Image.open(image_filename)),
-                                     axis=(0,1)))
-        self.pixel_mean = np.mean(np.array(mean_pixels), axis=0)
-        self.pixel_std = np.std(np.array(std_pixels), axis=0)
+        label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
+        self.image_info[image_id]["label_filename"] = label_filename
+        cv2.imwrite(label_filename, labelled_image)

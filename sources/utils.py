@@ -1,8 +1,9 @@
+""" Utilitary function for Mapillary dataset analysis
+
 # Author: Raphael Delhome
 # Organization: Oslandia
 # Date: september 2017
-
-# Utilitary function for Mapillary dataset analysis
+"""
 
 import logging
 import math

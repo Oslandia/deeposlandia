@@ -1,33 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-/**
- *   This script aims to train a neural network model in order to read street
- *   scene images produced by Mapillary (https://www.mapillary.com/dataset/vistas)
-
- *   Raphael Delhome - september 2017
- *
- *   This library is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU Library General Public
- *   License as published by the Free Software Foundation; either
- *   version 2 of the License, or (at your option) any later version.
- *   
- *   This library is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *   Library General Public License for more details.
- *   You should have received a copy of the GNU Library General Public
- *   License along with this library; if not, see <http://www.gnu.org/licenses/>
- */
-"""
 
 import argparse
 import os
 import pandas as pd
 import sys
 
-from dataset import Dataset, ShapeDataset
+from dataset import MapillaryDataset, ShapeDataset
 from model import ConvolutionalNeuralNetwork
 import utils
 
@@ -174,8 +151,8 @@ if __name__ == '__main__':
     if args.dataset == "mapillary":
         config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
         config_path = os.path.join(folders["input"], config_name)
-        train_dataset = Dataset(args.image_size, config_path)
-        validation_dataset = Dataset(args.image_size, config_path)
+        train_dataset = MapillaryDataset(args.image_size, config_path)
+        validation_dataset = MapillaryDataset(args.image_size, config_path)
     elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size, 3)
         validation_dataset = ShapeDataset(args.image_size, 3)
