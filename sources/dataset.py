@@ -22,7 +22,6 @@
 import os
 import json
 import math
-from collections import defaultdict
 from multiprocessing import Pool
 
 import cv2
@@ -46,8 +45,8 @@ class Dataset(object):
     """
     def __init__(self, image_size):
         self.image_size = image_size
-        self.class_info = defaultdict()
-        self.image_info = defaultdict()
+        self.class_info = {}
+        self.image_info = {}
 
     def get_class(self, class_id):
         """ `class_info` getter, return only one class
