@@ -167,16 +167,16 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
             images = tf.image.decode_image(image_content,
                                            channels=self._nb_channels)
             images.set_shape([self._image_size,
-                             self._image_size,
-                             self._nb_channels])
-            label_content = tf.read_file(input_queue[1])
-            labels = tf.image.decode_image(label_content, channels=self._nb_channels)
-            labels.set_shape([self._image_size,
                               self._image_size,
                               self._nb_channels])
-            #clean_labels = labels
+            label_content = tf.read_file(input_queue[1])
+            labels = tf.image.decode_png(label_content)
+            labels.set_shape([self._image_size,
+                              self._image_size,
+                              1])
             clean_labels = tf.one_hot(labels, len(labels_of_interest))
-            #clean_labels = utils.to_categorical_tensor(labels, labels_of_interest)
+            # remove the dimension of size 1 in (size, size, 1, num_classes)
+            clean_labels = tf.squeeze(clean_labels)
             return tf.train.batch([images, clean_labels],
                                   batch_size=batch_size,
                                   num_threads=4)
