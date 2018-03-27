@@ -158,7 +158,7 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
                                                   name=dataset_type+"_images")
             label_filepaths = [dataset.image_info[i]["label_filename"]
                                for i in range(dataset.get_nb_images())]
-            label_tensors = ops.convert_to_tensor(image_filepaths, dtype=tf.string,
+            label_tensors = ops.convert_to_tensor(label_filepaths, dtype=tf.string,
                                                   name=dataset_type+"_labels")
             input_queue = tf.train.slice_input_producer([image_tensors,
                                                          label_tensors],
