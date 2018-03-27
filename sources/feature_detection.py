@@ -149,6 +149,91 @@ class FeatureDetectionModel(ConvolutionalNeuralNetwork):
         layer = self.fullyconnected_layer(1, self._is_training, layer, last_layer_dim, 1024, self._dropout)
         return self.output_layer(layer, 1024)
 
+    def inception_block(self, counter, input_layer, input_depth, depth_1,
+                        depth_3_reduce, depth_3, depth_5_reduce, depth_5, depth_pool):
+        """Apply an Inception block (concatenation of convoluted inputs, see Szegedy et al, 2014)
+
+        Concatenation of several filtered outputs:
+        - 1*1 convoluted image
+        - 1*1 and 3*3 convoluted images
+        - 1*1 and 5*5 convoluted images
+        - 3*3 max-pooled and 1*1 convoluted images
+
+        Parameters
+        ----------
+        counter : integer
+            Inception block ID
+        input_layer : tensor
+            Input layer that has to be transformed in the Inception block
+        input_depth : integer
+            Input layer depth
+        depth_1 : integer
+            Depth of the 1*1 convoluted output
+        depth_3_reduce : integer
+            Hidden layer depth, between 1*1 and 3*3 convolution
+        depth_3 : integer
+            Depth of the 3*3 convoluted output
+        depth_5_reduce : integer
+            Hidden layer depth, between 1*1 and 5*5 convolution
+        depth_5 : integer
+            Depth of the 5*5 convoluted output
+        depth_pool : integer
+            Depth of the max-pooled output (after 1*1 convolution)
+
+        Returns
+        -------
+        tensor
+            Output layer, after Inception block treatments
+        """
+        filter_1_1 = self.convolutional_layer("i"+str(counter)+"1", self._is_training, input_layer,
+                                              input_depth, 1, depth_1)
+        filter_3_3 = self.convolutional_layer("i"+str(counter)+"3a", self._is_training, input_layer,
+                                              input_depth, 1, depth_3_reduce)
+        filter_3_3 = self.convolutional_layer("i"+str(counter)+"3b", self._is_training, filter_3_3,
+                                              depth_3_reduce, 3, depth_3)
+        filter_5_5 = self.convolutional_layer("i"+str(counter)+"5a", self._is_training, input_layer,
+                                              input_depth, 1, depth_5_reduce)
+        filter_5_5 = self.convolutional_layer("i"+str(counter)+"5b", self._is_training, filter_5_5,
+                                              depth_5_reduce, 5, depth_5)
+        filter_pool = self.maxpooling_layer("i"+str(counter), input_layer, 3, 1)
+        filter_pool = self.convolutional_layer("i"+str(counter)+"p", self._is_training,
+                                               filter_pool, input_depth, 1, depth_pool)
+        return tf.concat([filter_1_1, filter_3_3, filter_5_5, filter_pool], axis=3)
+
+    def add_inception_layers(self):
+        """Build the structure of a convolutional neural network from image data `input_layer`
+        to the last hidden layer on the model of a similar manner than Inception networks (see
+        Szegedy et al, Going Deeper with Convolutions, arXiv technical report, 2014) ; not
+        necessarily the *same* structure, as the input shape is not necessarily identical
+
+        Returns
+        -------
+        tensor
+            Output layer of the neural network, *i.e.* a 1 X 1 X nb_class structure that contains
+        model predictions
+        """
+        layer = self.convolutional_layer(1, self._is_training, self._X, self._nb_channels, 7, 64,
+        2)
+        layer = self.maxpooling_layer(1, layer, 3, 2)
+        layer = self.convolutional_layer(2, self._is_training, layer, 64, 3, 192)
+        layer = self.maxpooling_layer(2, layer, 3, 2)
+        layer = self.inception_block('3a', layer, 192, 64, 96, 128, 16, 32, 32)
+        layer = self.inception_block('3b', layer, 256, 128, 128, 192, 32, 96, 64)
+        layer = self.maxpooling_layer(3, layer, 3, 2)
+        layer = self.inception_block('4a', layer, 480, 192, 96, 208, 16, 48, 64)
+        layer = self.inception_block('4b', layer, 512, 160, 112, 224, 24, 64, 64)
+        layer = self.inception_block('4c', layer, 512, 128, 128, 256, 24, 64, 64)
+        layer = self.inception_block('4d', layer, 512, 112, 144, 288, 32, 64, 64)
+        layer = self.inception_block('4e', layer, 528, 256, 160, 320, 32, 128, 128)
+        layer = self.maxpooling_layer(4, layer, 3, 2)
+        layer = self.inception_block('5a', layer, 832, 256, 160, 320, 32, 128, 128)
+        layer = self.inception_block('5b', layer, 832, 384, 192, 384, 48, 128, 128)
+        layer = tf.nn.avg_pool(layer, ksize=[1, 7, 7, 1], strides=[1, 1, 1, 1],
+                               padding="VALID", name="avg_pool")
+        layer = tf.reshape(layer, [-1, 1024])
+        layer = tf.nn.dropout(layer, self._dropout, name="final_dropout")
+        return self.output_layer(layer, 1024)
+
     def compute_loss(self):
         """Define the loss tensor as well as the optimizer; it uses a decaying
         learning rate following the equation
