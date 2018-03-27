@@ -61,10 +61,13 @@ if __name__ == '__main__':
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
     parser.add_argument('-N', '--network', default='small',
-                        help=("Neural network size, either 'small' or 'medium'"
+                        help=("Neural network size, either 'small', 'medium',"
+                              " 'vgg' or 'inception' "
                               "('small' refers to 3 conv/pool blocks and 1 "
-                              "fully-connected layer, and 'medium' refers to 6"
-                              "conv/pool blocks and 2 fully-connected layers)")) # TO UPDATE
+                              "fully-connected layer; 'medium' refers to 6"
+                              "conv/pool blocks and 2 fully-connected layers;"
+                              " 'vgg' and 'inception' refer to "
+                              "state-of-the-art networks)"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
@@ -127,10 +130,10 @@ if __name__ == '__main__':
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
 
-    if not args.network in ["small", "medium", "vgg", "inception", "inception-v2", "inception-v3"]:
+    if not args.network in ["small", "medium", "vgg", "inception"]:
         utils.logger.error(("Unsupported network size description"
-                            "Please use this parameter with 'small' or "
-                            "'medium' values"))
+                            "Please use this parameter with 'small', "
+                            "'medium', 'vgg' or 'inception' values"))
         sys.exit(1)
 
     if not args.model in ["feature_detection", "semantic_segmentation"]:
