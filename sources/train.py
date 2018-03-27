@@ -4,8 +4,11 @@ import os
 import pandas as pd
 import sys
 
+
 from dataset import MapillaryDataset, ShapeDataset
-from model import ConvolutionalNeuralNetwork
+from feature_detection import FeatureDetectionModel
+from semantic_segmentation import SemanticSegmentationModel
+
 import utils
 
 if __name__ == '__main__':
@@ -51,10 +54,9 @@ if __name__ == '__main__':
                         help=("Monitoring level: 0=no monitoring, 1=monitor"
                               " important scalar variables, 2=monitor all "
                               "scalar variables, 3=full-monitoring"))
-    parser.add_argument('-M', '--model',
-                        help=("Research problem that is addressed, "
-                              "either 'feature_detection' or "
-                              "'semantic_segmentation'"))
+    parser.add_argument('-M', '--model', required=True,
+                        help=("Type of model to train, either "
+                              "'feature_detection' or 'semantic_segmentation'"))
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
@@ -192,21 +194,43 @@ if __name__ == '__main__':
         glossary["popularity"] = train_dataset.get_class_popularity()
         utils.logger.info("Data glossary:\n{}".format(glossary))
         sys.exit(0)
-
-    # Convolutional Neural Network creation and training
     utils.logger.info(("{} classes in the dataset glossary, {} being focused "
                        "").format(train_dataset.get_nb_class(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
-    cnn = ConvolutionalNeuralNetwork(network_name=instance_name, image_size=args.image_size,
-                                     nb_channels=3, nb_labels=len(label_list),
-                                     netsize=args.network_size,
-                                     learning_rate=args.learning_rate,
-                                     monitoring_level=args.monitoring)
-    cnn.train(train_dataset, validation_dataset, label_list, keep_proba=args.dropout,
-              nb_epochs=args.nb_epochs, batch_size=min(args.batch_size, args.nb_training_image),
-              validation_size=args.nb_validation_image,
-              nb_iter=args.training_limit, log_step=args.log_step,
-              save_step=args.save_step, validation_step=args.validation_step,
-              backup_path=folders["output"], timing=args.chrono)
-    sys.exit(0)
+
+    if args.model == 'feature_detection':
+        fdm = FeatureDetectionModel(network_name=instance_name,
+                                    image_size=args.image_size, nb_channels=3,
+                                    nb_labels=len(label_list),
+                                    netsize=args.network_size,
+                                    learning_rate=args.learning_rate,
+                                    monitoring_level=args.monitoring)
+        fdm.train(train_dataset, validation_dataset, label_list,
+                  keep_proba=args.dropout, nb_epochs=args.nb_epochs,
+                  batch_size=min(args.batch_size, args.nb_training_image),
+                  validation_size=args.nb_validation_image,
+                  nb_iter=args.training_limit, log_step=args.log_step,
+                  save_step=args.save_step, validation_step=args.validation_step,
+                  backup_path=folders["output"], timing=args.chrono)
+        sys.exit(0)
+    elif args.model == 'semantic_segmentation':
+        ssm = SemanticSegmentationModel(network_name=instance_name,
+                                    image_size=args.image_size, nb_channels=3,
+                                    nb_labels=len(label_list),
+                                    netsize=args.network_size,
+                                    learning_rate=args.learning_rate,
+                                    monitoring_level=args.monitoring)
+        ssm.train(train_dataset, validation_dataset, label_list,
+                  keep_proba=args.dropout, nb_epochs=args.nb_epochs,
+                  batch_size=min(args.batch_size, args.nb_training_image),
+                  validation_size=args.nb_validation_image,
+                  nb_iter=args.training_limit, log_step=args.log_step,
+                  save_step=args.save_step, validation_step=args.validation_step,
+                  backup_path=folders["output"], timing=args.chrono)
+        sys.exit(0)
+    else:
+        utils.logger.error(("Unknown type of model. Please use "
+                            "'feature_detection' or 'semantic_segmentation'"))
+        sys.exit(1)
+
