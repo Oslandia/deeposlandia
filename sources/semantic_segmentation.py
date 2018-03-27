@@ -86,7 +86,7 @@ class SemanticSegmentationModel(ConvolutionalNeuralNetwork):
                                                   3, 64, [1, 2, 2, 1])
         layer = self.convolution_transposal_layer(3, self._is_training, layer, 64,
                                                   3, 32, [1, 2, 2, 1])
-        layer = self.convolution_transposal_layer(4, self._is_training, layer, 32, 3,
+        layer = self.convolution_transposal_layer(4, self._is_training, layer, 32, 2,
                                                   self.get_nb_labels(), [1, 2, 2, 1])
         return self.output_layer(layer)
 
