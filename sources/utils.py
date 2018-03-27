@@ -18,7 +18,7 @@ import sys
 # Define the logger for the current project
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(module)s :: %(funcName)s : %(message)s')
 ch_stdout = logging.StreamHandler(sys.stdout)
 os.makedirs("../log", exist_ok=True)
 ch_logfile = logging.FileHandler("../log/cnn_log.log")
