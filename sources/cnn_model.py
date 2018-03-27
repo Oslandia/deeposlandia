@@ -207,8 +207,8 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
         with tf.variable_scope('transconv'+str(counter)) as scope:
             w = self.create_weights([kernel_dim, kernel_dim,
                                      layer_depth, input_layer_depth])
-            batch_size = tf.shape(input_layer)[0]
-            layer_size = strides[1] * tf.shape(input_layer)[1]
+            batch_size = self._batch_size
+            layer_size = strides[1] * int(input_layer.shape[1])
             tconv = tf.nn.conv2d_transpose(input_layer, w,
                                            output_shape=[batch_size, layer_size, layer_size, layer_depth],
                                            strides=strides, padding=padding)
