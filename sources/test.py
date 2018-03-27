@@ -20,7 +20,7 @@ if __name__ == '__main__':
                         help=("Number of images that must be contained "
                               "into a single batch"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
-                        help="Dataset type (either mapillary or shape")
+                        help="Dataset type (either mapillary or shapes")
     parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="Relative path towards data directory")
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     elif args.dataset == "shapes":
         testing_dataset = ShapeDataset(image_size, 3)
     else:
-        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
+        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)

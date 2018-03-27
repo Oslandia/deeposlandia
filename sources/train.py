@@ -24,7 +24,7 @@ if __name__ == '__main__':
                         help=("Measure the training phase execution time "
                               "and store it in a json file"))
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
-                        help="Dataset type (either mapillary or shape")
+                        help="Dataset type (either mapillary or shapes")
     parser.add_argument('-dp', '--datapath', required=False,
                         default="../data", nargs='?',
                         help="Relative path towards data directory")
@@ -159,7 +159,7 @@ if __name__ == '__main__':
         train_dataset = ShapeDataset(args.image_size, 3)
         validation_dataset = ShapeDataset(args.image_size, 3)
     else:
-        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shape'")
+        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
