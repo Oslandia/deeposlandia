@@ -60,11 +60,14 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default="cnnmapil", nargs='?',
                         help=("Model name that will be used for results, "
                               "checkout and graph storage on file system"))
-    parser.add_argument('-ns', '--network-size', default='small',
-                        help=("Neural network size, either 'small' or 'medium'"
+    parser.add_argument('-N', '--network', default='small',
+                        help=("Neural network size, either 'small', 'medium',"
+                              " 'vgg' or 'inception' "
                               "('small' refers to 3 conv/pool blocks and 1 "
-                              "fully-connected layer, and 'medium' refers to 6"
-                              "conv/pool blocks and 2 fully-connected layers)"))
+                              "fully-connected layer; 'medium' refers to 6"
+                              "conv/pool blocks and 2 fully-connected layers;"
+                              " 'vgg' and 'inception' refer to "
+                              "state-of-the-art networks)"))
     parser.add_argument('-r', '--learning-rate', required=False, nargs="+",
                         default=[0.01, 1000, 0.95], type=float,
                         help=("List of learning rate components (starting LR, "
@@ -127,10 +130,10 @@ if __name__ == '__main__':
                            "each batch (convex weights with min at 50%)..."))
         sys.exit(1)
 
-    if not args.network_size in ["small", "medium"]:
+    if not args.network in ["small", "medium", "vgg", "inception"]:
         utils.logger.error(("Unsupported network size description"
-                            "Please use this parameter with 'small' or "
-                            "'medium' values"))
+                            "Please use this parameter with 'small', "
+                            "'medium', 'vgg' or 'inception' values"))
         sys.exit(1)
 
     if not args.model in ["feature_detection", "semantic_segmentation"]:
@@ -145,7 +148,7 @@ if __name__ == '__main__':
 
     # Instance name (name + image size + network size + batch_size + aggregate? + dropout +
     # learning_rate)
-    instance_args = [args.name, args.image_size, args.network_size, args.batch_size,
+    instance_args = [args.name, args.image_size, args.network, args.batch_size,
                      aggregate_value, args.dropout, utils.list_to_str(args.learning_rate)]
     instance_name = utils.list_to_str(instance_args, "_")
 
@@ -233,4 +236,3 @@ if __name__ == '__main__':
         utils.logger.error(("Unknown type of model. Please use "
                             "'feature_detection' or 'semantic_segmentation'"))
         sys.exit(1)
-

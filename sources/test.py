@@ -50,7 +50,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # instance name decomposition (instance name = name + image size + network size)
-    _, image_size, network_size, _, aggregate_value, _, _ = args.name.split('_')
+    _, image_size, network, _, aggregate_value, _, _ = args.name.split('_')
     image_size = int(image_size)
 
     if image_size > 1024:
@@ -58,9 +58,9 @@ if __name__ == '__main__':
                             "reasonable image size (less than 1024)"))
         sys.exit(1)
 
-    if not network_size in ["small", "medium"]:
+    if not network in ["small", "medium", "vgg", "inception", "inception-v2", "inception-v3"]:
         utils.logger.error(("Unsupported network size. "
-                            "Please choose 'small' or 'medium'."))
+                            "Please choose 'small' or 'medium'.")) # TO UPDATE
         sys.exit(1)
 
     if not args.model in ["feature_detection", "semantic_segmentation"]:
