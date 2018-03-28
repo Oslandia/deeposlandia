@@ -107,7 +107,7 @@ if __name__ == '__main__':
     if args.model == "feature_detection":
         fdm = FeatureDetectionModel(network_name=args.name, image_size=image_size,
                                     nb_channels=3, nb_labels=len(label_list),
-                                    netsize=network_size)
+                                    netsize=network)
         fdm.test(testing_dataset, labels=label_list,
                  batch_size=min(args.batch_size, args.nb_testing_image),
                  log_step=args.log_step, backup_path=folders["output"])
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     elif args.model == "semantic_segmentation":
         ssm = FeatureDetectionModel(network_name=args.name, image_size=image_size,
                                     nb_channels=3, nb_labels=len(label_list),
-                                    netsize=network_size)
+                                    netsize=network)
         ssm.test(testing_dataset, labels=label_list,
                  batch_size=min(args.batch_size, args.nb_testing_image),
                  log_step=args.log_step, backup_path=folders["output"])
