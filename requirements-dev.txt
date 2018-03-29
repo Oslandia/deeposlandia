@@ -1,0 +1,5 @@
+-e .
+pytest
+ipdb
+ipython
+jupyter
