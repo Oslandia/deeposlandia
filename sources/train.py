@@ -43,7 +43,7 @@ if __name__ == '__main__':
                         help=("Number of training images"))
     parser.add_argument('-iv', '--nb-validation-image', type=int, default=200,
                         help=("Number of validation images"))
-    parser.add_argument('-l', '--label-list', required=False, nargs="+",
+    parser.add_argument('-l', '--label-list', required=False, nargs="*",
                         default=-1, type=int,
                         help=("List of label indices that "
                               "will be considered during training process"))
