@@ -206,7 +206,7 @@ if __name__ == '__main__':
         fdm = FeatureDetectionModel(network_name=instance_name,
                                     image_size=args.image_size, nb_channels=3,
                                     nb_labels=len(label_list),
-                                    netsize=args.network_size,
+                                    netsize=args.network,
                                     learning_rate=args.learning_rate,
                                     monitoring_level=args.monitoring)
         fdm.train(train_dataset, validation_dataset, label_list,
@@ -221,7 +221,7 @@ if __name__ == '__main__':
         ssm = SemanticSegmentationModel(network_name=instance_name,
                                     image_size=args.image_size, nb_channels=3,
                                     nb_labels=len(label_list),
-                                    netsize=args.network_size,
+                                    netsize=args.network,
                                     learning_rate=args.learning_rate,
                                     monitoring_level=args.monitoring)
         ssm.train(train_dataset, validation_dataset, label_list,
