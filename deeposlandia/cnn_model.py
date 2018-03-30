@@ -29,8 +29,7 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 import time
 
-import dataset
-import utils
+from deeposlandia import dataset, utils
 
 class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
 

@@ -4,9 +4,9 @@ import os
 import pandas as pd
 import sys
 
-from dataset import MapillaryDataset, ShapeDataset
-from feature_detection import FeatureDetectionModel
-from semantic_segmentation import SemanticSegmentationModel
+from deeposlandia.dataset import MapillaryDataset, ShapeDataset
+from deeposlandia.feature_detection import FeatureDetectionModel
+from deeposlandia.semantic_segmentation import SemanticSegmentationModel
 
 import utils
 
