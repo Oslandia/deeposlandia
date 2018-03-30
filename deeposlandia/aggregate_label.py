@@ -159,7 +159,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=("Aggregate labels on a training image"))
     parser.add_argument('-dp', '--datapath', required=False,
-                        default="../data", nargs='?',
+                        default="data", nargs='?',
                         help="Relative path towards data directory")
     parser.add_argument('-s', '--save', required=False,
                         default="config_aggregate.json",

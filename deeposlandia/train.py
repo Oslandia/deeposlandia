@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
                         help="Dataset type (either mapillary or shapes")
     parser.add_argument('-dp', '--datapath', required=False,
-                        default="../data", nargs='?',
+                        default="data", nargs='?',
                         help="Relative path towards data directory")
     parser.add_argument('-do', '--dropout', required=False,
                         default=1.0, nargs='?',
