@@ -30,10 +30,6 @@ if __name__ == '__main__':
                         default=-1, type=int,
                         help=("List of label indices that "
                               "will be considered during testing process"))
-    parser.add_argument('-M', '--model',
-                        help=("Research problem that is addressed, "
-                              "either 'feature_detection' or "
-                              "'semantic_segmentation'"))
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("Log periodicity during testing process"))
