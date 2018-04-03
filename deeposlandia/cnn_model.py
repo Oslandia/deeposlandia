@@ -101,7 +101,7 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
 
     def convolutional_layer(self, counter, is_training, input_layer,
                             input_layer_depth, kernel_dim,
-                            layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
+                            layer_depth, strides=1, padding='SAME'):
         """Build a convolutional layer as a Tensorflow object,
         for a convolutional neural network
 
@@ -126,8 +126,8 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
         previous and current layer depths)
         layer_depth: integer
             current layer channel number
-        strides: list
-            Dimensions of the convolution stride operation defined as [1,a,a,1]
+        strides: integer
+            Dimensions of the convolution stride operation defined as [1,strides,strides,1]
         where a is the shift (in pixels) between each convolution operation
         padding: object
             String designing the padding mode ('SAME', or 'VALID')
@@ -135,7 +135,7 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
         with tf.variable_scope('conv'+str(counter)) as scope:
             w = self.create_weights([kernel_dim, kernel_dim,
                                      input_layer_depth, layer_depth])
-            conv = tf.nn.conv2d(input_layer, w, strides=strides,
+            conv = tf.nn.conv2d(input_layer, w, strides=[1, strides, strides, 1],
                                 padding=padding)
             batched_conv = tf.layers.batch_normalization(conv, training=is_training)
             relu_conv = tf.nn.relu(batched_conv, name=scope.name)
@@ -146,7 +146,7 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
     
     def convolution_transposal_layer(self, counter, is_training, input_layer,
                                      input_layer_depth, kernel_dim,
-                                     layer_depth, strides=[1, 1, 1, 1], padding='SAME'):
+                                     layer_depth, strides=1, padding='SAME'):
         """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
         network
 
@@ -171,8 +171,8 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
         previous and current layer depths)
         layer_depth: integer
             current layer channel number
-        strides: list
-            Dimensions of the convolution stride operation defined as [1,a,a,1]
+        strides: integer
+            Dimensions of the convolution stride operation defined as [1,strides,strides,1]
         where a is the shift (in pixels) between each convolution operation
         padding: object
             String designing the padding mode ('SAME', or 'VALID')
@@ -185,7 +185,7 @@ class ConvolutionalNeuralNetwork(metaclass=abc.ABCMeta):
             layer_size = strides[1] * int(input_layer.shape[1])
             tconv = tf.nn.conv2d_transpose(input_layer, w,
                                            output_shape=[batch_size, layer_size, layer_size, layer_depth],
-                                           strides=strides, padding=padding)
+                                           strides=[1, strides, strides, 1], padding=padding)
             batched_tconv = tf.layers.batch_normalization(tconv, training=is_training)
             relu_tconv = tf.nn.relu(batched_tconv, name=scope.name)
             if self._monitoring >= 3:
