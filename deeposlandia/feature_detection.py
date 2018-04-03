@@ -254,7 +254,7 @@ class FeatureDetectionModel(ConvolutionalNeuralNetwork):
         """
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
             opt = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
-        self._optimizer = opt.minimize(self._loss, self._global_step)
+            self._optimizer = opt.minimize(self._loss, self._global_step)
 
     def compute_dashboard(self, y_true, y_pred, label="wrapper"):
         """Compute the global confusion matrix (`y_true` and `y_pred`
