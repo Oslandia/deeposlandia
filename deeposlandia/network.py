@@ -149,7 +149,7 @@ class ConvolutionalNeuralNetwork:
         Returns
         -------
         tensor
-            2D output layer
+            Output layer
         """
         x = K.layers.Dense(depth, name=name+'_fc')(x)
         if batch_norm:
@@ -158,3 +158,20 @@ class ConvolutionalNeuralNetwork:
         x = K.layers.Dropout(dropout_rate, name=name+'_dropout')(x)
         return x
 
+    def flatten(self, x, name=""):
+        """Apply a flattening operation to input tensor `x`, to reduce its dimension; arises
+        generally before a dense layer
+
+        Parameters
+        ----------
+        x : tensor
+            Input layer; its shapes is necessarily larger than 3
+        name : str
+            Flatten block name, for identification purpose
+
+        Returns
+        -------
+        tensor
+            2D output layer
+        """
+        return K.layers.Flatten(name=name)(x)
