@@ -5,6 +5,7 @@
 # Date: september 2017
 """
 
+import json
 import logging
 import math
 import matplotlib.pyplot as plt
@@ -26,6 +27,22 @@ ch_stdout.setFormatter(formatter)
 ch_logfile.setFormatter(formatter)
 logger.addHandler(ch_stdout)
 logger.addHandler(ch_logfile)
+
+def read_config(filename):
+    """Read the JSON configuration file.
+
+    Parameters
+    ----------
+    filename : str
+        Path of the configuration file
+
+    Returns
+    -------
+    dict
+        Dataset glossary
+    """
+    with open(filename) as fobj:
+        return json.load(fobj)
 
 def compute_monotonic_weights(nb_images, label_counter, mu=0.5, max_weight=10):
     """Compute monotonic weights regarding the popularity of each label given
