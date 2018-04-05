@@ -329,14 +329,16 @@ class ShapeDataset(Dataset):
     CIRCLE_COLOR = (200, 10, 50)
     TRIANGLE = 2
     TRIANGLE_COLOR = (200, 130, 130)
+    BACKGROUND = 3
+    BACKGROUND_COLOR = (255, 255, 255)
 
-    def __init__(self, image_size, nb_classes):
+    def __init__(self, image_size):
         """ Class constructor
         """
         super().__init__(image_size)
-        self.build_glossary(nb_classes)
+        self.build_glossary()
 
-    def build_glossary(self, nb_classes):
+    def build_glossary(self):
         """Read the shape glossary stored as a json file at the data
         repository root
 
@@ -345,13 +347,10 @@ class ShapeDataset(Dataset):
         nb_classes : integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(0, "square", self.SQUARE_COLOR, True)
-        if nb_classes > 1:
-            self.add_class(1, "circle", self.CIRCLE_COLOR, True)
-        if nb_classes > 2:
-            self.add_class(2, "triangle", self.TRIANGLE_COLOR, True)
-        if nb_classes > 3:
-            utils.logger.warning("Only three classes are considered.")
+        self.add_class(self.SQUARE, "square", self.SQUARE_COLOR, True)
+        self.add_class(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
+        self.add_class(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
+        self.add_class(self.BACKGROUND, "background", self.BACKGROUND_COLOR, False)
 
     def generate_labels(self, nb_images):
         """ Generate random shape labels in order to prepare shape image
@@ -448,7 +447,7 @@ class ShapeDataset(Dataset):
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
-        labelled_image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8) * 255
+        labelled_image = np.full([self.image_size, self.image_size, 3], self.BACKGROUND_COLOR, dtype=np.uint8)
 
         # Get the center x, y and the size s
         if image_info["labels"][self.SQUARE]:

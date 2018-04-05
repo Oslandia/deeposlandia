@@ -158,8 +158,8 @@ if __name__ == '__main__':
         train_dataset = MapillaryDataset(args.image_size, config_path)
         validation_dataset = MapillaryDataset(args.image_size, config_path)
     elif args.dataset == "shapes":
-        train_dataset = ShapeDataset(args.image_size, 3)
-        validation_dataset = ShapeDataset(args.image_size, 3)
+        train_dataset = ShapeDataset(args.image_size)
+        validation_dataset = ShapeDataset(args.image_size)
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
         sys.exit(1)
