@@ -3,7 +3,7 @@
 
 import keras as K
 
-from cnn_model import ConvolutionNeuralNetwork
+from deeposlandia.network import ConvolutionalNeuralNetwork
 
 def test_convolution_shape():
     """Test the convolution operation through its output layer shape
@@ -12,7 +12,7 @@ def test_convolution_shape():
     image_size = 64
     depth = 8
     strides = 2
-    cnn = ConvolutionNeuralNetwork("test", image_size)
+    cnn = ConvolutionalNeuralNetwork("test", image_size)
     y = cnn.convolution(cnn._X, nb_filters=depth,
                         kernel_size=3, strides=strides)
     assert(len(y.shape) == 4)
@@ -28,7 +28,7 @@ def test_transposed_convolution_shape():
     depth = 8
     kernel_size = 3
     strides = 2
-    cnn = ConvolutionNeuralNetwork("test", image_size)
+    cnn = ConvolutionalNeuralNetwork("test", image_size)
     print(cnn._X.shape)
     y = cnn.transposed_convolution(cnn._X, nb_filters=depth,
                                    kernel_size=kernel_size, strides=strides)
@@ -46,7 +46,7 @@ def test_maxpooling_shape():
     nb_channels = 3
     psize = 2
     strides = 2
-    cnn = ConvolutionNeuralNetwork("test", image_size, nb_channels)
+    cnn = ConvolutionalNeuralNetwork("test", image_size, nb_channels)
     y = cnn.maxpool(cnn._X, pool_size=psize, strides=strides)
     assert(len(y.shape) == 4)
     assert(y.shape[1] == image_size // strides)
@@ -59,7 +59,7 @@ def test_dense_shape():
     """
     image_size = 64
     depth = 8
-    cnn = ConvolutionNeuralNetwork("test", image_size)
+    cnn = ConvolutionalNeuralNetwork("test", image_size)
     y = cnn.dense(cnn._X, depth=depth)
     assert(len(y.shape) == 2)
     assert(y.shape[1] == depth)

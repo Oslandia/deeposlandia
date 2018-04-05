@@ -3,7 +3,7 @@
 
 import keras as K
 
-class ConvolutionNeuralNetwork:
+class ConvolutionalNeuralNetwork:
     """Convolutional neural network design
     """
 
