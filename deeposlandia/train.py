@@ -5,11 +5,10 @@ import pandas as pd
 import sys
 
 
-from dataset import MapillaryDataset, ShapeDataset
-from feature_detection import FeatureDetectionModel
-from semantic_segmentation import SemanticSegmentationModel
-
-import utils
+from deeposlandia.dataset import MapillaryDataset, ShapeDataset
+from deeposlandia.feature_detection import FeatureDetectionModel
+from deeposlandia.semantic_segmentation import SemanticSegmentationModel
+from deeposlandia import utils
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
@@ -26,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
                         help="Dataset type (either mapillary or shapes")
     parser.add_argument('-dp', '--datapath', required=False,
-                        default="../data", nargs='?',
+                        default="data", nargs='?',
                         help="Relative path towards data directory")
     parser.add_argument('-do', '--dropout', required=False,
                         default=1.0, nargs='?',

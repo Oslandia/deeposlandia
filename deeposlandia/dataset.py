@@ -9,7 +9,7 @@ from PIL import Image
 
 import numpy as np
 
-import utils
+from deeposlandia import utils
 
 class Dataset:
     """Generic class that describes the behavior of a Dataset object: it is initialized at least

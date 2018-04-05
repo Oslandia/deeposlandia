@@ -8,9 +8,8 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 import time
 
-import dataset
-from cnn_model import ConvolutionalNeuralNetwork
-import utils
+from deeposlandia import dataset, utils
+from deeposlandia.cnn_model import ConvolutionalNeuralNetwork
 
 class FeatureDetectionModel(ConvolutionalNeuralNetwork):
 

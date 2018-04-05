@@ -4,11 +4,10 @@ import os
 import pandas as pd
 import sys
 
-from dataset import MapillaryDataset, ShapeDataset
-from feature_detection import FeatureDetectionModel
-from semantic_segmentation import SemanticSegmentationModel
-
-import utils
+from deeposlandia.dataset import MapillaryDataset, ShapeDataset
+from deeposlandia.feature_detection import FeatureDetectionModel
+from deeposlandia.semantic_segmentation import SemanticSegmentationModel
+from deeposlandia import utils
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dataset', required=True, nargs='?',
                         help="Dataset type (either mapillary or shapes")
     parser.add_argument('-dp', '--datapath', required=False,
-                        default="../data", nargs='?',
+                        default="data", nargs='?',
                         help="Relative path towards data directory")
     parser.add_argument('-i', '--nb-testing-image', type=int, default=5000,
                         help=("Number of testing images"))
@@ -30,10 +29,6 @@ if __name__ == '__main__':
                         default=-1, type=int,
                         help=("List of label indices that "
                               "will be considered during testing process"))
-    parser.add_argument('-M', '--model',
-                        help=("Research problem that is addressed, "
-                              "either 'feature_detection' or "
-                              "'semantic_segmentation'"))
     parser.add_argument('-ls', '--log-step', nargs="?",
                         default=10, type=int,
                         help=("Log periodicity during testing process"))
