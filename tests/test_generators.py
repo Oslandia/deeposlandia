@@ -8,11 +8,10 @@ def test_mapillary_generator():
 
     """
     dataset = "mapillary"
-    IMAGE_SIZE = 256
+    IMAGE_SIZE = 128
     BATCH_SIZE = 10
-    datapath = ("data/mapillary/preprocessed/" + str(IMAGE_SIZE)
-                + "_aggregated/training/")
-    config = utils.read_config("./data/mapillary/input/config_aggregate.json")
+    datapath = ("./tests/data/" + dataset + "/training")
+    config = utils.read_config("./tests/data/" + dataset + "/config_aggregate.json")
     gen = generator.create_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
     assert(len(item)==2)
@@ -26,10 +25,9 @@ def test_shape_generator():
 
     """
     dataset = "shapes"
-    IMAGE_SIZE = 64
+    IMAGE_SIZE = 48
     BATCH_SIZE = 10
-    datapath = ("data/shapes/preprocessed/" + str(IMAGE_SIZE)
-                + "_full/training")
+    datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(datapath + ".json")
     gen = generator.create_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
