@@ -7,8 +7,7 @@ import sys
 from deeposlandia.dataset import MapillaryDataset, ShapeDataset
 from deeposlandia.feature_detection import FeatureDetectionModel
 from deeposlandia.semantic_segmentation import SemanticSegmentationModel
-
-import utils
+from deeposlandia import utils
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
