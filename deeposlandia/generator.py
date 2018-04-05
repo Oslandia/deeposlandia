@@ -28,12 +28,12 @@ def find_classes(img, config):
     """
     colors = [config['classes'][sc]['color'] for sc in config['classes']]
     nb_classes = len(config['classes'])
-    mask = np.zeros(img.shape[:3]) + nb_classes
+    a = np.zeros(img.shape[:3]) + nb_classes
     for class_id in range(nb_classes):
         for i in range(img.shape[0]):
-            mask[i][[[img[i, x, y, ::-1].tolist() == colors[class_id] for y in range(img.shape[2])]
-                   for x in range(img.shape[1])]] = class_id
-    return mask
+            a[i][[[img[i, x, y, ::-1].tolist() == colors[class_id] for y in range(img.shape[2])]
+                  for x in range(img.shape[1])]] = class_id
+    return a
 
 def to_categorical(img, config, dataset):
     """One-hot encoder for a labelled image
@@ -103,7 +103,7 @@ def create_generator(dataset, datapath, image_size, batch_size, config, seed=133
         class_mode=None,
         seed=seed)
     if dataset == 'shapes':
-        mask_generator = generator.flow_from_directory(
+        label_generator = generator.flow_from_directory(
             datapath,
             classes=['labels'],
             target_size=(image_size, image_size),
@@ -111,7 +111,7 @@ def create_generator(dataset, datapath, image_size, batch_size, config, seed=133
             class_mode=None,
             seed=seed)
     else:
-        mask_generator = generator.flow_from_directory(
+        label_generator = generator.flow_from_directory(
             datapath,
             classes=['labels'],
             target_size=(image_size, image_size),
@@ -119,5 +119,6 @@ def create_generator(dataset, datapath, image_size, batch_size, config, seed=133
             class_mode=None,
             color_mode='grayscale',
             seed=seed)
-    mask_generator = iter(to_categorical(x, config, dataset) for x in mask_generator)
-    return zip(im_generator, mask_generator)
+    label_generator = iter(to_categorical(x, config, dataset)
+                           for x in label_generator)
+    return zip(im_generator, label_generator)
