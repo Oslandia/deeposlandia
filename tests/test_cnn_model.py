@@ -1,7 +1,5 @@
-"""Unit test associated to the simple layer creation
+"""Unit test related to the simple layer creation
 """
-
-import keras as K
 
 from deeposlandia.network import ConvolutionalNeuralNetwork
 

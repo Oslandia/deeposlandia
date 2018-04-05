@@ -1,8 +1,5 @@
-"""Unit test associated to the generator building and feeding
+"""Unit test related to the generator building and feeding
 """
-
-import numpy as np
-import keras as K
 
 from deeposlandia import generator, network, utils
 
