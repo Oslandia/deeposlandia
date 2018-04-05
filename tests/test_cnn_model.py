@@ -11,8 +11,8 @@ def test_convolution_shape():
     depth = 8
     strides = 2
     cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.convolution(cnn._X, nb_filters=depth,
-                        kernel_size=3, strides=strides)
+    y = cnn.convolution(cnn.X, nb_filters=depth,
+                        kernel_size=3, strides=strides, name="convtest")
     assert len(y.shape) == 4
     assert y.shape[1:] == (image_size//strides, image_size//strides, depth)
 
@@ -25,8 +25,9 @@ def test_transposed_convolution_shape():
     kernel_size = 3
     strides = 2
     cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.transposed_convolution(cnn._X, nb_filters=depth,
-                                   kernel_size=kernel_size, strides=strides)
+    y = cnn.transposed_convolution(cnn.X, nb_filters=depth,
+                                   kernel_size=kernel_size, strides=strides,
+                                   name="transconvtest")
     assert len(y.shape) == 4
     assert y.shape[1:] == (image_size//strides, image_size//strides, depth)
 
@@ -39,7 +40,7 @@ def test_maxpooling_shape():
     psize = 2
     strides = 2
     cnn = ConvolutionalNeuralNetwork("test", image_size, nb_channels)
-    y = cnn.maxpool(cnn._X, pool_size=psize, strides=strides)
+    y = cnn.maxpool(cnn.X, pool_size=psize, strides=strides, name="pooltest")
     assert len(y.shape) == 4
     assert y.shape[1:] == (image_size//strides, image_size//strides, nb_channels)
 
@@ -50,7 +51,6 @@ def test_dense_shape():
     image_size = 64
     depth = 8
     cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.dense(cnn._X, depth=depth)
+    y = cnn.dense(cnn.X, depth=depth, name="fctest")
     assert len(y.shape) == 2
     assert y.shape[1] == depth
-    

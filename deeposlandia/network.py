@@ -15,7 +15,7 @@ class ConvolutionalNeuralNetwork:
         self._image_size = image_size
         self._nb_channels = nb_channels
         self._nb_labels = nb_labels
-        self._X = K.layers.Input(shape=(image_size, image_size, nb_channels))
+        self.X = K.layers.Input(shape=(image_size, image_size, nb_channels))
 
     def convolution(self, x, nb_filters, kernel_size, strides=1, padding="same",
                     activation='relu', batch_norm=True):
