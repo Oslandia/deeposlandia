@@ -18,7 +18,7 @@ class ConvolutionalNeuralNetwork:
         self.X = K.layers.Input(shape=(image_size, image_size, nb_channels))
 
     def convolution(self, x, nb_filters, kernel_size, strides=1, padding="same",
-                    activation='relu', batch_norm=True):
+                    activation='relu', batch_norm=True, name=""):
         """Apply a convolutional layer within a neural network
 
         Use Keras API
@@ -42,6 +42,8 @@ class ConvolutionalNeuralNetwork:
         batch_norm : boolean
             If True, a batch normalization process is applied on `x` tensor before activation
             layer
+        name : str
+            Convolution block name, for identification purpose
 
         Returns
         -------
@@ -49,14 +51,14 @@ class ConvolutionalNeuralNetwork:
             4D output layer
         """
         x = K.layers.Conv2D(nb_filters, kernel_size=kernel_size,
-                            strides=strides, padding='same')(x)
+                            strides=strides, padding='same', name=name+'_conv')(x)
         if batch_norm:
-            x = K.layers.BatchNormalization()(x)
-        x = K.layers.Activation(activation)(x)
+            x = K.layers.BatchNormalization(name=name+'_bn')(x)
+        x = K.layers.Activation(activation, name=name+'_activation')(x)
         return x
 
     def transposed_convolution(self, x, nb_filters, kernel_size, strides=1,
-                               padding="same", activation='relu', batch_norm=True):
+                               padding="same", activation='relu', batch_norm=True, name=""):
         """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
         network
 
@@ -81,6 +83,8 @@ class ConvolutionalNeuralNetwork:
         batch_norm : boolean
             If True, a batch normalization process is applied on `x` tensor before activation
             layer
+        name : str
+            Transposed convolution block name, for identification purpose
 
         Returns
         -------
@@ -88,13 +92,13 @@ class ConvolutionalNeuralNetwork:
             4D output layer
         """
         x = K.layers.Conv2DTranspose(nb_filters, kernel_size=kernel_size,
-                                     strides=strides, padding=padding)(x)
+                                     strides=strides, padding=padding, name=name+'_transconv')(x)
         if batch_norm:
-            x = K.layers.BatchNormalization()(x)
-        x = K.layers.Activation(activation)(x)
+            x = K.layers.BatchNormalization(name=name+'_bn')(x)
+        x = K.layers.Activation(activation, name=name+'_activation')(x)
         return x
 
-    def maxpool(self, x, pool_size, strides=1, padding="same"):
+    def maxpool(self, x, pool_size, strides=1, padding="same", name=""):
         """Apply a max pooling layer within a neural network
 
         Use Keras API
@@ -110,15 +114,17 @@ class ConvolutionalNeuralNetwork:
         padding : str
             Border pixel management ("valid" to apply convolution pixel only on image pixels, or
         "same" to replicate border pixels)
+        name : str
+            Pooling block name, for identification purpose
 
         Returns
         -------
         tensor
             4D output layer
         """
-        return K.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding)(x)
+        return K.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding, name=name)(x)
 
-    def dense(self, x, depth, dropout_rate=1.0, activation='relu', batch_norm=True):
+    def dense(self, x, depth, dropout_rate=1.0, activation='relu', batch_norm=True, name=""):
         """Apply a fully-connected layer within a neural network
 
         Use Keras API
@@ -137,17 +143,18 @@ class ConvolutionalNeuralNetwork:
         batch_norm : boolean
             If True, a batch normalization process is applied on `x` tensor before activation
             layer
+        name : str
+            Fully-connected block name, for identification purpose
 
         Returns
         -------
         tensor
             2D output layer
         """
-        x = K.layers.Flatten()(x)
-        x = K.layers.Dense(depth)(x)
+        x = K.layers.Dense(depth, name=name+'_fc')(x)
         if batch_norm:
-            x = K.layers.BatchNormalization()(x)
-        x = K.layers.Activation(activation)(x)
-        x = K.layers.Dropout(dropout_rate)(x)
+            x = K.layers.BatchNormalization(name=name+'_bn')(x)
+        x = K.layers.Activation(activation, name=name+'_activation')(x)
+        x = K.layers.Dropout(dropout_rate, name=name+'_dropout')(x)
         return x
 
