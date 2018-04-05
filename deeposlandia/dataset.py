@@ -436,6 +436,8 @@ class ShapeDataset(Dataset):
         """Draws an image from the specifications of its shapes and saves it on
         the file system to `datapath`
 
+        Save labels as mono-channel images on the file system by using the class ids
+
         Parameters
         ----------
         image_id : integer
@@ -447,19 +449,19 @@ class ShapeDataset(Dataset):
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
-        labelled_image = np.full([self.image_size, self.image_size, 3], self.BACKGROUND_COLOR, dtype=np.uint8)
+        label = np.full([self.image_size, self.image_size], self.BACKGROUND, dtype=np.uint8)
 
         # Get the center x, y and the size s
         if image_info["labels"][self.SQUARE]:
             color, x, y, s = image_info["shape_specs"][self.SQUARE]
             color = tuple(map(int, color))
             image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
-            labelled_image = cv2.rectangle(labelled_image, (x - s, y - s), (x + s, y + s), self.class_info[self.SQUARE]["color"], -1)
+            label = cv2.rectangle(label, (x - s, y - s), (x + s, y + s), self.SQUARE, -1)
         if image_info["labels"][self.CIRCLE]:
             color, x, y, s = image_info["shape_specs"][self.CIRCLE]
             color = tuple(map(int, color))
             image = cv2.circle(image, (x, y), s, color, -1)
-            labelled_image = cv2.circle(labelled_image, (x, y), s, self.class_info[self.CIRCLE]["color"], -1)
+            label = cv2.circle(label, (x, y), s, self.CIRCLE, -1)
         if image_info["labels"][self.TRIANGLE]:
             color, x, y, s = image_info["shape_specs"][self.TRIANGLE]
             color = tuple(map(int, color))
@@ -469,10 +471,10 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
-            labelled_image = cv2.fillPoly(labelled_image, points, self.class_info[self.TRIANGLE]["color"])
+            label = cv2.fillPoly(label, points, self.TRIANGLE)
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
         cv2.imwrite(image_filename, image)
         label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["label_filename"] = label_filename
-        cv2.imwrite(label_filename, labelled_image)
+        cv2.imwrite(label_filename, label)
