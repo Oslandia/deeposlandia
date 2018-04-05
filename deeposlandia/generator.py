@@ -10,6 +10,9 @@ def find_classes(img, config):
     """Convert RGB image data into a matrix which contains the glossary class that correspond to
     each pixel (-1 if no object)
 
+    As images have been stored with OpenCV, the color format is (B,G,R). The values in the last
+    dimension must then be inverted (`img[i, x, y, ::-1]` operation).
+
     Parameters
     ----------
     img : np.array
@@ -20,7 +23,8 @@ def find_classes(img, config):
     Returns
     -------
     np.array
-        Output matrix
+        Output array of shape (batch_size, img_size, img_size, nb_classes) with the index of each
+    pixel class stored at each pixel position
     """
     colors = [config['classes'][sc]['color'] for sc in config['classes']]
     nb_classes = len(config['classes'])
@@ -87,8 +91,8 @@ def create_generator(dataset, datapath, image_size, batch_size, config, seed=133
 
     Returns
     -------
-    zip
-        Image and labels Keras generators
+    generator
+        Generator of tuples (images, labels), for each input data batch
     """
     generator = ImageDataGenerator()
     im_generator = generator.flow_from_directory(
