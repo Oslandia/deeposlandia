@@ -6,8 +6,6 @@ import numpy as np
 import keras as K
 from keras.preprocessing.image import ImageDataGenerator
 
-SEED = 1337
-
 def find_classes(img, config):
     """Convert RGB image data into a matrix which contains the glossary class that correspond to
     each pixel (-1 if no object)
@@ -69,7 +67,7 @@ def to_categorical(img, config, dataset):
     output_shape = input_shape + (len(label_ids), )
     return categorical.reshape(output_shape)
 
-def create_generator(dataset, datapath, image_size, batch_size, config):
+def create_generator(dataset, datapath, image_size, batch_size, config, seed=1337):
     """Create a Keras data Generator starting from images contained in `datapath` repository
 
     Parameters
@@ -84,6 +82,8 @@ def create_generator(dataset, datapath, image_size, batch_size, config):
         Number of images in each training batch
     config : dict
         Dataset glossary
+    seed : integer
+        Random number generation for data shuffling and transformations
 
     Returns
     -------
@@ -97,7 +97,7 @@ def create_generator(dataset, datapath, image_size, batch_size, config):
         target_size=(image_size, image_size),
         batch_size=batch_size,
         class_mode=None,
-        seed=SEED)
+        seed=seed)
     if dataset == 'shapes':
         mask_generator = generator.flow_from_directory(
             datapath,
@@ -105,7 +105,7 @@ def create_generator(dataset, datapath, image_size, batch_size, config):
             target_size=(image_size, image_size),
             batch_size=batch_size,
             class_mode=None,
-            seed=SEED)
+            seed=seed)
     else:
         mask_generator = generator.flow_from_directory(
             datapath,
@@ -114,6 +114,6 @@ def create_generator(dataset, datapath, image_size, batch_size, config):
             batch_size=batch_size,
             class_mode=None,
             color_mode='grayscale',
-            seed=SEED)
+            seed=seed)
     mask_generator = iter(to_categorical(x, config, dataset) for x in mask_generator)
     return zip(im_generator, mask_generator)
