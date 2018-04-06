@@ -35,20 +35,6 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
                                             nb_channels, nb_labels, learning_rate)
         if architecture == "vgg16":
             self.Y = self.vgg16()
-        elif architecture == "vgg19":
-            self.Y = self.vgg19()
-        elif architecture == "inception-v1":
-            self.Y = self.inception_v1()
-        elif architecture == "inception-v2":
-            self.Y = self.inception_v2()
-        elif architecture == "inception-v3":
-            self.Y = self.inception_v3()
-        elif architecture == "inception-v4":
-            self.Y = self.inception_v4()
-        elif architecture == "Xception":
-            self.Y = self.xception()
-        elif architecture == "resnet":
-            self.Y = self.resnet()
         else:
             self.Y = self.simple()
 
