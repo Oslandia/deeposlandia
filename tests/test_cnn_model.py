@@ -1,6 +1,8 @@
 """Unit test related to the simple layer creation
 """
 
+from keras.models import Model
+
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 def test_convolution_shape():
@@ -13,8 +15,10 @@ def test_convolution_shape():
     cnn = ConvolutionalNeuralNetwork("test", image_size)
     y = cnn.convolution(cnn.X, nb_filters=depth,
                         kernel_size=3, strides=strides, name="convtest")
-    assert len(y.shape) == 4
-    assert y.shape[1:] == (image_size//strides, image_size//strides, depth)
+    m = Model(cnn.X, y)
+    output_shape = m.output_shape
+    assert len(output_shape) == 4
+    assert output_shape[1:] == (image_size//strides, image_size//strides, depth)
 
 def test_transposed_convolution_shape():
     """Test the transposed convolution operation through its output layer shape
@@ -28,8 +32,10 @@ def test_transposed_convolution_shape():
     y = cnn.transposed_convolution(cnn.X, nb_filters=depth,
                                    kernel_size=kernel_size, strides=strides,
                                    name="transconvtest")
-    assert len(y.shape) == 4
-    assert y.shape[1:] == (image_size//strides, image_size//strides, depth)
+    m = Model(cnn.X, y)
+    output_shape = m.output_shape
+    assert len(output_shape) == 4
+    assert output_shape[1:] == (image_size*strides, image_size*strides, depth)
 
 def test_maxpooling_shape():
     """Test the max pooling operation through its output layer shape
@@ -41,8 +47,10 @@ def test_maxpooling_shape():
     strides = 2
     cnn = ConvolutionalNeuralNetwork("test", image_size, nb_channels)
     y = cnn.maxpool(cnn.X, pool_size=psize, strides=strides, name="pooltest")
-    assert len(y.shape) == 4
-    assert y.shape[1:] == (image_size//strides, image_size//strides, nb_channels)
+    m = Model(cnn.X, y)
+    output_shape = m.output_shape
+    assert len(output_shape) == 4
+    assert output_shape[1:] == (image_size//strides, image_size//strides, nb_channels)
 
 def test_dense_shape():
     """Test the fully-connected layer through its output shape
@@ -52,5 +60,20 @@ def test_dense_shape():
     depth = 8
     cnn = ConvolutionalNeuralNetwork("test", image_size)
     y = cnn.dense(cnn.X, depth=depth, name="fctest")
-    assert len(y.shape) == 2
-    assert y.shape[1] == depth
+    m = Model(cnn.X, y)
+    output_shape = m.output_shape
+    assert len(output_shape) == 4
+    assert output_shape[1:] == (image_size, image_size, depth)
+
+def test_flatten_shape():
+    """Test the flattening layer through its output shape
+
+    """
+    image_size = 64
+    nb_channels = 3
+    cnn = ConvolutionalNeuralNetwork("test", image_size=image_size, nb_channels=nb_channels)
+    y = cnn.flatten(cnn.X, name="flattentest")
+    m = Model(cnn.X, y)
+    output_shape = m.output_shape
+    assert len(output_shape) == 2
+    assert output_shape[1] == image_size * image_size * nb_channels
