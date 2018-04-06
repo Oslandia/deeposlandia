@@ -5,12 +5,24 @@ import keras as K
 
 class ConvolutionalNeuralNetwork:
     """Convolutional neural network design
+
+    Attributes
+    ----------
+    _network_name : str
+        Name of the network
+    _image_size : integer
+        Input image size (height and width are equal)
+    _nb_channels : integer
+        Number of input image channels (1 for greyscaled images, 3 for RGB images)
+    _nb_labels : integer
+        Number of classes in the dataset glossary
+    X : tensor
+        (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
+
     """
 
     def __init__(self, network_name="mapillary", image_size=512,
                  nb_channels=3, nb_labels=65, learning_rate=1e-4):
-        """ Class constructor
-        """
         self._network_name = network_name
         self._image_size = image_size
         self._nb_channels = nb_channels

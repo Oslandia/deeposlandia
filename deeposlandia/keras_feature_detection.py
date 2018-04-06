@@ -7,7 +7,24 @@ import keras as K
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
-    """
+    """Class that encapsulates feature detection network creation
+
+    Inherits from `ConvolutionalNeuralNetwork`
+
+    Attributes
+    ----------
+    _network_name : str
+        Name of the network
+    _image_size : integer
+        Input image size (height and width are equal)
+    _nb_channels : integer
+        Number of input image channels (1 for greyscaled images, 3 for RGB images)
+    _nb_labels : integer
+        Number of classes in the dataset glossary
+    X : tensor
+        (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
+    Y : tensor
+        (None, nb_classes)-shaped output tensor, built as the output of the last network layer
     """
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
@@ -60,7 +77,7 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         Returns
         -------
         tensor
-            Output predictions, that have to be compared with ground-truth values
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
         layer = self.convolution(self.X, nb_filters=16, kernel_size=7, name='conv1')
         layer = self.maxpool(layer, pool_size=2, strides=2, name='pool1')
@@ -73,41 +90,15 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         return self.output_layer(layer, depth=self._nb_labels)
 
     def vgg16(self):
-        """
-        """
-        pass
+        """Build the structure of a convolutional neural network from input image data to the last
+        hidden layer on the model of a similar manner than VGG-net
 
-    def vgg19(self):
-        """
-        """
-        pass
+        See: Simonyan & Zisserman, Very Deep Convolutional Networks for Large-Scale Image
+        Recognition, arXiv technical report, 2014
 
-    def inception_v1(self):
-        """
-        """
-        pass
-    
-    def inception_v2(self):
-        """
-        """
-        pass
-
-    def inception_v3(self):
-        """
-        """
-        pass
-
-    def inception_v4(self):
-        """
-        """
-        pass
-
-    def xception(self):
-        """
-        """
-        pass
-
-    def resnet(self):
-        """
+        Returns
+        -------
+        tensor
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
         pass

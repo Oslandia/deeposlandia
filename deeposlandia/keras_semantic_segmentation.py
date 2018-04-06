@@ -7,7 +7,25 @@ import keras as K
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
-    """
+    """Class that encapsulates semantic segmentation network creation
+
+    Inherits from `ConvolutionalNeuralNetwork`
+
+    Attributes
+    ----------
+    _network_name : str
+        Name of the network
+    _image_size : integer
+        Input image size (height and width are equal)
+    _nb_channels : integer
+        Number of input image channels (1 for greyscaled images, 3 for RGB images)
+    _nb_labels : integer
+        Number of classes in the dataset glossary
+    X : tensor
+        (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
+    Y : tensor
+        (batch_size, image_size, image_size, nb_classes)-shaped output tensor, built as the output of the
+    last network layer
     """
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
@@ -43,7 +61,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         Returns
         -------
         tensor
-            Output predictions, that have to be compared with ground-truth values
+            (batch_size, image_size, image_size, nb_labels)-shaped output predictions, that have to
+        be compared with ground-truth values
         """
         layer = self.convolution(self.X, nb_filters=32, kernel_size=3, name='conv1')
         layer = self.maxpool(layer, pool_size=2, strides=2, name='pool1')
