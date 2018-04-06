@@ -2,8 +2,10 @@
 """Design a feature detection model with Keras API
 """
 
-import keras as K
+import h5py
 
+import keras as K
+from keras.applications import VGG16
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
@@ -101,4 +103,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         tensor
             (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
-        pass
+        vgg16_model = VGG16(input_tensor = self.X, include_top=False)
+        y = self.flatten(vgg16_model.output, name="flatten")
+        y = self.dense(y, 1024, dropout_rate=0.75, name="fc1")
+        y = self.dense(y, 1024, dropout_rate=0.75, name="fc2")
+        return self.output_layer(y, depth=self._nb_labels)
