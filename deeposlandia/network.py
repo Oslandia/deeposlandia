@@ -30,7 +30,7 @@ class ConvolutionalNeuralNetwork:
         self.X = K.layers.Input(shape=(image_size, image_size, nb_channels), name="input")
 
     def convolution(self, x, nb_filters, kernel_size, strides=1, padding="same",
-                    activation='relu', batch_norm=True, name=""):
+                    activation='relu', batch_norm=True, name=None):
         """Apply a convolutional layer within a neural network
 
         Use Keras API
@@ -70,7 +70,7 @@ class ConvolutionalNeuralNetwork:
         return x
 
     def transposed_convolution(self, x, nb_filters, kernel_size, strides=1,
-                               padding="same", activation='relu', batch_norm=True, name=""):
+                               padding="same", activation='relu', batch_norm=True, name=None):
         """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
         network
 
@@ -110,7 +110,7 @@ class ConvolutionalNeuralNetwork:
         x = K.layers.Activation(activation, name=name+'_activation')(x)
         return x
 
-    def maxpool(self, x, pool_size, strides=1, padding="same", name=""):
+    def maxpool(self, x, pool_size, strides=1, padding="same", name=None):
         """Apply a max pooling layer within a neural network
 
         Use Keras API
@@ -136,7 +136,7 @@ class ConvolutionalNeuralNetwork:
         """
         return K.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding, name=name)(x)
 
-    def dense(self, x, depth, dropout_rate=1.0, activation='relu', batch_norm=True, name=""):
+    def dense(self, x, depth, dropout_rate=1.0, activation='relu', batch_norm=True, name=None):
         """Apply a fully-connected layer within a neural network
 
         Use Keras API
@@ -170,7 +170,7 @@ class ConvolutionalNeuralNetwork:
         x = K.layers.Dropout(dropout_rate, name=name+'_dropout')(x)
         return x
 
-    def flatten(self, x, name=""):
+    def flatten(self, x, name=None):
         """Apply a flattening operation to input tensor `x`, to reduce its dimension; arises
         generally before a dense layer
 
