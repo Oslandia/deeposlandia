@@ -15,13 +15,13 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
 
     Attributes
     ----------
-    _network_name : str
+    network_name : str
         Name of the network
-    _image_size : integer
+    image_size : integer
         Input image size (height and width are equal)
-    _nb_channels : integer
+    nb_channels : integer
         Number of input image channels (1 for greyscaled images, 3 for RGB images)
-    _nb_labels : integer
+    nb_labels : integer
         Number of classes in the dataset glossary
     X : tensor
         (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
@@ -75,7 +75,7 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         layer = self.maxpool(layer, pool_size=2, strides=2, name='pool3')
         layer = self.flatten(layer, name='flatten1')
         layer = self.dense(layer, depth=512, dropout_rate=0.75, name='fc1')
-        return self.output_layer(layer, depth=self._nb_labels)
+        return self.output_layer(layer, depth=self.nb_labels)
 
     def vgg16(self):
         """Build the structure of a convolutional neural network from input image data to the last
@@ -93,4 +93,4 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         y = self.flatten(vgg16_model.output, name="flatten")
         y = self.dense(y, 1024, dropout_rate=0.75, name="fc1")
         y = self.dense(y, 1024, dropout_rate=0.75, name="fc2")
-        return self.output_layer(y, depth=self._nb_labels)
+        return self.output_layer(y, depth=self.nb_labels)

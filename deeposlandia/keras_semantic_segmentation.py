@@ -13,13 +13,13 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
 
     Attributes
     ----------
-    _network_name : str
+    network_name : str
         Name of the network
-    _image_size : integer
+    image_size : integer
         Input image size (height and width are equal)
-    _nb_channels : integer
+    nb_channels : integer
         Number of input image channels (1 for greyscaled images, 3 for RGB images)
-    _nb_labels : integer
+    nb_labels : integer
         Number of classes in the dataset glossary
     X : tensor
         (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
@@ -73,4 +73,4 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         layer = self.transposed_convolution(layer, nb_filters=128, strides=2, kernel_size=3, name="trconv1")
         layer = self.transposed_convolution(layer, nb_filters=64, strides=2, kernel_size=3, name="trconv2")
         layer = self.transposed_convolution(layer, nb_filters=32, strides=2, kernel_size=3, name="trconv3")
-        return self.output_layer(layer, depth=self._nb_labels)
+        return self.output_layer(layer, depth=self.nb_labels)

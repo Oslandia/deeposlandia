@@ -8,13 +8,13 @@ class ConvolutionalNeuralNetwork:
 
     Attributes
     ----------
-    _network_name : str
+    network_name : str
         Name of the network
-    _image_size : integer
+    image_size : integer
         Input image size (height and width are equal)
-    _nb_channels : integer
+    nb_channels : integer
         Number of input image channels (1 for greyscaled images, 3 for RGB images)
-    _nb_labels : integer
+    nb_labels : integer
         Number of classes in the dataset glossary
     X : tensor
         (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
@@ -23,10 +23,10 @@ class ConvolutionalNeuralNetwork:
 
     def __init__(self, network_name="mapillary", image_size=512,
                  nb_channels=3, nb_labels=65, learning_rate=1e-4):
-        self._network_name = network_name
-        self._image_size = image_size
-        self._nb_channels = nb_channels
-        self._nb_labels = nb_labels
+        self.network_name = network_name
+        self.image_size = image_size
+        self.nb_channels = nb_channels
+        self.nb_labels = nb_labels
         self.X = K.layers.Input(shape=(image_size, image_size, nb_channels), name="input")
 
     def convolution(self, x, nb_filters, kernel_size, strides=1, padding="same",
