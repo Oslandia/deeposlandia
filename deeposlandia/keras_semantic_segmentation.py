@@ -64,13 +64,13 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
             (batch_size, image_size, image_size, nb_labels)-shaped output predictions, that have to
         be compared with ground-truth values
         """
-        layer = self.convolution(self.X, nb_filters=32, kernel_size=3, name='conv1')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool1')
-        layer = self.convolution(layer, nb_filters=64, kernel_size=3, name='conv2')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool2')
-        layer = self.convolution(layer, nb_filters=128, kernel_size=3, name='conv3')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool3')
-        layer = self.transposed_convolution(layer, nb_filters=128, strides=2, kernel_size=3, name="trconv1")
-        layer = self.transposed_convolution(layer, nb_filters=64, strides=2, kernel_size=3, name="trconv2")
-        layer = self.transposed_convolution(layer, nb_filters=32, strides=2, kernel_size=3, name="trconv3")
+        layer = self.convolution(self.X, nb_filters=32, kernel_size=3, block_name='conv1')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool1')
+        layer = self.convolution(layer, nb_filters=64, kernel_size=3, block_name='conv2')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool2')
+        layer = self.convolution(layer, nb_filters=128, kernel_size=3, block_name='conv3')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool3')
+        layer = self.transposed_convolution(layer, nb_filters=128, strides=2, kernel_size=3, block_name="trconv1")
+        layer = self.transposed_convolution(layer, nb_filters=64, strides=2, kernel_size=3, block_name="trconv2")
+        layer = self.transposed_convolution(layer, nb_filters=32, strides=2, kernel_size=3, block_name="trconv3")
         return self.output_layer(layer, depth=self.nb_labels)

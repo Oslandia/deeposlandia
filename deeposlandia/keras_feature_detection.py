@@ -67,14 +67,14 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         tensor
             (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
-        layer = self.convolution(self.X, nb_filters=16, kernel_size=7, name='conv1')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool1')
-        layer = self.convolution(layer, nb_filters=32, kernel_size=5, name='conv2')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool2')
-        layer = self.convolution(layer, nb_filters=64, kernel_size=3, name='conv3')
-        layer = self.maxpool(layer, pool_size=2, strides=2, name='pool3')
-        layer = self.flatten(layer, name='flatten1')
-        layer = self.dense(layer, depth=512, dropout_rate=0.75, name='fc1')
+        layer = self.convolution(self.X, nb_filters=16, kernel_size=7, block_name='conv1')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool1')
+        layer = self.convolution(layer, nb_filters=32, kernel_size=5, block_name='conv2')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool2')
+        layer = self.convolution(layer, nb_filters=64, kernel_size=3, block_name='conv3')
+        layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool3')
+        layer = self.flatten(layer, block_name='flatten1')
+        layer = self.dense(layer, depth=512, dropout_rate=0.75, block_name='fc1')
         return self.output_layer(layer, depth=self.nb_labels)
 
     def vgg16(self):
@@ -90,7 +90,7 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
             (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
         vgg16_model = VGG16(input_tensor = self.X, include_top=False)
-        y = self.flatten(vgg16_model.output, name="flatten")
-        y = self.dense(y, 1024, dropout_rate=0.75, name="fc1")
-        y = self.dense(y, 1024, dropout_rate=0.75, name="fc2")
+        y = self.flatten(vgg16_model.output, block_name="flatten")
+        y = self.dense(y, 1024, dropout_rate=0.75, block_name="fc1")
+        y = self.dense(y, 1024, dropout_rate=0.75, block_name="fc2")
         return self.output_layer(y, depth=self.nb_labels)
