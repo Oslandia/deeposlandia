@@ -30,8 +30,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
                  nb_labels=65, learning_rate=1e-4, architecture="simple"):
-        ConvolutionalNeuralNetwork.__init__(self, network_name, image_size,
-                                            nb_channels, nb_labels, learning_rate)
+        super().__init__(network_name, image_size, nb_channels,
+                         nb_labels, learning_rate)
         self.Y = self.simple()
 
     def output_layer(self, x, depth):
