@@ -1,10 +1,13 @@
 """Unit test related to the semantic segmentation model
 """
 
+from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.keras_semantic_segmentation import SemanticSegmentationNetwork
 
+
+@keras_test
 def test_network_instanciation():
     """Test a simple feature detection network
 

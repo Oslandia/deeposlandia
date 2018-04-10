@@ -1,10 +1,13 @@
 """Unit test related to the simple layer creation
 """
 
+from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
+
+@keras_test
 def test_convolution_shape():
     """Test the convolution operation through its output layer shape
 
@@ -20,6 +23,8 @@ def test_convolution_shape():
     assert len(output_shape) == 4
     assert output_shape[1:] == (image_size//strides, image_size//strides, depth)
 
+
+@keras_test
 def test_transposed_convolution_shape():
     """Test the transposed convolution operation through its output layer shape
 
@@ -37,6 +42,8 @@ def test_transposed_convolution_shape():
     assert len(output_shape) == 4
     assert output_shape[1:] == (image_size*strides, image_size*strides, depth)
 
+
+@keras_test
 def test_maxpooling_shape():
     """Test the max pooling operation through its output layer shape
 
@@ -52,6 +59,8 @@ def test_maxpooling_shape():
     assert len(output_shape) == 4
     assert output_shape[1:] == (image_size//strides, image_size//strides, nb_channels)
 
+
+@keras_test
 def test_dense_shape():
     """Test the fully-connected layer through its output shape
 
@@ -65,6 +74,8 @@ def test_dense_shape():
     assert len(output_shape) == 4
     assert output_shape[1:] == (image_size, image_size, depth)
 
+
+@keras_test
 def test_flatten_shape():
     """Test the flattening layer through its output shape
 
@@ -78,6 +89,8 @@ def test_flatten_shape():
     assert len(output_shape) == 2
     assert output_shape[1] == image_size * image_size * nb_channels
 
+
+@keras_test
 def test_layer_name():
     """Test the convolution operation through its output layer shape
 
@@ -91,7 +104,6 @@ def test_layer_name():
     y = cnn.convolution(y, nb_filters=depth,
                         kernel_size=3, strides=strides)
     m = Model(cnn.X, y)
-    output_shape = m.output_shape
     assert ([l.name for l in m.layers[1:]] ==
             ['conv2d_1', 'batch_normalization_1', 'activation_1',
              'conv2d_2', 'batch_normalization_2', 'activation_2'])

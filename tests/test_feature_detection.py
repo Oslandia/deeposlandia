@@ -1,10 +1,13 @@
 """Unit test related to the feature detection model
 """
 
+from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
 
+
+@keras_test
 def test_simple_network_architecture():
     """Test a simple feature detection network
 
@@ -22,6 +25,8 @@ def test_simple_network_architecture():
     assert len(output_shape) == 2
     assert output_shape[1] == NB_LABELS
 
+
+@keras_test
 def test_vgg16_network_architecture():
     """Test a VGG16-inspired feature detection network
 
