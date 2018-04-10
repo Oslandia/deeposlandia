@@ -91,7 +91,6 @@ def test_layer_name():
     y = cnn.convolution(y, nb_filters=depth,
                         kernel_size=3, strides=strides)
     m = Model(cnn.X, y)
-    output_shape = m.output_shape
     assert ([l.name for l in m.layers[1:]] ==
             ['conv2d_1', 'batch_normalization_1', 'activation_1',
              'conv2d_2', 'batch_normalization_2', 'activation_2'])
