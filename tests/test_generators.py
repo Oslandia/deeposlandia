@@ -25,11 +25,12 @@ def test_featdet_mapillary_generator():
 
     """
     dataset = "mapillary"
+    model = "feature_detection"
     IMAGE_SIZE = 128
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config("./tests/data/" + dataset + "/config_aggregate.json")
-    gen = generator.feature_detection_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -42,11 +43,12 @@ def test_featdet_shape_generator():
 
     """
     dataset = "shapes"
+    model = "feature_detection"
     IMAGE_SIZE = 48
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(datapath + ".json")
-    gen = generator.feature_detection_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
@@ -76,11 +78,12 @@ def test_semseg_mapillary_generator():
 
     """
     dataset = "mapillary"
+    model = "semantic_segmentation"
     IMAGE_SIZE = 128
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config("./tests/data/" + dataset + "/config_aggregate.json")
-    gen = generator.semantic_segmentation_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -93,11 +96,12 @@ def test_semseg_shape_generator():
 
     """
     dataset = "shapes"
+    model = "semantic_segmentation"
     IMAGE_SIZE = 48
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(datapath + ".json")
-    gen = generator.semantic_segmentation_generator(dataset, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape

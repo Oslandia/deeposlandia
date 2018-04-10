@@ -54,8 +54,8 @@ def semantic_segmentation_labelling(img, label_ids):
     output_shape = input_shape + (len(label_ids), )
     return categorical.reshape(output_shape)
 
-def build_generator(datapath, gen_type, image_size, batch_size, seed=1337):
-    """Build a couple of generator feed by image and label repository, respectively
+def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
+    """Build a couple of generator fed by image and label repository, respectively
 
     The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
     Keras generator takes this difference into account through its `color_mode` parameter, that
@@ -89,14 +89,16 @@ def build_generator(datapath, gen_type, image_size, batch_size, seed=1337):
                                          color_mode=col_mode,
                                          seed=seed)
 
-def feature_detection_generator(dataset, datapath, image_size, batch_size, config, seed=1337):
+def create_generator(dataset, model, datapath, image_size, batch_size, config, seed=1337):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
-    address the feature detection problem
+    address `model`
 
     Parameters
     ----------
     dataset : str
-        Name of the dataset
+        Name of the dataset (*e.g.* `shapes` or `mapillary`)
+    model : str
+        Research problem that is addressed (either `feature_detection` or `semantic_segmentation`)
     datapath : str
         Path to image repository
     image_size : integer
@@ -120,43 +122,12 @@ def feature_detection_generator(dataset, datapath, image_size, batch_size, confi
     else:
         labels = config['labels']
         label_ids = [x['id'] for x in labels]
-    image_generator = build_generator(datapath, "images", image_size, batch_size, seed)
-    label_generator = build_generator(datapath, "labels", image_size, batch_size, seed)
-    label_generator = iter(feature_detection_labelling(x, label_ids) for x in label_generator)
-    return zip(image_generator, label_generator)
-
-def semantic_segmentation_generator(dataset, datapath, image_size, batch_size, config, seed=1337):
-    """Create a Keras data Generator starting from images contained in `datapath` repository to
-    address the semantic segmentation problem
-
-    Parameters
-    ----------
-    dataset : str
-        Name of the dataset
-    datapath : str
-        Path to image repository
-    image_size : integer
-        Number of width (resp. height) pixels
-    batch_size : integer
-        Number of images in each training batch
-    config : dict
-        Dataset glossary
-    seed : integer
-        Random number generation for data shuffling and transformations
-
-    Returns
-    -------
-    generator
-        Generator of tuples (images, labels), for each input data batch
-
-    """
-    if dataset == 'shapes':
-        label_ids = [c for c in config['classes']]
-        label_ids.sort()
+    image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
+    label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
+    if model == 'feature_detection':
+        label_generator = iter(feature_detection_labelling(x, label_ids)
+                               for x in label_generator)
     else:
-        labels = config['labels']
-        label_ids = [x['id'] for x in labels]
-    image_generator = build_generator(datapath, "images", image_size, batch_size, seed)
-    label_generator = build_generator(datapath, "labels", image_size, batch_size, seed)
-    label_generator = iter(semantic_segmentation_labelling(x, label_ids) for x in label_generator)
+        label_generator = iter(semantic_segmentation_labelling(x, label_ids)
+                               for x in label_generator)
     return zip(image_generator, label_generator)
