@@ -1,4 +1,4 @@
-"""Unit test related to semantic segmentation model instanciation
+"""Unit test related to the semantic segmentation model
 """
 
 from keras.models import Model
@@ -6,7 +6,7 @@ from keras.models import Model
 from deeposlandia.keras_semantic_segmentation import SemanticSegmentationNetwork
 
 def test_network_instanciation():
-    """Test the instanciation of a simple feature detection network
+    """Test a simple feature detection network
 
     """
     IMAGE_SIZE = 64

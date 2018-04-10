@@ -1,4 +1,4 @@
-"""Unit test related to feature detection model instanciation
+"""Unit test related to the feature detection model
 """
 
 from keras.models import Model
@@ -6,7 +6,7 @@ from keras.models import Model
 from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
 
 def test_simple_network_architecture():
-    """Test the instanciation of a simple feature detection network
+    """Test a simple feature detection network
 
     """
     IMAGE_SIZE = 64
@@ -23,7 +23,7 @@ def test_simple_network_architecture():
     assert output_shape[1] == NB_LABELS
 
 def test_vgg16_network_architecture():
-    """Test the instanciation of a VGG16-inspired feature detection network
+    """Test a VGG16-inspired feature detection network
 
     """
     IMAGE_SIZE = 224
