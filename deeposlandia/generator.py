@@ -3,8 +3,8 @@
 
 import numpy as np
 
-import keras as K
 from keras.preprocessing.image import ImageDataGenerator
+
 
 def feature_detection_labelling(img, label_ids):
     """One-hot encoding for feature detection problem
@@ -26,6 +26,7 @@ def feature_detection_labelling(img, label_ids):
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.eye(len(label_ids))[flattened_images]
     return one_hot_encoding.any(axis=1)
+
 
 def semantic_segmentation_labelling(img, label_ids):
     """One-hot encoder for semantic segmentation problem
@@ -53,6 +54,7 @@ def semantic_segmentation_labelling(img, label_ids):
     categorical[np.arange(n), img] = 1
     output_shape = input_shape + (len(label_ids), )
     return categorical.reshape(output_shape)
+
 
 def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
     """Build a couple of generator fed by image and label repository, respectively
@@ -88,6 +90,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
                                          class_mode=None,
                                          color_mode=col_mode,
                                          seed=seed)
+
 
 def create_generator(dataset, model, datapath, image_size, batch_size, config, seed=1337):
     """Create a Keras data Generator starting from images contained in `datapath` repository to

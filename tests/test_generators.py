@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from deeposlandia import generator, network, utils
+from deeposlandia import generator, utils
 
 def test_feature_detection_labelling():
     """Test `semantic_segmentation_labelling` function in `generator` module:
