@@ -6,6 +6,22 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 
 
+def check_label_id(labels, label_ids):
+    """Check the labels_ids
+
+    Parameters
+    ----------
+    labels : numpy.array
+        Array of labels ids (contain in a image for instance)
+    label_ids : list of integers
+        List of label ids
+    """
+    labels = np.unique(labels)
+    for label in labels:
+        assert label in label_ids, "array values must be ids specified in label_ids"
+    return True
+
+
 def feature_detection_labelling(img, label_ids):
     """One-hot encoding for feature detection problem
 
@@ -20,6 +36,7 @@ def feature_detection_labelling(img, label_ids):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
+    check_label_id(img, label_ids)
     for idx, label in enumerate(label_ids):
         mask = img == label
         img[mask] = idx
