@@ -65,14 +65,14 @@ class Dataset:
         list
             List of label ids
         """
-        return [label_id for label_id, attr in self.class_info.items()
+        return [label_id for label_id, attr in enumerate(self.label_info)
                 if attr['is_evaluate']]
 
     @property
     def labels(self):
         """Return the description of label that will be evaluated during the process
         """
-        return [attr for _, attr in self.class_info.items() if attr["is_evaluate"]]
+        return [label for label in self.label_info if label["is_evaluate"]]
 
     def get_nb_label(self):
         """Return the number of labels
@@ -89,7 +89,7 @@ class Dataset:
         """Return the label popularity in the current dataset, *i.e.* the proportion of images that
         contain corresponding object
         """
-        labels = [self.image_info[im]["labels"] for im in self.image_info]
+        labels = [img["labels"] for img in self.image_info]
         if self.get_nb_images() == 0:
             utils.logger.error("No images in the dataset.")
             return None
@@ -120,11 +120,12 @@ class Dataset:
         if label_id in self.label_info:
             utils.logger.error("Label {} already stored into the label set.".format(label_id))
             return None
-        self.class_info[class_id] = {"name": class_name,
-                                     "category": category,
-                                     "is_evaluate": is_evaluate,
-                                     "aggregate": aggregate,
-                                     "color": color}
+        self.label_info.append({"name": label_name,
+                                "id": label_id,
+                                "category": category,
+                                "is_evaluate": is_evaluate,
+                                "aggregate": aggregate,
+                                "color": color})
 
     def save(self, filename):
         """Save dataset in a json file indicated by `filename`
@@ -155,14 +156,11 @@ class Dataset:
         with open(filename) as fp:
             ds = json.load(fp)
         self.image_size = ds["image_size"]
-        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"]}
+        self.label_info = ds["labels"]
         if nb_images is None:
-            self.image_info = {int(k): ds["images"][k] for k in ds["images"]}
+            self.image_info = ds["images"]
         else:
-            self.image_info = {int(k): v for idx, (k, v) in enumerate(ds["images"].items())
-                               if idx < nb_images}
-        for img_id, info in self.image_info.items():
-            info['labels'] = {int(k): v for k, v in info['labels'].items()}
+            self.image_info = ds["images"][:nb_images]
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class MapillaryDataset(Dataset):
@@ -225,7 +223,7 @@ class MapillaryDataset(Dataset):
         # turn all label ids into the lowest digits/label id according to its "group"
         # (manually built)
         a = np.array(image)
-        for root_id, label in self.class_info.items():
+        for root_id, label in enumerate(self.label_info):
             for label_id, _ in label['aggregate']:
                 mask = a == label_id
                 a[mask] = root_id
@@ -240,7 +238,7 @@ class MapillaryDataset(Dataset):
         image_filaname : str
         aggregate : boolean
         labelling : boolean
-        
+
         Returns
         -------
         dict
@@ -303,8 +301,8 @@ class MapillaryDataset(Dataset):
         image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
         image_list_longname = [os.path.join(input_dir, "images", l) for l in image_list]
         with Pool() as p:
-            labels = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling) for x in image_list_longname])
-        self.image_info = {k: v for k,v in enumerate(labels)}
+            self.image_info = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling)
+                                                  for x in image_list_longname])
 
 class ShapeDataset(Dataset):
     """Dataset structure that gathers all information related to a randomly-generated shape Dataset
@@ -428,9 +426,9 @@ class ShapeDataset(Dataset):
         if image_id in self.image_info:
             utils.logger.error("Image {} already stored into the label set.".format(image_id))
             return None
-        self.image_info[image_id] = {"background": background,
-                                     "shape_specs": specifications,
-                                     "labels": labels}
+        self.image_info.append({"background": background,
+                                "shape_specs": specifications,
+                                "labels": labels})
 
     def draw_image(self, image_id, datapath):
         """Draws an image from the specifications of its shapes and saves it on

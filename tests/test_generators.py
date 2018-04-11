@@ -81,7 +81,7 @@ def test_featdet_shape_generator():
     im_shape = item[0].shape
     assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, len(config['classes']))
+    assert label_shape == (BATCH_SIZE, len(config['labels']))
 
 
 def test_semantic_segmentation_labelling():
@@ -151,25 +151,19 @@ def test_semseg_shape_generator():
     im_shape = item[0].shape
     assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(config['classes']))
+    assert label_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(config['labels']))
 
 
 def test_wrong_model_dataset_generator():
     """Test a wrong model and wrong dataset
     """
-    dataset = "fake"
     model = "conquer_the_world"
     IMAGE_SIZE = 10
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = {"classes": list('0123')}
 
-    # wrong dataset name
-    with pytest.raises(ValueError) as excinfo:
-        generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
-    assert str(excinfo.value) == "Wrong dataset name {}".format(dataset)
-
     # wrong model name
     with pytest.raises(ValueError) as excinfo:
-        generator.create_generator('shapes', model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+        generator.create_generator('shapes', model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
     assert str(excinfo.value) == "Wrong model name {}".format(model)
