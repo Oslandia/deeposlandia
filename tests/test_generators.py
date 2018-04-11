@@ -104,6 +104,21 @@ def test_semantic_segmentation_labelling():
     assert list(bsum) == list(asum)
 
 
+def test_semantic_segmentation_labelling_wrong_label_id():
+    """Test if there are some AssertionError for some wrong label ids (type and value)
+    """
+    MIN = 0
+    MAX = 10
+    SIZE = 3
+    a = np.random.randint(MIN, MAX, [SIZE, SIZE])
+
+    with pytest.raises(AssertionError):
+        b = generator.semantic_segmentation_labelling(a, ['0', '2', '10'])
+
+    with pytest.raises(AssertionError):
+        b = generator.semantic_segmentation_labelling(a, range(200, 210))
+
+
 def test_semseg_mapillary_generator():
     """Test the data generator for the Mapillary dataset
     """
