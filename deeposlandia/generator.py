@@ -60,6 +60,7 @@ def semantic_segmentation_labelling(img, label_ids):
     ndarray
         Occurrence of the ith label for each pixel
     """
+    check_label_id(img, label_ids)
     img = img.squeeze()
     input_shape = img.shape
     img = img.ravel().astype(np.uint8)
