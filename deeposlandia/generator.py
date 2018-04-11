@@ -137,7 +137,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size, config, s
 
     """
     if dataset == 'shapes':
-        label_ids = [c for c in config['classes']]
+        label_ids = [int(c) for c in config['classes']]
         label_ids.sort()
     else:
         labels = config['labels']
