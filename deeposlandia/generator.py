@@ -146,9 +146,9 @@ def create_generator(dataset, model, datapath, image_size, batch_size, config, s
     image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':
-        label_generator = iter(feature_detection_labelling(x, label_ids)
-                               for x in label_generator)
+        label_generator = (feature_detection_labelling(x, label_ids)
+                           for x in label_generator)
     else:
-        label_generator = iter(semantic_segmentation_labelling(x, label_ids)
-                               for x in label_generator)
+        label_generator = (semantic_segmentation_labelling(x, label_ids)
+                           for x in label_generator)
     return zip(image_generator, label_generator)
