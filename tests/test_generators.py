@@ -40,8 +40,7 @@ def test_feature_detection_labelling_wrong_label_id():
     with pytest.raises(AssertionError):
         b = generator.feature_detection_labelling(labels, ['0', '3', '10'])
 
-    # label_id=2 is a wrong id. All values=3 are kept and used as index value. But
-    # there are only 3 classes, so a list of index [0, 1, 2].
+    # do not allow a label id value which is not in the 'labels' array
     with pytest.raises(AssertionError):
         b = generator.feature_detection_labelling(labels, [0, 2, 10])
     b = generator.feature_detection_labelling(labels, [0, 3, 10])
