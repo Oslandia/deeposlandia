@@ -1,9 +1,12 @@
 """Unit test related to the generator building and feeding
 """
 
+import pytest
+
 import numpy as np
 
 from deeposlandia import generator, utils
+
 
 def test_feature_detection_labelling():
     """Test `semantic_segmentation_labelling` function in `generator` module:
@@ -19,6 +22,32 @@ def test_feature_detection_labelling():
     a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
     b = generator.feature_detection_labelling(a, range(MIN, MAX))
     assert b.shape == (BATCH_SIZE, MAX)
+
+
+def test_feature_detection_labelling_wrong_label_id():
+    one_label = np.array([[0, 0, 0, 10, 10],
+                          [3, 3, 0, 10, 10],
+                          [3, 3, 3,  0,  0],
+                          [3, 3, 3,  0,  0]])
+    two_label = np.array([[10, 10, 0, 0, 0],
+                          [0, 0, 0, 10, 10],
+                          [10, 10, 0, 0, 0],
+                          [10, 10, 0, 0, 0]])
+    labels = np.array(one_label.tolist() + two_label.tolist())
+    labels = labels.reshape((2, 4, 5, 1))
+    # do not allow a list of string as label ids
+    with pytest.raises(AssertionError):
+        b = generator.feature_detection_labelling(labels, ['0', '3', '10'])
+
+    # label_id=2 is a wrong id. All values=3 are kept and used as index value. But
+    # there are only 3 classes, so a list of index [0, 1, 2].
+    with pytest.raises(AssertionError):
+        b = generator.feature_detection_labelling(labels, [0, 2, 10])
+    b = generator.feature_detection_labelling(labels, [0, 3, 10])
+    assert b.tolist() ==[[True, True, True],
+                         [True, False, True]]
+
+
 
 def test_featdet_mapillary_generator():
     """Test the data generator for the Mapillary dataset
