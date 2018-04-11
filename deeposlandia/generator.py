@@ -140,15 +140,19 @@ def create_generator(dataset, model, datapath, image_size, batch_size, config, s
     if dataset == 'shapes':
         label_ids = [int(c) for c in config['classes']]
         label_ids.sort()
-    else:
+    elif dataset == 'mapillary':
         labels = config['labels']
         label_ids = [x['id'] for x in labels]
+    else:
+        raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':
         label_generator = (feature_detection_labelling(x, label_ids)
                            for x in label_generator)
-    else:
+    elif model == 'semantic_segmentation':
         label_generator = (semantic_segmentation_labelling(x, label_ids)
                            for x in label_generator)
+    else:
+        raise ValueError("Wrong model name {}".format(model))
     return zip(image_generator, label_generator)
