@@ -6,22 +6,6 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 
 
-def check_label_id(labels, label_ids):
-    """Check the labels_ids
-
-    Parameters
-    ----------
-    labels : numpy.array
-        Array of labels ids (contain in a image for instance)
-    label_ids : list of integers
-        List of label ids
-    """
-    labels = np.unique(labels)
-    for label in labels:
-        assert label in label_ids, "array values must be ids specified in label_ids"
-    return True
-
-
 def feature_detection_labelling(img, label_ids):
     """One-hot encoding for feature detection problem
 
@@ -36,12 +20,11 @@ def feature_detection_labelling(img, label_ids):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
-    check_label_id(img, label_ids)
     for idx, label in enumerate(label_ids):
         mask = img == label
         img[mask] = idx
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
-    one_hot_encoding = np.eye(len(label_ids))[flattened_images]
+    one_hot_encoding = np.equal.outer(flattened_images, label_ids)
     return one_hot_encoding.any(axis=1)
 
 
@@ -51,27 +34,19 @@ def semantic_segmentation_labelling(img, label_ids):
     Parameters
     ----------
     img : ndarray
-        2D or 3D (if batched)
+        Batched input image data of size (batch_size, image_size, image_size, 1)
     label_ids : list
         List of dataset label IDs
 
     Returns
     -------
     ndarray
-        Occurrence of the ith label for each pixel
+        Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
+    of the ith label for each pixel
     """
-    check_label_id(img, label_ids)
-    img = img.squeeze()
-    input_shape = img.shape
-    img = img.ravel().astype(np.uint8)
-    for idx, label in enumerate(label_ids):
-        mask = img == label
-        img[mask] = idx
-    n = img.shape[0]
-    categorical = np.zeros((n, len(label_ids)))
-    categorical[np.arange(n), img] = 1
-    output_shape = input_shape + (len(label_ids), )
-    return categorical.reshape(output_shape)
+    img = img.squeeze().astype(np.uint8)
+    one_hot_encoding = np.equal.outer(img, label_ids)
+    return one_hot_encoding
 
 
 def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
