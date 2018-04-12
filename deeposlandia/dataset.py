@@ -200,7 +200,6 @@ class MapillaryDataset(Dataset):
             utils.logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            lab_id = lab_id if 'id' not in label else label['id']
             name_items = label["name"].split('--')
             category = '-'.join(name_items)
             self.add_label(lab_id, name_items, label["color"],
