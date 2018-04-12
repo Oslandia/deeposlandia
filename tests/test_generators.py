@@ -8,6 +8,23 @@ import numpy as np
 from deeposlandia import generator, utils
 
 
+def test_feature_detection_labelling_evaluated_labels():
+    """Test `feature_detection_labelling` function by considering only evaluated labels, *i.e.* dataset
+    labels that have a `is_evaluated` key at `False` are not integrated into the label generator
+
+    """
+    BATCH_SIZE = 5
+    MIN = 0
+    MAX = 10
+    IMAGE_SIZE = 3
+    a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
+    labels = range(MIN, MAX)
+    evaluated_labels = np.random.choice(range(MIN, MAX), MAX-3)
+    b = generator.feature_detection_labelling(a, evaluated_labels)
+    assert len(labels) != len(evaluated_labels)
+    assert b.shape == (BATCH_SIZE, len(evaluated_labels))
+
+
 def test_feature_detection_labelling():
     """Test `semantic_segmentation_labelling` function in `generator` module:
     - test if output shape is input shape + an additional dimension given by the `label_ids` length
@@ -103,6 +120,23 @@ def test_semantic_segmentation_labelling():
     bsum = np.sum(b, axis=(0, 1))
     assert b.shape == (SIZE, SIZE, MAX)
     assert list(bsum) == list(asum)
+def test_semantic_segmentation_labelling_evaluated_labels():
+    """Test `semantic_segmentation_labelling` function by considering only evaluated labels, *i.e.*
+    dataset labels that have a `is_evaluated` key at `False` are not integrated into the label
+    generator
+
+    """
+    BATCH_SIZE = 5
+    MIN = 0
+    MAX = 10
+    IMAGE_SIZE = 3
+    a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
+    labels = range(MIN, MAX)
+    evaluated_labels = np.random.choice(range(MIN, MAX), MAX-3)
+    b = generator.semantic_segmentation_labelling(a, evaluated_labels)
+    assert len(labels) != len(evaluated_labels)
+    assert b.shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(evaluated_labels))
+
 
 
 def test_semantic_segmentation_labelling_wrong_label_id():
