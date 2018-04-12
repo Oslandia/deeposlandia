@@ -56,8 +56,9 @@ def test_featdet_mapillary_generator():
     IMAGE_SIZE = 128
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config("./tests/data/" + dataset + "/config_aggregate.json")
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    config = utils.read_config(datapath + ".json")
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -75,7 +76,8 @@ def test_featdet_shape_generator():
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(datapath + ".json")
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
@@ -126,8 +128,9 @@ def test_semseg_mapillary_generator():
     IMAGE_SIZE = 128
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config("./tests/data/" + dataset + "/config_aggregate.json")
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    config = utils.read_config(datapath + ".json")
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -145,7 +148,8 @@ def test_semseg_shape_generator():
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(datapath + ".json")
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, config)
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
