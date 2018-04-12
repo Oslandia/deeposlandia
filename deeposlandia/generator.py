@@ -111,6 +111,8 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_ids
         Generator of tuples (images, labels), for each input data batch
 
     """
+    if not dataset in ['shapes', 'mapillary']:
+        raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':

@@ -195,11 +195,17 @@ def test_semseg_shape_generator():
 def test_wrong_model_dataset_generator():
     """Test a wrong model and wrong dataset
     """
+    dataset = "fake"
     model = "conquer_the_world"
     IMAGE_SIZE = 10
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
-    config = {"classes": list('0123')}
+    label_ids = range(3)
+
+    # wrong model name
+    with pytest.raises(ValueError) as excinfo:
+        generator.create_generator(dataset, 'feature_detection', datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+    assert str(excinfo.value) == "Wrong dataset name {}".format(dataset)
 
     # wrong model name
     with pytest.raises(ValueError) as excinfo:
