@@ -54,7 +54,7 @@ def test_feature_detection_labelling_wrong_label_id():
     labels = np.array(one_label.tolist() + two_label.tolist())
     labels = labels.reshape((2, 4, 5, 1))
     # do not allow a list of string as label ids
-    with pytest.raises(AssertionError):
+    with pytest.raises(AttributeError):
         b = generator.feature_detection_labelling(labels, ['0', '3', '10'])
 
     # do not allow a label id value which is not in the 'labels' array
@@ -120,6 +120,8 @@ def test_semantic_segmentation_labelling():
     bsum = np.sum(b, axis=(0, 1))
     assert b.shape == (SIZE, SIZE, MAX)
     assert list(bsum) == list(asum)
+
+
 def test_semantic_segmentation_labelling_evaluated_labels():
     """Test `semantic_segmentation_labelling` function by considering only evaluated labels, *i.e.*
     dataset labels that have a `is_evaluated` key at `False` are not integrated into the label
@@ -147,7 +149,7 @@ def test_semantic_segmentation_labelling_wrong_label_id():
     SIZE = 3
     a = np.random.randint(MIN, MAX, [SIZE, SIZE])
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(AttributeError):
         b = generator.semantic_segmentation_labelling(a, ['0', '2', '10'])
 
     with pytest.raises(AssertionError):
