@@ -3,8 +3,24 @@
 
 import numpy as np
 
-import keras as K
 from keras.preprocessing.image import ImageDataGenerator
+
+
+def check_label_id(labels, label_ids):
+    """Check the labels_ids
+
+    Parameters
+    ----------
+    labels : numpy.array
+        Array of labels ids (contain in a image for instance)
+    label_ids : list of integers
+        List of label ids
+    """
+    labels = np.unique(labels)
+    for label in labels:
+        assert label in label_ids, "array values must be ids specified in label_ids"
+    return True
+
 
 def feature_detection_labelling(img, label_ids):
     """One-hot encoding for feature detection problem
@@ -20,12 +36,14 @@ def feature_detection_labelling(img, label_ids):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
+    check_label_id(img, label_ids)
     for idx, label in enumerate(label_ids):
         mask = img == label
         img[mask] = idx
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.eye(len(label_ids))[flattened_images]
     return one_hot_encoding.any(axis=1)
+
 
 def semantic_segmentation_labelling(img, label_ids):
     """One-hot encoder for semantic segmentation problem
@@ -42,6 +60,7 @@ def semantic_segmentation_labelling(img, label_ids):
     ndarray
         Occurrence of the ith label for each pixel
     """
+    check_label_id(img, label_ids)
     img = img.squeeze()
     input_shape = img.shape
     img = img.ravel().astype(np.uint8)
@@ -53,6 +72,7 @@ def semantic_segmentation_labelling(img, label_ids):
     categorical[np.arange(n), img] = 1
     output_shape = input_shape + (len(label_ids), )
     return categorical.reshape(output_shape)
+
 
 def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
     """Build a couple of generator fed by image and label repository, respectively
@@ -89,6 +109,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
                                          color_mode=col_mode,
                                          seed=seed)
 
+
 def create_generator(dataset, model, datapath, image_size, batch_size, config, seed=1337):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
     address `model`
@@ -117,17 +138,21 @@ def create_generator(dataset, model, datapath, image_size, batch_size, config, s
 
     """
     if dataset == 'shapes':
-        label_ids = [c for c in config['classes']]
+        label_ids = [int(c) for c in config['classes']]
         label_ids.sort()
-    else:
+    elif dataset == 'mapillary':
         labels = config['labels']
         label_ids = [x['id'] for x in labels]
+    else:
+        raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':
-        label_generator = iter(feature_detection_labelling(x, label_ids)
-                               for x in label_generator)
+        label_generator = (feature_detection_labelling(x, label_ids)
+                           for x in label_generator)
+    elif model == 'semantic_segmentation':
+        label_generator = (semantic_segmentation_labelling(x, label_ids)
+                           for x in label_generator)
     else:
-        label_generator = iter(semantic_segmentation_labelling(x, label_ids)
-                               for x in label_generator)
+        raise ValueError("Wrong model name {}".format(model))
     return zip(image_generator, label_generator)
