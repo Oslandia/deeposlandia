@@ -57,12 +57,9 @@ def test_feature_detection_labelling_wrong_label_id():
     with pytest.raises(AttributeError):
         b = generator.feature_detection_labelling(labels, ['0', '3', '10'])
 
-    # do not allow a label id value which is not in the 'labels' array
-    with pytest.raises(AssertionError):
-        b = generator.feature_detection_labelling(labels, [0, 2, 10])
     b = generator.feature_detection_labelling(labels, [0, 3, 10])
-    assert b.tolist() ==[[True, True, True],
-                         [True, False, True]]
+    assert b.tolist() == [[True, True, True],
+                          [True, False, True]]
 
 
 def test_featdet_mapillary_generator():
@@ -140,20 +137,46 @@ def test_semantic_segmentation_labelling_evaluated_labels():
     assert b.shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(evaluated_labels))
 
 
-
 def test_semantic_segmentation_labelling_wrong_label_id():
     """Test if there are some AssertionError for some wrong label ids (type and value)
     """
-    MIN = 0
-    MAX = 10
-    SIZE = 3
-    a = np.random.randint(MIN, MAX, [SIZE, SIZE])
+    one_label = np.array([[0, 0, 0, 10],
+                          [3, 3, 0, 10],
+                          [3, 3, 3,  0]])
+    two_label = np.array([[10, 10, 0, 0],
+                          [0, 0, 0, 10],
+                          [10, 10, 0, 0]])
+    labels = np.array(one_label.tolist() + two_label.tolist())
+    labels = labels.reshape((2, 3, 4, 1))
 
     with pytest.raises(AttributeError):
-        b = generator.semantic_segmentation_labelling(a, ['0', '2', '10'])
+        b = generator.semantic_segmentation_labelling(labels, ['0', '2', '10'])
 
-    with pytest.raises(AssertionError):
-        b = generator.semantic_segmentation_labelling(a, range(200, 210))
+    b = generator.semantic_segmentation_labelling(labels, [0, 3, 10])
+    assert b.tolist() == [[[[True, False, False],
+                            [True, False, False],
+                            [True, False, False],
+                            [False, False, True]],
+                           [[False, True, False],
+                            [False, True, False],
+                            [True, False, False],
+                            [False, False, True]],
+                           [[False, True, False],
+                            [False, True, False],
+                            [False, True, False],
+                            [True, False, False]]],
+                          [[[False, False, True],
+                            [False, False, True],
+                            [True, False, False],
+                            [True, False, False]],
+                           [[True, False, False],
+                            [True, False, False],
+                            [True, False, False],
+                            [False, False, True]],
+                           [[False, False, True],
+                            [False, False, True],
+                            [True, False, False],
+                            [True, False, False]]]]
 
 
 def test_semseg_mapillary_generator():
