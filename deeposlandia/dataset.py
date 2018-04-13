@@ -13,7 +13,7 @@ from deeposlandia import utils
 
 class Dataset:
     """Generic class that describes the behavior of a Dataset object: it is initialized at least
-    with an image size, its class are added always through the same manner, it can be serialized (save) and
+    with an image size, its label are added always through the same manner, it can be serialized (save) and
     deserialized (load) from/to a `.json` file
 
     Attributes
@@ -25,21 +25,21 @@ class Dataset:
     """
     def __init__(self, image_size):
         self.image_size = image_size
-        self.class_info = {}
-        self.image_info = {}
+        self.label_info = []
+        self.image_info = []
 
-    def get_class(self, class_id):
-        """ `class_info` getter, return only one class
+    def get_label(self, label_id):
+        """ `label_info` getter, return only one label
 
         Parameters
         ----------
-        class_id : integer
-            Id of the dataset class that must be returned
+        label_id : integer
+            Id of the dataset label that must be returned
         """
-        if not class_id in self.class_info.keys():
-            utils.logger.error("Class {} not in the dataset glossary".format(class_id))
+        if not label_id in self.label_info.keys():
+            utils.logger.error("Label {} not in the dataset glossary".format(label_id))
             return None
-        return self.class_info[class_id]
+        return self.label_info[label_id]
 
     def get_image(self, image_id):
         """ `image_info` getter, return only the information for one image
@@ -65,16 +65,16 @@ class Dataset:
         list
             List of label ids
         """
-        return [label_id for label_id, attr in self.class_info.items()
+        return [label_id for label_id, attr in enumerate(self.label_info)
                 if attr['is_evaluate']]
 
     @property
     def labels(self):
-        """Return the description of class that will be evaluated during the process
+        """Return the description of label that will be evaluated during the process
         """
-        return [attr for _, attr in self.class_info.items() if attr["is_evaluate"]]
+        return [label for label in self.label_info if label["is_evaluate"]]
 
-    def get_nb_class(self):
+    def get_nb_label(self):
         """Return the number of labels
         """
         return len(self.label_ids)
@@ -85,11 +85,11 @@ class Dataset:
         """
         return len(self.image_info)
 
-    def get_class_popularity(self):
-        """Return the class popularity in the current dataset, *i.e.* the proportion of images that
+    def get_label_popularity(self):
+        """Return the label popularity in the current dataset, *i.e.* the proportion of images that
         contain corresponding object
         """
-        labels = [self.image_info[im]["labels"] for im in self.image_info]
+        labels = [img["labels"] for img in self.image_info]
         if self.get_nb_images() == 0:
             utils.logger.error("No images in the dataset.")
             return None
@@ -98,33 +98,34 @@ class Dataset:
                                       self.get_nb_images()), 3)
 
 
-    def add_class(self, class_id, class_name, color, is_evaluate,
+    def add_label(self, label_id, label_name, color, is_evaluate,
                   category=None, aggregate=None):
-        """ Add a new class to the dataset with class id `class_id`
+        """ Add a new label to the dataset with label id `label_id`
 
         Parameters
         ----------
-        class_id : integer
-            Id of the new class
-        class_name : str
-            String designing the new class name
+        label_id : integer
+            Id of the new label
+        label_name : str
+            String designing the new label name
         color : list
             List of three integers (between 0 and 255) that characterizes the
-            class (useful for semantic segmentation result printing)
+            label (useful for semantic segmentation result printing)
         is_evaluate : bool
         category : str
-            String designing the category of the dataset class
+            String designing the category of the dataset label
         aggregate : list (optional)
-            List of class ids aggregated by the current class_id
+            List of label ids aggregated by the current label_id
         """
-        if class_id in self.class_info:
-            utils.logger.error("Class {} already stored into the class set.".format(class_id))
+        if label_id in self.label_info:
+            utils.logger.error("Label {} already stored into the label set.".format(label_id))
             return None
-        self.class_info[class_id] = {"name": class_name,
-                                     "category": category,
-                                     "is_evaluate": is_evaluate,
-                                     "aggregate": aggregate,
-                                     "color": color}
+        self.label_info.append({"name": label_name,
+                                "id": label_id,
+                                "category": category,
+                                "is_evaluate": is_evaluate,
+                                "aggregate": aggregate,
+                                "color": color})
 
     def save(self, filename):
         """Save dataset in a json file indicated by `filename`
@@ -136,7 +137,7 @@ class Dataset:
         """
         with open(filename, 'w') as fp:
             json.dump({"image_size": self.image_size,
-                       "classes": self.class_info,
+                       "labels": self.label_info,
                        "images": self.image_info}, fp)
         utils.logger.info("The dataset has been saved into {}".format(filename))
 
@@ -155,14 +156,11 @@ class Dataset:
         with open(filename) as fp:
             ds = json.load(fp)
         self.image_size = ds["image_size"]
-        self.class_info = {int(k): ds["classes"][k] for k in ds["classes"]}
+        self.label_info = ds["labels"]
         if nb_images is None:
-            self.image_info = {int(k): ds["images"][k] for k in ds["images"]}
+            self.image_info = ds["images"]
         else:
-            self.image_info = {int(k): v for idx, (k, v) in enumerate(ds["images"].items())
-                               if idx < nb_images}
-        for img_id, info in self.image_info.items():
-            info['labels'] = {int(k): v for k, v in info['labels'].items()}
+            self.image_info = ds["images"][:nb_images]
         utils.logger.info("The dataset has been loaded from {}".format(filename))
 
 class MapillaryDataset(Dataset):
@@ -175,13 +173,13 @@ class MapillaryDataset(Dataset):
     preprocessing
     glossary_filename : str
         Name of the Mapillary input glossary, that contains every information about Mapillary
-    classes
+    labels
 
     """
 
     def __init__(self, image_size, glossary_filename):
         """ Class constructor ; instanciates a MapillaryDataset as a standard Dataset which is
-        completed by a glossary file that describes the dataset classes
+        completed by a glossary file that describes the dataset labels
         """
         super().__init__(image_size)
         self.build_glossary(glossary_filename)
@@ -202,10 +200,9 @@ class MapillaryDataset(Dataset):
             utils.logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            lab_id = lab_id if 'id' not in label else label['id']
             name_items = label["name"].split('--')
             category = '-'.join(name_items)
-            self.add_class(lab_id, name_items, label["color"],
+            self.add_label(lab_id, name_items, label["color"],
                            label['evaluate'], category, label.get('aggregate'))
 
     def group_image_label(self, image):
@@ -225,7 +222,7 @@ class MapillaryDataset(Dataset):
         # turn all label ids into the lowest digits/label id according to its "group"
         # (manually built)
         a = np.array(image)
-        for root_id, label in self.class_info.items():
+        for root_id, label in enumerate(self.label_info):
             for label_id, _ in label['aggregate']:
                 mask = a == label_id
                 a[mask] = root_id
@@ -240,7 +237,7 @@ class MapillaryDataset(Dataset):
         image_filaname : str
         aggregate : boolean
         labelling : boolean
-        
+
         Returns
         -------
         dict
@@ -276,7 +273,7 @@ class MapillaryDataset(Dataset):
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
-            labels = {i: 0 for i in range(self.get_nb_class())}
+            labels = {i: 0 for i in range(self.get_nb_label())}
 
         return {"raw_filename": image_filename,
                 "image_filename": new_in_filename,
@@ -303,8 +300,8 @@ class MapillaryDataset(Dataset):
         image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
         image_list_longname = [os.path.join(input_dir, "images", l) for l in image_list]
         with Pool() as p:
-            labels = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling) for x in image_list_longname])
-        self.image_info = {k: v for k,v in enumerate(labels)}
+            self.image_info = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling)
+                                                  for x in image_list_longname])
 
 class ShapeDataset(Dataset):
     """Dataset structure that gathers all information related to a randomly-generated shape Dataset
@@ -318,7 +315,7 @@ class ShapeDataset(Dataset):
     image_size : int
         Size of considered images (height=width), raw images will be resized during the
     preprocessing
-    nb_classes : int
+    nb_labels : int
         Number of shape types that must be integrated into the dataset (only 1, 2 and 3 are supported)
 
     """
@@ -344,13 +341,13 @@ class ShapeDataset(Dataset):
 
         Parameters
         ----------
-        nb_classes : integer
+        nb_labels : integer
             Number of shape types (either 1, 2 or 3, warning if more)
         """
-        self.add_class(self.SQUARE, "square", self.SQUARE_COLOR, True)
-        self.add_class(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
-        self.add_class(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
-        self.add_class(self.BACKGROUND, "background", self.BACKGROUND_COLOR, False)
+        self.add_label(self.SQUARE, "square", self.SQUARE_COLOR, True)
+        self.add_label(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
+        self.add_label(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
+        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, False)
 
     def generate_labels(self, nb_images):
         """ Generate random shape labels in order to prepare shape image
@@ -365,9 +362,9 @@ class ShapeDataset(Dataset):
         raw_labels = [np.random.choice(np.arange(nb_images),
                                             int(nb_images/2),
                                             replace=False)
-                      for i in range(self.get_nb_class())]
-        labels = np.zeros([nb_images, self.get_nb_class()], dtype=int)
-        for i in range(self.get_nb_class()):
+                      for i in range(self.get_nb_label())]
+        labels = np.zeros([nb_images, self.get_nb_label()], dtype=int)
+        for i in range(self.get_nb_label()):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
@@ -407,7 +404,7 @@ class ShapeDataset(Dataset):
     def add_image(self, image_id, background, specifications, labels):
         """ Add a new image to the dataset with image id `image_id`; an image
         in the dataset is represented by an id, a list of shape specifications,
-        a background color and a list of 0-1 labels (1 if the i-th class is on
+        a background color and a list of 0-1 labels (1 if the i-th label is on
         the image, 0 otherwise)
 
         Parameters
@@ -421,22 +418,22 @@ class ShapeDataset(Dataset):
             Image specifications, as a list of shapes (color, coordinates and
         size)
         labels : list
-            List of 0-1 values, the i-th value being 1 if the i-th class is on
+            List of 0-1 values, the i-th value being 1 if the i-th label is on
         the new image, 0 otherwise; the label list length correspond to the
-        number of classes in the dataset
+        number of labels in the dataset
         """
         if image_id in self.image_info:
-            utils.logger.error("Image {} already stored into the class set.".format(image_id))
+            utils.logger.error("Image {} already stored into the label set.".format(image_id))
             return None
-        self.image_info[image_id] = {"background": background,
-                                     "shape_specs": specifications,
-                                     "labels": labels}
+        self.image_info.append({"background": background,
+                                "shape_specs": specifications,
+                                "labels": labels})
 
     def draw_image(self, image_id, datapath):
         """Draws an image from the specifications of its shapes and saves it on
         the file system to `datapath`
 
-        Save labels as mono-channel images on the file system by using the class ids
+        Save labels as mono-channel images on the file system by using the label ids
 
         Parameters
         ----------

@@ -187,17 +187,17 @@ if __name__ == '__main__':
         label_list = train_dataset.label_ids
     else:
         label_list = args.label_list
-        if sum([l>=train_dataset.get_nb_class() for l in args.label_list]) > 0:
+        if sum([l>=train_dataset.get_nb_label() for l in args.label_list]) > 0:
             utils.logger.error(("Unsupported label list. Please enter a list of integers comprised"
                                 "between 0 and {}".format(nb_labels)))
             sys.exit(1)
     if args.glossary_printing:
         glossary = pd.DataFrame(train_dataset.labels)
-        glossary["popularity"] = train_dataset.get_class_popularity()
+        glossary["popularity"] = train_dataset.get_label_popularity()
         utils.logger.info("Data glossary:\n{}".format(glossary))
         sys.exit(0)
-    utils.logger.info(("{} classes in the dataset glossary, {} being focused "
-                       "").format(train_dataset.get_nb_class(), len(label_list)))
+    utils.logger.info(("{} labels in the dataset glossary, {} being focused "
+                       "").format(train_dataset.get_nb_label(), len(label_list)))
     utils.logger.info(("{} images in the training"
                        "set").format(train_dataset.get_nb_images()))
 
