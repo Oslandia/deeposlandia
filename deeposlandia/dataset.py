@@ -48,7 +48,7 @@ class Dataset:
         """
         return [label for label in self.label_info if label["is_evaluate"]]
 
-    def get_nb_label(self):
+    def get_nb_labels(self):
         """Return the number of labels
         """
         return len(self.label_ids)
@@ -247,7 +247,7 @@ class MapillaryDataset(Dataset):
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
-            labels = {i: 0 for i in range(self.get_nb_label())}
+            labels = {i: 0 for i in range(self.get_nb_labels())}
 
         return {"raw_filename": image_filename,
                 "image_filename": new_in_filename,
@@ -336,9 +336,9 @@ class ShapeDataset(Dataset):
         raw_labels = [np.random.choice(np.arange(nb_images),
                                             int(nb_images/2),
                                             replace=False)
-                      for i in range(self.get_nb_label())]
-        labels = np.zeros([nb_images, self.get_nb_label()], dtype=int)
-        for i in range(self.get_nb_label()):
+                      for i in range(self.get_nb_labels())]
+        labels = np.zeros([nb_images, self.get_nb_labels()], dtype=int)
+        for i in range(self.get_nb_labels()):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
