@@ -35,6 +35,10 @@ def add_instance_arguments(parser):
                         default=256,
                         type=int,
                         help=("Desired size of images (width = height)"))
+    parser.add_argument('-T', '--nb-testing-image',
+                        type=int,
+                        default=5000,
+                        help=("Number of testing images"))
     parser.add_argument('-t', '--nb-training-image',
                         type=int,
                         default=18000,
@@ -67,9 +71,11 @@ if __name__=='__main__':
         config_path = os.path.join(folders["input"], config_name)
         train_dataset = MapillaryDataset(args.image_size, config_path)
         validation_dataset = MapillaryDataset(args.image_size, config_path)
+        test_dataset = MapillaryDataset(args.image_size, config_path)
     elif args.dataset == "shapes":
         train_dataset = ShapeDataset(args.image_size)
         validation_dataset = ShapeDataset(args.image_size)
+        test_dataset = ShapeDataset(args.image_size)
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
         sys.exit(1)
@@ -95,6 +101,16 @@ if __name__=='__main__':
                                     nb_images=args.nb_validation_image,
                                     aggregate=args.aggregate_label)
         validation_dataset.save(folders["validation_config"])
+    if os.path.isfile(folders["testing_config"]):
+        test_dataset.load(folders["testing_config"], args.nb_testing_image)
+    else:
+        utils.logger.info(("No existing configuration file for this dataset. Create {}"
+                           "").format(folders["testing_config"]))
+        input_image_dir = os.path.join(folders["input"], "testing")
+        test_dataset.populate(folders["prepro_testing"], input_image_dir,
+                                    nb_images=args.nb_testing_image,
+                                    aggregate=args.aggregate_label)
+        test_dataset.save(folders["testing_config"])
 
     glossary = pd.DataFrame(train_dataset.labels)
     glossary["popularity"] = train_dataset.get_label_popularity()
