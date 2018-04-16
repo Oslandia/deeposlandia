@@ -28,32 +28,6 @@ class Dataset:
         self.label_info = []
         self.image_info = []
 
-    def get_label(self, label_id):
-        """ `label_info` getter, return only one label
-
-        Parameters
-        ----------
-        label_id : integer
-            Id of the dataset label that must be returned
-        """
-        if not label_id in self.label_info.keys():
-            utils.logger.error("Label {} not in the dataset glossary".format(label_id))
-            return None
-        return self.label_info[label_id]
-
-    def get_image(self, image_id):
-        """ `image_info` getter, return only the information for one image
-
-        Parameters
-        ----------
-        image_id : integer
-            Id of the dataset image that must be returned
-        """
-        if not image_id in self.image_info:
-            utils.logger.error("Image {} not in the dataset".format(image_id))
-            return None
-        return self.image_info[image_id]
-
     @property
     def label_ids(self):
         """Return the list of labels ids taken into account in the dataset
