@@ -87,7 +87,8 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
                                          color_mode=col_mode,
                                          seed=seed)
 
-def create_generator(dataset, model, datapath, image_size, batch_size, label_ids, seed=None):
+def create_generator(dataset, model, datapath, image_size, batch_size, label_ids,
+                     inference=False, seed=None):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
     address `model`
 
@@ -105,6 +106,8 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_ids
         Number of images in each training batch
     label_ids : list of integer
         Dataset valid label IDs (background label are excluded)
+    inference : boolean
+        If True, generates only image data (labels are not considered during inference)
     seed : integer
         Random number generation for data shuffling and transformations
 
@@ -117,6 +120,8 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_ids
     if not dataset in ['shapes', 'mapillary']:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
+    if inference:
+        return image_generator
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':
         label_generator = (feature_detection_labelling(x, label_ids)
