@@ -52,7 +52,7 @@ def semantic_segmentation_labelling(img, label_ids):
     return one_hot_encoding
 
 
-def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
+def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
     """Build a couple of generator fed by image and label repository, respectively
 
     The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
@@ -87,7 +87,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=1337):
                                          color_mode=col_mode,
                                          seed=seed)
 
-def create_generator(dataset, model, datapath, image_size, batch_size, label_ids, seed=1337):
+def create_generator(dataset, model, datapath, image_size, batch_size, label_ids, seed=None):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
     address `model`
 
