@@ -48,10 +48,19 @@ class Dataset:
         """
         return [label for label in self.label_info if label["is_evaluate"]]
 
-    def get_nb_labels(self):
+    def get_nb_labels(self, see_all=False):
         """Return the number of labels
+
+        Parameters
+        ----------
+        see_all : boolean
+            If True, consider all labels, otherwise consider only labels for which `is_evaluate` is
+        True
         """
-        return len(self.label_ids)
+        if see_all:
+            return len(self.label_info)
+        else:
+            return len(self.label_ids)
 
     def get_nb_images(self):
         """ `image_info` getter, return the size of `image_info`, i.e. the
