@@ -75,7 +75,7 @@ def add_hyperparameters(parser):
                               "during training"))
     parser.add_argument('-e', '--nb-epochs',
                         type=int,
-                        default=1,
+                        default=0,
                         help=("Number of training epochs (one epoch means "
                               "scanning each training image once)"))
     parser.add_argument('-l', '--learning-rate',
@@ -105,7 +105,7 @@ def add_training_arguments(parser):
     """
     parser.add_argument('-ii', '--nb-testing-image',
                         type=int,
-                        default=100,
+                        default=5000,
                         help=("Number of training images"))
     parser.add_argument('-it', '--nb-training-image',
                         type=int,
@@ -113,25 +113,8 @@ def add_training_arguments(parser):
                         help=("Number of training images"))
     parser.add_argument('-iv', '--nb-validation-image',
                         type=int,
-                        default=500,
+                        default=2000,
                         help=("Number of validation images"))
-    parser.add_argument('-ls', '--log-step',
-                        default=10,
-                        type=int,
-                        help=("Log periodicity during training process"))
-    parser.add_argument('-ss', '--save-step',
-                        default=100,
-                        type=int,
-                        help=("Save periodicity during training process"))
-    parser.add_argument('-t', '--training-limit',
-                        type=int,
-                        help=("Training limit as a number of iterations"
-                              " (debugging purpose)"))
-    parser.add_argument('-vs', '--validation-step',
-                        default=200,
-                        type=int,
-                        help=("Validation metric computing periodicity "
-                              "during training process"))
     return parser
 
 if __name__=='__main__':
