@@ -189,7 +189,7 @@ def list_to_str(seq, sep='-'):
     """
     return sep.join(str(i) for i in seq)
 
-def prepare_folders(datapath, dataset, aggregate_value, image_size, model):
+def prepare_folders(datapath, dataset, aggregate_value, image_size, model, instance_name):
     """Data path and repository management ; create all the folders needed to accomplish the
     current instance training/testing
 
@@ -205,6 +205,8 @@ def prepare_folders(datapath, dataset, aggregate_value, image_size, model):
         Size of the considered images (height and width are equal)
     model : str
         Research problem that is tackled, *e.g.* `feature_detection` or `semantic_segmentation`
+    instance_name : str
+        Instance name, used to create the accurate output folders
 
     Returns
     -------
@@ -227,7 +229,7 @@ def prepare_folders(datapath, dataset, aggregate_value, image_size, model):
     os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
     os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
     os.makedirs(os.path.join(preprocessed_testing_path, "images"), exist_ok=True)
-    os.makedirs(backup_path, exist_ok=True)
+    os.makedirs(os.path.join(backup_path, "checkpoints", instance_name), exist_ok=True)
     return {"input": input_repo,
             "prepro_training": preprocessed_training_path,
             "prepro_validation": preprocessed_validation_path,
