@@ -1,4 +1,16 @@
 """Main method to generate new datasets
+
+Example of program calls:
+
+* generate 64*64 pixel images from Shapes dataset, 10000 images in the training set, 100 in the
+validation set, 1000 in the testing set::
+
+    python deeposlandia/datagen.py -D shapes -s 64 -t 10000 -v 100 -T 1000
+
+* generate 224*224 pixel images from Mapillary dataset, with aggregated labels::
+
+    python deeposlandia/datagen.py -D mapillary -s 224 -a
+
 """
 
 import argparse
@@ -51,8 +63,6 @@ def add_instance_arguments(parser):
 
 
 if __name__=='__main__':
-    """Main method: generate a dataset from some instance specifications
-    """
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
