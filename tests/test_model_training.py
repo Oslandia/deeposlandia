@@ -22,7 +22,7 @@ def test_model_training():
     BATCH_SIZE = 10
     dataset = "shapes"
     model = "feature_detection"
-    datapath = ("./tests/data/" + dataset + "/training")
+    datapath = os.path.join("tests", "data", dataset, "training")
     config = read_config(datapath + ".json")
     NB_IMAGES = len(os.listdir(os.path.join(datapath, "images")))
     NB_STEPS = NB_IMAGES // BATCH_SIZE
@@ -43,7 +43,7 @@ def test_model_training():
     assert score.shape == (BATCH_SIZE, len(label_ids))
     assert all(0 <= s and s <= 1 for s in score.ravel())
 
-    BACKUP_PATH = "./tests/data/" + dataset + "/backups/"
+    BACKUP_PATH = os.path.join("tests", "data", dataset, "backups")
     os.makedirs(BACKUP_PATH, exist_ok=True)
     BACKUP_FILENAME = os.path.join(BACKUP_PATH, "test_model.h5")
     model.save(BACKUP_FILENAME)
