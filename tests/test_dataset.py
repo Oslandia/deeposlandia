@@ -3,6 +3,7 @@
 
 import json
 import os
+import shutil
 
 from deeposlandia.dataset import Dataset, MapillaryDataset, ShapeDataset
 
@@ -30,7 +31,7 @@ def test_mapillary_dataset_creation():
     assert d.get_nb_labels(see_all=True) == NB_LABELS
     assert d.get_nb_images() == 0
 
-def test_mapillary_dataset_population():
+def test_mapillary_dataset_population(tmpdir):
     """Populate a Mapillary dataset
     """
     IMAGE_SIZE = 224
@@ -38,19 +39,19 @@ def test_mapillary_dataset_population():
     with open(config_filename) as fobj:
         config = json.load(fobj)
     NB_LABELS = len(config["labels"])
-    output_dir = "tests/data/mapillary/validation"
-    input_dir = "tests/data/mapillary/validation/raw"
-    os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
-    os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+    input_dir = "tests/data/mapillary/input_dataset_population/"
     NB_IMAGES = len(os.listdir(os.path.join(input_dir, "images")))
+    output_dir = str(tmpdir.realpath())
+    tmpdir.mkdir("images")
+    tmpdir.mkdir("labels")
     d = MapillaryDataset(IMAGE_SIZE, config_filename)
     d.populate(output_dir, input_dir, nb_images=NB_IMAGES)
     d.save(output_dir + '.json')
     assert d.get_nb_labels(see_all=True) == NB_LABELS
     assert d.get_nb_images() == NB_IMAGES
     assert os.path.isfile(output_dir + '.json')
-    assert len(os.listdir(os.path.join(output_dir, "images"))) == NB_IMAGES
-    assert len(os.listdir(os.path.join(output_dir, "labels"))) == NB_IMAGES
+    assert all(len(os.listdir(str(tmp_dir))) == NB_IMAGES
+               for tmp_dir in tmpdir.listdir())
 
 def test_mapillary_dataset_loading():
     """Load images into a Mapillary dataset
@@ -78,23 +79,23 @@ def test_shape_dataset_creation():
     assert d.get_nb_labels(see_all=True) == NB_LABELS
     assert d.get_nb_images() == 0
 
-def test_shape_dataset_population():
+def test_shape_dataset_population(tmpdir):
     """Populate a Shapes dataset
     """
     IMAGE_SIZE = 64
     NB_LABELS = 4
     NB_IMAGES = 20
-    output_dir = "tests/data/shapes/validation"
-    os.makedirs(os.path.join(output_dir, "images"), exist_ok=True)
-    os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+    output_dir = str(tmpdir.realpath())
+    tmpdir.mkdir("images")
+    tmpdir.mkdir("labels")
     d = ShapeDataset(IMAGE_SIZE)
     d.populate(output_dir, nb_images=NB_IMAGES)
     d.save(output_dir + '.json')
     assert d.get_nb_labels(see_all=True) == NB_LABELS
     assert d.get_nb_images() == NB_IMAGES
     assert os.path.isfile(output_dir + '.json')
-    assert len(os.listdir(os.path.join(output_dir, "images"))) == NB_IMAGES
-    assert len(os.listdir(os.path.join(output_dir, "labels"))) == NB_IMAGES
+    assert all(len(os.listdir(str(tmp_dir))) == NB_IMAGES
+               for tmp_dir in tmpdir.listdir())
 
 def test_shape_dataset_loading():
     """Load images into a Shapes dataset
