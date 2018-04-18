@@ -28,32 +28,6 @@ class Dataset:
         self.label_info = []
         self.image_info = []
 
-    def get_label(self, label_id):
-        """ `label_info` getter, return only one label
-
-        Parameters
-        ----------
-        label_id : integer
-            Id of the dataset label that must be returned
-        """
-        if not label_id in self.label_info.keys():
-            utils.logger.error("Label {} not in the dataset glossary".format(label_id))
-            return None
-        return self.label_info[label_id]
-
-    def get_image(self, image_id):
-        """ `image_info` getter, return only the information for one image
-
-        Parameters
-        ----------
-        image_id : integer
-            Id of the dataset image that must be returned
-        """
-        if not image_id in self.image_info:
-            utils.logger.error("Image {} not in the dataset".format(image_id))
-            return None
-        return self.image_info[image_id]
-
     @property
     def label_ids(self):
         """Return the list of labels ids taken into account in the dataset
@@ -74,10 +48,19 @@ class Dataset:
         """
         return [label for label in self.label_info if label["is_evaluate"]]
 
-    def get_nb_label(self):
+    def get_nb_labels(self, see_all=False):
         """Return the number of labels
+
+        Parameters
+        ----------
+        see_all : boolean
+            If True, consider all labels, otherwise consider only labels for which `is_evaluate` is
+        True
         """
-        return len(self.label_ids)
+        if see_all:
+            return len(self.label_info)
+        else:
+            return len(self.label_ids)
 
     def get_nb_images(self):
         """ `image_info` getter, return the size of `image_info`, i.e. the
@@ -273,7 +256,7 @@ class MapillaryDataset(Dataset):
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
-            labels = {i: 0 for i in range(self.get_nb_label())}
+            labels = {i: 0 for i in range(self.get_nb_labels())}
 
         return {"raw_filename": image_filename,
                 "image_filename": new_in_filename,
@@ -362,9 +345,9 @@ class ShapeDataset(Dataset):
         raw_labels = [np.random.choice(np.arange(nb_images),
                                             int(nb_images/2),
                                             replace=False)
-                      for i in range(self.get_nb_label())]
-        labels = np.zeros([nb_images, self.get_nb_label()], dtype=int)
-        for i in range(self.get_nb_label()):
+                      for i in range(self.get_nb_labels())]
+        labels = np.zeros([nb_images, self.get_nb_labels()], dtype=int)
+        for i in range(self.get_nb_labels()):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
