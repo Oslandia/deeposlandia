@@ -112,7 +112,7 @@ def test_semantic_segmentation_labelling():
     MAX = 10
     SIZE = 3
     a = np.random.randint(MIN, MAX, [SIZE, SIZE])
-    asum = np.bincount(a.reshape(-1))
+    asum, _ = np.histogram(a.reshape(-1), range=(MIN, MAX))
     b = generator.semantic_segmentation_labelling(a, label_ids=range(MIN, MAX))
     bsum = np.sum(b, axis=(0, 1))
     assert b.shape == (SIZE, SIZE, MAX)
