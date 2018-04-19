@@ -26,7 +26,7 @@ def test_feature_detection_labelling_concise():
                    [2, 1, 0, 0]]])
     labels = np.unique(a).tolist()
     MIN, MAX = np.amin(a), np.amax(a)
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         b = generator.feature_detection_labelling(a, ['0', '1', '2', '3'])
     b = generator.feature_detection_labelling(a, labels)
     assert b.shape == (a.shape[0], len(labels))
@@ -55,7 +55,7 @@ def test_feature_detection_labelling_sparse():
                    [1, 1, 1, 2, 1],
                    [1, 1, 2, 3, 2]]])
     labels = np.unique(a).tolist()[:-1]
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         b = generator.feature_detection_labelling(a, ['0', '1', '2'])
     b = generator.feature_detection_labelling(a, labels)
     assert len(labels) != np.amax(a) - np.amin(a) + 1
@@ -121,7 +121,7 @@ def test_semantic_segmentation_labelling_concise():
                    [1, 1, 0, 0]]])
     labels = np.unique(a).tolist()
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         b = generator.semantic_segmentation_labelling(a, ['0', '1', '2', '3'])
     b = generator.semantic_segmentation_labelling(a, labels)
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
@@ -171,7 +171,7 @@ def test_semantic_segmentation_labelling_sparse():
                    [1, 1, 0, 0]]])
     labels = [0, 2, 3]
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         b = generator.semantic_segmentation_labelling(a, ['0', '2', '3'])
     b = generator.semantic_segmentation_labelling(a, labels)
     assert len(labels) != np.amax(a) - np.amin(a) + 1

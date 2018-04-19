@@ -20,9 +20,9 @@ def feature_detection_labelling(img, label_ids):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
-    if any(isinstance(item, str) for item in label_ids):
-        raise AttributeError(("List of label IDs must contains "
-                              "integers: {}").format(label_ids))
+    if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
+        raise ValueError(("List of label IDs must contains "
+                          "integers: {}").format(label_ids))
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.equal.outer(flattened_images, label_ids)
     return one_hot_encoding.any(axis=1)
@@ -44,9 +44,9 @@ def semantic_segmentation_labelling(img, label_ids):
         Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
     of the ith label for each pixel
     """
-    if any(isinstance(item, str) for item in label_ids):
-        raise AttributeError(("List of label IDs must contains "
-                              "integers: {}").format(label_ids))
+    if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
+        raise ValueError(("List of label IDs must contains "
+                          "integers: {}").format(label_ids))
     img = img.squeeze().astype(np.uint8)
     one_hot_encoding = np.equal.outer(img, label_ids)
     return one_hot_encoding
