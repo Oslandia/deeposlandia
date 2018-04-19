@@ -88,7 +88,7 @@ def shapes_nb_images():
 
 @pytest.fixture
 def shapes_nb_labels():
-    return 4
+    return 3
 
 
 @pytest.fixture

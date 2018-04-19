@@ -49,7 +49,7 @@ def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
         config = json.load(fobj)
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
     d.load(str(mapillary_config))
-    assert d.get_nb_labels(see_all=True) == mapillary_nb_labels
+    assert d.get_nb_labels() == mapillary_nb_labels
     assert d.get_nb_images() == mapillary_nb_images
 
 def test_shape_dataset_creation(shapes_image_size, shapes_nb_labels):
@@ -57,7 +57,7 @@ def test_shape_dataset_creation(shapes_image_size, shapes_nb_labels):
     """
     d = ShapeDataset(shapes_image_size)
     assert d.image_size == shapes_image_size
-    assert d.get_nb_labels(see_all=True) == shapes_nb_labels
+    assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == 0
 
 def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb_labels,
@@ -67,7 +67,7 @@ def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb
     d = ShapeDataset(shapes_image_size)
     d.populate(str(shapes_training_data), nb_images=shapes_nb_images)
     d.save(str(shapes_config))
-    assert d.get_nb_labels(see_all=True) == shapes_nb_labels
+    assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == shapes_nb_images
     assert os.path.isfile(str(shapes_config))
     assert all(len(os.listdir(os.path.join(str(shapes_training_data), tmp_dir))) == shapes_nb_images
@@ -78,5 +78,5 @@ def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_la
     """
     d = ShapeDataset(shapes_image_size)
     d.load(str(shapes_config))
-    assert d.get_nb_labels(see_all=True) == shapes_nb_labels
+    assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == shapes_nb_images
