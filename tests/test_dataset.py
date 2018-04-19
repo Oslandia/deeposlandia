@@ -28,27 +28,27 @@ def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels, m
 def test_mapillary_dataset_population(mapillary_image_size, mapillary_sample_dir,
                                       mapillary_nb_images, mapillary_nb_labels,
                                       mapillary_input_config, mapillary_config,
-                                      mapillary_training_data):
+                                      mapillary_temp_dir):
     """Populate a Mapillary dataset
     """
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
-    d.populate(str(mapillary_training_data), mapillary_sample_dir, nb_images=mapillary_nb_images)
+    d.populate(str(mapillary_temp_dir), mapillary_sample_dir, nb_images=mapillary_nb_images)
     d.save(str(mapillary_config))
     assert d.get_nb_labels(see_all=True) == mapillary_nb_labels
     assert d.get_nb_images() == mapillary_nb_images
     assert os.path.isfile(str(mapillary_config))
-    assert all(len(os.listdir(os.path.join(str(mapillary_training_data), tmp_dir))) == mapillary_nb_images
+    assert all(len(os.listdir(os.path.join(str(mapillary_temp_dir), tmp_dir))) == mapillary_nb_images
                for tmp_dir in ["images", "labels"])
 
 def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
                                    mapillary_input_config, mapillary_nb_labels,
-                                   mapillary_config):
+                                   mapillary_sample_config):
     """Load images into a Mapillary dataset
     """
     with open(mapillary_input_config) as fobj:
         config = json.load(fobj)
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
-    d.load(str(mapillary_config))
+    d.load(mapillary_sample_config)
     assert d.get_nb_labels() == mapillary_nb_labels
     assert d.get_nb_images() == mapillary_nb_images
 
@@ -61,22 +61,22 @@ def test_shape_dataset_creation(shapes_image_size, shapes_nb_labels):
     assert d.get_nb_images() == 0
 
 def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb_labels,
-                                  shapes_config, shapes_training_data):
+                                  shapes_config, shapes_temp_dir):
     """Populate a Shapes dataset
     """
     d = ShapeDataset(shapes_image_size)
-    d.populate(str(shapes_training_data), nb_images=shapes_nb_images)
+    d.populate(str(shapes_temp_dir), nb_images=shapes_nb_images)
     d.save(str(shapes_config))
     assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == shapes_nb_images
     assert os.path.isfile(str(shapes_config))
-    assert all(len(os.listdir(os.path.join(str(shapes_training_data), tmp_dir))) == shapes_nb_images
+    assert all(len(os.listdir(os.path.join(str(shapes_temp_dir), tmp_dir))) == shapes_nb_images
                for tmp_dir in ["images", "labels"])
 
-def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_labels, shapes_config):
+def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_labels, shapes_sample_config):
     """Load images into a Shapes dataset
     """
     d = ShapeDataset(shapes_image_size)
-    d.load(str(shapes_config))
+    d.load(shapes_sample_config)
     assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == shapes_nb_images

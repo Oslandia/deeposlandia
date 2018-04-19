@@ -57,6 +57,16 @@ def mapillary_input_config():
 
 
 @pytest.fixture
+def mapillary_sample_config():
+    return "tests/data/mapillary/training.json"
+
+
+@pytest.fixture
+def mapillary_sample():
+    return "tests/data/mapillary/training/"
+
+
+@pytest.fixture
 def mapillary_nb_labels(mapillary_input_config):
     with open(mapillary_input_config) as fobj:
         config = json.load(fobj)
@@ -69,7 +79,7 @@ def mapillary_config(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def mapillary_training_data(tmpdir_factory):
+def mapillary_temp_dir(tmpdir_factory):
     mapillary_subdir = tmpdir_factory.mktemp('mapillary', numbered=False)
     tmpdir_factory.mktemp('mapillary/images', numbered=False)
     tmpdir_factory.mktemp('mapillary/labels', numbered=False)
@@ -84,7 +94,7 @@ def shapes_image_size():
 
 @pytest.fixture
 def shapes_nb_images():
-    return 20
+    return 10
 
 
 @pytest.fixture
@@ -97,8 +107,18 @@ def shapes_config(tmpdir_factory):
     return tmpdir_factory.getbasetemp().join('shapes.json')
 
 
+@pytest.fixture
+def shapes_sample_config():
+    return "tests/data/shapes/training.json"
+
+
+@pytest.fixture
+def shapes_sample():
+    return "tests/data/shapes/training/"
+
+
 @pytest.fixture(scope='session')
-def shapes_training_data(tmpdir_factory):
+def shapes_temp_dir(tmpdir_factory):
     shapes_subdir = tmpdir_factory.mktemp('shapes', numbered=False)
     tmpdir_factory.mktemp('shapes/images', numbered=False)
     tmpdir_factory.mktemp('shapes/labels', numbered=False)

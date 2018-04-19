@@ -12,7 +12,7 @@ from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
 from deeposlandia.utils import read_config
 
 @keras_test
-def test_model_training(shapes_image_size, shapes_training_data, shapes_config, shapes_nb_images):
+def test_model_training(shapes_image_size, shapes_sample, shapes_sample_config, shapes_temp_dir, shapes_nb_images):
     """Test the training of a simple neural network with Keras API, as well as model inference and
     trained model backup
 
@@ -20,10 +20,10 @@ def test_model_training(shapes_image_size, shapes_training_data, shapes_config, 
     """
     BATCH_SIZE = 10
     NB_STEPS = shapes_nb_images // BATCH_SIZE
-    config = read_config(str(shapes_config))
+    config = read_config(shapes_sample_config)
     label_ids = [x['id'] for x in config["labels"]]
 
-    gen = create_generator("shapes", "feature_detection", str(shapes_training_data),
+    gen = create_generator("shapes", "feature_detection", shapes_sample,
                            shapes_image_size, BATCH_SIZE, label_ids)
     cnn = FeatureDetectionNetwork("test", image_size=shapes_image_size, nb_labels=len(label_ids))
     model = Model(cnn.X, cnn.Y)
@@ -38,6 +38,6 @@ def test_model_training(shapes_image_size, shapes_training_data, shapes_config, 
     assert score.shape == (BATCH_SIZE, len(label_ids))
     assert all(0 <= s and s <= 1 for s in score.ravel())
 
-    BACKUP_FILENAME = os.path.join(str(shapes_training_data), "checkpoints", "test_model.h5")
+    BACKUP_FILENAME = os.path.join(str(shapes_temp_dir), "checkpoints", "test_model.h5")
     model.save(BACKUP_FILENAME)
     assert os.path.isfile(BACKUP_FILENAME)
