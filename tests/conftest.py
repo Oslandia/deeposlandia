@@ -63,7 +63,7 @@ def mapillary_nb_labels(mapillary_input_config):
     return len(config["labels"])
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def mapillary_config(tmpdir_factory):
     return tmpdir_factory.getbasetemp().join('mapillary.json')
 
@@ -92,7 +92,7 @@ def shapes_nb_labels():
     return 3
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def shapes_config(tmpdir_factory):
     return tmpdir_factory.getbasetemp().join('shapes.json')
 
