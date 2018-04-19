@@ -8,39 +8,33 @@ from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
 
 
 @keras_test
-def test_simple_network_architecture():
+def test_simple_network_architecture(shapes_image_size, nb_channels, shapes_nb_labels):
     """Test a simple feature detection network
 
     """
-    IMAGE_SIZE = 64
-    NB_CHANNELS = 3
-    NB_LABELS = 3
-    net = FeatureDetectionNetwork("fd_test", image_size=IMAGE_SIZE,
-                                  nb_channels=NB_CHANNELS, nb_labels=NB_LABELS)
+    net = FeatureDetectionNetwork("fd_test", image_size=shapes_image_size,
+                                  nb_channels=nb_channels, nb_labels=shapes_nb_labels)
     m = Model(net.X, net.Y)
     input_shape = m.input_shape
     output_shape = m.output_shape
     assert len(input_shape) == 4
-    assert input_shape[1:] == (IMAGE_SIZE, IMAGE_SIZE, NB_CHANNELS)
+    assert input_shape[1:] == (shapes_image_size, shapes_image_size, nb_channels)
     assert len(output_shape) == 2
-    assert output_shape[1] == NB_LABELS
+    assert output_shape[1] == shapes_nb_labels
 
 
 @keras_test
-def test_vgg16_network_architecture():
+def test_vgg16_network_architecture(mapillary_image_size, nb_channels, mapillary_nb_labels):
     """Test a VGG16-inspired feature detection network
 
     """
-    IMAGE_SIZE = 224
-    NB_CHANNELS = 3
-    NB_LABELS = 3
-    net = FeatureDetectionNetwork("fd_test", image_size=IMAGE_SIZE,
-                                  nb_channels=NB_CHANNELS, nb_labels=NB_LABELS,
+    net = FeatureDetectionNetwork("fd_test", image_size=mapillary_image_size,
+                                  nb_channels=nb_channels, nb_labels=mapillary_nb_labels,
                                   architecture="vgg16")
     m = Model(net.X, net.Y)
     input_shape = m.input_shape
     output_shape = m.output_shape
     assert len(input_shape) == 4
-    assert input_shape[1:] == (IMAGE_SIZE, IMAGE_SIZE, NB_CHANNELS)
+    assert input_shape[1:] == (mapillary_image_size, mapillary_image_size, nb_channels)
     assert len(output_shape) == 2
-    assert output_shape[1] == NB_LABELS
+    assert output_shape[1] == mapillary_nb_labels
