@@ -102,81 +102,102 @@ def test_featdet_shape_generator():
     assert label_shape == (BATCH_SIZE, len(config['labels']))
 
 
-def test_semantic_segmentation_labelling():
-    """Test `semantic_segmentation_labelling` function in `generator` module
-
-    - test if output shape is input shape + an additional dimension given by the
+def test_semantic_segmentation_labelling_concise():
+    """Test `semantic_segmentation_labelling` function in `generator` module by considering a
+    concise labelling, *i.e.* the labels correspond to array values
+    * as a preliminary verification, check if passing string labels raises an AttributeError
+    exception
+    * test if output shape is input shape + an additional dimension given by the
       `label_ids` length
-    - test if both representation provides the same information (native array on the
+    * test if both representation provides the same information (native array on the
       first hand and its one-hot version on the second hand)
-    """
-    MIN = 0
-    MAX = 10
-    SIZE = 3
-    a = np.random.randint(MIN, MAX, [SIZE, SIZE])
-    asum, _ = np.histogram(a.reshape(-1), range=(MIN, MAX))
-    b = generator.semantic_segmentation_labelling(a, label_ids=range(MIN, MAX))
-    bsum = np.sum(b, axis=(0, 1))
-    assert b.shape == (SIZE, SIZE, MAX)
-    assert list(bsum) == list(asum)
-
-
-def test_semantic_segmentation_labelling_evaluated_labels():
-    """Test `semantic_segmentation_labelling` function by considering only evaluated labels, *i.e.*
-    dataset labels that have a `is_evaluated` key at `False` are not integrated into the label
-    generator
 
     """
-    BATCH_SIZE = 5
-    MIN = 0
-    MAX = 10
-    IMAGE_SIZE = 3
-    a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
-    labels = range(MIN, MAX)
-    evaluated_labels = np.random.choice(range(MIN, MAX), MAX-3)
-    b = generator.semantic_segmentation_labelling(a, evaluated_labels)
-    assert len(labels) != len(evaluated_labels)
-    assert b.shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(evaluated_labels))
-
-
-def test_semantic_segmentation_labelling_wrong_label_id():
-    """Test if there are some AssertionError for some wrong label ids (type and value)
-    """
-    one_label = np.array([[0, 0, 0, 10],
-                          [3, 3, 0, 10],
-                          [3, 3, 3,  0]])
-    two_label = np.array([[10, 10, 0, 0],
-                          [0, 0, 0, 10],
-                          [10, 10, 0, 0]])
-    labels = np.array(one_label.tolist() + two_label.tolist())
-    labels = labels.reshape((2, 3, 4, 1))
-
+    a = np.array([[[1, 1, 3, 1],
+                   [3, 3, 1, 1],
+                   [3, 3, 3, 1]],
+                  [[1, 1, 0, 0],
+                   [2, 2, 0, 1],
+                   [1, 1, 0, 0]]])
+    labels = np.unique(a).tolist()
+    asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
     with pytest.raises(AttributeError):
-        b = generator.semantic_segmentation_labelling(labels, ['0', '2', '10'])
+        b = generator.semantic_segmentation_labelling(a, ['0', '1', '2', '3'])
+    b = generator.semantic_segmentation_labelling(a, labels)
+    assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
+    assert b.tolist() == [[[[False, True, False, False],
+                            [False, True, False, False],
+                            [False, False, False, True],
+                            [False, True, False, False]],
+                           [[False, False, False, True],
+                            [False, False, False, True],
+                            [False, True, False, False],
+                            [False, True, False, False]],
+                           [[False, False, False, True],
+                            [False, False, False, True],
+                            [False, False, False, True],
+                            [False, True, False, False]]],
+                          [[[False, True, False, False],
+                            [False, True, False, False],
+                            [True, False, False, False],
+                            [True, False, False, False]],
+                           [[False, False, True, False],
+                            [False, False, True, False],
+                            [True, False, False, False],
+                            [False, True, False, False]],
+                           [[False, True, False, False],
+                            [False, True, False, False],
+                            [True, False, False, False],
+                            [True, False, False, False]]]]
 
-    b = generator.semantic_segmentation_labelling(labels, [0, 3, 10])
-    assert b.tolist() == [[[[True, False, False],
-                            [True, False, False],
-                            [True, False, False],
-                            [False, False, True]],
-                           [[False, True, False],
-                            [False, True, False],
-                            [True, False, False],
-                            [False, False, True]],
-                           [[False, True, False],
-                            [False, True, False],
-                            [False, True, False],
-                            [True, False, False]]],
-                          [[[False, False, True],
+
+def test_semantic_segmentation_labelling_sparse():
+    """Test `semantic_segmentation_labelling` function in `generator` module by considering a
+    sparse labelling, *i.e.* the array contains unknown values (to mimic the non-evaluated label
+    situations)
+    * as a preliminary verification, check if passing string labels raises an AttributeError
+    exception
+    * test if output shape is input shape + an additional dimension given by the
+      `label_ids` length
+    * test if both representation provides the same information (native array on the
+      first hand and its one-hot version on the second hand)
+
+    """
+    a = np.array([[[1, 1, 3, 1],
+                   [3, 3, 1, 1],
+                   [3, 4, 3, 1]],
+                  [[1, 1, 0, 0],
+                   [3, 4, 0, 1],
+                   [1, 1, 0, 0]]])
+    labels = [0, 2, 3]
+    asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
+    with pytest.raises(AttributeError):
+        b = generator.semantic_segmentation_labelling(a, ['0', '2', '3'])
+    b = generator.semantic_segmentation_labelling(a, labels)
+    assert len(labels) != range(np.amin(a), np.amax(a))
+    assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
+    assert b.tolist() == [[[[False, False, False],
+                            [False, False, False],
                             [False, False, True],
-                            [True, False, False],
-                            [True, False, False]],
-                           [[True, False, False],
-                            [True, False, False],
-                            [True, False, False],
-                            [False, False, True]],
+                            [False, False, False]],
                            [[False, False, True],
                             [False, False, True],
+                            [False, False, False],
+                            [False, False, False]],
+                           [[False, False, True],
+                            [False, False, False],
+                            [False, False, True],
+                            [False, False, False]]],
+                          [[[False, False, False],
+                            [False, False, False],
+                            [True, False, False],
+                            [True, False, False]],
+                           [[False, False, True],
+                            [False, False, False],
+                            [True, False, False],
+                            [False, False, False]],
+                           [[False, False, False],
+                            [False, False, False],
                             [True, False, False],
                             [True, False, False]]]]
 
