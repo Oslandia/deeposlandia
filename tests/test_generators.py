@@ -8,58 +8,60 @@ import numpy as np
 from deeposlandia import generator, utils
 
 
-def test_feature_detection_labelling_evaluated_labels():
-    """Test `feature_detection_labelling` function by considering only evaluated labels, *i.e.* dataset
-    labels that have a `is_evaluated` key at `False` are not integrated into the label generator
-
-    """
-    BATCH_SIZE = 5
-    MIN = 0
-    MAX = 10
-    IMAGE_SIZE = 3
-    a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
-    labels = range(MIN, MAX)
-    evaluated_labels = np.random.choice(range(MIN, MAX), MAX-3)
-    b = generator.feature_detection_labelling(a, evaluated_labels)
-    assert len(labels) != len(evaluated_labels)
-    assert b.shape == (BATCH_SIZE, len(evaluated_labels))
-
-
-def test_feature_detection_labelling():
-    """Test `semantic_segmentation_labelling` function in `generator` module:
-    - test if output shape is input shape + an additional dimension given by the `label_ids` length
-    - test if both representation provides the same information (native array on the first hand and
+def test_feature_detection_labelling_concise():
+    """Test `feature_detection_labelling` function in `generator` module by considering a concise
+    labelling, *i.e.* all labels are represented into the array:
+    * as a preliminary verification, check if passing string labels raises an AttributeError
+    exception
+    * test if output shape is first input shape (batch size) + an additional dimension given by the
+    `label_ids` length
+    * test if both representation provides the same information (native array on the first hand and
     its one-hot version on the second hand)
     """
-    BATCH_SIZE = 5
-    MIN = 0
-    MAX = 10
-    IMAGE_SIZE = 3
-    a = np.random.randint(MIN, MAX, [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE])
-    b = generator.feature_detection_labelling(a, range(MIN, MAX))
-    assert b.shape == (BATCH_SIZE, MAX)
-
-
-def test_feature_detection_labelling_wrong_label_id():
-    """Test the value and the type of some label ids for feature detection one-hot encoding.
-    """
-    one_label = np.array([[0, 0, 0, 10, 10],
-                          [3, 3, 0, 10, 10],
-                          [3, 3, 3,  0,  0],
-                          [3, 3, 3,  0,  0]])
-    two_label = np.array([[10, 10, 0, 0, 0],
-                          [0, 0, 0, 10, 10],
-                          [10, 10, 0, 0, 0],
-                          [10, 10, 0, 0, 0]])
-    labels = np.array(one_label.tolist() + two_label.tolist())
-    labels = labels.reshape((2, 4, 5, 1))
-    # do not allow a list of string as label ids
+    a = np.array([[[0, 0, 0, 2],
+                   [3, 3, 0, 2],
+                   [3, 3, 3, 0]],
+                  [[2, 2, 0, 0],
+                   [1, 2, 0, 0],
+                   [2, 1, 0, 0]]])
+    labels = np.unique(a).tolist()
+    MIN, MAX = np.amin(a), np.amax(a)
     with pytest.raises(AttributeError):
-        b = generator.feature_detection_labelling(labels, ['0', '3', '10'])
+        b = generator.feature_detection_labelling(a, ['0', '1', '2', '3'])
+    b = generator.feature_detection_labelling(a, labels)
+    assert b.shape == (a.shape[0], len(labels))
+    assert b.tolist() == [[True, False, True, True],
+                          [True, True, True, False]]
 
-    b = generator.feature_detection_labelling(labels, [0, 3, 10])
-    assert b.tolist() == [[True, True, True],
-                          [True, False, True]]
+
+def test_feature_detection_labelling_sparse():
+    """Test `feature_detection_labelling` function in `generator` module by considering a sparse
+    labelling, *i.e.* the array contains unknown values (to mimic the non-evaluated label
+    situations):
+    * as a preliminary verification, check if passing string labels raises an AttributeError
+    exception
+    * test if label length is different from the list of values in the array
+    * test if output shape is first input shape (batch size) + an additional dimension given by the
+    `label_ids` length
+    * test if both representation provides the same information (native array on the first hand and
+    its one-hot version on the second hand)
+    """
+    a = np.array([[[0, 0, 0, 1, 1],
+                   [3, 3, 0, 1, 1],
+                   [3, 3, 3, 0, 0],
+                   [3, 3, 3, 0, 0]],
+                  [[1, 1, 2, 1, 2],
+                   [3, 2, 2, 1, 3],
+                   [1, 1, 1, 2, 1],
+                   [1, 1, 2, 3, 2]]])
+    labels = np.unique(a).tolist()[:-1]
+    with pytest.raises(AttributeError):
+        b = generator.feature_detection_labelling(a, ['0', '1', '2'])
+    b = generator.feature_detection_labelling(a, labels)
+    assert len(labels) != range(np.amin(a), np.amax(a))
+    assert b.tolist() == [[True, True, False],
+                          [False, True, True]]
+    assert b.shape == (a.shape[0], len(labels))
 
 
 def test_featdet_mapillary_generator():
