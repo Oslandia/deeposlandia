@@ -38,7 +38,7 @@ def test_mapillary_dataset_population(mapillary_image_size, mapillary_sample_dir
     assert d.get_nb_images() == mapillary_nb_images
     assert os.path.isfile(str(mapillary_config))
     assert all(len(os.listdir(os.path.join(str(mapillary_training_data), tmp_dir))) == mapillary_nb_images
-               for tmp_dir in os.listdir(str(mapillary_training_data)))
+               for tmp_dir in ["images", "labels"])
 
 def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
                                    mapillary_input_config, mapillary_nb_labels,
@@ -71,7 +71,7 @@ def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb
     assert d.get_nb_images() == shapes_nb_images
     assert os.path.isfile(str(shapes_config))
     assert all(len(os.listdir(os.path.join(str(shapes_training_data), tmp_dir))) == shapes_nb_images
-               for tmp_dir in os.listdir(str(shapes_training_data)))
+               for tmp_dir in ["images", "labels"])
 
 def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_labels, shapes_config):
     """Load images into a Shapes dataset

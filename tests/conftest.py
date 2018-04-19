@@ -73,6 +73,7 @@ def mapillary_training_data(tmpdir_factory):
     mapillary_subdir = tmpdir_factory.mktemp('mapillary', numbered=False)
     tmpdir_factory.mktemp('mapillary/images', numbered=False)
     tmpdir_factory.mktemp('mapillary/labels', numbered=False)
+    tmpdir_factory.mktemp('mapillary/checkpoints', numbered=False)
     return mapillary_subdir
 
 
@@ -101,4 +102,5 @@ def shapes_training_data(tmpdir_factory):
     shapes_subdir = tmpdir_factory.mktemp('shapes', numbered=False)
     tmpdir_factory.mktemp('shapes/images', numbered=False)
     tmpdir_factory.mktemp('shapes/labels', numbered=False)
+    tmpdir_factory.mktemp('shapes/checkpoints', numbered=False)
     return shapes_subdir

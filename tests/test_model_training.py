@@ -38,8 +38,6 @@ def test_model_training(shapes_image_size, shapes_training_data, shapes_config, 
     assert score.shape == (BATCH_SIZE, len(label_ids))
     assert all(0 <= s and s <= 1 for s in score.ravel())
 
-    BACKUP_PATH = os.path.join("tests", "data", "shapes", "backups")
-    os.makedirs(BACKUP_PATH, exist_ok=True)
-    BACKUP_FILENAME = os.path.join(BACKUP_PATH, "test_model.h5")
+    BACKUP_FILENAME = os.path.join(str(shapes_training_data), "checkpoints", "test_model.h5")
     model.save(BACKUP_FILENAME)
     assert os.path.isfile(BACKUP_FILENAME)
