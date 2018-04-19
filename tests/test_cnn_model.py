@@ -8,101 +8,87 @@ from deeposlandia.network import ConvolutionalNeuralNetwork
 
 
 @keras_test
-def test_convolution_shape():
+def test_convolution_shape(shapes_image_size, kernel_size, conv_depth, conv_strides):
     """Test the convolution operation through its output layer shape
 
     """
-    image_size = 64
-    depth = 8
-    strides = 2
-    cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.convolution(cnn.X, nb_filters=depth,
-                        kernel_size=3, strides=strides, block_name="convtest")
+    cnn = ConvolutionalNeuralNetwork("test", shapes_image_size)
+    y = cnn.convolution(cnn.X, nb_filters=conv_depth,
+                        kernel_size=kernel_size, strides=conv_strides, block_name="convtest")
     m = Model(cnn.X, y)
     output_shape = m.output_shape
     assert len(output_shape) == 4
-    assert output_shape[1:] == (image_size//strides, image_size//strides, depth)
+    assert output_shape[1:] == (shapes_image_size // conv_strides,
+                                shapes_image_size // conv_strides,
+                                conv_depth)
 
 
 @keras_test
-def test_transposed_convolution_shape():
+def test_transposed_convolution_shape(shapes_image_size, conv_depth, kernel_size, conv_strides):
     """Test the transposed convolution operation through its output layer shape
 
     """
-    image_size = 64
-    depth = 8
-    kernel_size = 3
-    strides = 2
-    cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.transposed_convolution(cnn.X, nb_filters=depth,
-                                   kernel_size=kernel_size, strides=strides,
+    cnn = ConvolutionalNeuralNetwork("test", shapes_image_size)
+    y = cnn.transposed_convolution(cnn.X, nb_filters=conv_depth,
+                                   kernel_size=kernel_size, strides=conv_strides,
                                    block_name="transconvtest")
     m = Model(cnn.X, y)
     output_shape = m.output_shape
     assert len(output_shape) == 4
-    assert output_shape[1:] == (image_size*strides, image_size*strides, depth)
+    assert output_shape[1:] == (shapes_image_size * conv_strides,
+                                shapes_image_size * conv_strides,
+                                conv_depth)
 
 
 @keras_test
-def test_maxpooling_shape():
+def test_maxpooling_shape(shapes_image_size, nb_channels, pool_size, pool_strides):
     """Test the max pooling operation through its output layer shape
 
     """
-    image_size = 64
-    nb_channels = 3
-    psize = 2
-    strides = 2
-    cnn = ConvolutionalNeuralNetwork("test", image_size, nb_channels)
-    y = cnn.maxpool(cnn.X, pool_size=psize, strides=strides, block_name="pooltest")
+    cnn = ConvolutionalNeuralNetwork("test", shapes_image_size, nb_channels)
+    y = cnn.maxpool(cnn.X, pool_size=pool_size, strides=pool_strides, block_name="pooltest")
     m = Model(cnn.X, y)
     output_shape = m.output_shape
     assert len(output_shape) == 4
-    assert output_shape[1:] == (image_size//strides, image_size//strides, nb_channels)
+    assert output_shape[1:] == (shapes_image_size//pool_strides, shapes_image_size//pool_strides, nb_channels)
 
 
 @keras_test
-def test_dense_shape():
+def test_dense_shape(shapes_image_size, conv_depth):
     """Test the fully-connected layer through its output shape
 
     """
-    image_size = 64
-    depth = 8
-    cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.dense(cnn.X, depth=depth, block_name="fctest")
+    cnn = ConvolutionalNeuralNetwork("test", shapes_image_size)
+    y = cnn.dense(cnn.X, depth=conv_depth, block_name="fctest")
     m = Model(cnn.X, y)
     output_shape = m.output_shape
     assert len(output_shape) == 4
-    assert output_shape[1:] == (image_size, image_size, depth)
+    assert output_shape[1:] == (shapes_image_size, shapes_image_size, conv_depth)
 
 
 @keras_test
-def test_flatten_shape():
+def test_flatten_shape(shapes_image_size, nb_channels):
     """Test the flattening layer through its output shape
 
     """
-    image_size = 64
-    nb_channels = 3
-    cnn = ConvolutionalNeuralNetwork("test", image_size=image_size, nb_channels=nb_channels)
+    cnn = ConvolutionalNeuralNetwork("test", image_size=shapes_image_size, nb_channels=nb_channels)
     y = cnn.flatten(cnn.X, block_name="flattentest")
     m = Model(cnn.X, y)
     output_shape = m.output_shape
     assert len(output_shape) == 2
-    assert output_shape[1] == image_size * image_size * nb_channels
+    assert output_shape[1] == shapes_image_size * shapes_image_size * nb_channels
 
 
 @keras_test
-def test_layer_name():
+def test_layer_name(shapes_image_size, kernel_size, conv_depth, conv_strides):
     """Test the convolution operation through its output layer shape
 
     """
-    image_size = 64
-    depth = 8
-    strides = 1
-    cnn = ConvolutionalNeuralNetwork("test", image_size)
-    y = cnn.convolution(cnn.X, nb_filters=depth,
-                        kernel_size=3, strides=strides)
-    y = cnn.convolution(y, nb_filters=depth,
-                        kernel_size=3, strides=strides)
+    cnn = ConvolutionalNeuralNetwork("test", shapes_image_size)
+    y = cnn.convolution(cnn.X, nb_filters=conv_depth,
+                        kernel_size=kernel_size, strides=conv_strides)
+    y = cnn.convolution(y, nb_filters=conv_depth,
+                        kernel_size=kernel_size, strides=conv_strides)
     m = Model(cnn.X, y)
     assert ([l.name for l in m.layers[1:]] ==
             ['conv2d_1', 'batch_normalization_1', 'activation_1',

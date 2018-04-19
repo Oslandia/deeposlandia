@@ -7,8 +7,38 @@ import pytest
 
 
 @pytest.fixture
+def nb_channels():
+    return 3
+
+
+@pytest.fixture
+def kernel_size():
+    return 3
+
+
+@pytest.fixture
+def conv_depth():
+    return 8
+
+
+@pytest.fixture
+def conv_strides():
+    return 2
+
+
+@pytest.fixture
+def pool_strides():
+    return 2
+
+
+@pytest.fixture
+def pool_size():
+    return 2
+
+
+@pytest.fixture
 def mapillary_image_size():
-    return 22
+    return 224
 
 
 @pytest.fixture
@@ -31,6 +61,7 @@ def mapillary_nb_labels(mapillary_input_config):
     with open(mapillary_input_config) as fobj:
         config = json.load(fobj)
     return len(config["labels"])
+
 
 @pytest.fixture
 def mapillary_config(tmpdir_factory):
