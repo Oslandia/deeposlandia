@@ -58,7 +58,7 @@ def test_feature_detection_labelling_sparse():
     with pytest.raises(AttributeError):
         b = generator.feature_detection_labelling(a, ['0', '1', '2'])
     b = generator.feature_detection_labelling(a, labels)
-    assert len(labels) != range(np.amin(a), np.amax(a))
+    assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.tolist() == [[True, True, False],
                           [False, True, True]]
     assert b.shape == (a.shape[0], len(labels))
@@ -174,7 +174,7 @@ def test_semantic_segmentation_labelling_sparse():
     with pytest.raises(AttributeError):
         b = generator.semantic_segmentation_labelling(a, ['0', '2', '3'])
     b = generator.semantic_segmentation_labelling(a, labels)
-    assert len(labels) != range(np.amin(a), np.amax(a))
+    assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
     assert b.tolist() == [[[[False, False, False],
                             [False, False, False],
