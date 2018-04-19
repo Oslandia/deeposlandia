@@ -64,42 +64,40 @@ def test_feature_detection_labelling_sparse():
     assert b.shape == (a.shape[0], len(labels))
 
 
-def test_featdet_mapillary_generator():
+def test_featdet_mapillary_generator(mapillary_image_size,
+                                     mapillary_training_data,
+                                     mapillary_config,
+                                     nb_channels):
     """Test the data generator for the Mapillary dataset
     """
-    dataset = "mapillary"
-    model = "feature_detection"
-    IMAGE_SIZE = 128
     BATCH_SIZE = 10
-    datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config(datapath + ".json")
+    config = utils.read_config(str(mapillary_config))
     label_ids = [x['id'] for x in config["labels"]]
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+    gen = generator.create_generator("mapillary", "feature_detection",
+                                     str(mapillary_training_data),
+                                     mapillary_image_size,
+                                     BATCH_SIZE, label_ids)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
-    assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
+    assert im_shape == (BATCH_SIZE, mapillary_image_size, mapillary_image_size, nb_channels)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, len(config['labels']))
+    assert label_shape == (BATCH_SIZE, len(label_ids))
 
 
-def test_featdet_shape_generator():
+def test_featdet_shape_generator(shapes_image_size, shapes_training_data, shapes_config, nb_channels):
     """Test the data generator for the shape dataset
     """
-    dataset = "shapes"
-    model = "feature_detection"
-    IMAGE_SIZE = 48
     BATCH_SIZE = 10
-    datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config(datapath + ".json")
+    config = utils.read_config(str(shapes_config))
     label_ids = [x['id'] for x in config["labels"]]
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+    gen = generator.create_generator("shapes", "feature_detection", str(shapes_training_data), shapes_image_size, BATCH_SIZE, label_ids)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
-    assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
+    assert im_shape == (BATCH_SIZE, shapes_image_size, shapes_image_size, nb_channels)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, len(config['labels']))
+    assert label_shape == (BATCH_SIZE, len(label_ids))
 
 
 def test_semantic_segmentation_labelling_concise():
@@ -202,42 +200,42 @@ def test_semantic_segmentation_labelling_sparse():
                             [True, False, False]]]]
 
 
-def test_semseg_mapillary_generator():
+def test_semseg_mapillary_generator(mapillary_image_size,
+                                    mapillary_training_data,
+                                    mapillary_config,
+                                    nb_channels):
     """Test the data generator for the Mapillary dataset
     """
-    dataset = "mapillary"
-    model = "semantic_segmentation"
-    IMAGE_SIZE = 128
     BATCH_SIZE = 10
-    datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config(datapath + ".json")
+    config = utils.read_config(str(mapillary_config))
     label_ids = [x['id'] for x in config["labels"]]
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+    gen = generator.create_generator("mapillary", "semantic_segmentation",
+                                     str(mapillary_training_data),
+                                     mapillary_image_size,
+                                     BATCH_SIZE, label_ids)
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
-    assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
+    assert im_shape == (BATCH_SIZE, mapillary_image_size, mapillary_image_size, nb_channels)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(config['labels']))
+    assert label_shape == (BATCH_SIZE, mapillary_image_size, mapillary_image_size, len(label_ids))
 
 
-def test_semseg_shape_generator():
+def test_semseg_shape_generator(shapes_image_size, shapes_training_data, shapes_config, nb_channels):
     """Test the data generator for the shape dataset
     """
-    dataset = "shapes"
-    model = "semantic_segmentation"
-    IMAGE_SIZE = 48
     BATCH_SIZE = 10
-    datapath = ("./tests/data/" + dataset + "/training")
-    config = utils.read_config(datapath + ".json")
+    config = utils.read_config(str(shapes_config))
     label_ids = [x['id'] for x in config["labels"]]
-    gen = generator.create_generator(dataset, model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+    gen = generator.create_generator("shapes", "semantic_segmentation",
+                                     str(shapes_training_data), shapes_image_size,
+                                     BATCH_SIZE, label_ids)
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
-    assert im_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3)
+    assert im_shape == (BATCH_SIZE, shapes_image_size, shapes_image_size, nb_channels)
     label_shape = item[1].shape
-    assert label_shape == (BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, len(config['labels']))
+    assert label_shape == (BATCH_SIZE, shapes_image_size, shapes_image_size, len(label_ids))
 
 
 def test_wrong_model_dataset_generator():
