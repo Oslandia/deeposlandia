@@ -221,9 +221,10 @@ if __name__=='__main__':
             model.load_weights(checkpoint_complete_path)
             utils.logger.info(("Model weights have been recovered from {}"
                                "").format(checkpoint_complete_path))
-        utils.logger.info(("No available checkpoint for this configuration. "
-                           "The model will be trained from scratch."))
-        trained_model_epoch = 0
+        else:
+            utils.logger.info(("No available checkpoint for this configuration. "
+                               "The model will be trained from scratch."))
+            trained_model_epoch = 0
     else:
         utils.logger.info(("No available checkpoint for this configuration. "
                            "The model will be trained from scratch."))
