@@ -40,6 +40,16 @@ def test_mapillary_dataset_population(mapillary_image_size, mapillary_sample_dir
     assert all(len(os.listdir(os.path.join(str(mapillary_temp_dir), tmp_dir))) == mapillary_nb_images
                for tmp_dir in ["images", "labels"])
 
+def test_mapillary_dataset_population_without_labels(mapillary_image_size, mapillary_input_config,
+                                                     mapillary_sample_without_labels_dir,
+                                                     mapillary_nb_images, mapillary_temp_dir):
+    """Fail at populating a Mapillary dataset without labelled images
+    """
+    d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
+    with pytest.raises(FileNotFoundError) as excinfo:
+        d.populate(str(mapillary_temp_dir), mapillary_sample_without_labels_dir, nb_images=mapillary_nb_images)
+    assert str(excinfo.value).split(':')[0] == "[Errno 2] No such file or directory"
+
 def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
                                    mapillary_input_config, mapillary_nb_labels,
                                    mapillary_sample_config):
