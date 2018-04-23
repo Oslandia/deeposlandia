@@ -6,6 +6,8 @@ import os
 import sys
 import numpy as np
 
+from datetime import datetime
+
 from keras import backend
 from keras.models import Model
 
@@ -141,6 +143,7 @@ if __name__=='__main__':
     instance_name = utils.list_to_str(instance_args, "_")
 
     # Data gathering
+    train_seed = int(datetime.now().timestamp())
     if (os.path.isfile(folders["training_config"]) and os.path.isfile(folders["validation_config"])
         and os.path.isfile(folders["testing_config"])):
         train_config = utils.read_config(folders["training_config"])
@@ -151,14 +154,16 @@ if __name__=='__main__':
             folders["prepro_training"],
             args.image_size,
             args.batch_size,
-            label_ids)
+            label_ids,
+            seed=train_seed)
         validation_generator = generator.create_generator(
             args.dataset,
             args.model,
             folders["prepro_validation"],
             args.image_size,
             args.batch_size,
-            label_ids)
+            label_ids,
+            seed=train_seed)
         test_generator = generator.create_generator(
             args.dataset,
             args.model,
@@ -166,7 +171,8 @@ if __name__=='__main__':
             args.image_size,
             args.batch_size,
             label_ids,
-            inference=True)
+            inference=True,
+            seed=train_seed)
     else:
         utils.logger.error(("There is no valid data with the specified parameters. "
                            "Please generate a valid dataset before calling the training program."))
