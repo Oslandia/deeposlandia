@@ -118,8 +118,9 @@ if __name__=='__main__':
                            "").format(folders["testing_config"]))
         input_image_dir = os.path.join(folders["input"], "testing")
         test_dataset.populate(folders["prepro_testing"], input_image_dir,
-                                    nb_images=args.nb_testing_image,
-                                    aggregate=args.aggregate_label)
+                              nb_images=args.nb_testing_image,
+                              aggregate=args.aggregate_label,
+                              labelling=False)
         test_dataset.save(folders["testing_config"])
 
     glossary = pd.DataFrame(train_dataset.labels)
