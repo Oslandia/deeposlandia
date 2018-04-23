@@ -47,6 +47,11 @@ def mapillary_sample_dir():
 
 
 @pytest.fixture
+def mapillary_sample_without_labels_dir():
+    return "tests/data/mapillary/sample_no_label/"
+
+
+@pytest.fixture
 def mapillary_nb_images(mapillary_sample_dir):
     return len(os.listdir(os.path.join(mapillary_sample_dir, "images")))
 
