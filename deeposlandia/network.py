@@ -22,7 +22,7 @@ class ConvolutionalNeuralNetwork:
     """
 
     def __init__(self, network_name="mapillary", image_size=512,
-                 nb_channels=3, nb_labels=65, learning_rate=1e-4):
+                 nb_channels=3, nb_labels=65):
         self.network_name = network_name
         self.image_size = image_size
         self.nb_channels = nb_channels
