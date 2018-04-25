@@ -65,4 +65,5 @@ def test_model_backup_loading(shapes_image_size, shapes_sample_config, shapes_te
     assert trained_model_epoch > 0
     assert len(old_weights) == len(new_weights)
     assert old_weights[0].shape == new_weights[0].shape
-    assert all(not np.allclose(old_weights[i], new_weights[i]) for i in range(len(new_weights)))
+    # Test if old and new weights are different (at least for one layer)
+    assert any(not np.allclose(lhs, rhs) for lhs, rhs in zip(old_weights, new_weights))
