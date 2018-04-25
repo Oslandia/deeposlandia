@@ -55,7 +55,7 @@ def test_model_backup_loading(shapes_image_size, shapes_sample_config, shapes_te
     if os.path.isdir(checkpoint_path):
         checkpoints = os.listdir(checkpoint_path)
         if len(checkpoints) > 0:
-            model_checkpoint = checkpoints[-1]
+            model_checkpoint = max(checkpoints)
             trained_model_epoch = int(model_checkpoint[-5:-3])
             checkpoint_complete_path = os.path.join(checkpoint_path, model_checkpoint)
             model.load_weights(checkpoint_complete_path)

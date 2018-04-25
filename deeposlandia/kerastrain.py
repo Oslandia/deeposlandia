@@ -230,10 +230,12 @@ if __name__=='__main__':
                            "The model will be trained from scratch."))
         trained_model_epoch = 0
 
-    checkpoint_filenames = os.path.join(folders["output"], "checkpoints",
-                                        instance_name, "checkpoint-epoch-{epoch:02d}.h5")
+    checkpoint_filename = os.path.join(folders["output"],
+                                       "checkpoints",
+                                       instance_name,
+                                       "checkpoint-epoch-{epoch:03d}.h5")
     checkpoints = callbacks.ModelCheckpoint(
-        checkpoint_filenames,
+        checkpoint_filename,
         monitor='val_acc',
         verbose=0,
         save_best_only=True,
