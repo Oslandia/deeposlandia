@@ -8,7 +8,7 @@ import numpy as np
 
 from datetime import datetime
 
-from keras import backend
+from keras import backend, callbacks
 from keras.models import Model
 
 from deeposlandia import generator, utils
@@ -131,16 +131,16 @@ if __name__=='__main__':
     parser = add_training_arguments(parser)
     args = parser.parse_args()
 
-    # Data path and repository management
-    aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
-                                    args.image_size, args.model)
-
     # Instance name (name + image size + network size + batch_size
     # + aggregate? + dropout + learning_rate)
+    aggregate_value = "full" if not args.aggregate_label else "aggregated"
     instance_args = [args.name, args.image_size, args.network, args.batch_size,
                      aggregate_value, args.dropout, utils.list_to_str(args.learning_rate)]
     instance_name = utils.list_to_str(instance_args, "_")
+
+    # Data path and repository management
+    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
+                                    args.image_size, args.model, instance_name)
 
     # Data gathering
     train_seed = int(datetime.now().timestamp())
@@ -210,23 +210,58 @@ if __name__=='__main__':
     STEPS = args.nb_training_image // args.batch_size
     VAL_STEPS = args.nb_validation_image // args.batch_size
     TEST_STEPS = args.nb_testing_image // args.batch_size
+
+    checkpoint_path = os.path.join(folders["output"], "checkpoints", instance_name)
+    if os.path.isdir(checkpoint_path):
+        checkpoints = os.listdir(checkpoint_path)
+        if len(checkpoints) > 0:
+            model_checkpoint = max(checkpoints)
+            trained_model_epoch = int(model_checkpoint[-5:-3])
+            checkpoint_complete_path = os.path.join(checkpoint_path, model_checkpoint)
+            model.load_weights(checkpoint_complete_path)
+            utils.logger.info(("Model weights have been recovered from {}"
+                               "").format(checkpoint_complete_path))
+        else:
+            utils.logger.info(("No available checkpoint for this configuration. "
+                               "The model will be trained from scratch."))
+            trained_model_epoch = 0
+    else:
+        utils.logger.info(("No available checkpoint for this configuration. "
+                           "The model will be trained from scratch."))
+        trained_model_epoch = 0
+
+    checkpoint_filename = os.path.join(folders["output"],
+                                       "checkpoints",
+                                       instance_name,
+                                       "checkpoint-epoch-{epoch:03d}.h5")
+    checkpoints = callbacks.ModelCheckpoint(
+        checkpoint_filename,
+        monitor='val_acc',
+        verbose=0,
+        save_best_only=True,
+        save_weights_only=False,
+        mode='auto', period=1)
+
     hist = model.fit_generator(train_generator,
                                epochs=args.nb_epochs,
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
-                               validation_steps=VAL_STEPS)
+                               validation_steps=VAL_STEPS,
+                               callbacks=[checkpoints],
+                               initial_epoch=trained_model_epoch)
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
                "params": hist.params}
-    utils.logger.info("History:\n")
+    utils.logger.info("History:")
     print(metrics["metrics"])
 
+    # Model inference
     score = model.predict_generator(test_generator, steps=TEST_STEPS)
-    utils.logger.info("Extract of prediction score:\n")
+    utils.logger.info("Extract of prediction score:")
     print(score[:10])
 
     test_label_popularity = np.round(score).astype(np.uint8).sum(axis=0) / score.shape[0]
-    utils.logger.info("Test label popularity:\n")
+    utils.logger.info("Test label popularity:")
     print(test_label_popularity)
 
     backend.clear_session()
