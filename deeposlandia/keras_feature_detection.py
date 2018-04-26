@@ -30,9 +30,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
     """
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 nb_labels=65, learning_rate=1e-4, architecture="simple"):
-        super().__init__(network_name, image_size, nb_channels,
-                         nb_labels, learning_rate)
+                 nb_labels=65, architecture="simple"):
+        super().__init__(network_name, image_size, nb_channels, nb_labels)
         if architecture == "vgg16":
             self.Y = self.vgg16()
         else:

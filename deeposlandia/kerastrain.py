@@ -10,6 +10,7 @@ from datetime import datetime
 
 from keras import backend, callbacks
 from keras.models import Model
+from keras.optimizers import Adam
 
 from deeposlandia import generator, utils
 from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
@@ -80,12 +81,14 @@ def add_hyperparameters(parser):
                         default=0,
                         help=("Number of training epochs (one epoch means "
                               "scanning each training image once)"))
-    parser.add_argument('-l', '--learning-rate',
-                        nargs="+",
-                        default=[0.001, 300, 0.95],
+    parser.add_argument('-L', '--learning-rate', 
+                        default=0.001,
                         type=float,
-                        help=("List of learning rate components (starting LR, "
-                              "decay steps and decay rate)"))
+                        help=("Starting learning rate"))
+    parser.add_argument('-l', '--learning-rate-decay',
+                        default=0.00001,
+                        type=float,
+                        help=("Learning rate decay"))
     parser.add_argument('-s', '--image-size',
                         default=256,
                         type=int,
@@ -135,7 +138,8 @@ if __name__=='__main__':
     # + aggregate? + dropout + learning_rate)
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
     instance_args = [args.name, args.image_size, args.network, args.batch_size,
-                     aggregate_value, args.dropout, utils.list_to_str(args.learning_rate)]
+                     aggregate_value, args.dropout,
+                     args.learning_rate, args.learning_rate_decay]
     instance_name = utils.list_to_str(instance_args, "_")
 
     # Data path and repository management
@@ -185,7 +189,6 @@ if __name__=='__main__':
                                       image_size=args.image_size,
                                       nb_channels=3,
                                       nb_labels=nb_labels,
-                                      learning_rate=args.learning_rate,
                                       architecture=args.network)
         loss_function = "binary_crossentropy"
     elif args.model == "semantic_segmentation":
@@ -193,7 +196,6 @@ if __name__=='__main__':
                                           image_size=args.image_size,
                                           nb_channels=nb_labels,
                                           nb_labels=len(train_config["labels"]),
-                                          learning_rate=args.learning_rate,
                                           architecture=args.network)
         loss_function = "categorical_crossentropy"
     else:
@@ -201,8 +203,9 @@ if __name__=='__main__':
                             "or 'semantic_segmentation'."))
         sys.exit(1)
     model = Model(net.X, net.Y)
+    opt = Adam(lr=args.learning_rate, decay=args.learning_rate_decay)
     model.compile(loss=loss_function,
-                  optimizer='adam',
+                  optimizer=opt,
                   metrics=['acc', 'mae'])
     model.summary()
 
