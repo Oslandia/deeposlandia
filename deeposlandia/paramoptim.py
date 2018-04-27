@@ -198,11 +198,29 @@ def run_model(train_generator, validation_generator,
     # Model training
     STEPS = nb_training_image // batch_size
     VAL_STEPS = nb_validation_image // batch_size
+    checkpoint_filename = os.path.join(folders["output"],
+                                       "checkpoints",
+                                       instance_name,
+                                       "best-model.h5")
+    checkpoints = callbacks.ModelCheckpoint(
+        checkpoint_filename,
+        monitor='val_acc',
+        verbose=0,
+        save_best_only=True,
+        save_weights_only=False,
+        mode='auto', period=1)
+    terminate_on_nan = callbacks.TerminateOnNaN()
+    earlystop = callbacks.EarlyStopping(monitor='val_acc',
+                                        min_delta=0.005,
+                                        patience=5,
+                                        verbose=0,
+                                        mode='auto')
     hist = model.fit_generator(train_generator,
                                epochs=args.nb_epochs,
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
-                               validation_steps=VAL_STEPS)
+                               validation_steps=VAL_STEPS,
+                               callbacks=[checkpoints, earlystop, terminate_on_nan])
     ref_metric = max(hist.history['val_acc'])
     return {'model': model, 'val_acc': ref_metric,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,
