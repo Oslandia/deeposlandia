@@ -189,9 +189,29 @@ def list_to_str(seq, sep='-'):
     """
     return sep.join(str(i) for i in seq)
 
-def prepare_folders(datapath, dataset, aggregate_value, image_size, model, instance_name):
-    """Data path and repository management ; create all the folders needed to accomplish the
-    current instance training/testing
+def prepare_input_folder(datapath, dataset):
+    """Data path and repository management; create and return the raw dataset path
+
+    Parameters
+    ----------
+    datapath : str
+        Data root directory, contain all used the datasets
+    dataset : str
+        Dataset name, *e.g.* `mapillary` or `shapes`
+
+    Returns
+    -------
+    str
+        Dataset raw image path
+
+    """
+    input_folder = os.path.join(datapath, dataset, "input")
+    os.makedirs(input_folder, exist_ok=True)
+    return input_folder
+
+def prepare_preprocessed_folder(datapath, dataset, image_size, aggregate_value):
+    """Data path and repository management; create all the folders needed to
+    accomplish the current instance training/testing
 
     Parameters
     ----------
@@ -203,6 +223,42 @@ def prepare_folders(datapath, dataset, aggregate_value, image_size, model, insta
         Indicates the label aggregation status, either `full` or `aggregated`
     image_size : int
         Size of the considered images (height and width are equal)
+
+    Returns
+    -------
+    dict
+        All the meaningful folders and dataset configuration file as a dictionary
+
+    """
+    prepro_folder = os.path.join(datapath, dataset, "preprocessed",
+                                       str(image_size) + "_" + aggregate_value)
+    training_filename = os.path.join(prepro_folder, "training.json")
+    validation_filename = os.path.join(prepro_folder, "validation.json")
+    testing_filename = os.path.join(prepro_folder, "testing.json")
+    training_folder = os.path.join(prepro_folder, "training")
+    validation_folder = os.path.join(prepro_folder, "validation")
+    testing_folder = os.path.join(prepro_folder, "testing")
+    os.makedirs(os.path.join(training_folder, "images"), exist_ok=True)
+    os.makedirs(os.path.join(training_folder, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(validation_folder, "images"), exist_ok=True)
+    os.makedirs(os.path.join(validation_folder, "labels"), exist_ok=True)
+    os.makedirs(os.path.join(testing_folder, "images"), exist_ok=True)
+    return {"training": training_folder,
+            "validation": validation_folder,
+            "testing": testing_folder,
+            "training_config": training_filename,
+            "validation_config": validation_filename,
+            "testing_config": testing_filename}
+
+def prepare_output_folder(datapath, dataset, model, instance_name=None):
+    """Dataset and repository management; create and return the dataset output path
+
+    Parameters
+    ----------
+    datapath : str
+        Data root directory, contain all used the datasets
+    dataset : str
+        Dataset name, *e.g.* `mapillary` or `shapes`
     model : str
         Research problem that is tackled, *e.g.* `feature_detection` or `semantic_segmentation`
     instance_name : str
@@ -210,31 +266,14 @@ def prepare_folders(datapath, dataset, aggregate_value, image_size, model, insta
 
     Returns
     -------
-    dict
-        All the meaningful folders and dataset configuration file as a dictionary
+    str
+        Dataset output path
     """
-    dataset_repo = os.path.join(datapath, dataset)
-    input_repo = os.path.join(dataset_repo, "input")
-    preprocessed_repo = str(image_size) + "_" + aggregate_value
-    preprocessed_path = os.path.join(dataset_repo, "preprocessed", preprocessed_repo)
-    training_filename = os.path.join(preprocessed_path, "training.json")
-    validation_filename = os.path.join(preprocessed_path, "validation.json")
-    testing_filename = os.path.join(preprocessed_path, "testing.json")
-    preprocessed_training_path = os.path.join(preprocessed_path, "training")
-    preprocessed_validation_path = os.path.join(preprocessed_path, "validation")
-    preprocessed_testing_path = os.path.join(preprocessed_path, "testing")
-    backup_path = os.path.join(dataset_repo, "output", model)
-    os.makedirs(os.path.join(preprocessed_training_path, "images"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_training_path, "labels"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_validation_path, "images"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_validation_path, "labels"), exist_ok=True)
-    os.makedirs(os.path.join(preprocessed_testing_path, "images"), exist_ok=True)
-    os.makedirs(os.path.join(backup_path, "checkpoints", instance_name), exist_ok=True)
-    return {"input": input_repo,
-            "prepro_training": preprocessed_training_path,
-            "prepro_validation": preprocessed_validation_path,
-            "prepro_testing": preprocessed_testing_path,
-            "training_config": training_filename,
-            "validation_config": validation_filename,
-            "testing_config": testing_filename,
-            "output": backup_path}
+    if not instance_name is None:
+        output_folder = os.path.join(datapath, dataset, "output",
+                                     model, "checkpoints", instance_name)
+    else:
+        output_folder = os.path.join(datapath, dataset, "output",
+                                     model, "checkpoints")
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
