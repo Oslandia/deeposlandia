@@ -3,6 +3,7 @@
 
 import argparse
 import itertools
+import json
 import os
 import sys
 import numpy as np
@@ -68,8 +69,8 @@ def add_hyperparameters(parser):
         Modified parser, with additional arguments
     """
     parser.add_argument('-b', '--batch-size',
-                        type=int,
-                        default=50,
+                        type=int, nargs='+',
+                        default=[20, 50, 100],
                         help=("Number of images that must be contained "
                               "into a single batch"))
     parser.add_argument('-d', '--dropout',
@@ -169,7 +170,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
 
 def run_model(train_generator, validation_generator,
               instance_name, image_size, nb_labels, nb_training_image, nb_validation_image,
-              batch_size, dropout, learning_rate, learning_rate_decay, network):
+              batch_size, dropout, network, learning_rate, learning_rate_decay):
     """
     """
     if args.model == "feature_detection":
@@ -221,34 +222,40 @@ if __name__=='__main__':
     parser = add_training_arguments(parser)
     args = parser.parse_args()
 
-    # Instance name (name + image size + network size + batch_size
-    # + aggregate? + dropout + learning_rate)
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    instance_args = [args.name, args.image_size, args.network, args.batch_size,
-                     aggregate_value, args.dropout, utils.list_to_str(args.learning_rate)]
-    instance_name = utils.list_to_str(instance_args, "_")
 
-    # Data path and repository management
-    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
-                                    args.image_size, args.model)
+    # Grid search
+    model_output = []
+    for parameters in itertools.product(args.batch_size, args.dropout, args.network,
+                                        args.learning_rate, args.learning_rate_decay):
+        utils.logger.info(utils.list_to_str(parameters))
+        # Data path and repository management
+        batch_size, dropout, network, learning_rate, learning_rate_decay = parameters
+        instance_args = [args.name, args.image_size, network, batch_size,
+                         aggregate_value, dropout, learning_rate, learning_rate_decay]
+        instance_name = utils.list_to_str(instance_args, "_")
+        folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
+                                        args.image_size, args.model, instance_name)
 
-    utils.logger.info(folders)
-    utils.logger.info(args.batch_size)
-    utils.logger.info(args.dropout)
-    utils.logger.info(args.learning_rate)
-    utils.logger.info(args.learning_rate_decay)
-    utils.logger.info(args.network)
+        # Data generator building
+        nb_labels, train_gen, valid_gen, test_gen = get_data(folders, args.dataset, args.model,
+                                                             args.image_size, batch_size)
 
-    nb_labels, train_gen, valid_gen, test_gen = get_data(folders, args.dataset, args.model,
-                                                         args.image_size, args.batch_size)
+        # Model running
+        model_output.append(run_model(train_gen, valid_gen, instance_name,
+                                      args.image_size, nb_labels, args.nb_training_image,
+                                      args.nb_validation_image, *parameters))
+        utils.logger.info(model_output[-1])
 
-    for parameters in itertools.product(args.dropout, args.learning_rate, args.learning_rate_decay,
-                                        args.network):
-        print(*parameters)
-        model_output = run_model(train_gen, valid_gen, instance_name, args.image_size, nb_labels,
-                                 args.nb_training_image, args.nb_validation_image, args.batch_size,
-                                 *parameters)
+    # Recover best instance starting from validation accuracy
+    best_instance = max(model_output, key=lambda x: x['val_acc'])
 
-    print(model_output)
+    # Save best model
+    instance_name = os.path.join(folders["output"], "checkpoints",
+                                 "best-{}-" + str(args.image_size) + ".{}")
+    best_instance["model"].save(instance_name.format("model", "h5"))
+    with open(instance_name.format("instance", "json"), "w") as fobj:
+              json.dump({key:best_instance[key]
+                         for key in best_instance if key != 'model'}, fobj)
 
     backend.clear_session()
