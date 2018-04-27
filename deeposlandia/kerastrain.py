@@ -143,7 +143,6 @@ if __name__=='__main__':
     instance_name = utils.list_to_str(instance_args, "_")
 
     # Data path and repository management
-    input_folder = utils.prepare_input_folder(args.datapath, args.dataset)
     prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
                                                       args.image_size,
                                                       aggregate_value)
