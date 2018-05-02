@@ -83,7 +83,7 @@ def add_hyperparameters(parser):
                         default=0,
                         help=("Number of training epochs (one epoch means "
                               "scanning each training image once)"))
-    parser.add_argument('-L', '--learning-rate', 
+    parser.add_argument('-L', '--learning-rate',
                         default=0.001,
                         type=float,
                         help=("Starting learning rate"))
@@ -125,8 +125,6 @@ def add_training_arguments(parser):
     return parser
 
 if __name__=='__main__':
-    """Main method: run a convolutional neural network using Keras API
-    """
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
@@ -136,15 +134,12 @@ if __name__=='__main__':
     parser = add_training_arguments(parser)
     args = parser.parse_args()
 
-    # Instance name (name + image size + network size + batch_size
-    # + aggregate? + dropout + learning_rate)
+    # Data path and repository management
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
     instance_args = [args.name, args.image_size, args.network, args.batch_size,
                      aggregate_value, args.dropout,
                      args.learning_rate, args.learning_rate_decay]
     instance_name = utils.list_to_str(instance_args, "_")
-
-    # Data path and repository management
     prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
                                                       args.image_size,
                                                       aggregate_value)
@@ -197,7 +192,7 @@ if __name__=='__main__':
         net = SemanticSegmentationNetwork(network_name=instance_name,
                                           image_size=args.image_size,
                                           nb_channels=nb_labels,
-                                          nb_labels=len(train_config["labels"]),
+                                          nb_labels=nb_labels,
                                           architecture=args.network)
         loss_function = "categorical_crossentropy"
     else:
@@ -208,8 +203,7 @@ if __name__=='__main__':
     opt = Adam(lr=args.learning_rate, decay=args.learning_rate_decay)
     model.compile(loss=loss_function,
                   optimizer=opt,
-                  metrics=['acc', 'mae'])
-    model.summary()
+                  metrics=['acc'])
 
     # Model training
     STEPS = args.nb_training_image // args.batch_size
@@ -252,16 +246,12 @@ if __name__=='__main__':
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
                "params": hist.params}
-    utils.logger.info("History:")
-    print(metrics["metrics"])
+    utils.logger.info("History:\n{}".format(metrics["metrics"]))
 
     # Model inference
     score = model.predict_generator(test_generator, steps=TEST_STEPS)
-    utils.logger.info("Extract of prediction score:")
-    print(score[:10])
-
+    utils.logger.info("Extract of prediction score:\n{}".format(score[:5]))
     test_label_popularity = np.round(score).astype(np.uint8).sum(axis=0) / score.shape[0]
-    utils.logger.info("Test label popularity:")
-    print(test_label_popularity)
+    utils.logger.info("Test label popularity:\n{}".format(test_label_popularity))
 
     backend.clear_session()

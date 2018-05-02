@@ -1,8 +1,4 @@
 """ Utilitary function for Mapillary dataset analysis
-
-# Author: Raphael Delhome
-# Organization: Oslandia
-# Date: september 2017
 """
 
 import json
@@ -44,43 +40,6 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def compute_monotonic_weights(nb_images, label_counter, mu=0.5, max_weight=10):
-    """Compute monotonic weights regarding the popularity of each label given
-    by `label_counter`, over a total population of `nb_images`
-
-    Parameters
-    ----------
-    nb_images: integer
-        Number of images over which the weights must be computed
-    label_counter: list
-        Number of images where each label does appear
-    mu: float
-        Constant coefficient between 0 and 1
-    max_weight: integer
-        Maximum weight to apply when counter is too small with respect to
-    nb_images (in such a case, the function can give a far too large number)
-    """
-    return [min(math.log(1 + mu * nb_images / l), max_weight) for l in label_counter]
-
-def compute_centered_weights(nb_images, label_counter, mu=0.5):
-    """Compute weights regarding the popularity of each label given by
-    `label_counter`, over a total population of `nb_images`; the weights will
-    be larger when popularity is either too small or too large (comparison with
-    a 50% popularity)
-
-    Parameters
-    ----------
-    nb_images: integer
-        Number of images over which the weights must be computed
-    label_counter: list
-        Number of images where each label does appear
-    mu: float
-        Constant coefficient between 0 and 1
-    
-    """
-    return [math.log(1 + mu * (l - nb_images / 2) ** 2 / nb_images)
-            for l in label_counter]
-
 def mapillary_label_building(filtered_image, label_ids):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
@@ -100,35 +59,6 @@ def mapillary_label_building(filtered_image, label_ids):
     image_data = np.array(filtered_image)
     available_labels = np.unique(image_data)
     return {i: 1 if i in available_labels else 0 for i in label_ids}
-
-def mapillary_image_size_plot(data, filename):
-    """Plot the distribution of the sizes in a bunch of images, as a hexbin
-    plot; the image data are stored into a pandas.DataFrame that contains two
-    columns `height` and `width`
-
-    Parameters
-    ----------
-    data: pd.DataFrame
-        image data, with at least two columns `width` and `height`
-    filename: object
-        string designing the name of the .png file in which is saved the plot
-    
-    """
-    data.plot.hexbin(x="width", y="height", gridsize=25, bins='log')
-    plt.plot(data.width, data.height, 'b+', ms=0.75)
-    plt.legend(['images'], loc=2)
-    plt.plot([0, 8000], [0, 6000], 'r-', linestyle="dashed", linewidth=0.5)
-    plt.xlim(0, 7000)
-    plt.ylim(0, 5500)
-    plt.axvline(x=3264, color="grey", linewidth=0.5, linestyle="dotted")
-    plt.axhline(y=2448, color="grey", linewidth=0.5, linestyle="dotted")
-    plt.text(6000, 5000, "4:3", color="red")
-    plt.text(3500, 600, "width=3264", color="grey")
-    plt.text(700, 2600, "height=2448", color="grey")
-    plt.title("Number of images with respect to dimensions (log10-scale)",
-              fontsize=12)
-    plt.tight_layout()
-    plt.savefig(os.path.join("..", "images", filename))
 
 def resize_image(img, base_size):
     """ Resize image `img` such that min(width, height)=base_size; keep image

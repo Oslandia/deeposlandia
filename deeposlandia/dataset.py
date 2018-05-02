@@ -1,3 +1,7 @@
+"""Encapsulates datasets in a generic Dataset class, and in some more specific classes that inherit
+from it
+
+"""
 
 import os
 import json
