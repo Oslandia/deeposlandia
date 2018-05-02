@@ -70,7 +70,7 @@ def add_hyperparameters(parser):
     """
     parser.add_argument('-b', '--batch-size',
                         type=int,
-                        default=20,
+                        default=50,
                         help=("Number of images that must be contained "
                               "into a single batch"))
     parser.add_argument('-d', '--dropout',
@@ -87,7 +87,7 @@ def add_hyperparameters(parser):
                         type=float,
                         help=("Starting learning rate"))
     parser.add_argument('-l', '--learning-rate-decay',
-                        default=0.00001,
+                        default=0.0001,
                         type=float,
                         help=("Learning rate decay"))
     parser.add_argument('-s', '--image-size',
