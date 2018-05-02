@@ -146,8 +146,6 @@ if __name__=='__main__':
     prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
                                                       args.image_size,
                                                       aggregate_value)
-    output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
-                                                args.model, instance_name)
 
     # Data gathering
     train_seed = int(datetime.now().timestamp())
@@ -217,19 +215,17 @@ if __name__=='__main__':
     VAL_STEPS = args.nb_validation_image // args.batch_size
     TEST_STEPS = args.nb_testing_image // args.batch_size
 
-    if os.path.isdir(output_folder):
-        checkpoints = os.listdir(output_folder)
-        if len(checkpoints) > 0:
-            model_checkpoint = max(checkpoints)
-            trained_model_epoch = int(model_checkpoint[-5:-3])
-            checkpoint_complete_path = os.path.join(checkpoint_path, model_checkpoint)
-            model.load_weights(checkpoint_complete_path)
-            utils.logger.info(("Model weights have been recovered from {}"
-                               "").format(checkpoint_complete_path))
-        else:
-            utils.logger.info(("No available checkpoint for this configuration. "
-                               "The model will be trained from scratch."))
-            trained_model_epoch = 0
+    output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
+                                                args.model, instance_name)
+    checkpoints = [item for item in os.listdir(output_folder)
+                   if os.path.isfile(os.path.join(output_folder, item))]
+    if len(checkpoints) > 0:
+        model_checkpoint = max(checkpoints)
+        trained_model_epoch = int(model_checkpoint[-5:-3])
+        checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
+        model.load_weights(checkpoint_complete_path)
+        utils.logger.info(("Model weights have been recovered from {}"
+                           "").format(checkpoint_complete_path))
     else:
         utils.logger.info(("No available checkpoint for this configuration. "
                            "The model will be trained from scratch."))
