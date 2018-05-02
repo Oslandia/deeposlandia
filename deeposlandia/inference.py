@@ -116,10 +116,12 @@ if __name__ == '__main__':
     parser = add_instance_arguments(parser)
     args = parser.parse_args()
 
-    image_paths = [item for sublist in [glob.glob(f) for f in args.image_paths]
-                   for item in sublist]
+    # `image_paths` is first got as [[image1, ..., image_i], [image_j, ..., image_n]]
+    image_paths = [glob.glob(f) for f in args.image_paths]
+    # then it is flattened to get a simple list
+    flattened_image_paths = sum(image_paths, [])
     x_test = []
-    for image_path in image_paths:
+    for image_path in flattened_image_paths:
         image = Image.open(image_path)
         image_size = image.size[0]
         if image.size[0] != image.size[1]:
@@ -128,7 +130,7 @@ if __name__ == '__main__':
             sys.exit(1)
         x_test.append(np.array(image))
     x_test = np.array(x_test)
-    
+
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
     instance_args = [args.name, image_size, args.network, args.batch_size,
                      aggregate_value, args.dropout,
@@ -141,7 +143,6 @@ if __name__ == '__main__':
                                                       image_size,
                                                       aggregate_value)
 
-    print( prepro_folder['training_config'] )
     if os.path.isfile(prepro_folder["training_config"]):
         train_config = utils.read_config(prepro_folder["training_config"])
         label_ids = [x['id'] for x in train_config['labels']
@@ -210,5 +211,5 @@ if __name__ == '__main__':
     y_raw_pred = model.predict(x_test)
     y_pred = np.round(y_raw_pred).astype(np.uint8)
     utils.logger.info("Predicted labels:")
-    for image, prediction in zip(image_paths, y_pred.tolist()):
+    for image, prediction in zip(flattened_image_paths, y_pred.tolist()):
         utils.logger.info("{}: {}".format(image, prediction))
