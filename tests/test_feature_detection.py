@@ -4,7 +4,7 @@
 from keras.utils.test_utils import keras_test
 from keras.models import Model
 
-from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
+from deeposlandia.feature_detection import FeatureDetectionNetwork
 
 
 @keras_test

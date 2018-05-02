@@ -13,8 +13,8 @@ from keras.models import Model
 from keras.optimizers import Adam
 
 from deeposlandia import generator, utils
-from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
-from deeposlandia.keras_semantic_segmentation import SemanticSegmentationNetwork
+from deeposlandia.feature_detection import FeatureDetectionNetwork
+from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
