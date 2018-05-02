@@ -6,7 +6,7 @@ with open('deeposlandia/__init__.py', 'r') as f:
             version = line.strip().split('=')[1].strip(' \'"')
             break
     else:
-        version = '0.3.2'
+        version = '0.4'
 
 with open('README.md', 'rb') as f:
     readme = f.read().decode('utf-8')
