@@ -16,6 +16,8 @@ from deeposlandia import generator, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
+SEED = int(datetime.now().timestamp())
+
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
 
@@ -148,7 +150,6 @@ if __name__=='__main__':
                                                       aggregate_value)
 
     # Data gathering
-    train_seed = int(datetime.now().timestamp())
     if (os.path.isfile(prepro_folder["training_config"]) and os.path.isfile(prepro_folder["validation_config"])
         and os.path.isfile(prepro_folder["testing_config"])):
         train_config = utils.read_config(prepro_folder["training_config"])
@@ -160,7 +161,7 @@ if __name__=='__main__':
             args.image_size,
             args.batch_size,
             label_ids,
-            seed=train_seed)
+            seed=SEED)
         validation_generator = generator.create_generator(
             args.dataset,
             args.model,
@@ -168,7 +169,7 @@ if __name__=='__main__':
             args.image_size,
             args.batch_size,
             label_ids,
-            seed=train_seed)
+            seed=SEED)
         test_generator = generator.create_generator(
             args.dataset,
             args.model,
@@ -177,7 +178,7 @@ if __name__=='__main__':
             args.batch_size,
             label_ids,
             inference=True,
-            seed=train_seed)
+            seed=SEED)
     else:
         utils.logger.error(("There is no valid data with the specified parameters. "
                            "Please generate a valid dataset before calling the training program."))
