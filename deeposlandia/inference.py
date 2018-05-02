@@ -177,7 +177,8 @@ if __name__ == '__main__':
         output_folder = utils.prepare_output_folder(args.datapath,
                                                     args.dataset,
                                                     args.model)
-        checkpoints = os.listdir(output_folder)
+        checkpoints = [item for item in os.listdir(output_folder)
+                       if os.path.isfile(os.path.join(output_folder, item))]
         if len(checkpoints) > 0:
             model_checkpoint = max(checkpoints)
             checkpoint_complete_path = os.path.join(output_folder,
