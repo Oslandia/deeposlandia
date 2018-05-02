@@ -22,11 +22,12 @@ class ConvolutionalNeuralNetwork:
     """
 
     def __init__(self, network_name="mapillary", image_size=512,
-                 nb_channels=3, nb_labels=65):
+                 nb_channels=3, nb_labels=65, dropout=1.0):
         self.network_name = network_name
         self.image_size = image_size
         self.nb_channels = nb_channels
         self.nb_labels = nb_labels
+        self.dropout_rate = dropout
         self.X = K.layers.Input(shape=(image_size, image_size, nb_channels), name="input")
 
     def layer_name(self, prefix, suffix):
@@ -155,7 +156,7 @@ class ConvolutionalNeuralNetwork:
         """
         return K.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding, name=block_name)(x)
 
-    def dense(self, x, depth, dropout_rate=1.0, activation='relu', batch_norm=True, block_name=None):
+    def dense(self, x, depth, activation='relu', batch_norm=True, block_name=None):
         """Apply a fully-connected layer within a neural network
 
         Use Keras API
@@ -169,8 +170,6 @@ class ConvolutionalNeuralNetwork:
         activation : str
             Type of activation function to apply on the tensor at the end of the convolution block
         ('relu' by default)
-        dropout_rate: tensor
-            tensor corresponding to the neuron keeping probability during dropout operation
         batch_norm : boolean
             If True, a batch normalization process is applied on `x` tensor before activation
             layer
@@ -186,7 +185,7 @@ class ConvolutionalNeuralNetwork:
         if batch_norm:
             x = K.layers.BatchNormalization(name=self.layer_name(block_name, '_bn'))(x)
         x = K.layers.Activation(activation, name=self.layer_name(block_name, '_activation'))(x)
-        x = K.layers.Dropout(dropout_rate, name=self.layer_name(block_name, '_dropout'))(x)
+        x = K.layers.Dropout(self.dropout_rate, name=self.layer_name(block_name, '_dropout'))(x)
         return x
 
     def flatten(self, x, block_name=None):

@@ -84,8 +84,7 @@ def add_instance_arguments(parser):
     parser.add_argument('-d', '--dropout',
                         type=float,
                         default=None,
-                        help=("Percentage of dropped out neurons "
-                              "during training"))
+                        help="Percentage of kept neurons during training")
     parser.add_argument('-L', '--learning-rate', 
                         default=None,
                         type=float,
@@ -159,12 +158,14 @@ if __name__ == '__main__':
         net = FeatureDetectionNetwork(network_name=instance_name,
                                       image_size=image_size,
                                       nb_labels=nb_labels,
+                                      dropout=args.dropout,
                                       architecture=args.network)
         loss_function = "binary_crossentropy"
     elif args.model == "semantic_segmentation":
         net = SemanticSegmentationNetwork(network_name=instance_name,
                                           image_size=image_size,
                                           nb_labels=nb_labels,
+                                          dropout=args.dropout,
                                           architecture=args.network)
         loss_function = "categorical_crossentropy"
     else:

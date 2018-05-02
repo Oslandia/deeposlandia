@@ -76,8 +76,7 @@ def add_hyperparameters(parser):
     parser.add_argument('-d', '--dropout',
                         type=float,
                         default=1.0,
-                        help=("Percentage of dropped out neurons "
-                              "during training"))
+                        help="Percentage of kept neurons during training")
     parser.add_argument('-e', '--nb-epochs',
                         type=int,
                         default=0,
@@ -186,6 +185,7 @@ if __name__=='__main__':
                                       image_size=args.image_size,
                                       nb_channels=3,
                                       nb_labels=nb_labels,
+                                      dropout=args.dropout,
                                       architecture=args.network)
         loss_function = "binary_crossentropy"
     elif args.model == "semantic_segmentation":
@@ -193,6 +193,7 @@ if __name__=='__main__':
                                           image_size=args.image_size,
                                           nb_channels=nb_labels,
                                           nb_labels=nb_labels,
+                                          dropout=args.dropout,
                                           architecture=args.network)
         loss_function = "categorical_crossentropy"
     else:

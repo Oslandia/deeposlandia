@@ -30,8 +30,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
     """
 
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
-                 nb_labels=65, architecture="simple"):
-        super().__init__(network_name, image_size, nb_channels, nb_labels)
+                 nb_labels=65, dropout=1.0, architecture="simple"):
+        super().__init__(network_name, image_size, nb_channels, nb_labels, dropout)
         if architecture == "vgg16":
             self.Y = self.vgg16()
         else:
@@ -73,7 +73,7 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         layer = self.convolution(layer, nb_filters=64, kernel_size=3, block_name='conv3')
         layer = self.maxpool(layer, pool_size=2, strides=2, block_name='pool3')
         layer = self.flatten(layer, block_name='flatten1')
-        layer = self.dense(layer, depth=512, dropout_rate=0.75, block_name='fc1')
+        layer = self.dense(layer, depth=512, block_name='fc1')
         return self.output_layer(layer, depth=self.nb_labels)
 
     def vgg16(self):
@@ -90,6 +90,6 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         """
         vgg16_model = VGG16(input_tensor = self.X, include_top=False)
         y = self.flatten(vgg16_model.output, block_name="flatten")
-        y = self.dense(y, 1024, dropout_rate=0.75, block_name="fc1")
-        y = self.dense(y, 1024, dropout_rate=0.75, block_name="fc2")
+        y = self.dense(y, 1024, block_name="fc1")
+        y = self.dense(y, 1024, block_name="fc2")
         return self.output_layer(y, depth=self.nb_labels)
