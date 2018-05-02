@@ -143,19 +143,22 @@ if __name__=='__main__':
     instance_name = utils.list_to_str(instance_args, "_")
 
     # Data path and repository management
-    folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
-                                    args.image_size, args.model, instance_name)
+    prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
+                                                      args.image_size,
+                                                      aggregate_value)
+    output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
+                                                args.model, instance_name)
 
     # Data gathering
     train_seed = int(datetime.now().timestamp())
-    if (os.path.isfile(folders["training_config"]) and os.path.isfile(folders["validation_config"])
-        and os.path.isfile(folders["testing_config"])):
-        train_config = utils.read_config(folders["training_config"])
+    if (os.path.isfile(prepro_folder["training_config"]) and os.path.isfile(prepro_folder["validation_config"])
+        and os.path.isfile(prepro_folder["testing_config"])):
+        train_config = utils.read_config(prepro_folder["training_config"])
         label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]
         train_generator = generator.create_generator(
             args.dataset,
             args.model,
-            folders["prepro_training"],
+            prepro_folder["training"],
             args.image_size,
             args.batch_size,
             label_ids,
@@ -163,7 +166,7 @@ if __name__=='__main__':
         validation_generator = generator.create_generator(
             args.dataset,
             args.model,
-            folders["prepro_validation"],
+            prepro_folder["validation"],
             args.image_size,
             args.batch_size,
             label_ids,
@@ -171,7 +174,7 @@ if __name__=='__main__':
         test_generator = generator.create_generator(
             args.dataset,
             args.model,
-            folders["prepro_testing"],
+            prepro_folder["testing"],
             args.image_size,
             args.batch_size,
             label_ids,
@@ -214,9 +217,8 @@ if __name__=='__main__':
     VAL_STEPS = args.nb_validation_image // args.batch_size
     TEST_STEPS = args.nb_testing_image // args.batch_size
 
-    checkpoint_path = os.path.join(folders["output"], "checkpoints", instance_name)
-    if os.path.isdir(checkpoint_path):
-        checkpoints = os.listdir(checkpoint_path)
+    if os.path.isdir(output_folder):
+        checkpoints = os.listdir(output_folder)
         if len(checkpoints) > 0:
             model_checkpoint = max(checkpoints)
             trained_model_epoch = int(model_checkpoint[-5:-3])
@@ -233,9 +235,7 @@ if __name__=='__main__':
                            "The model will be trained from scratch."))
         trained_model_epoch = 0
 
-    checkpoint_filename = os.path.join(folders["output"],
-                                       "checkpoints",
-                                       instance_name,
+    checkpoint_filename = os.path.join(output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
     checkpoints = callbacks.ModelCheckpoint(
         checkpoint_filename,

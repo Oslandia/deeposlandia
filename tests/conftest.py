@@ -129,3 +129,8 @@ def shapes_temp_dir(tmpdir_factory):
     tmpdir_factory.mktemp('shapes/labels', numbered=False)
     tmpdir_factory.mktemp('shapes/checkpoints', numbered=False)
     return shapes_subdir
+
+@pytest.fixture(scope='session')
+def datapath_repo(tmpdir_factory):
+    datapath_subdir = tmpdir_factory.mktemp('datapath', numbered=False)
+    return datapath_subdir
