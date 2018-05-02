@@ -1,6 +1,3 @@
-# Motivation
-
-## Mapillary dataset
 
 In this project we use a set of images provided
 by [Mapillary](https://www.mapillary.com/), in order to investigate on the
@@ -21,8 +18,6 @@ There are 18000 images in the training set, 2000 images in the validation set,
 and 5000 images in the testing set. The testing set is proposed only for a
 model test purpose, it does not contain filtered versions of images.
 
-## Shape dataset
-
 To complete the project, and make the test easier, a randomly-generated shape model is also
 available. In this dataset, some simple coloured geometric shapes are inserted into each picture,
 on a total random mode. There can be one rectangle, one circle and/or one triangle per image, or
@@ -33,11 +28,33 @@ The picture below shows an example of image generated in this way:
 
 ![Example of shape image](./images/shape_00000.png)
 
-# Dependencies
+# Content
+
+The project contains some Python materials designed to illustrate the Tensorflow and Keras
+libraries (snippets and notebooks)
+
++ [article](./article) contains the original text of articles that have been published
+  on [Oslandia blog](http://oslandia.com/en/blog/) on this topic
++ [deeposlandia](./deeposlandia) contains main Python modules to train and test convolutional
+  neural networks
++ [images](./images) contains some example images to illustrate the Mapillary dataset as well as
+  some preprocessing analysis results
++ [notebooks](./notebooks) contains some Jupyter notebooks that aim at describing data or basic
+  neural network construction
++ [tests](./tests) contains some test modules to guarantee the functioning of a bunch of snippets;
+  it uses the `pytest` framework.
+
+Additionally, running the code may generate extra subdirectories in the data repository.
+
+# Installation
+
+## Requirements
 
 This project needs to load the following Python dependencies:
 
 + cv2
++ keras
++ h5py
 + logging
 + matplotlib
 + numpy
@@ -45,158 +62,133 @@ This project needs to load the following Python dependencies:
 + PIL
 + tensorflow
 
-These dependencies are stored in `requirements.txt` located at the project root. As a remark, the
-code has been run with Python3 (version 3.5).
+As a remark, the code has been run with Python3 (version 3.5).
 
-# Content
+## From source
 
-The project contains some Python materials designed to illustrate the Tensorflow library (snippets
-and notebooks)
-
-+ [article](./article) contains the original text of articles that have been published
-  on [Oslandia blog](http://oslandia.com/en/blog/) on this topic
-+ [images](./images) contains some example images to illustrate the Mapillary dataset as well as
-  some preprocessing analysis results
-+ [notebooks](./notebooks) contains some Jupyter notebooks that aim at describing data or basic
-  neural network construction
-+ [sources](./sources) contains Python modules that train a convolutional neural network based on
-  the Mapillary street image dataset
-
-Additionally, running the code may generate extra repositories:
-
-+ [checkpoints](./checkpoints) refers to trained model back-ups, they are
-  organized with respect to models
-+ [graphs](./graphs) is organized like `checkpoints` repository, it contains
-  `Tensorflow` graphs corresponding to each neural network
-+ [chronos](./chronos) allows to store some training execution times, if wanted
-
-These repository are located at the data repository root.
+```
+$ git clone https://github.com/Oslandia/deeposlandia
+$ cd deeposlandia
+$ virtualenv -p /usr/bin/python3 venv
+$ source venv/bin/activate
+(venv)$ pip install -r requirements-dev.txt
+```
 
 # Running the code
 
-This project supposes that you have downloaded the Mapillary image dataset. The
-following program calls are supposed to be made from the `source` repository.
+This project supposes that you have downloaded the Mapillary image dataset.
 
-## Printing Mapillary glossary
+## Data preprocessing
 
-First of all, the Mapillary glossary can be printed for information purpose
-with the following command:
+First of all, preprocessed versions of raw Mapillary dataset has to be generated before any neural
+network training:
 
 ```
-python3 train.py -g -d mapillary -s 256 -dp ./any-data-path
+python deeposlandia/datagen.py -D mapillary -s 224 -a -p ./any-data-path -t 18000 -v 2000 -T 5000
 ```
 
-The `-g` argument makes the program recover the data glossary that corresponds to the dataset
-indicated by `-d` command (the program expects `mapillary` or `shapes`). By default, the program
-will look for the glossary in `../data` repository (*i.e.* it hypothesizes that the data repository
-is at the project root, or that a symbolic link points to it). This behavior may be changed through
-`-dp` argument. By default, the image characteristics are computed starting from resized images of
-512 * 512 pixels, that can be modified with the `-s` argument.
+The previous command will generates a set of 224 * 224 images based on Mapillary dataset. The raw
+dataset must be in `./any-data-path/input`. If the `-a` argument is specified, the preprocessed
+dataset will be stored in `./any-data-path/preprocessed/224_aggregated`, otherwise it will be
+stored in `./any-data-path/preprocessed/224_full`. The aggregation is applied on dataset labels,
+that can be grouped in Mapillary case (and only in Mapillary case) to reduce their number from 65
+to 11.
 
-As an easter-egg feature, label popularity (proportion of images where the label appears in the
-dataset) is also printed for each label.
+Additionally, the preprocessed dataset may contain less images than the raw dataset: the `-t`, `-v`
+and `-T` arguments refer respectively to training, validation and testing image quantities. The
+amount indicated as an example correspond to raw dataset size.
+
+In the Shapes datase case, this preprocessing step generates a bunch of images from scratch.
+
+As an easter-egg feature, label popularity is also printed by this command (proportion of images
+where each label appears in the preprocessed dataset).
 
 ## Model training
 
 Then the model training itself may be undertaken:
 
 ```
-python3 train.py -dp ../data -d mapillary -n mapcnn -s 512 -e 5
+python deeposlandia/train.py -M feature_detection -D mapillary -s 512 -e 5
 ```
 
-In this example, 512*512 images will be exploited (either after a
-pre-processing step for `mapillary` dataset, or after random image generations
-for `shape` dataset). A network called `mapcnn` will be built (`cnnmapil` is
-the default value). The network name is useful for checkpoints, graphs and
-results naming. Here the training will take place for five epoches, as
-indicated by the `-e` argument. One epoch refers to the scan of every training
-image.
+In this example, 512 * 512 Mapillary images will be exploited from training a feature detection
+model. Here the training will take place for five epoches. An inference step is always undertaken
+at the end of the training.
 
-Some other arguments may be parametrized for running this program:
-+ `-a`: aggregate labels (*e.g.* `car`, `truck` or `caravan`... into a `vehicle` labels)
-+ `-b`: indicate the batch size (number of images per training batch, 20 by
-  default)
-+ `-c`: indicates if training time must be measured
-+ `-do`: percentage of dropped out neurons during training process
-+ `-h`: show the help message
-+ `-it`: number of training images (default to 18000, according to the Mapillary dataset)
-+ `-iv`: number of validation images (default to 200, regarding computing memory limitation, as
-  validation is done at once)
-+ `-l`: IDs of considered labels during training (between 1 and 65 if
-  `mapillary` dataset is considered)
-+ `-ls`: log periodicity during training (print dashboard on log each `ss`
-  steps)
-+ `-m`: monitoring level on TensorBoard, either 0 (no monitoring), 1 (monitor main scalar tensor),
-  2 (monitor all scalar tensors), or 3 (full-monitoring, including histograms and images, mainly
-  for a debugging purpose)
-+ `-ns`: neural network size for feature detection problem, either `small` (default value), or
-  `medium`, the former being composed of 3 convolution+pooling operation and 1 fully-connected
-  layer, whilst the latter is composed of 6 convolution+pooling operation plus 2 fully-connected
-  layers.
-+ `-r`: decaying learning rate components; can be one floating number (constant
-  learning rate) or three ones (starting learning rate, decay steps and decay
-  rate) if learning rate has to decay during training process
-+ `-ss`: back-up periodicity during training (back-up the TensorFlow model into a `checkpoints`
-  sub-directory each `ss` steps)
-+ `-t`: training limit, measured as a number of iteration; overload the epoch
-  number if specified
-+ `-vs`: validation periodicity during training (run the validation phase on the whole validation
-  dataset each `ss` steps)
+Here comes the parameter handled by this program:
++ `-a`: aggregate labels (*e.g.* `car`, `truck` or `caravan`... into a `vehicle` labels); do
+  nothing if applied to `shapes` dataset.
++ `-b`: indicate the batch size (number of images per training batch, 50 by default).
++ `-D`: dataset (either `mapillary` or `shapes`).
++ `-d`: percentage of dropped out neurons during training process. Default value=1.0, no dropout.
++ `-e`: number of epochs (one epoch refers to the scan of every training image). Default value=0,
+  the model is not trained, inference is done starting from the last trained model.
++ `-h`: show the help message.
++ `-ii`: number of testing images (default to 5000, according to the Mapillary dataset).
++ `-it`: number of training images (default to 18000, according to the Mapillary dataset).
++ `-iv`: number of validation images (default to 2000, according to the Mapillary dataset).
++ `L`: starting learning rate. Default to 0.001.
++ `l`: learning rate decay (according to
+  the [Adam optimizer definition](https://keras.io/optimizers/#adam)). Default to 1e-4.
++ `-M`: considered research problem, either `feature_detection` (determining if some labelled
+  objects are on an image) or `semantic_segmentation` (classifying each pixel of an image).
++ `-N`: neural network architecture, either `simple` (default value), or `vgg16` for the feature
+  detection problem, `simple` is the only handled architecture for semantic segmentation.
++ `-n`: neural network name, used for checkpoint path naming. Default to `cnn`.
++ `-p`: path to datasets, on the file system. Default to `./data`.
++ `-s`: image size, in pixels (height = width). Default to 256.
 
 ## Model testing
 
 Trained models may be tested after the training process. Once a model is trained, a checkpoint
-structure is recorded in `<datapath>/<dataset>/checkpoints/<network-name>`. It is the key for
-inference, as the model state after training is stored into it.
+structure is recorded in `<datapath>/<dataset>/output/<problem>/checkpoints/<instance-name>`. It is
+the key point for inference.
 
 The model testing is done as follows:
 
 ```
-python3 test.py -dp ../data -d mapillary -n mapcnn_256_small -i 1000 -b 100 -ls 100
+python deeposlandia/inference.py -D shapes -i ./data/shapes/preprocessed/64_full/testing/images/shape_00000.png
 ```
 
-+ `-b`: testing image batch size (default to 20)
-+ `-d`: dataset (either `mapillary` or `shapes`)
-+ `-dp`: data path in which the data are stored onto the computer (the dataset content is located
-  at `<datapath>/<dataset>`)
-+ `-i`: number of testing images (default to 5000, according to the Mapillary dataset)
-+ `-ls`: log periodicity during training (print dashboard on log each `ss`
-  steps)
-+ `-n`: instance name, under the format `<netname>_<imsize>_<netsize>`, that allows to recover the
-  model trained with the network name `<netname>`, image size of `<imsize>*<imsize>` pixels and a
-  neural network of size `<netsize>` (either `small` or `medium`).
-
-# TensorBoard
-
-The model monitoring is ensured through Tensorboard usage. For more details
-about this tool and downloading instructions, please check on the
-corresponding [Github project](https://github.com/tensorflow/tensorboard) or
-the
-[TensorFlow documentation](https://www.tensorflow.org/get_started/summaries_and_tensorboard).
-
-The network graph is created under `<datapath>/<dataset>/graph/<network-name>` (*e.g.*
-`../data/mapillary/graph/mapcnn`).
-
-To check the training process, a simple command must be done on your command prompt:
+In this example, a label prediction will be done on a single image, for `shapes` dataset in the
+feature detection case. The trained model will be recovered by default in
+`<datapath>/<dataset>/output/<problem>/checkpoints/`, by supposing that an optimized model (*e.g.*
+regarding hyperparameters) has been produced. If the hyperparameters are specified (training batch
+size, dropout rate, starting learning rate, learning rate decay, model architecture and even model
+name), knowing that the image size is given by the first tested image, the trained model is
+recovered in `<datapath>/<dataset>/output/<problem>/checkpoints/<instance>/`, where `<instance>` is
+defined as:
 
 ```
-tensorboard --port 6006 --logdir=<datapath>/<dataset>/graph/<network-name>
+<model_name>-<image_size>-<network_architecture>-<batch_size>-<aggregation_mode>-<dropout>-<start_lr>-<lr_decay>
 ```
 
-Be careful, if the path given to `--logdir` argument do not correspond to those created within the
-training, the Tensorboard dashboard won't show anything. As a remark, several run can be showed at
-the same time; in such a case, `--logdir` argument is composed of several path separated by commas,
-and graph instances may be named as follows:
+If no trained model can be found in the computed path, the label prediction is done from scratch
+(and will be rather inaccurate...).
 
-```
-tensorboard --port 6006 --logdir=n1:<datapath>/<dataset>/graph/<network-name-1>,n2:<datapath>/<dataset>/graph/<network-name-2>
-```
+The list of handled parameters is as follows:
++ `-a`: aggregate labels. Used to point out the accurate configuration file, so as to get the
+  number of labels in the dataset.
++ `-b`: training image batch size. Default to `None` (aims at identifying trained model).
++ `-D`: dataset (either `mapillary` or `shapes`)
++ `-d`: percentage of dropped out neurons during training process. Default to `None` (aims at
+  identifying trained model).
++ `-i`: path to tested images, may handle regex for multi-image selection.
++ `L`: starting learning rate. Default to `None` (aims at identifying trained model).
++ `l`: learning rate decay (according to
+  the [Adam optimizer definition](https://keras.io/optimizers/#adam)). Default to `None` (aims at
+  identifying trained model).
++ `-M`: considered research problem, either `feature_detection` (determining if some labelled
+  objects are on an image) or `semantic_segmentation` (classifying each pixel of an image).
++ `-N`: trained model neural network architecture. Default to `None` (aims at identifying trained
+  model).
++ `-n`: neural network name. Default to `None` (aims at identifying trained model).
++ `-p`: path to datasets, on the file system. Default to `./data`.
 
-An example of visualization for scalar variables (*e.g.* loss, learning rate,
-true positives...) is provided in the following figure:
+# License
 
-![-> tensorboard example](./images/tensorboard_example.png)
+The program license is described in [LICENSE.md](./LICENSE.md).
 
 ___
 
-Oslandia, March 2018
+Oslandia, April 2018
