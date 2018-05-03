@@ -62,7 +62,9 @@ This project needs to load the following Python dependencies:
 + PIL
 + tensorflow
 
-As a remark, the code has been run with Python3 (version 3.5).
+As a remark, the code has been run with Python3 (version 3.5). These dependencies are recalled in
+`setup.py` file, and additional dependencies for developing purpose are listed in
+`requirements-dev.txt`.
 
 ## From source
 
