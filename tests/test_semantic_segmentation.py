@@ -4,7 +4,7 @@
 from keras.utils.test_utils import keras_test
 from keras.models import Model
 
-from deeposlandia.keras_semantic_segmentation import SemanticSegmentationNetwork
+from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
 
 @keras_test

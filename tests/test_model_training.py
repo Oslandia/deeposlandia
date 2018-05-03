@@ -8,7 +8,7 @@ from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.generator import create_generator
-from deeposlandia.keras_feature_detection import FeatureDetectionNetwork
+from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.utils import read_config
 
 @keras_test

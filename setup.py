@@ -1,12 +1,17 @@
+
+import os
+
 from setuptools import find_packages, setup
 
-with open('deeposlandia/__init__.py', 'r') as f:
-    for line in f:
-        if line.startswith('__version__'):
-            version = line.strip().split('=')[1].strip(' \'"')
-            break
-    else:
-        version = '0.3.2'
+here = os.path.abspath(os.path.dirname(__file__))
+
+def find_version(*file_paths):
+    with open(os.path.join(here, *file_paths), 'r') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                return line.strip().split('=')[1].strip(' \'"')
+    raise RuntimeError(("Unable to find version string. "
+                        "Should be __init__.py."))
 
 with open('README.md', 'rb') as f:
     readme = f.read().decode('utf-8')
@@ -23,15 +28,16 @@ install_requires = [
 
 setup(
     name='deeposlandia',
-    version=version,
+    keywords=['deep learning', 'convolutional neural networks', 'image', 'Keras'],
+    version=find_version('deeposlandia', '__init__.py'),
     description='Automatic detection and semantic image segmentation with deep learning',
     long_description=readme,
+    license='MIT',
     author='Oslandia',
     author_email='info@oslandia.com',
     maintainer='Oslandia',
     maintainer_email='',
     url='https://github.com/Oslandia/deeposlandia',
-
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -43,7 +49,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
-
+    python_requires='>=3',
     install_requires=install_requires,
     packages=find_packages(),
 )
