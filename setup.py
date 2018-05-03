@@ -28,15 +28,16 @@ install_requires = [
 
 setup(
     name='deeposlandia',
+    keywords=['deep learning', 'convolutional neural networks', 'image', 'Keras'],
     version=find_version('deeposlandia', '__init__.py'),
     description='Automatic detection and semantic image segmentation with deep learning',
     long_description=readme,
+    license='MIT',
     author='Oslandia',
     author_email='info@oslandia.com',
     maintainer='Oslandia',
     maintainer_email='',
     url='https://github.com/Oslandia/deeposlandia',
-
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -48,7 +49,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
-
+    python_requires='>=3',
     install_requires=install_requires,
     packages=find_packages(),
 )
