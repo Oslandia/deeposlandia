@@ -242,35 +242,49 @@ if __name__=='__main__':
 
     # Grid search
     model_output = []
-    for parameters in itertools.product(args.batch_size, args.dropout, args.network,
-                                        args.learning_rate, args.learning_rate_decay):
-        utils.logger.info(utils.list_to_str(parameters))
-        # Data path and repository management
-        batch_size, dropout, network, learning_rate, learning_rate_decay = parameters
-        instance_args = [args.name, args.image_size, network, batch_size,
-                         aggregate_value, dropout, learning_rate, learning_rate_decay]
-        instance_name = utils.list_to_str(instance_args, "_")
-        prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
-                                                          args.image_size, aggregate_value)
-        output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
-                                                      args.model, instance_name)
-
+    for batch_size in args.batch_size:
+        utils.logger.info(("Generating data with batch of {} images..."
+                           "").format(batch_size))
         # Data generator building
-        nb_labels, train_gen, valid_gen, test_gen = get_data(prepro_folder, args.dataset,
-                                                             args.model, args.image_size,
+        prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
+                                                          args.dataset,
+                                                          args.image_size,
+                                                          aggregate_value)
+        nb_labels, train_gen, valid_gen, test_gen = get_data(prepro_folder,
+                                                             args.dataset,
+                                                             args.model,
+                                                             args.image_size,
                                                              batch_size)
-
-        # Model running
-        model_output.append(run_model(train_gen, valid_gen, output_folder, instance_name,
-                                      args.image_size, nb_labels, args.nb_training_image,
-                                      args.nb_validation_image, *parameters))
-        utils.logger.info(model_output[-1])
+        for parameters in itertools.product(args.dropout,
+                                            args.network,
+                                            args.learning_rate,
+                                            args.learning_rate_decay):
+            utils.logger.info(utils.list_to_str(parameters))
+            # Data path and repository management
+            dropout, network, learning_rate, learning_rate_decay = parameters
+            instance_args = [args.name, args.image_size, network,
+                             batch_size, aggregate_value, dropout,
+                             learning_rate, learning_rate_decay]
+            instance_name = utils.list_to_str(instance_args, "_")
+            output_folder = utils.prepare_output_folder(args.datapath,
+                                                        args.dataset,
+                                                        args.model,
+                                                        instance_name)
+            # Model running
+            model_output.append(run_model(train_gen, valid_gen, output_folder,
+                                          instance_name, args.image_size,
+                                          nb_labels, args.nb_training_image,
+                                          args.nb_validation_image, batch_size,
+                                          *parameters))
+            utils.logger.info("Instance result: {}".format(model_output[-1]))
 
     # Recover best instance starting from validation accuracy
     best_instance = max(model_output, key=lambda x: x['val_acc'])
 
     # Save best model
-    output_folder = utils.prepare_output_folder(args.datapath, args.dataset, args.model)
+    output_folder = utils.prepare_output_folder(args.datapath,
+                                                args.dataset,
+                                                args.model)
     instance_name = os.path.join(output_folder,
                                  "best-{}-" + str(args.image_size) + ".{}")
     best_instance["model"].save(instance_name.format("model", "h5"))
