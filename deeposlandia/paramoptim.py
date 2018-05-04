@@ -139,7 +139,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
         train_generator = generator.create_generator(
             dataset,
             model,
-            folders["prepro_training"],
+            folders["training"],
             image_size,
             batch_size,
             label_ids,
@@ -147,7 +147,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
         validation_generator = generator.create_generator(
             dataset,
             model,
-            folders["prepro_validation"],
+            folders["validation"],
             image_size,
             batch_size,
             label_ids,
@@ -155,7 +155,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
         test_generator = generator.create_generator(
             dataset,
             model,
-            folders["prepro_testing"],
+            folders["testing"],
             image_size,
             batch_size,
             label_ids,
@@ -168,7 +168,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator, test_generator
 
-def run_model(train_generator, validation_generator,
+def run_model(train_generator, validation_generator, output_folder,
               instance_name, image_size, nb_labels, nb_training_image, nb_validation_image,
               batch_size, dropout, network, learning_rate, learning_rate_decay):
     """
@@ -198,9 +198,7 @@ def run_model(train_generator, validation_generator,
     # Model training
     STEPS = nb_training_image // batch_size
     VAL_STEPS = nb_validation_image // batch_size
-    checkpoint_filename = os.path.join(folders["output"],
-                                       "checkpoints",
-                                       instance_name,
+    checkpoint_filename = os.path.join(output_folder,
                                        "best-model.h5")
     checkpoints = callbacks.ModelCheckpoint(
         checkpoint_filename,
@@ -252,15 +250,18 @@ if __name__=='__main__':
         instance_args = [args.name, args.image_size, network, batch_size,
                          aggregate_value, dropout, learning_rate, learning_rate_decay]
         instance_name = utils.list_to_str(instance_args, "_")
-        folders = utils.prepare_folders(args.datapath, args.dataset, aggregate_value,
-                                        args.image_size, args.model, instance_name)
+        prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset,
+                                                          args.image_size, aggregate_value)
+        output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
+                                                      args.model, instance_name)
 
         # Data generator building
-        nb_labels, train_gen, valid_gen, test_gen = get_data(folders, args.dataset, args.model,
-                                                             args.image_size, batch_size)
+        nb_labels, train_gen, valid_gen, test_gen = get_data(prepro_folder, args.dataset,
+                                                             args.model, args.image_size,
+                                                             batch_size)
 
         # Model running
-        model_output.append(run_model(train_gen, valid_gen, instance_name,
+        model_output.append(run_model(train_gen, valid_gen, output_folder, instance_name,
                                       args.image_size, nb_labels, args.nb_training_image,
                                       args.nb_validation_image, *parameters))
         utils.logger.info(model_output[-1])
@@ -269,7 +270,8 @@ if __name__=='__main__':
     best_instance = max(model_output, key=lambda x: x['val_acc'])
 
     # Save best model
-    instance_name = os.path.join(folders["output"], "checkpoints",
+    output_folder = utils.prepare_output_folder(args.datapath, args.dataset, args.model)
+    instance_name = os.path.join(output_folder,
                                  "best-{}-" + str(args.image_size) + ".{}")
     best_instance["model"].save(instance_name.format("model", "h5"))
     with open(instance_name.format("instance", "json"), "w") as fobj:
