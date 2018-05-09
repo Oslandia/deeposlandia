@@ -105,6 +105,46 @@ def add_instance_arguments(parser):
                               "refer to state-of-the-art networks)"))
     return parser
 
+def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
+    """Initialize a convolutional neural network with Keras API starting from a set of parameters
+
+    Parameters
+    ----------
+    problem : str
+        Type of solved problem, either `feature_detection` or `semantic_segmentation`
+    instance_name : str
+        Name of the instance, for identification purpose
+    image_size : int
+        Image size, in pixels (height=width)
+    nb_labels : int
+        Number of output labels
+    dropout : float
+        Dropout rate
+    network : str
+        Network architecture
+
+    Returns
+    -------
+    keras.models.Model
+        Convolutional neural network
+    """
+    if args.model == "feature_detection":
+        net = FeatureDetectionNetwork(network_name=instance_name,
+                                      image_size=image_size,
+                                      nb_labels=nb_labels,
+                                      dropout=dropout,
+                                      architecture=network)
+    elif args.model == "semantic_segmentation":
+        net = SemanticSegmentationNetwork(network_name=instance_name,
+                                          image_size=image_size,
+                                          nb_labels=nb_labels,
+                                          dropout=dropout,
+                                          architecture=network)
+    else:
+        utils.logger.error(("Unrecognized model. Please enter 'feature_detection' "
+                            "or 'semantic_segmentation'."))
+        sys.exit(1)
+    return Model(net.X, net.Y)
 
 if __name__ == '__main__':
 
@@ -153,32 +193,14 @@ if __name__ == '__main__':
                             "before calling the program."))
         sys.exit(1)
 
-    # Model creation
-    if args.model == "feature_detection":
-        net = FeatureDetectionNetwork(network_name=instance_name,
-                                      image_size=image_size,
-                                      nb_labels=nb_labels,
-                                      dropout=args.dropout,
-                                      architecture=args.network)
-        loss_function = "binary_crossentropy"
-    elif args.model == "semantic_segmentation":
-        net = SemanticSegmentationNetwork(network_name=instance_name,
-                                          image_size=image_size,
-                                          nb_labels=nb_labels,
-                                          dropout=args.dropout,
-                                          architecture=args.network)
-        loss_function = "categorical_crossentropy"
-    else:
-        utils.logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                            "or 'semantic_segmentation'."))
-        sys.exit(1)
-    model = Model(net.X, net.Y)
-
     if any([arg is None for arg in instance_args]):
         utils.logger.info("Some arguments are None, the best model is considered.")
         output_folder = utils.prepare_output_folder(args.datapath,
                                                     args.dataset,
                                                     args.model)
+        instance_path = os.path.join(output_folder, "best-instance-" + str(image_size) + ".json")
+        dropout, network = utils.recover_instance(instance_path)
+        model = init_model(args.model, instance_name, image_size, nb_labels, dropout, network)
         checkpoints = [item for item in os.listdir(output_folder)
                        if os.path.isfile(os.path.join(output_folder, item))]
         if len(checkpoints) > 0:
@@ -198,6 +220,8 @@ if __name__ == '__main__':
                                                     args.dataset,
                                                     args.model,
                                                     instance_name)
+        model = init_model(args.model, instance_name, image_size,
+                           nb_labels, args.dropout, args.network)
         model_checkpoint = "best-model-" + str(image_size) + ".h5"
         checkpoint_complete_path = os.path.join(output_folder,
                                                 model_checkpoint)
