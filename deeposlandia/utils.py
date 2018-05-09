@@ -207,3 +207,21 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
                                      model, "checkpoints")
     os.makedirs(output_folder, exist_ok=True)
     return output_folder
+
+def recover_instance(instance_path):
+    """Recover instance specification for model design, *i.e.* dropout rate and network
+    architecture
+
+    Parameters
+    ----------
+    instance_path : str
+        Path of the instance specifications on the file system
+
+    Returns
+    -------
+    tuple
+        Instance dropout and network architecture
+    """
+    with open(instance_path) as fobj:
+        instance = json.load(fobj)
+    return instance["dropout"], instance["network"]
