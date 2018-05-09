@@ -57,7 +57,7 @@ def add_instance_arguments(parser):
                         help=("Number of training images"))
     parser.add_argument('-v', '--nb-validation-image',
                         type=int,
-                        default=200,
+                        default=2000,
                         help=("Number of validation images"))
     return parser
 
