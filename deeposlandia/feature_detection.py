@@ -5,7 +5,7 @@
 import h5py
 
 import keras as K
-from keras.applications import VGG16, inception_v3
+from keras.applications import VGG16, inception_v3, resnet50
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
@@ -36,6 +36,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
             self.Y = self.vgg16()
         elif architecture == "inception":
             self.Y = self.inception()
+        elif architecture == "resnet":
+            self.Y = self.resnet()
         else:
             self.Y = self.simple()
 
@@ -90,10 +92,27 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         tensor
             (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
-        vgg16_model = VGG16(input_tensor = self.X, include_top=False)
+        vgg16_model = VGG16(input_tensor=self.X, include_top=False)
         y = self.flatten(vgg16_model.output, block_name="flatten")
         y = self.dense(y, 1024, block_name="fc1")
         y = self.dense(y, 1024, block_name="fc2")
+        return self.output_layer(y, depth=self.nb_labels)
+
+    def resnet(self):
+        """Build the structure of a convolutional neural network from input image data to the last
+        hidden layer on a similar manner than ResNet
+
+        See: He, Zhang, Ren, Sun. Deep Residual Learning for Image Recognition. ArXiv
+        technical report, 2015.
+
+        Returns
+        -------
+        tensor
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with
+        ground-truth values
+        """
+        resnet_model = resnet50.ResNet50(include_top=False, input_tensor=self.X)
+        y = self.flatten(resnet_model.output)
         return self.output_layer(y, depth=self.nb_labels)
 
     def inception(self):
