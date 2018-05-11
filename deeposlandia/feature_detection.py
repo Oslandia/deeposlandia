@@ -5,7 +5,7 @@
 import h5py
 
 import keras as K
-from keras.applications import VGG16
+from keras.applications import VGG16, inception_v3
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
@@ -34,6 +34,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         super().__init__(network_name, image_size, nb_channels, nb_labels, dropout)
         if architecture == "vgg16":
             self.Y = self.vgg16()
+        elif architecture == "inception":
+            self.Y = self.inception()
         else:
             self.Y = self.simple()
 
@@ -92,4 +94,22 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         y = self.flatten(vgg16_model.output, block_name="flatten")
         y = self.dense(y, 1024, block_name="fc1")
         y = self.dense(y, 1024, block_name="fc2")
+        return self.output_layer(y, depth=self.nb_labels)
+
+    def inception(self):
+        """Build the structure of a convolutional neural network from input image data to the last
+        hidden layer on the model of a similar manner than Inception-V4
+
+        See: Szegedy, Vanhoucke, Ioffe, Shlens. Rethinking the Inception Architecture for
+        Computer Vision. ArXiv technical report, 2015.
+
+        Returns
+        -------
+        tensor
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with
+        ground-truth values
+
+        """
+        inception_model = inception_v3.InceptionV3(input_tensor=self.X, include_top=False)
+        y = K.layers.GlobalAveragePooling2D()(inception_model.output)
         return self.output_layer(y, depth=self.nb_labels)
