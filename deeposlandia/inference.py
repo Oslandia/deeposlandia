@@ -234,7 +234,16 @@ if __name__ == '__main__':
                                "The model will be trained from scratch."))
 
     y_raw_pred = model.predict(x_test)
-    y_pred = np.round(y_raw_pred).astype(np.uint8)
-    utils.logger.info("Predicted labels:")
-    for image, prediction in zip(flattened_image_paths, y_pred.tolist()):
-        utils.logger.info("{}: {}".format(image, prediction))
+    if args.model == "feature_detection":
+        utils.logger.info("Predicted labels:")
+        for image, prediction in zip(flattened_image_paths, y_raw_pred.tolist()):
+            y_pred = np.round(prediction).astype(np.uint8)
+            utils.logger.info("{}: {}".format(image, y_pred))
+            found_objects = [i['name'][-1] for i, y in zip(train_config['labels'], y_pred) if y == 1]
+            utils.logger.info("On image {}, we can find: {}".format(image,
+        found_objects))
+    elif args.model == "semantic_segmentation":
+        pass
+    else:
+        utils.logger.error(("Unknown model argument. Please use "
+                            "'feature_detection' or 'semantic_segmentation'."))
