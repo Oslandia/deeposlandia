@@ -356,7 +356,7 @@ class ShapeDataset(Dataset):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
-    def populate(self, output_dir, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
+    def populate(self, output_dir=None, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -387,7 +387,8 @@ class ShapeDataset(Dataset):
                 else:
                     shape_specs.append([None, None, None, None])
             self.add_image(i, bg_color, shape_specs, image_label)
-            self.draw_image(i, output_dir)
+            if not output_dir is None:
+                self.draw_image(i, output_dir)
 
     def add_image(self, image_id, background, specifications, labels):
         """ Add a new image to the dataset with image id `image_id`; an image
