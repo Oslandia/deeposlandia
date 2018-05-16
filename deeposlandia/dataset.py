@@ -109,7 +109,8 @@ class Dataset:
             return None
         self.label_info.append({"name": label_name,
                                 "id": label_id,
-                                "category": category,
+                                "category": (label_name if category is None
+                                             else category),
                                 "is_evaluate": is_evaluate,
                                 "aggregate": aggregate,
                                 "color": color})

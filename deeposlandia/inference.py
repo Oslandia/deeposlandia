@@ -235,13 +235,11 @@ if __name__ == '__main__':
 
     y_raw_pred = model.predict(x_test)
     if args.model == "feature_detection":
-        utils.logger.info("Predicted labels:")
         for image, prediction in zip(flattened_image_paths, y_raw_pred.tolist()):
-            y_pred = np.round(prediction).astype(np.uint8)
-            utils.logger.info("{}: {}".format(image, y_pred))
-            found_objects = [i['name'][-1] for i, y in zip(train_config['labels'], y_pred) if y == 1]
-            utils.logger.info("On image {}, we can find: {}".format(image,
-        found_objects))
+            utils.logger.info("On image {}:".format(image))
+            label_names = [i['category'] for i in train_config['labels']]
+            for label, y in zip(label_names, prediction):
+                utils.logger.info("{}: {:.2f}%".format(label, 100*y))
     elif args.model == "semantic_segmentation":
         pass
     else:
