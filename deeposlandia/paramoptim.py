@@ -199,9 +199,8 @@ def run_model(train_generator, validation_generator, output_folder,
     # Model training
     STEPS = nb_training_image // batch_size
     VAL_STEPS = nb_validation_image // batch_size
-    checkpoint_name = ("best-model-" + image_size + "-"
-                       + aggregate_value + ".h5")
-    checkpoint_filename = os.path.join(output_folder, checkpoint_name)
+    checkpoint_filename = os.path.join(output_folder,
+                                       "checkpoint-epoch-{epoch:03d}.h5")
     checkpoints = callbacks.ModelCheckpoint(
         checkpoint_filename,
         monitor='val_acc',
