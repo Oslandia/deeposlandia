@@ -1,0 +1,25 @@
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Simple deep learning demonstrator">
+    <meta name="keywords" content="Artificial Intelligence, Deep Learning, image">
+    <meta name="author" content="Oslandia">
+    {% include 'deeposlandia-css.html' %}
+
+    <title>deeposlandia: deep learning on image data</title>
+  </head>
+
+  <body>
+    <div class="container">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+
+  {% include 'deeposlandia-js.html' %}
+
+  {% block appjs %}
+  {% endblock %}
+
+</html>

@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<h2>Deeposlandia: prediction on image labels with deep learning</h2>
+
+<p>
+  Predict some feature detection result with a simple neural network model. See the <a href="https://github.com/oslandia/deeposlandia">project page on Github</a>.</p>
+
+<h4>Addressed problems</h4>
+<p>
+  <ul>
+    <li><a href="{{ url_for('predictor_view', model='feature_detection', dataset='shapes') }}">feature detection on random shapes</a></li>
+    <li><a href="{{ url_for('predictor_view', model='feature_detection', dataset='mapillary') }}">feature detection on street-view images</a></li>
+    <li><a href="{{ url_for('predictor_view', model='semantic_segmentation', dataset='shapes') }}">semantic segmentation on random shapes</a></li>
+    <li><a href="{{ url_for('predictor_view', model='semantic_segmentation', dataset='mapillary') }}">semantic segmentation on street-view images</a></li>
+  </ul>
+</p>
+
+<h4>Datasets</h4>
+<p>
+  <ul>
+    <li>
+      <a href="https://www.mapillary.com/dataset/vistas">Mapillary<br>
+      <img src="../../images/MVD_M2kh294N9c72sICO990Uew.png" alt="Mapillary image example" style="width:500px;height:250px;" title="Mapillary"></a>
+    </li>
+    <li>
+      Random shapes<br>
+      <img src="../../images/shape_00000.png" alt="Shape image example" style="width:250px;height:250px;" title="Shapes">
+    </li>
+  </ul>
+</p>
+
+<h4>About</h4>
+<p>
+  Developed and hosted by the <a href="http://oslandia.com">Oslandia</a> team! Visit also the <a href="http://data.oslandia.io">data.oslanda.io</a> website to learn more about data processing and machine learning Oslandia projects.
+</p>
+
+{% endblock %}
