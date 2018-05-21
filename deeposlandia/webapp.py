@@ -9,6 +9,7 @@ import logging
 
 from flask import Flask, render_template, abort, request, jsonify
 
+from deeposlandia.inference import predict
 
 daiquiri.setup(level=logging.INFO)
 logger = daiquiri.getLogger("deeposlandia-webapp")
@@ -53,3 +54,15 @@ def predictor_view(model, dataset):
                                image_name=os.path.join("images", filename))
     else:
         return render_template('predictor.html', model=model, dataset=dataset)
+
+@app.route("/_model_prediction")
+def model_prediction():
+    filename = request.args.get('img')
+    filename = os.path.join("deeposlandia", filename[1:])
+    print("===> FILENAME = {}".format(filename))
+    dataset = request.args.get('dataset')
+    model = request.args.get('model')
+    predictions = predict([filename], dataset, model)
+    predictions[filename] = {k: 100*round(predictions[filename][k], 2)
+                             for k in predictions[filename]}
+    return jsonify(predictions)
