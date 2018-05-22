@@ -26,7 +26,7 @@ function generate_image(image){
 };
 
 function predict_labels(filename, dataset, model){
-  $.getJSON('/_model_prediction', {
+  $.getJSON('/_shape_prediction', {
     img: filename,
     dataset: dataset,
     model: model

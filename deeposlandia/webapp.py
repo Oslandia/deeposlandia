@@ -47,23 +47,23 @@ def predictor_view(model, dataset):
     check_model(model)
     check_dataset(dataset)
     if dataset == "shapes":
-        image_id = np.random.randint(0, 5000)
-        filename = os.path.join("shape_{:05d}.png".format(image_id))
-        print(filename)
+        filename = os.path.join("sample_image", "shape_example.png")
         return render_template('shape_predictor.html',
                                model=model,
-                               image_name=os.path.join("images", filename))
+                               image_name=filename)
     else:
-        return render_template('predictor.html', model=model, dataset=dataset)
+        filename = os.path.join("sample_image", "example.jpg")
+        return render_template('predictor.html', model=model,
+                               dataset=dataset, example_image=filename)
 
-@app.route("/_model_prediction")
-def model_prediction():
+
+@app.route("/_shape_prediction")
+def shape_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
-    print("===> FILENAME = {}".format(filename))
-    dataset = request.args.get('dataset')
     model = request.args.get('model')
-    predictions = predict([filename], dataset, model)
+    utils.logger.info("file: {}, dataset: shapes, model: {}".format(filename, model))
+    predictions = predict([filename], "shapes", model)
     predictions[filename] = {k: 100*round(predictions[filename][k], 2)
                              for k in predictions[filename]}
     return jsonify(predictions)
