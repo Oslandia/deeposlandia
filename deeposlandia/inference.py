@@ -218,29 +218,16 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
     if any([arg is None for arg in instance_args]):
         utils.logger.info(("Some arguments are None, "
                            "the best model is considered."))
-<<<<<<< HEAD
-        output_folder = utils.prepare_output_folder(args.datapath,
-                                                    args.dataset,
-                                                    args.model)
-        instance_filename = ("best-instance-" + str(image_size) + "-"
-                             + aggregate_value + ".json")
-        instance_path = os.path.join(output_folder, instance_filename)
-        dropout, network = utils.recover_instance(instance_path)
-        model = init_model(args.model, instance_name, image_size, nb_labels, dropout, network)
-        checkpoint_filename = ("best-model-" + str(image_size) + "-"
-                               + aggregate_value + ".h5")
-=======
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
                                                     model)
-        instance_filename = ("best-instance-" + str(image_size) + "-"
-                             + aggregate_value + ".json")
+        instance_filename = ("best-instance-" + str(image_size)
+                             + "-" + aggregate_value + ".json")
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
         model = init_model(model, instance_name, image_size, nb_labels, dropout, network)
-        checkpoint_filename = ("best-model-" + str(image_size) + "-"
-                               + aggregate_value + ".h5")
->>>>>>> app: modify inference.py so as to create a callable function that can be used by the web application
+        checkpoint_filename = ("best-model-" + str(image_size)
+                               + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
             model.load_weights(checkpoint_full_path)
