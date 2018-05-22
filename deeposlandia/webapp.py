@@ -1,14 +1,15 @@
 """Flask web application for deeposlandia
 """
 
-import os
-import numpy as np
-
 import daiquiri
+from flask import (abort, Flask, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
 import logging
+import numpy as np
+import os
+from werkzeug.utils import secure_filename
 
-from flask import Flask, render_template, abort, request, jsonify
-
+from deeposlandia import utils
 from deeposlandia.inference import predict
 
 daiquiri.setup(level=logging.INFO)
