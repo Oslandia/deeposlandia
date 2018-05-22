@@ -1,14 +1,14 @@
 // Load a new image from the static directory on click
-var predict_button = document.getElementById("predict_labels")
+var predict_button = document.getElementById("predict_labels");
 predict_button.addEventListener("click", function(){
   var image = document.getElementById("image");
 
   console.log("Generate a new image...");
-  filename = generate_image(image)
-  document.getElementById("result").innerHTML = ""
+  filename = generate_image(image);
+  document.getElementById("result").innerHTML = "";
 
   console.log("Predict labels...");
-  predict_labels(filename, "shapes", "feature_detection")
+  predict_labels(filename, "shapes", "feature_detection");
 });
 
 function generate_image(image){
