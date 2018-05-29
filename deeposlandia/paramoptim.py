@@ -169,7 +169,8 @@ def get_data(folders, dataset, model, image_size, batch_size):
     return nb_labels, train_generator, validation_generator, test_generator
 
 def run_model(train_generator, validation_generator, output_folder,
-              instance_name, image_size, nb_labels, nb_training_image, nb_validation_image,
+              instance_name, image_size, aggregate_value, nb_labels,
+              nb_training_image, nb_validation_image,
               batch_size, dropout, network, learning_rate, learning_rate_decay):
     """
     """
@@ -198,8 +199,9 @@ def run_model(train_generator, validation_generator, output_folder,
     # Model training
     STEPS = nb_training_image // batch_size
     VAL_STEPS = nb_validation_image // batch_size
-    checkpoint_filename = os.path.join(output_folder,
-                                       "best-model.h5")
+    checkpoint_name = ("best-model-" + image_size + "-"
+                       + aggregate_value + ".h5")
+    checkpoint_filename = os.path.join(output_folder, checkpoint_name)
     checkpoints = callbacks.ModelCheckpoint(
         checkpoint_filename,
         monitor='val_acc',
@@ -273,7 +275,8 @@ if __name__=='__main__':
             # Model running
             model_output.append(run_model(train_gen, valid_gen, output_folder,
                                           instance_name, args.image_size,
-                                          nb_labels, args.nb_training_image,
+                                          aggregate_value, nb_labels,
+                                          args.nb_training_image,
                                           args.nb_validation_image, batch_size,
                                           *parameters))
             utils.logger.info("Instance result: {}".format(model_output[-1]))
@@ -286,7 +289,8 @@ if __name__=='__main__':
                                                 args.dataset,
                                                 args.model)
     instance_name = os.path.join(output_folder,
-                                 "best-{}-" + str(args.image_size) + ".{}")
+                                 "best-{}-" + str(args.image_size)
+                                 + "-" + aggregate_value + ".{}")
     best_instance["model"].save(instance_name.format("model", "h5"))
     with open(instance_name.format("instance", "json"), "w") as fobj:
               json.dump({key:best_instance[key]
