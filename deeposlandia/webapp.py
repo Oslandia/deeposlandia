@@ -43,11 +43,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route('/request/')
-def swagger_ui():
-    return render_template("swagger-ui.html")
-
-
 @app.route("/<string:model>/<string:dataset>")
 def predictor_view(model, dataset):
     check_model(model)
