@@ -25,8 +25,8 @@ install_requires = [
     'keras<=2.1.5',
     'matplotlib<=2.2.0',
     'h5py<=2.7.1',
-    'daiquiri': '1.3.0',
-    'Flask': '1.0.2']
+    'daiquiri<=1.3.0',
+    'Flask<=1.0.2']
 
 setup(
     name='deeposlandia',
