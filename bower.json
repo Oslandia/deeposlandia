@@ -24,11 +24,6 @@
   ],
   "dependencies": {
     "jquery": "3.3.1",
-    "bootstrap": "~3.3.6",
-    // "turfjs": "*",
-    // "swagger-ui": "^3.5.0",
-    // "html2canvas": "0.4.1",
-    // "dom-to-image": "*"
-    // "blueimp-load-image": "*"
+    "bootstrap": "~3.3.6"
   }
 }
