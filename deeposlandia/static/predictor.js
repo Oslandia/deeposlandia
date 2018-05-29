@@ -11,7 +11,7 @@ predict_button.addEventListener("click", function(){
 
   console.log("Prediction OK!");
   function predict_labels(filename, dataset, model){
-    $.getJSON('/_prediction', {
+    $.getJSON('/prediction', {
       img: filename,
       dataset: dataset,
       model: model

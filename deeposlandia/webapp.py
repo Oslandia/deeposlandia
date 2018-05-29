@@ -63,7 +63,7 @@ def predictor_view(model, dataset):
                                dataset=dataset, example_image=filename)
 
 
-@app.route("/_shape_prediction")
+@app.route("/shape_prediction")
 def shape_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
@@ -75,7 +75,7 @@ def shape_prediction():
     return jsonify(predictions)
 
 
-@app.route("/_prediction")
+@app.route("/prediction")
 def prediction():
     filename = request.args.get('img').split("/")[-1]
     full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
