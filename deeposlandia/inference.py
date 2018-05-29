@@ -199,11 +199,13 @@ if __name__ == '__main__':
         output_folder = utils.prepare_output_folder(args.datapath,
                                                     args.dataset,
                                                     args.model)
-        instance_filename = "best-instance-" + str(image_size) + ".json"
+        instance_filename = ("best-instance-" + str(image_size) + "-"
+                             + aggregate_value + ".json")
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
         model = init_model(args.model, instance_name, image_size, nb_labels, dropout, network)
-        checkpoint_filename = "best-model-" + str(image_size) + ".h5"
+        checkpoint_filename = ("best-model-" + str(image_size) + "-"
+                               + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
             model.load_weights(checkpoint_full_path)
