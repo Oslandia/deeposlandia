@@ -198,7 +198,6 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
                      dropout, learning_rate, learning_rate_decay]
     instance_name = utils.list_to_str(instance_args, "_")
 
-    input_folder = utils.prepare_input_folder(datapath, dataset)
     prepro_folder = utils.prepare_preprocessed_folder(datapath,
                                                       dataset,
                                                       image_size,
@@ -230,6 +229,8 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
+            model.summary()
+            utils.logger.info("Checkpoint full path : {}".format(checkpoint_full_path))
             model.load_weights(checkpoint_full_path)
             utils.logger.info(("Model weights have been recovered from {}"
                                "").format(checkpoint_full_path))

@@ -6,6 +6,7 @@ predict_button.addEventListener("click", function(){
   console.log("Generate a new image...");
   filename = generate_image(image);
   document.getElementById("result").innerHTML = "";
+  console.log(filename);
 
   console.log("Predict labels...");
   predict_labels(filename, "shapes", "feature_detection");
@@ -28,7 +29,6 @@ function generate_image(image){
 function predict_labels(filename, dataset, model){
   $.getJSON('/shape_prediction', {
     img: filename,
-    dataset: dataset,
     model: model
   }, function(data){
     var result = [];

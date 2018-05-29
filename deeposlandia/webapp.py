@@ -73,13 +73,13 @@ def shape_prediction():
 @app.route("/prediction")
 def prediction():
     filename = request.args.get('img').split("/")[-1]
-    full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
     utils.logger.info("file: {}, dataset: {}, model: {}".format(filename, dataset, model))
-    predictions = predict([full_filename], dataset, model, aggregate=True)
-    predictions[full_filename] = {k: 100*round(predictions[full_filename][k], 2)
-                             for k in predictions[full_filename]}
+    predictions = predict([filename], dataset, model, aggregate=True)
+    predictions[filename] = {k: 100*round(predictions[filename][k], 2)
+                             for k in predictions[filename]}
     return jsonify(predictions)
 
 

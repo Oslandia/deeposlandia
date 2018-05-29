@@ -17,7 +17,6 @@ predict_button.addEventListener("click", function(){
       model: model
     }, function(data){
       var result = [];
-      console.log("Pre-loop log");
       $.each(data, function(image, predictions){
   	result.push("<ul>");
   	$.each(predictions, function(key, val){
