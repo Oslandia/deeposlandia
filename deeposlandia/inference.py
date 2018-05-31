@@ -26,6 +26,7 @@ from PIL import Image
 import sys
 
 from keras.models import Model
+import keras.backend as K
 
 from deeposlandia import utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
@@ -128,6 +129,7 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
     keras.models.Model
         Convolutional neural network
     """
+    K.clear_session()
     if problem == "feature_detection":
         net = FeatureDetectionNetwork(network_name=instance_name,
                                       image_size=image_size,
