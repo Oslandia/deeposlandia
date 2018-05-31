@@ -32,14 +32,18 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
                  nb_labels=65, dropout=1.0, architecture="simple"):
         super().__init__(network_name, image_size, nb_channels, nb_labels, dropout)
-        if architecture == "vgg16":
+        if architecture == "vgg":
             self.Y = self.vgg16()
         elif architecture == "inception":
             self.Y = self.inception()
         elif architecture == "resnet":
             self.Y = self.resnet()
-        else:
+        elif architecture == "simple":
             self.Y = self.simple()
+        else:
+            utils.logger.error(("Unknown network architecture. Please use "
+                                "'simple', 'vgg', 'inception' or 'resnet'."))
+            raise ValueError("Unknown network architecture.")
 
     def output_layer(self, x, depth):
         """Build an output layer to a neural network, as a dense layer with sigmoid activation
