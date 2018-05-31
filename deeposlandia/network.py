@@ -49,8 +49,9 @@ class ConvolutionalNeuralNetwork:
         """
         return prefix + suffix if prefix is not None else None
 
-    def convolution(self, x, nb_filters, kernel_size, strides=1, padding="same",
-                    activation='relu', batch_norm=True, block_name=None):
+    def convolution(self, x, nb_filters, kernel_size, strides=1,
+                    dilation_rate=1, padding="same", activation='relu',
+                    batch_norm=True, block_name=None):
         """Apply a convolutional layer within a neural network
 
         Use Keras API
@@ -65,6 +66,8 @@ class ConvolutionalNeuralNetwork:
             Convolution filter size, in pixel
         strides : integer
             Convolution strides, in pixel
+        dilation_rate : integer
+            Rate of dilation, for atrous convolution (default to 1, no dilation)
         padding : str
             Border pixel management ("valid" to apply convolution pixel only on image pixels, or
         "same" to replicate border pixels)
@@ -82,15 +85,17 @@ class ConvolutionalNeuralNetwork:
         tensor
             4D output layer
         """
-        x = K.layers.Conv2D(nb_filters, kernel_size=kernel_size, strides=strides,
-                            padding='same', name=self.layer_name(block_name, '_conv'))(x)
+        x = K.layers.Conv2D(nb_filters, kernel_size=kernel_size,
+                            strides=strides, dilation_rate=dilation_rate,
+                            padding='same',
+                            name=self.layer_name(block_name, '_conv'))(x)
         if batch_norm:
             x = K.layers.BatchNormalization(name=self.layer_name(block_name, '_bn'))(x)
         x = K.layers.Activation(activation, name=self.layer_name(block_name, '_activation'))(x)
         return x
 
-    def transposed_convolution(self, x, nb_filters, kernel_size, strides=1,
-                               padding="same", activation='relu', batch_norm=True, block_name=None):
+    def transposed_convolution(self, x, nb_filters, kernel_size, strides=1, padding="same", activation='relu',
+                               batch_norm=True, block_name=None):
         """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
         network
 
@@ -123,8 +128,9 @@ class ConvolutionalNeuralNetwork:
         tensor
             4D output layer
         """
-        x = K.layers.Conv2DTranspose(nb_filters, kernel_size=kernel_size, strides=strides,
-                                     padding=padding, name=self.layer_name(block_name, '_transconv'))(x)
+        x = K.layers.Conv2DTranspose(nb_filters, kernel_size=kernel_size,
+                                     strides=strides, padding=padding,
+                                     name=self.layer_name(block_name, '_transconv'))(x)
         if batch_norm:
             x = K.layers.BatchNormalization(name=self.layer_name(block_name, '_bn'))(x)
         x = K.layers.Activation(activation, name=self.layer_name(block_name, '_activation'))(x)
