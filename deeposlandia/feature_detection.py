@@ -6,6 +6,8 @@ import h5py
 
 import keras as K
 from keras.applications import VGG16, inception_v3, resnet50
+
+from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):

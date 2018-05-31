@@ -4,6 +4,7 @@
 
 import keras as K
 
+from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
