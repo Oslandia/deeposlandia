@@ -231,7 +231,6 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
-            model.summary()
             utils.logger.info("Checkpoint full path : {}".format(checkpoint_full_path))
             model.load_weights(checkpoint_full_path)
             utils.logger.info(("Model weights have been recovered from {}"
