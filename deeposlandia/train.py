@@ -46,10 +46,10 @@ def add_instance_arguments(parser):
                               "checkout and graph storage on file system"))
     parser.add_argument('-N', '--network',
                         default='simple',
-                        help=("Neural network size, either 'simple', 'vgg' or "
-                              "'inception' ('simple' refers to 3 conv/pool "
-                              "blocks and 1 fully-connected layer; the others "
-                              "refer to state-of-the-art networks)"))
+                        help=("Neural network size, either 'simple', 'vgg', "
+                              "'inception' or 'unet' ('simple' refers to 3 "
+                              "conv/pool blocks and 1 fully-connected layer; "
+                              "the others refer to state-of-the-art networks)"))
     parser.add_argument('-p', '--datapath',
                         default="./data",
                         help="Relative path towards data directory")

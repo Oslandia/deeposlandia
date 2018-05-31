@@ -205,3 +205,22 @@ class ConvolutionalNeuralNetwork:
             2D output layer
         """
         return K.layers.Flatten(name=block_name)(x)
+
+    def upsample(self, layer1, layer2, block_name=None):
+        """Apply an upsampling operation on `layer1` and concatenate the
+        resulting layer with `layer2`
+
+        Parameters
+        ----------
+        layer1 : tensor
+            First input layer, its shape must correspond to layer2 shape
+        layer2 : tensor
+            Second input layer, its shape must correspond to layer1 shape
+        block_name : str
+            Upsample block name, for identification purpose
+
+        """
+        upname = self.layer_name(block_name, "_up")
+        ccname = self.layer_name(block_name, "_concat")
+        upsample = K.layers.UpSampling2D(size=(2, 2), name=upname)(layer1)
+        return K.layers.concatenate([upsample, layer2], axis=3, name=ccname)
