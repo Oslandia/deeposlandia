@@ -6,7 +6,6 @@ import itertools
 import json
 import os
 import sys
-import numpy as np
 
 from datetime import datetime
 
@@ -19,6 +18,7 @@ from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
 SEED = int(datetime.now().timestamp())
+
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -54,6 +54,7 @@ def add_instance_arguments(parser):
                         type=int,
                         help=("Desired size of images (width = height)"))
     return parser
+
 
 def add_hyperparameters(parser):
     """Add hyperparameter arguments from the command line
@@ -96,6 +97,7 @@ def add_hyperparameters(parser):
                               "refer to state-of-the-art networks)"))
     return parser
 
+
 def add_training_arguments(parser):
     """Add training-specific arguments from the command line
 
@@ -127,6 +129,7 @@ def add_training_arguments(parser):
                         default=2000,
                         help=("Number of validation images"))
     return parser
+
 
 def get_data(folders, dataset, model, image_size, batch_size):
     """
@@ -167,6 +170,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
         sys.exit(1)
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator, test_generator
+
 
 def run_model(train_generator, validation_generator, output_folder,
               instance_name, image_size, aggregate_value, nb_labels,
@@ -225,7 +229,8 @@ def run_model(train_generator, validation_generator, output_folder,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,
             'learning_rate': learning_rate, 'learning_rate_decay': learning_rate_decay}
 
-if __name__=='__main__':
+
+if __name__ =='__main__':
     """Main method: run a convolutional neural network using Keras API
     """
 
