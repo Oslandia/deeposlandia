@@ -230,9 +230,7 @@ def run_model(train_generator, validation_generator, output_folder,
             'learning_rate': learning_rate, 'learning_rate_decay': learning_rate_decay}
 
 
-if __name__ =='__main__':
-    """Main method: run a convolutional neural network using Keras API
-    """
+if __name__ == '__main__':
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
