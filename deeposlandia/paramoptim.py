@@ -132,7 +132,26 @@ def add_training_arguments(parser):
 
 
 def get_data(folders, dataset, model, image_size, batch_size):
-    """
+    """On the file system, recover `dataset` that can solve `model` problem
+
+    Parameters
+    ----------
+    folders : dict
+        Dictionary of useful folders that indicates paths to data
+    dataset : str
+        Name of the used dataset (*e.g.* `shapes` or `mapillary`)
+    model : str
+        Name of the addressed research problem (*e.g.* `feature_detection` or `semantic_segmentation`)
+    image_size : int
+        Size of the images, in pixel (height=width)
+    batch_size : int
+        Number of images in each batch
+
+    Returns
+    -------
+    tuple
+        Number of labels in the dataset, as well as training, validation and testing data generators
+
     """
     # Data gathering
     if (os.path.isfile(folders["training_config"]) and os.path.isfile(folders["validation_config"])
@@ -172,20 +191,62 @@ def get_data(folders, dataset, model, image_size, batch_size):
     return nb_labels, train_generator, validation_generator, test_generator
 
 
-def run_model(train_generator, validation_generator, output_folder,
-              instance_name, image_size, aggregate_value, nb_labels,
+def run_model(train_generator, validation_generator, dl_model, output_folder,
+              instance_name, image_size, aggregate_value, nb_labels, nb_epochs,
               nb_training_image, nb_validation_image,
               batch_size, dropout, network, learning_rate, learning_rate_decay):
+    """Run deep learning `dl_model` starting from training and validation data generators, depending on a
+              range of hyperparameters
+
+    Parameters
+    ----------
+    train_generator : generator
+        Training data generator
+    validation_generator : generator
+        Validation data generator
+    dl_model : str
+        Name of the addressed research problem (*e.g.* `feature_detection` or `semantic_segmentation`)
+    output_folder : str
+        Name of the folder where the trained model will be stored on the file system
+    instance_name : str
+        Name of the instance
+    image_size : int
+        Size of images, in pixel (height=width)
+    aggregate_value : str
+        Label aggregation policy (either `full` or `aggregated`)
+    nb_labels : int
+        Number of labels into the dataset
+    nb_epochs : int
+        Number of epochs during which models will be trained
+    nb_training_image : int
+        Number of images into the training dataset
+    nb_validation_image : int
+        Number of images into the validation dataset
+    batch_size : int
+        Number of images into each batch
+    dropout : float
+        Probability of keeping a neuron during dropout phase
+    network : str
+        Neural network architecture (*e.g.* `simple`, `vgg`, `inception`)
+    learning_rate : float
+        Starting learning rate
+    learning_rate_decay : float
+        Learning rate decay
+
+    Returns
+    -------
+    dict
+        Dictionary that summarizes the instance and the corresponding model performance (measured
+    by validation accuracy)
     """
-    """
-    if args.model == "feature_detection":
+    if dl_model == "feature_detection":
         net = FeatureDetectionNetwork(network_name=instance_name,
                                       image_size=image_size,
                                       nb_channels=3,
                                       nb_labels=nb_labels,
                                       architecture=network)
         loss_function = "binary_crossentropy"
-    elif args.model == "semantic_segmentation":
+    elif dl_model == "semantic_segmentation":
         net = SemanticSegmentationNetwork(network_name=instance_name,
                                           image_size=image_size,
                                           nb_channels=3,
@@ -275,9 +336,10 @@ if __name__ == '__main__':
                                                         args.model,
                                                         instance_name)
             # Model running
-            model_output.append(run_model(train_gen, valid_gen, output_folder,
-                                          instance_name, args.image_size,
-                                          aggregate_value, nb_labels,
+            model_output.append(run_model(train_gen, valid_gen, args.model,
+                                          output_folder, instance_name,
+                                          args.image_size, aggregate_value,
+                                          nb_labels, args.nb_epochs,
                                           args.nb_training_image,
                                           args.nb_validation_image, batch_size,
                                           *parameters))
