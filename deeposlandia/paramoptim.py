@@ -201,8 +201,8 @@ def run_model(train_generator, validation_generator, output_folder,
     model.compile(loss=loss_function, optimizer=opt, metrics=['acc'])
 
     # Model training
-    STEPS = nb_training_image // batch_size
-    VAL_STEPS = nb_validation_image // batch_size
+    steps = nb_training_image // batch_size
+    val_steps = nb_validation_image // batch_size
     checkpoint_filename = os.path.join(output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
     checkpoints = callbacks.ModelCheckpoint(
@@ -219,10 +219,10 @@ def run_model(train_generator, validation_generator, output_folder,
                                         verbose=0,
                                         mode='auto')
     hist = model.fit_generator(train_generator,
-                               epochs=args.nb_epochs,
-                               steps_per_epoch=STEPS,
+                               epochs=nb_epochs,
+                               steps_per_epoch=steps,
                                validation_data=validation_generator,
-                               validation_steps=VAL_STEPS,
+                               validation_steps=val_steps,
                                callbacks=[checkpoints, earlystop, terminate_on_nan])
     ref_metric = max(hist.history['val_acc'])
     return {'model': model, 'val_acc': ref_metric,
