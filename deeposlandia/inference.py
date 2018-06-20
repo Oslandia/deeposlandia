@@ -351,15 +351,4 @@ if __name__ == '__main__':
                          args.batch_size, args.dropout,
                          args.learning_rate, args.learning_rate_decay)
 
-    if args.model == "feature_detection":
-        utils.logger.info(y_raw_pred)
-        # for image in y_raw_pred:
-        #     utils.logger.info("On image {}:".format(image))
-        #     label_names = [i['category'] for i in train_config['labels']]
-        #     for label, y in zip(label_names, y_raw_pred[image]):
-        #         utils.logger.info("{}: {:.2f}%".format(label, 100*y))
-    elif args.model == "semantic_segmentation":
-        pass
-    else:
-        utils.logger.error(("Unknown model argument. Please use "
-                            "'feature_detection' or 'semantic_segmentation'."))
+    utils.logger.info(y_raw_pred)
