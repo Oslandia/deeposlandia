@@ -150,7 +150,7 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
 
 def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             name=None, network=None, batch_size=None, dropout=None,
-            learning_rate=None, learning_rate_decay=None):
+            learning_rate=None, learning_rate_decay=None, output_dir=None):
     """Make label prediction on image indicated by ̀filename`, according to
     considered `problem`
 
@@ -179,6 +179,9 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         Learning rate used for training the model
     learning_rate_decay : float
         Learning rate decay used for training the model
+    output_dir : str
+        Path of the output directory, where labelled images will be stored
+    (useful only if `problem=semantic_segmentation`)
 
     Returns
     -------
@@ -260,12 +263,55 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                "The model will be trained from scratch."))
 
     y_raw_pred = model.predict(images)
-    label_names = [i['category'] for i in train_config['labels']]
-    result = {}
-    for filename, prediction in zip(filenames, y_raw_pred):
-        result[filename] = {i: float(j)
-                            for i, j in zip(label_names, prediction)}
-    return result
+
+    if problem == "feature_detection":
+        utils.logger.info(y_raw_pred)
+        label_names = [i['category'] for i in train_config['labels']]
+        result = {}
+        for filename, prediction in zip(flattened_image_paths, y_raw_pred):
+            result[filename] = {i: float(j)
+                                for i, j in zip(label_names, prediction)}
+        return result
+    elif problem == "semantic_segmentation":
+        utils.logger.info("Shape of prediction: {}".format(y_raw_pred.shape))
+        predicted_labels = np.argmax(y_raw_pred, axis=3)
+        encountered_labels = np.unique(predicted_labels)
+        print(encountered_labels)
+        labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
+                                   dtype=np.int8)
+        for i in range(nb_labels):
+            labelled_images[predicted_labels == i] = train_config["labels"][i]["color"]
+        result = {}
+        for predicted_labels, filename in zip(labelled_images, flattened_image_paths):
+            predicted_image = Image.fromarray(predicted_labels, 'RGB')
+            predicted_image_path = os.path.join(output_dir, filename.split("/")[-1])
+            predicted_image.save(predicted_image_path)
+            # result[filename] = predicted_image_path
+            result[filename] = filename.split("/")[-1]
+        meaningful_labels = [x for i, x in enumerate(train_config["labels"])
+                             if i in encountered_labels]
+        return {'labels': summarize_config(meaningful_labels),
+                'lab_images': result}
+    else:
+        utils.logger.error(("Unknown model argument. Please use "
+                            "'feature_detection' or 'semantic_segmentation'."))
+        sys.exit(1)
+
+def summarize_config(config):
+    """Extract and reshape dataset configuration information in a HTML-printing
+    context
+
+    Parameters
+    ----------
+    config : dict
+        Dataset label configuration
+
+    Returns
+    -------
+    dict
+        Simplified dataset configuration for HTML-printing purpose
+    """
+    return {c['category']: utils.RGBToHTMLColor(c['color']) for c in config}
 
 def extract_images(image_paths):
     """Convert a list of image filenames into a numpy array that contains the
