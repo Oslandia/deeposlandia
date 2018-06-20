@@ -85,16 +85,19 @@ the trained model.</p>
      src="{{url_for('static', filename=example_image)}}"
      title="Example image"
      alt="Example image">
+<label>Raw image</label>
 <br>
 <span id="example_label">Labels should be predicted on this type of image.</span>
+<br>
+<button id="predict_button">Predict</button>
 
 {% else %}
 
 <img id="uploaded_image"
      src="{{ url_for('send_image', filename=image_name) }}"
      alt="Uploaded image"
-     title="Uploaded image"
-     style="width:224px;height:224px;">
+     title="Uploaded image">
+<label>Raw image</label>
 <br>
 <span id="result_label">What does contain this image?</span>
 <br>

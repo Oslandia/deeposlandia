@@ -36,7 +36,8 @@
 
 <button id="predict_labels" value="Generate a new image" dataset="shapes">Generate a new image</button>
 <br>
-<img id="image" src="{{url_for('static', filename=image_name)}}">
+<img id="raw_image" src="{{url_for('static', filename=image_name)}}">
+<label>Raw image</label>
 <br>
 <span id="result">What does contain this image?</span>
 
