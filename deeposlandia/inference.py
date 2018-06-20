@@ -148,11 +148,11 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
         sys.exit(1)
     return Model(net.X, net.Y)
 
-def predict(filenames, dataset, model, datapath="./data", aggregate=False,
+def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             name=None, network=None, batch_size=None, dropout=None,
             learning_rate=None, learning_rate_decay=None):
     """Make label prediction on image indicated by ̀filename`, according to
-    considered `model`
+    considered `problem`
 
     Parameters
     ----------
@@ -160,7 +160,7 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
         Name of the image files on the file system
     dataset : str
         Name of the dataset, either `shapes` or `mapillary`
-    model : str
+    problem : str
         Name of the considered model, either `feature_detection` or
     `semantic_segmentation`
     datapath : str
@@ -221,12 +221,12 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
                            "the best model is considered."))
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
-                                                    model)
+                                                    problem)
         instance_filename = ("best-instance-" + str(image_size)
                              + "-" + aggregate_value + ".json")
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
-        model = init_model(model, instance_name, image_size, nb_labels, dropout, network)
+        model = init_model(problem, instance_name, image_size, nb_labels, dropout, network)
         checkpoint_filename = ("best-model-" + str(image_size)
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
@@ -243,9 +243,9 @@ def predict(filenames, dataset, model, datapath="./data", aggregate=False,
         utils.logger.info("All instance arguments are filled out.")
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
-                                                    model,
+                                                    problem,
                                                     instance_name)
-        model = init_model(model, instance_name, image_size,
+        model = init_model(problem, instance_name, image_size,
                            nb_labels, dropout, network)
         checkpoints = [item for item in os.listdir(output_folder)
                        if os.path.isfile(os.path.join(output_folder, item))]
