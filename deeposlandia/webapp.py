@@ -61,6 +61,11 @@ def predictor_view(model, dataset):
                                dataset=dataset, example_image=filename)
 
 
+@app.route("/predictor_demo")
+def predictor_demo():
+    return render_template("predictor_demo.html")
+
+
 @app.route("/shape_prediction")
 def shape_prediction():
     filename = request.args.get('img')
@@ -113,8 +118,8 @@ def send_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-@app.route("/<string:model>/<string:dataset>", methods=['GET', 'POST'])
-def upload_image(model, dataset):
+@app.route("/predictor_demo", methods=['GET', 'POST'])
+def upload_image():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
@@ -130,5 +135,4 @@ def upload_image(model, dataset):
             filename = secure_filename(file.filename)
             full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(full_filename)
-            return render_template('predictor.html', model=model,
-                                   dataset=dataset, image_name=filename)
+            return render_template('predictor_demo.html', image_name=filename)
