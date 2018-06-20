@@ -8,8 +8,8 @@ predict_button.addEventListener("click", function(){
   document.getElementById("result").innerHTML = "";
   console.log(filename);
 
-  console.log("Predict labels...");
-  predict_labels(filename, "shapes", "feature_detection");
+  console.log("Predict labels for " + model);
+  predict_labels(filename, model);
 });
 
 function generate_image(image){
@@ -26,20 +26,36 @@ function generate_image(image){
   return filename
 };
 
-function predict_labels(filename, dataset, model){
+function predict_labels(filename, model){
   $.getJSON('/shape_prediction', {
     img: filename,
     model: model
   }, function(data){
     var result = [];
-    $.each(data, function(image, predictions){
+    if (model === "feature_detection") {
+      $.each(data, function(image, predictions){
+	result.push("<ul>");
+	$.each(predictions, function(key, val){
+      	  result.push("<li>" + key + ": " + val + "%</li>" );
+	});
+	result.push("</ul>");
+      });
+      document.getElementById("result").innerHTML = result.join("")
+    } else {
+      var predicted_image_path;
+      $.each(data.lab_images, function(image, predicted_image){
+	predicted_image_path = "/static/predicted_images/" + predicted_image;
+	result.push("<img id='predicted_image'><label>Predicted labels</label>");
+      });
       result.push("<ul>");
-      $.each(predictions, function(key, val){
-      	result.push("<li>" + key + ": " + val + "%</li>" );
+      $.each(data.labels, function(label, color){
+	if (label != "background") {
+    	  result.push("<li><font color='" + color + "'>" + label + "</font></li>" );
+	}
       });
       result.push("</ul>");
-      console.log(result.join(""))
-    });
-    document.getElementById("result").innerHTML = result.join("")
+      document.getElementById("result").innerHTML = result.join("");
+      document.getElementById("predicted_image").src = predicted_image_path;
+    }
   });/*$.getJSON*/
 };
