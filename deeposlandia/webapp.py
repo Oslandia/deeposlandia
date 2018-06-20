@@ -15,8 +15,11 @@ from deeposlandia.inference import predict
 MODELS = ('feature_detection', 'semantic_segmentation')
 DATASETS = ('mapillary', 'shapes')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-UPLOAD_FOLDER = '/tmp/deeposlandia/uploads/'
+PROJECT_FOLDER = '/tmp/deeposlandia'
+UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
+PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, 'predicted/')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PREDICT_FOLDER, exist_ok=True)
 
 daiquiri.setup(level=logging.INFO)
 logger = daiquiri.getLogger("deeposlandia-webapp")
@@ -63,11 +66,21 @@ def shape_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: shapes, model: {}".format(filename, model))
-    predictions = predict([filename], "shapes", model)
-    predictions[filename] = {k: 100*round(predictions[filename][k], 2)
-                             for k in predictions[filename]}
-    return jsonify(predictions)
+    utils.logger.info("file: {}, dataset: shapes, model: {}".format(filename,
+                                                                    model))
+    if model == "feature_detection":
+        predictions = predict([filename], "shapes", model)
+        predictions[filename] = {k: 100*round(predictions[filename][k], 2)
+                                 for k in predictions[filename]}
+        return jsonify(predictions)
+    elif model == "semantic_segmentation":
+        predictions = predict([filename], "shapes", model,
+                              output_dir=PREDICT_FOLDER)
+        return jsonify(predictions)
+    else:
+        utils.logger.error(("Unknown model. Please choose "
+                            "'feature_detection' or 'semantic_segmentation'."))
+        return ""
 
 
 @app.route("/prediction")
@@ -76,11 +89,23 @@ def prediction():
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename, dataset, model))
-    predictions = predict([filename], dataset, model, aggregate=True)
-    predictions[filename] = {k: 100*round(predictions[filename][k], 2)
+    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename,
+                                                                dataset,
+                                                                model))
+    if model == "feature_detection":
+        predictions = predict([filename], dataset, model,
+                              aggregate=False, output_dir=PREDICT_FOLDER)
+        predictions[filename] = {k: 100*round(predictions[filename][k], 2)
                              for k in predictions[filename]}
-    return jsonify(predictions)
+        return jsonify(predictions)
+    elif model == "semantic_segmentation":
+        predictions = predict([filename], dataset, model,
+                              aggregate=False, output_dir=PREDICT_FOLDER)
+        return jsonify(predictions)
+    else:
+        utils.logger.error(("Unknown model. Please choose "
+                            "'feature_detection' or 'semantic_segmentation'."))
+        return ""
 
 
 @app.route('/uploads/<filename>')
@@ -105,5 +130,5 @@ def upload_image(model, dataset):
             filename = secure_filename(file.filename)
             full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(full_filename)
-            return render_template('predictor.html', model="feature_detection",
-                                   dataset="mapillary", image_name=filename)
+            return render_template('predictor.html', model=model,
+                                   dataset=dataset, image_name=filename)
