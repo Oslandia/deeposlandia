@@ -7,37 +7,34 @@
 <p>
   Predict some feature detection result with a simple neural network model. See the <a href="https://github.com/oslandia/deeposlandia">project page on Github</a>.</p>
 
-<h4>Datasets</h4>
+<h3>Datasets</h4>
+<h4><a href="https://www.mapillary.com/dataset/vistas">Mapillary</a></h5>
 <p>
   <ul>
-    <li>
-      <a href="https://www.mapillary.com/dataset/vistas">Mapillary<br>
-      <img src="{{url_for('static', filename='sample_image/MVD_M2kh294N9c72sICO990Uew.png')}}" alt="Mapillary image example" style="width:500px;height:250px;" title="Mapillary"></a>
-    </li>
-    <li>
-      Random shapes<br>
-      <img src="{{url_for('static', filename='sample_image/shape_example.png')}}" alt="Shape image example" style="width:250px;height:250px;" title="Shapes">
-    </li>
+    <li><a href="{{ url_for('predictor_demo', model='feature_detection', dataset='mapillary') }}">feature detection</a></li>
+    <li><a href="{{ url_for('predictor_demo', model='semantic_segmentation', dataset='mapillary') }}">semantic segmentation</a></li>
   </ul>
+  <a href="https://www.mapillary.com/dataset/vistas">
+    <img src="{{url_for('static', filename='sample_image/MVD_M2kh294N9c72sICO990Uew.png')}}" alt="Mapillary image example" style="width:448px;height:224px;" title="Mapillary">
+  </a>
 </p>
 
-<h4>Addressed problems</h4>
+<h4>Random shapes</h5>
 <p>
   <ul>
-    <li><a href="{{ url_for('predictor_view', model='feature_detection', dataset='shapes') }}">feature detection on random shapes</a></li>
-    <li><a href="{{ url_for('predictor_view', model='feature_detection', dataset='mapillary') }}">feature detection on street-view images</a></li>
-    <li><a href="{{ url_for('predictor_view', model='semantic_segmentation', dataset='shapes') }}">semantic segmentation on random shapes</a></li>
-    <li><a href="{{ url_for('predictor_view', model='semantic_segmentation', dataset='mapillary') }}">semantic segmentation on street-view images</a></li>
+    <li><a href="{{ url_for('predictor_demo', model='feature_detection', dataset='shapes') }}">feature detection</a></li>
+    <li><a href="{{ url_for('predictor_demo', model='semantic_segmentation', dataset='shapes') }}">semantic segmentation</a></li>
   </ul>
+  <img src="{{url_for('static', filename='sample_image/shape_example.png')}}" alt="Shape image example" style="width:128px;height:128px;" title="Shapes">
 </p>
 
-<h4>Your turn to play!</h4>
+<h3>Your turn to play!</h4>
 
 <p>
-  Try our <a href="{{ url_for('predictor_demo')}}">semantic segmentation predictor</a> with your own images!
+  Try our <a href="{{ url_for('predictor')}}">semantic segmentation predictor</a> with your own images!
 </p>
 
-<h4>About</h4>
+<h3>About</h4>
 <p>
   Developed and hosted by the <a href="http://oslandia.com">Oslandia</a> team! Visit also the <a href="http://data.oslandia.io">data.oslanda.io</a> website to learn more about data processing and machine learning Oslandia projects.
 </p>
