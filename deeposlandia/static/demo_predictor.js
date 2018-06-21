@@ -12,20 +12,30 @@ function get_image_name(dataset, filename_callback){
 	  url: '/mapillary_image_selector',
 	  data: {dataset: dataset},
 	  success: function(response){
-	    var filename = "/static/" + dataset + "/" + response.image_name;
-	    console.log("Generate a new image starting from file " + response.image_name + "...");
-	    generate_image(document.getElementById("raw_image"), filename);
+	    var img_folder = "/static/" + dataset + "/images/";
+	    var lbl_folder = "/static/" + dataset + "/labels/";
+	    var img_filename = img_folder + response.image_name;
+	    if (dataset === "mapillary"){
+	      img_filename += ".jpg";
+	    } else {
+	      img_filename += ".png";
+	    }
+	    var lbl_filename = lbl_folder + response.image_name + ".png"
+	    console.log("File " + response.image_name + " will be used as demo...");
+	    generate_image("raw_image", img_filename);
+	    generate_image("ground_truth", lbl_filename);
 	    console.log("Predict labels for " + model);
-	    predict_labels(filename, dataset, model);
+	    predict_labels(img_filename, dataset, model);
 	    console.log("Prediction OK!");  
 	  }
 	 });
 }
-  
-function generate_image(image, image_name){
+
+function generate_image(image_id, image_name){
+  var image = document.getElementById(image_id);
   if(image.complete){
     var new_image = new Image();
-    new_image.id = "raw_image";
+    new_image.id = image_id;
     new_image.src = image_name
     image.parentNode.insertBefore(new_image, image);
     image.parentNode.removeChild(image);

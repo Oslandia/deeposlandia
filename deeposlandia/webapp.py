@@ -131,8 +131,8 @@ def upload_image():
 def mapillary_image_selector():
     dataset = request.args.get('dataset')
     utils.logger.info("DATASET: {}".format(dataset))
-    folder = os.path.join("deeposlandia", "static", dataset)
+    folder = os.path.join("deeposlandia", "static", dataset, "images")
     utils.logger.info("FOLDER: {}".format(folder))
-    filename = random.choice(os.listdir(folder))
+    filename = random.choice(os.listdir(folder)).split(".")[0]
     utils.logger.info("FILENAME: {}".format(filename))
     return jsonify(image_name=filename)
