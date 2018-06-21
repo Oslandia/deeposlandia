@@ -5,8 +5,8 @@ import daiquiri
 from flask import (abort, Flask, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 import logging
-import numpy as np
 import os
+import random
 from werkzeug.utils import secure_filename
 
 from deeposlandia import utils
@@ -46,28 +46,28 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/<string:model>/<string:dataset>")
-def predictor_view(model, dataset):
+@app.route("/predictor_demo/<string:model>/<string:dataset>")
+def predictor_demo(model, dataset):
     check_model(model)
     check_dataset(dataset)
     if dataset == "shapes":
         filename = os.path.join("sample_image", "shape_example.png")
-        return render_template('shape_predictor.html',
-                               model=model,
+        return render_template('shape_demo.html', model=model,
                                image_name=filename)
     else:
         filename = os.path.join("sample_image", "example.jpg")
-        return render_template('predictor.html', model=model,
-                               dataset=dataset, example_image=filename)
+        return render_template('mapillary_demo.html', model=model,
+                               image_name=filename)
 
 
-@app.route("/predictor_demo")
-def predictor_demo():
-    return render_template("predictor_demo.html")
+@app.route("/predictor")
+def predictor():
+    filename = os.path.join("sample_image", "example.jpg")
+    return render_template("predictor.html", example_image=filename)
 
 
-@app.route("/shape_prediction")
-def shape_prediction():
+@app.route("/demo_prediction")
+def demo_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
     model = request.args.get('model')
@@ -118,7 +118,7 @@ def send_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-@app.route("/predictor_demo", methods=['GET', 'POST'])
+@app.route("/predictor", methods=['GET', 'POST'])
 def upload_image():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -135,4 +135,14 @@ def upload_image():
             filename = secure_filename(file.filename)
             full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(full_filename)
-            return render_template('predictor_demo.html', image_name=filename)
+            return render_template('predictor.html', image_name=filename)
+
+@app.route("/mapillary_image_selector")
+def mapillary_image_selector():
+    dataset = request.args.get('dataset')
+    utils.logger.info("DATASET: {}".format(dataset))
+    folder = os.path.join("deeposlandia", "static", dataset)
+    utils.logger.info("FOLDER: {}".format(folder))
+    filename = random.choice(os.listdir(folder))
+    utils.logger.info("FILENAME: {}".format(filename))
+    return jsonify(image_name=filename)
