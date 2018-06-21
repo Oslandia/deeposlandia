@@ -264,34 +264,31 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
 
     y_raw_pred = model.predict(images)
 
+    result = {}
     if problem == "feature_detection":
-        utils.logger.info(y_raw_pred)
-        label_names = [i['category'] for i in train_config['labels']]
-        result = {}
+        label_info = [(i['category'], utils.RGBToHTMLColor(i['color']))
+                      for i in train_config['labels']]
         for filename, prediction in zip(flattened_image_paths, y_raw_pred):
-            result[filename] = {i: float(j)
-                                for i, j in zip(label_names, prediction)}
+            result[filename] = {i[0]: {"probability": 100*round(float(j), 2),
+                                       "color": i[1]}
+                                for i, j in zip(label_info, prediction)}
         return result
     elif problem == "semantic_segmentation":
-        utils.logger.info("Shape of prediction: {}".format(y_raw_pred.shape))
         predicted_labels = np.argmax(y_raw_pred, axis=3)
         encountered_labels = np.unique(predicted_labels)
-        print(encountered_labels)
+        meaningful_labels = [x for i, x in enumerate(train_config["labels"])
+                         if i in encountered_labels]
         labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
                                    dtype=np.int8)
         for i in range(nb_labels):
             labelled_images[predicted_labels == i] = train_config["labels"][i]["color"]
-        result = {}
         for predicted_labels, filename in zip(labelled_images, flattened_image_paths):
             predicted_image = Image.fromarray(predicted_labels, 'RGB')
             predicted_image_path = os.path.join(output_dir, filename.split("/")[-1])
             predicted_image.save(predicted_image_path)
-            # result[filename] = predicted_image_path
             result[filename] = filename.split("/")[-1]
-        meaningful_labels = [x for i, x in enumerate(train_config["labels"])
-                             if i in encountered_labels]
         return {'labels': summarize_config(meaningful_labels),
-                'lab_images': result}
+                'label_images': result}
     else:
         utils.logger.error(("Unknown model argument. Please use "
                             "'feature_detection' or 'semantic_segmentation'."))

@@ -77,8 +77,6 @@ def demo_prediction():
                                                                 model))
     if model == "feature_detection":
         predictions = predict([filename], dataset, model)
-        predictions[filename] = {k: 100*round(predictions[filename][k], 2)
-                                 for k in predictions[filename]}
         return jsonify(predictions)
     elif model == "semantic_segmentation":
         predictions = predict([filename], dataset, model,
