@@ -51,13 +51,13 @@ def predictor_demo(model, dataset):
     check_model(model)
     check_dataset(dataset)
     if dataset == "shapes":
-        filename = os.path.join("sample_image", "shape_example.png")
+        sample_filename = os.path.join("sample_image", "shape_example.png")
         return render_template('shape_demo.html', model=model,
-                               image_name=filename)
+                               sample_filename=sample_filename)
     else:
-        filename = os.path.join("sample_image", "example.jpg")
+        sample_filename = os.path.join("sample_image", "example.jpg")
         return render_template('mapillary_demo.html', model=model,
-                               image_name=filename)
+                               sample_filename=sample_filename)
 
 
 @app.route("/predictor")

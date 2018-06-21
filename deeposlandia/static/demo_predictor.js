@@ -32,13 +32,13 @@ function get_image_name(dataset, filename_callback){
 }
 
 function generate_image(image_id, image_name){
-  var image = document.getElementById(image_id);
-  if(image.complete){
+  var dom_image = document.getElementById(image_id);
+  if(dom_image.complete){
     var new_image = new Image();
     new_image.id = image_id;
     new_image.src = image_name
-    image.parentNode.insertBefore(new_image, image);
-    image.parentNode.removeChild(image);
+    dom_image.parentNode.insertBefore(new_image, dom_image);
+    dom_image.parentNode.removeChild(dom_image);
   }
 };
 

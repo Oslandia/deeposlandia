@@ -41,12 +41,14 @@
   <div class="column column-left">
     <label>Raw image</label>
     <br>
-    <img id="raw_image" src="{{url_for('static', filename=image_name)}}">
+    <img id="raw_image" src="{{url_for('static', filename=sample_filename)}}">
   </div>
   <div class="column column-center">
     <label>Ground-truth</label>
     <br>
-    <img id="ground_truth" src="{{url_for('static', filename=image_name)}}">
+    <img id="ground_truth" src="{{url_for('static', filename=sample_filename)}}">
+    <br>
+    <span id="ground_truth_labels"></span>
   </div>
   <div class="column column-right">
     <label>Prediction</label>
