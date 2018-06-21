@@ -3,10 +3,11 @@
 {% block content %}
 
 <script>
+  const dataset = "shapes";
   const model = "{{ model }}";
 </script>
 
-<h2>Deep learning predictor: {{model}} for shapes dataset</h2>
+<h2>Deep learning predictor: {{model}} for Shapes dataset</h2>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -32,7 +33,7 @@
 
 <h4>Use the deep learning model to predict image labels</h4>
 
-<p>Click on the below button to generate a random picture with geometric shapes, and to display the corresponding label predictions, <em>i.e.</em> the probability that each shape is <em>really</em> on the picture according to the trained model.</p>
+<p>Click on the below button to generate a random picture with geometric shapes, and to display the corresponding label predictions.</p>
 
 <button id="predict_labels" value="Generate a new image" dataset="shapes">Generate a new image</button>
 <br>
@@ -45,6 +46,6 @@
 
 {% block appjs %}
 
-<script src="{{ url_for('static', filename='shape_predictor.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='demo_predictor.js') }}" type="text/javascript"></script>
 
 {% endblock %}
