@@ -4,9 +4,11 @@
 import daiquiri
 from flask import (abort, Flask, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
+import json
 import logging
+import numpy as np
 import os
-import random
+from PIL import Image
 from werkzeug.utils import secure_filename
 
 from deeposlandia import utils
@@ -125,12 +127,27 @@ def upload_image():
             file.save(full_filename)
             return render_template('predictor.html', image_name=filename)
 
-@app.route("/mapillary_image_selector")
-def mapillary_image_selector():
+
+@app.route("/demo_image_selector")
+def demo_image_selector():
     dataset = request.args.get('dataset')
-    utils.logger.info("DATASET: {}".format(dataset))
-    folder = os.path.join("deeposlandia", "static", dataset, "images")
-    utils.logger.info("FOLDER: {}".format(folder))
-    filename = random.choice(os.listdir(folder)).split(".")[0]
-    utils.logger.info("FILENAME: {}".format(filename))
-    return jsonify(image_name=filename)
+    server_folder = os.path.join("deeposlandia", "static", dataset, "images")
+    client_folder = os.path.join("/", "static", dataset, "images")
+    filename = np.random.choice(os.listdir(server_folder))
+    image_file = os.path.join(client_folder, filename)
+    label_file = image_file.replace("images", "labels")
+    if dataset == "mapillary":
+        label_file = label_file.replace("jpg", "png")
+    server_label_filename = os.path.join("deeposlandia", label_file[1:])
+    lbls = np.unique(np.array(Image.open(server_label_filename))).tolist()
+    image_size = 224 if dataset == "mapillary" else 64
+    with open(os.path.join("data", dataset, "preprocessed",
+                           str(image_size)+"_full", "testing.json")) as fobj:
+        config = json.load(fobj)
+    labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+              for item in config['labels']
+              if item['id'] in lbls}
+    return jsonify(image_name=filename,
+                   image_file=image_file,
+                   label_file=label_file,
+                   labels=labels)

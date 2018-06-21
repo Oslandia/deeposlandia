@@ -9,7 +9,7 @@ document.getElementById("predict_labels").addEventListener("click", function(){
 
 function get_image_name(dataset, filename_callback){
   $.ajax({type: 'GET',
-	  url: '/mapillary_image_selector',
+	  url: '/demo_image_selector',
 	  data: {dataset: dataset},
 	  success: function(response){
 	    var img_folder = "/static/" + dataset + "/images/";
