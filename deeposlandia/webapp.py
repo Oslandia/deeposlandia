@@ -70,16 +70,18 @@ def predictor():
 def demo_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
+    dataset = request.args.get('dataset')
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: shapes, model: {}".format(filename,
-                                                                    model))
+    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename,
+                                                                dataset,
+                                                                model))
     if model == "feature_detection":
-        predictions = predict([filename], "shapes", model)
+        predictions = predict([filename], dataset, model)
         predictions[filename] = {k: 100*round(predictions[filename][k], 2)
                                  for k in predictions[filename]}
         return jsonify(predictions)
     elif model == "semantic_segmentation":
-        predictions = predict([filename], "shapes", model,
+        predictions = predict([filename], dataset, model,
                               output_dir=PREDICT_FOLDER)
         return jsonify(predictions)
     else:
@@ -94,23 +96,11 @@ def prediction():
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename,
-                                                                dataset,
-                                                                model))
-    if model == "feature_detection":
-        predictions = predict([filename], dataset, model,
-                              aggregate=False, output_dir=PREDICT_FOLDER)
-        predictions[filename] = {k: 100*round(predictions[filename][k], 2)
-                             for k in predictions[filename]}
-        return jsonify(predictions)
-    elif model == "semantic_segmentation":
-        predictions = predict([filename], dataset, model,
-                              aggregate=False, output_dir=PREDICT_FOLDER)
-        return jsonify(predictions)
-    else:
-        utils.logger.error(("Unknown model. Please choose "
-                            "'feature_detection' or 'semantic_segmentation'."))
-        return ""
+    utils.logger.info("file: {}, dataset: {}, model: {}".format(dataset, model,
+                                                                filename))
+    predictions = predict([filename], "mapillary", "semantic_segmentation",
+                          aggregate=False, output_dir=PREDICT_FOLDER)
+    return jsonify(predictions)
 
 
 @app.route('/uploads/<filename>')
