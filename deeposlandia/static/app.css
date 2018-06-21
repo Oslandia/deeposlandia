@@ -1,35 +1,12 @@
-/* Jitenshea app CSS */
+/* Deeposlandia app CSS */
 
 html, body {
     margin: 1em;
     margin-right: 3em;
 }
 
-/* Uploading progress bar */
-#progress-wrp {
-  border: 1px solid #0099CC;
-  padding: 1px;
-  position: relative;
-  height: 30px;
-  border-radius: 3px;
-  margin: 10px;
-  text-align: left;
-  background: #fff;
-  box-shadow: inset 1px 3px 6px rgba(0, 0, 0, 0.12);
-}
-
-#progress-wrp .progress-bar {
-  height: 100%;
-  border-radius: 3px;
-  background-color: #f39ac7;
-  width: 0;
-  box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.11);
-}
-
-#progress-wrp .status {
-  top: 3px;
-  left: 50%;
-  position: absolute;
-  display: inline-block;
-  color: #000000;
-}
+.shapeContainer{width: 450px}
+.mapillaryContainer{width: 900px}
+.column-left{ float: left; width: 33%; }
+.column-right{ float: right; width: 33%; }
+.column-center{ display: inline-block; width: 33%; }
