@@ -28,7 +28,6 @@ logger = daiquiri.getLogger("deeposlandia-webapp")
 
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False
-app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def check_model(model):
@@ -113,13 +112,13 @@ def upload_image():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
-            print('No file part')
+            utils.logger.info('No file part')
             return redirect(request.url)
         file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
-            print('No selected file')
+            utils.logger.info('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
