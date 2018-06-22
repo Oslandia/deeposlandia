@@ -191,7 +191,7 @@ if __name__=='__main__':
     elif args.model == "semantic_segmentation":
         net = SemanticSegmentationNetwork(network_name=instance_name,
                                           image_size=args.image_size,
-                                          nb_channels=nb_labels,
+                                          nb_channels=3,
                                           nb_labels=nb_labels,
                                           dropout=args.dropout,
                                           architecture=args.network)
