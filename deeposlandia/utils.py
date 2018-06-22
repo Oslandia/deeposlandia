@@ -225,3 +225,19 @@ def recover_instance(instance_path):
     with open(instance_path) as fobj:
         instance = json.load(fobj)
     return instance["dropout"], instance["network"]
+
+
+def RGBToHTMLColor(rgb_tuple):
+    """Convert an (R, G, B) tuple to #RRGGBB
+
+    Parameters
+    ----------
+    rgb_list : list
+        List of red, green, blue pixel values
+
+    Returns
+    -------
+    str
+        HTML-version of color
+    """
+    return '#%02x%02x%02x' % tuple(rgb_tuple)

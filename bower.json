@@ -1,0 +1,29 @@
+{
+  "name": "deeposlandia",
+  "version": "0.3.2",
+  "authors": [
+    "Raphael Delhome <raphael.delhome@oslandia.com>",
+    "Damien Garaud <damien.garaud@oslandia.com>"
+  ],
+  "description": "Simpe deep learning predictor for image-focused problems",
+  "keywords": [
+    "deep learning",
+    "neural network",
+    "artificial intelligence",
+    "image",
+    "geospatial data"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "./deeposlandia/js/bower/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "3.3.1",
+    "bootstrap": "~3.3.6"
+  }
+}

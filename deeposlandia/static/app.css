@@ -1,0 +1,12 @@
+/* Deeposlandia app CSS */
+
+html, body {
+    margin: 1em;
+    margin-right: 3em;
+}
+
+.shapeContainer{width: 450px}
+.mapillaryContainer{width: 900px}
+.column-left{ float: left; width: 33%; }
+.column-right{ float: right; width: 33%; }
+.column-center{ display: inline-block; width: 33%; }

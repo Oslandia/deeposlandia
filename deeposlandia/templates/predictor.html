@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<script>
+  const model = "semantic_segmentation";
+</script>
+
+<h2>Semantic segmentation predictor</h2>
+<h3>Try your own pictures!</h3>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"
+        aria-current="page"><a href="{{url_for('index')}}">Home</a>
+    </li>
+  </ol>
+</nav>
+
+<h4>Remark about model training</h4>
+
+<p>The model used here has been trained
+on <a href="https://www.mapillary.com/dataset/vistas">Mapillary dataset</a>
+during 5 epochs with a set of 18000 training images. It has been validated with
+a smaller set of 2000 images (the validation occurred at the end of each
+training epoch), in order to ensure that learned features are as generic as
+possible.</p>
+
+<h4>Use the deep learning model to predict image labels</h4>
+
+<p>
+  Load a <i>.png</i> or <i>.jpg</i> image from your file system, the
+  corresponding label predictions will be automatically displayed, as a
+  labelled version of the picture, with the corresponding legend below.
+</p>
+<p>
+  <b>Disclaimer:</b> The model expect street-scene images. You can try whatever
+  picture you want, however in the case you pick another type of scene, do not
+  be surprised if the result looks weird...
+</p>
+
+<form method="POST"
+      enctype="multipart/form-data"
+      action="{{url_for('upload_image')}}"
+      id="upload_form">
+  <input type="file"
+  	 name="file"
+  	 value="Upload"
+  	 id="upload_file">
+  <input type="submit"
+	 value="Upload"
+	 id="upload_button">
+</form>
+
+{% if example_image %}
+
+<img id="example_image"
+     src="{{url_for('static', filename=example_image)}}"
+     title="Example image"
+     alt="Example image">
+<label>Raw image</label>
+<br>
+<span id="example_label"></span>
+<br>
+<button id="predict_button">Predict</button>
+
+{% else %}
+
+<img id="uploaded_image"
+     src="{{ url_for('send_image', filename=image_name) }}"
+     alt="Uploaded image"
+     title="Uploaded image">
+<label>Raw image</label>
+<br>
+<span id="result_label">What does contain this image?</span>
+<br>
+<button id="predict_button">Predict</button>
+
+{% endif %}
+
+{% endblock %}
+
+{% block appjs %}
+
+<script src="{{ url_for('static', filename='predictor.js') }}"
+	type="text/javascript">
+</script>
+
+{% endblock %}

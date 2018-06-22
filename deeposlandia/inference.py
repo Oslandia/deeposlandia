@@ -26,6 +26,7 @@ from PIL import Image
 import sys
 
 from keras.models import Model
+import keras.backend as K
 
 from deeposlandia import utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
@@ -85,7 +86,7 @@ def add_instance_arguments(parser):
                         type=float,
                         default=None,
                         help="Percentage of kept neurons during training")
-    parser.add_argument('-L', '--learning-rate', 
+    parser.add_argument('-L', '--learning-rate',
                         default=None,
                         type=float,
                         help=("Starting learning rate"))
@@ -128,13 +129,14 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
     keras.models.Model
         Convolutional neural network
     """
-    if args.model == "feature_detection":
+    K.clear_session()
+    if problem == "feature_detection":
         net = FeatureDetectionNetwork(network_name=instance_name,
                                       image_size=image_size,
                                       nb_labels=nb_labels,
                                       dropout=dropout,
                                       architecture=network)
-    elif args.model == "semantic_segmentation":
+    elif problem == "semantic_segmentation":
         net = SemanticSegmentationNetwork(network_name=instance_name,
                                           image_size=image_size,
                                           nb_labels=nb_labels,
@@ -146,39 +148,63 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
         sys.exit(1)
     return Model(net.X, net.Y)
 
-if __name__ == '__main__':
+def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
+            name=None, network=None, batch_size=None, dropout=None,
+            learning_rate=None, learning_rate_decay=None, output_dir=None):
+    """Make label prediction on image indicated by ̀filename`, according to
+    considered `problem`
 
-    program_description = ("Infer labels on one (or more) image file(s) "
-                           "from a trained deep neural network")
-    parser = argparse.ArgumentParser(description=program_description)
-    parser = add_program_arguments(parser)
-    parser = add_instance_arguments(parser)
-    args = parser.parse_args()
+    Parameters
+    ----------
+    filenames : str
+        Name of the image files on the file system
+    dataset : str
+        Name of the dataset, either `shapes` or `mapillary`
+    problem : str
+        Name of the considered model, either `feature_detection` or
+    `semantic_segmentation`
+    datapath : str
+        Relative path of dataset repository
+    aggregate : bool
+        Either or not the labels are aggregated
+    name : str
+        Name of the saved network
+    network : str
+        Name of the chosen architecture, either `simple`, `vgg` or `inception`
+    batch_size : integer
+        Batch size used for training the model
+    dropout : float
+        Dropout rate used for training the model
+    learning_rate : float
+        Learning rate used for training the model
+    learning_rate_decay : float
+        Learning rate decay used for training the model
+    output_dir : str
+        Path of the output directory, where labelled images will be stored
+    (useful only if `problem=semantic_segmentation`)
 
-    # `image_paths` is first got as [[image1, ..., image_i], [image_j, ..., image_n]]
-    image_paths = [glob.glob(f) for f in args.image_paths]
+    Returns
+    -------
+    dict
+        Double predictions (between 0 and 1, acts as percentages) regarding
+    each labels
+
+    """
+    # `image_paths` is first got as
+    # [[image1, ..., image_i], [image_j, ..., image_n]]
+    image_paths = [glob.glob(f) for f in filenames]
     # then it is flattened to get a simple list
     flattened_image_paths = sum(image_paths, [])
-    x_test = []
-    for image_path in flattened_image_paths:
-        image = Image.open(image_path)
-        image_size = image.size[0]
-        if image.size[0] != image.size[1]:
-            utils.logger.error(("One of the parsed images "
-                                "has non-squared dimensions."))
-            sys.exit(1)
-        x_test.append(np.array(image))
-    x_test = np.array(x_test)
+    images = extract_images(flattened_image_paths)
+    image_size = images.shape[1]
 
-    aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    instance_args = [args.name, image_size, args.network, args.batch_size,
-                     aggregate_value, args.dropout,
-                     args.learning_rate, args.learning_rate_decay]
+    aggregate_value = "full" if not aggregate else "aggregated"
+    instance_args = [name, image_size, network, batch_size, aggregate_value,
+                     dropout, learning_rate, learning_rate_decay]
     instance_name = utils.list_to_str(instance_args, "_")
 
-    input_folder = utils.prepare_input_folder(args.datapath, args.dataset)
-    prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
-                                                      args.dataset,
+    prepro_folder = utils.prepare_preprocessed_folder(datapath,
+                                                      dataset,
                                                       image_size,
                                                       aggregate_value)
 
@@ -196,18 +222,19 @@ if __name__ == '__main__':
     if any([arg is None for arg in instance_args]):
         utils.logger.info(("Some arguments are None, "
                            "the best model is considered."))
-        output_folder = utils.prepare_output_folder(args.datapath,
-                                                    args.dataset,
-                                                    args.model)
-        instance_filename = ("best-instance-" + str(image_size) + "-"
-                             + aggregate_value + ".json")
+        output_folder = utils.prepare_output_folder(datapath,
+                                                    dataset,
+                                                    problem)
+        instance_filename = ("best-instance-" + str(image_size)
+                             + "-" + aggregate_value + ".json")
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
-        model = init_model(args.model, instance_name, image_size, nb_labels, dropout, network)
-        checkpoint_filename = ("best-model-" + str(image_size) + "-"
-                               + aggregate_value + ".h5")
+        model = init_model(problem, instance_name, image_size, nb_labels, dropout, network)
+        checkpoint_filename = ("best-model-" + str(image_size)
+                               + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
+            utils.logger.info("Checkpoint full path : {}".format(checkpoint_full_path))
             model.load_weights(checkpoint_full_path)
             utils.logger.info(("Model weights have been recovered from {}"
                                "").format(checkpoint_full_path))
@@ -217,12 +244,12 @@ if __name__ == '__main__':
                                "inference will be done on an untrained model"))
     else:
         utils.logger.info("All instance arguments are filled out.")
-        output_folder = utils.prepare_output_folder(args.datapath,
-                                                    args.dataset,
-                                                    args.model,
+        output_folder = utils.prepare_output_folder(datapath,
+                                                    dataset,
+                                                    problem,
                                                     instance_name)
-        model = init_model(args.model, instance_name, image_size,
-                           nb_labels, args.dropout, args.network)
+        model = init_model(problem, instance_name, image_size,
+                           nb_labels, dropout, network)
         checkpoints = [item for item in os.listdir(output_folder)
                        if os.path.isfile(os.path.join(output_folder, item))]
         if len(checkpoints) > 0:
@@ -235,15 +262,90 @@ if __name__ == '__main__':
             utils.logger.info(("No available checkpoint for this configuration. "
                                "The model will be trained from scratch."))
 
-    y_raw_pred = model.predict(x_test)
-    if args.model == "feature_detection":
-        for image, prediction in zip(flattened_image_paths, y_raw_pred.tolist()):
-            utils.logger.info("On image {}:".format(image))
-            label_names = [i['category'] for i in train_config['labels']]
-            for label, y in zip(label_names, prediction):
-                utils.logger.info("{}: {:.2f}%".format(label, 100*y))
-    elif args.model == "semantic_segmentation":
-        pass
+    y_raw_pred = model.predict(images)
+
+    result = {}
+    if problem == "feature_detection":
+        label_info = [(i['category'], utils.RGBToHTMLColor(i['color']))
+                      for i in train_config['labels']]
+        for filename, prediction in zip(flattened_image_paths, y_raw_pred):
+            result[filename] = {i[0]: {"probability": 100*round(float(j), 2),
+                                       "color": i[1]}
+                                for i, j in zip(label_info, prediction)}
+        return result
+    elif problem == "semantic_segmentation":
+        predicted_labels = np.argmax(y_raw_pred, axis=3)
+        encountered_labels = np.unique(predicted_labels)
+        meaningful_labels = [x for i, x in enumerate(train_config["labels"])
+                         if i in encountered_labels]
+        labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
+                                   dtype=np.int8)
+        for i in range(nb_labels):
+            labelled_images[predicted_labels == i] = train_config["labels"][i]["color"]
+        for predicted_labels, filename in zip(labelled_images, flattened_image_paths):
+            predicted_image = Image.fromarray(predicted_labels, 'RGB')
+            predicted_image_path = os.path.join(output_dir, filename.split("/")[-1])
+            predicted_image.save(predicted_image_path)
+            result[filename] = filename.split("/")[-1]
+        return {'labels': summarize_config(meaningful_labels),
+                'label_images': result}
     else:
         utils.logger.error(("Unknown model argument. Please use "
                             "'feature_detection' or 'semantic_segmentation'."))
+        sys.exit(1)
+
+def summarize_config(config):
+    """Extract and reshape dataset configuration information in a HTML-printing
+    context
+
+    Parameters
+    ----------
+    config : dict
+        Dataset label configuration
+
+    Returns
+    -------
+    dict
+        Simplified dataset configuration for HTML-printing purpose
+    """
+    return {c['category']: utils.RGBToHTMLColor(c['color']) for c in config}
+
+def extract_images(image_paths):
+    """Convert a list of image filenames into a numpy array that contains the
+    image data
+
+    Parameters
+    ----------
+    image_paths : str
+        Name of the image files onto the file system
+
+    Returns
+    -------
+    np.array
+        Data that is contained into the image
+    """
+    x_test = []
+    for image_path in image_paths:
+        image = Image.open(image_path)
+        if image.size[0] != image.size[1]:
+            utils.logger.error(("One of the parsed images "
+                                "has non-squared dimensions."))
+            sys.exit(1)
+        x_test.append(np.array(image))
+    return np.array(x_test)
+
+if __name__ == '__main__':
+
+    program_description = ("Infer labels on one (or more) image file(s) "
+                           "from a trained deep neural network")
+    parser = argparse.ArgumentParser(description=program_description)
+    parser = add_program_arguments(parser)
+    parser = add_instance_arguments(parser)
+    args = parser.parse_args()
+
+    y_raw_pred = predict(args.image_paths, args.dataset, args.model, args.datapath,
+                         args.aggregate_label, args.name, args.network,
+                         args.batch_size, args.dropout,
+                         args.learning_rate, args.learning_rate_decay)
+
+    utils.logger.info(y_raw_pred)
