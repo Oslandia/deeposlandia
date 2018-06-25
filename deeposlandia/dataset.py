@@ -309,11 +309,11 @@ class ShapeDataset(Dataset):
     """
 
     SQUARE = 0
-    SQUARE_COLOR = (0, 10, 10)
+    SQUARE_COLOR = (50, 50, 200)
     CIRCLE = 1
-    CIRCLE_COLOR = (200, 10, 50)
+    CIRCLE_COLOR = (200, 50, 50)
     TRIANGLE = 2
-    TRIANGLE_COLOR = (200, 130, 130)
+    TRIANGLE_COLOR = (50, 200, 50)
     BACKGROUND = 3
     BACKGROUND_COLOR = (255, 255, 255)
 
