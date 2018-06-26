@@ -5,38 +5,68 @@ import numpy as np
 
 from keras.preprocessing.image import ImageDataGenerator
 
+def recover_label_id(img, label_config):
+    """Recover label ids starting from a typical RGB-colored image modeled as a
+    (width, height, 3)-shaped array
 
-def feature_detection_labelling(img, label_ids):
+    Parameters
+    ----------
+    img : np.array
+        Image data of shape (width, heigth, 3)
+    label_config : dict
+        Labels contained into the dataset
+
+    Returns
+    -------
+    np.array
+        Array of pixel labels of shape (width, heigth)
+    """
+    reshaped_img = img.reshape([-1, 3])
+    label_img = np.zeros(shape=reshaped_img.shape[0], dtype=reshaped_img.dtype)
+    for label in label_config:
+        label_img[np.all(label['color']==reshaped_img, axis=1)] = label['id']
+        return label_img.reshape(img.shape[:3])
+
+
+def feature_detection_labelling(img, label_config):
     """One-hot encoding for feature detection problem
 
     Parameters
     ----------
     img : numpy.array
         Batched input image data of size (batch_size, image_size, image_size, 1)
-    label_ids : list of integer
-        Number of classes contained into the dataset
+    label_config : dict
+        Labels contained into the dataset
+
     Returns
     -------
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
+    if not (img.shape[1] == img.shape[2] and
+            (len(img.shape) == 3 or len(img.shape) == 4)):
+        raise ValueError(("Wrong image shape. Please provide batched images "
+                          "with equal width and height dimensions."))
+    label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
+    if len(img.shape) == 4 and img.shape[3] > 1:
+        img = recover_label_id(img, label_config);
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.equal.outer(flattened_images, label_ids)
     return one_hot_encoding.any(axis=1)
 
 
-def semantic_segmentation_labelling(img, label_ids):
+def semantic_segmentation_labelling(img, label_config):
     """One-hot encoder for semantic segmentation problem
 
     Parameters
     ----------
     img : ndarray
         Batched input image data of size (batch_size, image_size, image_size, 1)
-    label_ids : list
-        List of dataset label IDs
+    label_config : dict
+        Label contained into the dataset
 
     Returns
     -------
@@ -44,6 +74,7 @@ def semantic_segmentation_labelling(img, label_ids):
         Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
     of the ith label for each pixel
     """
+    label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
@@ -87,7 +118,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
                                          color_mode=col_mode,
                                          seed=seed)
 
-def create_generator(dataset, model, datapath, image_size, batch_size, label_ids,
+def create_generator(dataset, model, datapath, image_size, batch_size, label_config,
                      inference=False, seed=None):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
     address `model`
@@ -104,8 +135,8 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_ids
         Number of width (resp. height) pixels
     batch_size : integer
         Number of images in each training batch
-    label_ids : list of integer
-        Dataset valid label IDs (background label are excluded)
+    label_config : dict
+        Dataset valid label description
     inference : boolean
         If True, generates only image data (labels are not considered during inference)
     seed : integer
@@ -124,10 +155,10 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_ids
         return image_generator
     label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
     if model == 'feature_detection':
-        label_generator = (feature_detection_labelling(x, label_ids)
+        label_generator = (feature_detection_labelling(x, label_config)
                            for x in label_generator)
     elif model == 'semantic_segmentation':
-        label_generator = (semantic_segmentation_labelling(x, label_ids)
+        label_generator = (semantic_segmentation_labelling(x, label_config)
                            for x in label_generator)
     else:
         raise ValueError("Wrong model name {}".format(model))

@@ -154,7 +154,7 @@ if __name__=='__main__':
             prepro_folder["training"],
             args.image_size,
             args.batch_size,
-            label_ids,
+            train_config['labels'],
             seed=SEED)
         validation_generator = generator.create_generator(
             args.dataset,
@@ -162,7 +162,7 @@ if __name__=='__main__':
             prepro_folder["validation"],
             args.image_size,
             args.batch_size,
-            label_ids,
+            train_config['labels'],
             seed=SEED)
         test_generator = generator.create_generator(
             args.dataset,
@@ -170,7 +170,7 @@ if __name__=='__main__':
             prepro_folder["testing"],
             args.image_size,
             args.batch_size,
-            label_ids,
+            train_config['labels'],
             inference=True,
             seed=SEED)
     else:
