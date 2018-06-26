@@ -18,19 +18,26 @@ def test_feature_detection_labelling_concise():
     * test if both representation provides the same information (native array on the first hand and
     its one-hot version on the second hand)
     """
-    a = np.array([[[0, 0, 0, 2],
-                   [3, 3, 0, 2],
-                   [3, 3, 3, 0]],
-                  [[2, 2, 0, 0],
-                   [1, 2, 0, 0],
-                   [2, 1, 0, 0]]])
+    a = np.array([[[0, 0, 0],
+                   [3, 3, 0],
+                   [3, 3, 3]],
+                  [[2, 2, 0],
+                   [1, 2, 0],
+                   [2, 1, 0]]])
     labels = np.unique(a).tolist()
-    MIN, MAX = np.amin(a), np.amax(a)
+    wrong_config = [{'id': '0', 'is_evaluate': True},
+                    {'id': '1', 'is_evaluate': True},
+                    {'id': '2', 'is_evaluate': True},
+                    {'id': '3', 'is_evaluate': True}]
     with pytest.raises(ValueError):
-        b = generator.feature_detection_labelling(a, ['0', '1', '2', '3'])
-    b = generator.feature_detection_labelling(a, labels)
+        b = generator.feature_detection_labelling(a, wrong_config)
+    config = [{'id': 0, 'is_evaluate': True},
+              {'id': 1, 'is_evaluate': True},
+              {'id': 2, 'is_evaluate': True},
+              {'id': 3, 'is_evaluate': True}]
+    b = generator.feature_detection_labelling(a, config)
     assert b.shape == (a.shape[0], len(labels))
-    assert b.tolist() == [[True, False, True, True],
+    assert b.tolist() == [[True, False, False, True],
                           [True, True, True, False]]
 
 
@@ -46,18 +53,24 @@ def test_feature_detection_labelling_sparse():
     * test if both representation provides the same information (native array on the first hand and
     its one-hot version on the second hand)
     """
-    a = np.array([[[0, 0, 0, 1, 1],
-                   [3, 3, 0, 1, 1],
-                   [3, 3, 3, 0, 0],
-                   [3, 3, 3, 0, 0]],
-                  [[1, 1, 2, 1, 2],
-                   [3, 2, 2, 1, 3],
-                   [1, 1, 1, 2, 1],
-                   [1, 1, 2, 3, 2]]])
+    a = np.array([[[0, 0, 0, 1],
+                   [3, 3, 0, 1],
+                   [3, 3, 3, 0],
+                   [3, 3, 3, 0]],
+                  [[1, 1, 2, 1],
+                   [3, 2, 2, 2],
+                   [1, 1, 1, 3],
+                   [1, 1, 2, 3]]])
     labels = np.unique(a).tolist()[:-1]
+    wrong_config = [{'id': '0', 'is_evaluate': True},
+                    {'id': '1', 'is_evaluate': True},
+                    {'id': '2', 'is_evaluate': True}]
     with pytest.raises(ValueError):
-        b = generator.feature_detection_labelling(a, ['0', '1', '2'])
-    b = generator.feature_detection_labelling(a, labels)
+        b = generator.feature_detection_labelling(a, wrong_config)
+    config = [{'id': 0, 'is_evaluate': True},
+              {'id': 1, 'is_evaluate': True},
+              {'id': 2, 'is_evaluate': True}]
+    b = generator.feature_detection_labelling(a, config)
     assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.tolist() == [[True, True, False],
                           [False, True, True]]
@@ -76,7 +89,8 @@ def test_featdet_mapillary_generator(mapillary_image_size,
     gen = generator.create_generator("mapillary", "feature_detection",
                                      mapillary_sample,
                                      mapillary_image_size,
-                                     BATCH_SIZE, label_ids)
+                                     BATCH_SIZE,
+                                     config["labels"])
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -91,7 +105,7 @@ def test_featdet_shape_generator(shapes_image_size, shapes_sample, shapes_sample
     BATCH_SIZE = 10
     config = utils.read_config(shapes_sample_config)
     label_ids = [x['id'] for x in config["labels"]]
-    gen = generator.create_generator("shapes", "feature_detection", shapes_sample, shapes_image_size, BATCH_SIZE, label_ids)
+    gen = generator.create_generator("shapes", "feature_detection", shapes_sample, shapes_image_size, BATCH_SIZE, config["labels"])
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
@@ -111,41 +125,43 @@ def test_semantic_segmentation_labelling_concise():
       first hand and its one-hot version on the second hand)
 
     """
-    a = np.array([[[1, 1, 3, 1],
-                   [3, 3, 1, 1],
-                   [3, 3, 3, 1]],
-                  [[1, 1, 0, 0],
-                   [2, 2, 0, 1],
-                   [1, 1, 0, 0]]])
+    a = np.array([[[1, 1, 3],
+                   [3, 3, 1],
+                   [3, 3, 3]],
+                  [[1, 1, 0],
+                   [2, 2, 0],
+                   [1, 1, 0]]])
     labels = np.unique(a).tolist()
+    wrong_config = [{'id': '0', 'is_evaluate': True},
+                    {'id': '1', 'is_evaluate': True},
+                    {'id': '2', 'is_evaluate': True},
+                    {'id': '3', 'is_evaluate': True}]
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
     with pytest.raises(ValueError):
-        b = generator.semantic_segmentation_labelling(a, ['0', '1', '2', '3'])
-    b = generator.semantic_segmentation_labelling(a, labels)
+        b = generator.semantic_segmentation_labelling(a, wrong_config)
+    config = [{'id': 0, 'is_evaluate': True},
+              {'id': 1, 'is_evaluate': True},
+              {'id': 2, 'is_evaluate': True},
+              {'id': 3, 'is_evaluate': True}]
+    b = generator.semantic_segmentation_labelling(a, config)
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
     assert b.tolist() == [[[[False, True, False, False],
                             [False, True, False, False],
+                            [False, False, False, True]],
+                           [[False, False, False, True],
                             [False, False, False, True],
                             [False, True, False, False]],
                            [[False, False, False, True],
                             [False, False, False, True],
-                            [False, True, False, False],
-                            [False, True, False, False]],
-                           [[False, False, False, True],
-                            [False, False, False, True],
-                            [False, False, False, True],
-                            [False, True, False, False]]],
+                            [False, False, False, True]]],
                           [[[False, True, False, False],
                             [False, True, False, False],
-                            [True, False, False, False],
                             [True, False, False, False]],
                            [[False, False, True, False],
                             [False, False, True, False],
-                            [True, False, False, False],
-                            [False, True, False, False]],
+                            [True, False, False, False]],
                            [[False, True, False, False],
                             [False, True, False, False],
-                            [True, False, False, False],
                             [True, False, False, False]]]]
 
 
@@ -161,42 +177,42 @@ def test_semantic_segmentation_labelling_sparse():
       first hand and its one-hot version on the second hand)
 
     """
-    a = np.array([[[1, 1, 3, 1],
-                   [3, 3, 1, 1],
-                   [3, 4, 3, 1]],
-                  [[1, 1, 0, 0],
-                   [3, 4, 0, 1],
-                   [1, 1, 0, 0]]])
+    a = np.array([[[1, 1, 3],
+                   [3, 3, 1],
+                   [3, 4, 3]],
+                  [[1, 1, 0],
+                   [3, 4, 0],
+                   [1, 1, 0]]])
     labels = [0, 2, 3]
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
+    wrong_config = [{'id': '0', 'is_evaluate': True},
+                    {'id': '2', 'is_evaluate': True},
+                    {'id': '3', 'is_evaluate': True}]
     with pytest.raises(ValueError):
-        b = generator.semantic_segmentation_labelling(a, ['0', '2', '3'])
-    b = generator.semantic_segmentation_labelling(a, labels)
+        b = generator.semantic_segmentation_labelling(a, wrong_config)
+    config = [{'id': 0, 'is_evaluate': True},
+              {'id': 2, 'is_evaluate': True},
+              {'id': 3, 'is_evaluate': True}]
+    b = generator.semantic_segmentation_labelling(a, config)
     assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
     assert b.tolist() == [[[[False, False, False],
                             [False, False, False],
+                            [False, False, True]],
+                           [[False, False, True],
                             [False, False, True],
                             [False, False, False]],
                            [[False, False, True],
-                            [False, False, True],
                             [False, False, False],
-                            [False, False, False]],
-                           [[False, False, True],
-                            [False, False, False],
-                            [False, False, True],
-                            [False, False, False]]],
+                            [False, False, True]]],
                           [[[False, False, False],
                             [False, False, False],
-                            [True, False, False],
                             [True, False, False]],
                            [[False, False, True],
                             [False, False, False],
-                            [True, False, False],
-                            [False, False, False]],
+                            [True, False, False]],
                            [[False, False, False],
                             [False, False, False],
-                            [True, False, False],
                             [True, False, False]]]]
 
 
@@ -212,7 +228,7 @@ def test_semseg_mapillary_generator(mapillary_image_size,
     gen = generator.create_generator("mapillary", "semantic_segmentation",
                                      mapillary_sample,
                                      mapillary_image_size,
-                                     BATCH_SIZE, label_ids)
+                                     BATCH_SIZE, config["labels"])
     item = next(gen)
     assert(len(item)==2)
     im_shape = item[0].shape
@@ -229,7 +245,7 @@ def test_semseg_shape_generator(shapes_image_size, shapes_sample, shapes_sample_
     label_ids = [x['id'] for x in config["labels"]]
     gen = generator.create_generator("shapes", "semantic_segmentation",
                                      shapes_sample, shapes_image_size,
-                                     BATCH_SIZE, label_ids)
+                                     BATCH_SIZE, config["labels"])
     item = next(gen)
     assert len(item) == 2
     im_shape = item[0].shape
@@ -238,7 +254,7 @@ def test_semseg_shape_generator(shapes_image_size, shapes_sample, shapes_sample_
     assert label_shape == (BATCH_SIZE, shapes_image_size, shapes_image_size, len(label_ids))
 
 
-def test_wrong_model_dataset_generator():
+def test_wrong_model_dataset_generator(shapes_sample_config):
     """Test a wrong model and wrong dataset
     """
     dataset = "fake"
@@ -246,14 +262,14 @@ def test_wrong_model_dataset_generator():
     IMAGE_SIZE = 10
     BATCH_SIZE = 10
     datapath = ("./tests/data/" + dataset + "/training")
-    label_ids = range(3)
+    config = utils.read_config(shapes_sample_config)
 
     # wrong model name
     with pytest.raises(ValueError) as excinfo:
-        generator.create_generator(dataset, 'feature_detection', datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+        generator.create_generator(dataset, 'feature_detection', datapath, IMAGE_SIZE, BATCH_SIZE, config["labels"])
     assert str(excinfo.value) == "Wrong dataset name {}".format(dataset)
 
     # wrong model name
     with pytest.raises(ValueError) as excinfo:
-        generator.create_generator('shapes', model, datapath, IMAGE_SIZE, BATCH_SIZE, label_ids)
+        generator.create_generator('shapes', model, datapath, IMAGE_SIZE, BATCH_SIZE, config["labels"])
     assert str(excinfo.value) == "Wrong model name {}".format(model)
