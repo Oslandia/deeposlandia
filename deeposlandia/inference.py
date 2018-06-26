@@ -150,7 +150,8 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
 
 def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             name=None, network=None, batch_size=None, dropout=None,
-            learning_rate=None, learning_rate_decay=None, output_dir=None):
+            learning_rate=None, learning_rate_decay=None,
+            output_dir="/tmp/deeposlandia/predicted"):
     """Make label prediction on image indicated by ̀filename`, according to
     considered `problem`
 
