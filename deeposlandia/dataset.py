@@ -335,7 +335,7 @@ class ShapeDataset(Dataset):
         self.add_label(self.SQUARE, "square", self.SQUARE_COLOR, True)
         self.add_label(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
         self.add_label(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
-        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, False)
+        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, True)
 
     def generate_labels(self, nb_images):
         """ Generate random shape labels in order to prepare shape image
