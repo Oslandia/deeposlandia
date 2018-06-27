@@ -315,7 +315,7 @@ class ShapeDataset(Dataset):
     TRIANGLE = 2
     TRIANGLE_COLOR = (50, 200, 50)
     BACKGROUND = 3
-    BACKGROUND_COLOR = (255, 255, 255)
+    BACKGROUND_COLOR = (200, 200, 200)
 
     def __init__(self, image_size):
         """ Class constructor
