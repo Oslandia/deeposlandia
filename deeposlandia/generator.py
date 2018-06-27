@@ -25,7 +25,7 @@ def recover_label_id(img, label_config):
     label_img = np.zeros(shape=reshaped_img.shape[0], dtype=reshaped_img.dtype)
     for label in label_config:
         label_img[np.all(label['color']==reshaped_img, axis=1)] = label['id']
-        return label_img.reshape(img.shape[:3])
+    return label_img.reshape(img.shape[:3])
 
 
 def feature_detection_labelling(img, label_config):
