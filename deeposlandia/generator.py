@@ -83,7 +83,7 @@ def semantic_segmentation_labelling(img, label_config):
     return one_hot_encoding
 
 
-def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
+def feed_generator(datapath, gen_type, image_size, batch_size, col_mode, seed=None):
     """Build a couple of generator fed by image and label repository, respectively
 
     The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
@@ -100,6 +100,9 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
         Number of width (resp. height) pixels
     batch_size : integer
         Number of images in each training batch
+    col_mode : str
+        Color mode, `grayscale` if labels are stored as integer, or `rgb` if
+    they are stored as RGB pixels
     seed : integer
         Random number generation for data shuffling and transformations
 
@@ -108,7 +111,6 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
     generator
         Input image generator
     """
-    col_mode = 'grayscale' if gen_type == "labels" else 'rgb'
     generator = ImageDataGenerator()
     return generator.flow_from_directory(datapath,
                                          classes=[gen_type],
@@ -150,10 +152,13 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
     """
     if not dataset in ['shapes', 'mapillary']:
         raise ValueError("Wrong dataset name {}".format(dataset))
-    image_generator = feed_generator(datapath, "images", image_size, batch_size, seed)
+    image_generator = feed_generator(datapath, "images", image_size,
+                                     batch_size, 'rgb', seed)
     if inference:
         return image_generator
-    label_generator = feed_generator(datapath, "labels", image_size, batch_size, seed)
+    col_mode = 'grayscale' if dataset == 'mapillary' else 'rgb'
+    label_generator = feed_generator(datapath, "labels", image_size,
+                                     batch_size, col_mode, seed)
     if model == 'feature_detection':
         label_generator = (feature_detection_labelling(x, label_config)
                            for x in label_generator)
