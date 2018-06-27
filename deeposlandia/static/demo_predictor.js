@@ -53,8 +53,10 @@ function predict_labels(filename, dataset, model){
       $.each(data, function(image, predictions){
 	result.push("<ul>");
 	$.each(predictions, function(label, info){
-      	  result.push("<li><font color='" + info.color + "'>"
-		      + label + ": " + info.probability + "%</color></li>" );
+	  if (label != "background"){
+      	    result.push("<li><font color='" + info.color + "'>"
+			+ label + ": " + info.probability + "%</color></li>" );
+	      }
 	});
 	result.push("</ul>");
       });
