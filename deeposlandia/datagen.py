@@ -89,6 +89,8 @@ if __name__=='__main__':
         train_dataset = ShapeDataset(args.image_size)
         validation_dataset = ShapeDataset(args.image_size)
         test_dataset = ShapeDataset(args.image_size)
+        os.makedirs(os.path.join(prepro_folder["testing"], "labels"),
+                                 exist_ok=True)
     else:
         utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
         sys.exit(1)
