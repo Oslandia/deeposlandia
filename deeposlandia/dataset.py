@@ -460,7 +460,7 @@ class ShapeDataset(Dataset):
             label = cv2.fillPoly(label, points, self.TRIANGLE_COLOR)
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
-        cv2.imwrite(image_filename, image)
+        Image.fromarray(image).save(image_filename)
         label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["label_filename"] = label_filename
-        cv2.imwrite(label_filename, label)
+        Image.fromarray(label).save(label_filename)
