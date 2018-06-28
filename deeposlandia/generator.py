@@ -78,6 +78,8 @@ def semantic_segmentation_labelling(img, label_config):
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
+    if len(img.shape) == 4 and img.shape[3] > 1:
+        img = recover_label_id(img, label_config);
     img = img.squeeze().astype(np.uint8)
     one_hot_encoding = np.equal.outer(img, label_ids)
     return one_hot_encoding
