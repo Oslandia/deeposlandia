@@ -238,14 +238,21 @@ def demo_image_selector():
     if dataset == "mapillary":
         label_file = label_file.replace("jpg", "png")
     server_label_filename = os.path.join("deeposlandia", label_file[1:])
-    lbls = np.unique(np.array(Image.open(server_label_filename))).tolist()
+    server_label_image = np.array(Image.open(server_label_filename))
     image_size = 224 if dataset == "mapillary" else 64
     with open(os.path.join("data", dataset, "preprocessed",
                            str(image_size)+"_full", "testing.json")) as fobj:
         config = json.load(fobj)
-    labels = {item['category']: utils.RGBToHTMLColor(item['color'])
-              for item in config['labels']
-              if item['id'] in lbls}
+    if dataset == "shapes":
+        lbls = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+        labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+                  for item in config['labels']
+                  if item['color'] in lbls}
+    else:
+        lbls = np.unique(server_label_image).tolist()
+        labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+                  for item in config['labels']
+                  if item['id'] in lbls}
     return jsonify(image_name=filename,
                    image_file=image_file,
                    label_file=label_file,
