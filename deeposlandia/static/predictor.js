@@ -17,7 +17,7 @@ document.getElementById("predict_button").addEventListener("click", function(){
     }, function(data){
       var result = [];
       var predicted_image_path;
-      $.each(data.lab_images, function(image, predicted_image){
+      $.each(data.label_images, function(image, predicted_image){
 	predicted_image_path = "/static/predicted_images/" + predicted_image;
 	result.push("<img id='predicted_image'><label>Predicted labels</label>");
       });
