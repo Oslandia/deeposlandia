@@ -136,15 +136,16 @@ def demo_prediction():
     filename = request.args.get('img')
     filename = os.path.join("deeposlandia", filename[1:])
     dataset = request.args.get('dataset')
+    agg_value = dataset == "mapillary"
     model = request.args.get('model')
     utils.logger.info("file: {}, dataset: {}, model: {}".format(filename,
                                                                 dataset,
                                                                 model))
     if model == "feature_detection":
-        predictions = predict([filename], dataset, model)
+        predictions = predict([filename], dataset, model, aggregate=agg_value)
         return jsonify(predictions)
     elif model == "semantic_segmentation":
-        predictions = predict([filename], dataset, model,
+        predictions = predict([filename], dataset, model, aggregate=agg_value,
                               output_dir=PREDICT_FOLDER)
         return jsonify(predictions)
     else:
@@ -170,7 +171,7 @@ def prediction():
     utils.logger.info("file: {}, dataset: {}, model: {}".format(dataset, model,
                                                                 filename))
     predictions = predict([filename], "mapillary", "semantic_segmentation",
-                          aggregate=False, output_dir=PREDICT_FOLDER)
+                          aggregate=True, output_dir=PREDICT_FOLDER)
     return jsonify(predictions)
 
 
@@ -230,18 +231,19 @@ def demo_image_selector():
     summarizes the label information for displyaing purpose
     """
     dataset = request.args.get('dataset')
-    server_folder = os.path.join("deeposlandia", "static", dataset, "images")
-    client_folder = os.path.join("/", "static", dataset, "images")
+    dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
+    server_folder = os.path.join("deeposlandia", "static", dataset_code, "images")
+    client_folder = os.path.join("/", "static", dataset_code, "images")
     filename = np.random.choice(os.listdir(server_folder))
     image_file = os.path.join(client_folder, filename)
     label_file = image_file.replace("images", "labels")
-    if dataset == "mapillary":
-        label_file = label_file.replace("jpg", "png")
+    if dataset == "mapillary" or dataset == "mapillary_agg":
+        label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join("deeposlandia", label_file[1:])
     server_label_image = np.array(Image.open(server_label_filename))
     image_size = 224 if dataset == "mapillary" else 64
     with open(os.path.join("data", dataset, "preprocessed",
-                           str(image_size)+"_full", "testing.json")) as fobj:
+                           str(image_size)+"_aggregated", "testing.json")) as fobj:
         config = json.load(fobj)
     if dataset == "shapes":
         actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0)
