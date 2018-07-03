@@ -7,8 +7,6 @@ import json
 import pandas as pd
 import seaborn as sns
 
-
-DATASET = 'mapillary'
 # column name which contains the name of the aggregated label family
 KEY_AGG = 'agg_label'
 
@@ -92,7 +90,7 @@ def read_config(datadir):
     dict
         Mapillary glossary
     """
-    with open(os.path.join(datadir, DATASET, 'config.json'), 'r') as fobj:
+    with open(os.path.join(datadir, 'config.json'), 'r') as fobj:
         return json.load(fobj)
 
 
@@ -177,6 +175,6 @@ if __name__ == '__main__':
                         help="Name of the output JSON file.")
     args = parser.parse_args()
     label_aggregated = main(args.datapath)
-    with open(os.path.join(args.datapath, 'mapillary', args.save), 'w') as fobj:
-        print("write the file '{}'".format(os.path.join(args.datapath, 'mapillary', args.save)))
+    with open(os.path.join(args.datapath, args.save), 'w') as fobj:
+        print("write the file '{}'".format(os.path.join(args.datapath, args.save)))
         json.dump(label_aggregated, fobj)
