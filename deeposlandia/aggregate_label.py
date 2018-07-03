@@ -39,6 +39,7 @@ def config_as_dataframe(config):
     df = pd.DataFrame(config['labels'])
     df['id'] = range(df.shape[0])
     df['family'] = df['name'].str.split('--').apply(lambda x: x[0])
+    df['label'] = df['name'].str.split('--').apply(lambda x: x[-1])
     df['new_label'] = df['name'].str.split('--').apply(lambda x: x[-2])
     return df
 
@@ -58,16 +59,18 @@ def aggregate_config(config, df):
     assert len(config['labels']) == df.shape[0], "should have the same size"
     result = {'folder_structure': config['folder_structure']}
     result['labels'] = []
+    nb_labels = len(df.new_label.unique())
+    intgen = (i for i in range(nb_labels))
+    palette = set_label_color(nb_labels)
     for key, group in df.groupby("new_label"):
-        label_id = int(group['id'].min())  # int conversion from int64 for JSON serialization
-        for _, label in group.iterrows():
-            if label['id'] == label_id:
-                d = config['labels'][label_id]
-                d['id'] = label_id
-                d['group_name'] = label["new_label"]
-                d['aggregate'] = []
-            else:
-                d['aggregate'].append((label['id'], label['name']))
+        d = {'id': next(intgen),
+             'family': group.family.iloc[0],
+             'name': group.new_label.iloc[0],
+             'contains': group.label.str.cat(sep="..."),
+             'contains_id': list(group.id),
+             'color': next(palette),
+             'evaluate': any(group.evaluate)
+        }
         result['labels'].append(d)
     return result
 
