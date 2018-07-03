@@ -5,12 +5,23 @@ import os
 import json
 
 import pandas as pd
+import seaborn as sns
 
 
 DATASET = 'mapillary'
 # column name which contains the name of the aggregated label family
 KEY_AGG = 'agg_label'
 
+def set_label_color(nb_colors):
+    """Set a color for each aggregated label with seaborn palettes
+
+    Parameters
+    ----------
+    nb_colors : int
+        Number of label to display
+    """
+    palette = sns.hls_palette(nb_colors, l=0.6, s=0.75)
+    return ([int(255 * item) for item in color] for color in palette)
 
 def _split_object_label(df):
     """Split 'object' label into three sub-labels
