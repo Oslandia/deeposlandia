@@ -26,7 +26,8 @@ install_requires = [
     'matplotlib<=2.2.0',
     'h5py<=2.7.1',
     'daiquiri<=1.3.0',
-    'Flask<=1.0.2']
+    'Flask<=1.0.2',
+    'seaborn<=0.8.1']
 
 setup(
     name='deeposlandia',
