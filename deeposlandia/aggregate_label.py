@@ -7,8 +7,7 @@ import json
 import pandas as pd
 import seaborn as sns
 
-# column name which contains the name of the aggregated label family
-KEY_AGG = 'agg_label'
+from deeposlandia import utils
 
 def set_label_color(nb_colors):
     """Set a color for each aggregated label with seaborn palettes
@@ -20,78 +19,6 @@ def set_label_color(nb_colors):
     """
     palette = sns.hls_palette(nb_colors, l=0.6, s=0.75)
     return ([int(255 * item) for item in color] for color in palette)
-
-def _split_object_label(df):
-    """Split 'object' label into three sub-labels
-
-    - object
-    - vehicle
-    - traffic
-
-    XXX : split vehicle into 2 or 4 sub-labels (motorcycle, bike, car, bus, etc.)?
-      - bus, car, caravan, truck
-      - motorcycle, bicycle
-      - car
-      - others
-
-    Parameters
-    ----------
-    df : pandas dataframe
-        Mapillary labels
-
-    Returns
-    -------
-    pandas dataframe
-        Modified Mapillary labels
-    """
-    df = df.copy()
-    mask_vehicle = df['name'].str.split('--').apply(lambda x: 'vehicle' in x)
-    df.loc[mask_vehicle, KEY_AGG] = 'vehicle'
-    mask_traffic = df['readable'].str.lower().apply(lambda x: 'traffic' in x)
-    df.loc[mask_traffic, KEY_AGG] = 'traffic'
-    return df
-
-
-def _split_construction_label(df):
-    """Split 'construction' label into three sub-labels
-
-    - construction
-    - flat
-    - barrier
-
-    Parameters
-    ----------
-    df : pandas dataframe
-        Mapillary labels
-
-    Returns
-    -------
-    pandas dataframe
-        Modified Mapillary labels
-    """
-    df = df.copy()
-    mask_barrier = df['name'].str.split('--').apply(lambda x: 'barrier' in x)
-    df.loc[mask_barrier, KEY_AGG] = 'barrier'
-    mask_flat = df['name'].str.split('--').apply(lambda x: 'flat' in x)
-    df.loc[mask_flat, KEY_AGG] = 'flat'
-    return df
-
-
-def read_config(datadir):
-    """Read the mapillary configuration JSON file
-
-    Parameters
-    ----------
-    datadir : string
-        Path to data repository
-
-    Returns
-    -------
-    dict
-        Mapillary glossary
-    """
-    with open(os.path.join(datadir, 'config.json'), 'r') as fobj:
-        return json.load(fobj)
 
 
 def config_as_dataframe(config):
@@ -112,9 +39,7 @@ def config_as_dataframe(config):
     df = pd.DataFrame(config['labels'])
     df['id'] = range(df.shape[0])
     df['family'] = df['name'].str.split('--').apply(lambda x: x[0])
-    df[KEY_AGG] = df['family']
-    df = _split_object_label(df)
-    df = _split_construction_label(df)
+    df['new_label'] = df['name'].str.split('--').apply(lambda x: x[-2])
     return df
 
 
@@ -133,13 +58,13 @@ def aggregate_config(config, df):
     assert len(config['labels']) == df.shape[0], "should have the same size"
     result = {'folder_structure': config['folder_structure']}
     result['labels'] = []
-    for key, group in df.groupby(KEY_AGG):
+    for key, group in df.groupby("new_label"):
         label_id = int(group['id'].min())  # int conversion from int64 for JSON serialization
         for _, label in group.iterrows():
             if label['id'] == label_id:
                 d = config['labels'][label_id]
                 d['id'] = label_id
-                d['group_name'] = label[KEY_AGG]
+                d['group_name'] = label["new_label"]
                 d['aggregate'] = []
             else:
                 d['aggregate'].append((label['id'], label['name']))
@@ -158,7 +83,7 @@ def main(datadir):
     -------
     dict
     """
-    config = read_config(datadir)
+    config = utils.read_config(os.path.join(datadir, 'config.json'))
     df = config_as_dataframe(config)
     agg_config = aggregate_config(config, df)
     return agg_config
