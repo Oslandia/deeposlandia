@@ -241,20 +241,14 @@ def demo_image_selector():
         label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join("deeposlandia", label_file[1:])
     server_label_image = np.array(Image.open(server_label_filename))
-    image_size = 224 if dataset == "mapillary" else 64
-    with open(os.path.join("data", dataset, "preprocessed",
-                           str(image_size)+"_aggregated", "testing.json")) as fobj:
+    size_aggregation = "224_aggregated" if dataset == "mapillary" else "64_full"
+    with open(os.path.join("data", dataset, "preprocessed", size_aggregation
+                           , "testing.json")) as fobj:
         config = json.load(fobj)
-    if dataset == "shapes":
-        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0)
-        printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
-                          for item in config['labels']
-                          if item['color'] in actual_labels}
-    else:
-        actual_labels = np.unique(server_label_image)
-        printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
-                          for item in config['labels']
-                          if item['id'] in actual_labels}
+    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0)
+    printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+                      for item in config['labels']
+                      if item['color'] in actual_labels}
     return jsonify(image_name=filename,
                    image_file=image_file,
                    label_file=label_file,
