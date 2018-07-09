@@ -256,8 +256,12 @@ class MapillaryDataset(Dataset):
             if aggregate:
                 final_img_out = self.group_image_label(final_img_out)
 
-            labels = utils.mapillary_label_building(final_img_out, self.label_ids)
-            new_out_filename = os.path.join(output_dir, 'labels', label_filename.split('/')[-1])
+            labels = utils.mapillary_label_building(final_img_out,
+                                                    self.label_ids)
+            new_out_filename = os.path.join(output_dir, 'labels',
+                                            label_filename.split('/')[-1])
+            final_img_out = utils.build_image_from_config(final_img_out,
+                                                          self.label_info)
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
