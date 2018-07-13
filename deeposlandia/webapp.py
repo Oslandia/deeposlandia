@@ -245,7 +245,7 @@ def demo_image_selector():
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
                            , "testing.json")) as fobj:
         config = json.load(fobj)
-    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0)
+    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
     printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
                       for item in config['labels']
                       if item['color'] in actual_labels}
