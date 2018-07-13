@@ -244,16 +244,16 @@ def demo_image_selector():
                            str(image_size)+"_full", "testing.json")) as fobj:
         config = json.load(fobj)
     if dataset == "shapes":
-        lbls = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
-        labels = {item['category']: utils.RGBToHTMLColor(item['color'])
-                  for item in config['labels']
-                  if item['color'] in lbls}
+        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0)
+        printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+                          for item in config['labels']
+                          if item['color'] in actual_labels}
     else:
-        lbls = np.unique(server_label_image).tolist()
-        labels = {item['category']: utils.RGBToHTMLColor(item['color'])
-                  for item in config['labels']
-                  if item['id'] in lbls}
+        actual_labels = np.unique(server_label_image)
+        printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+                          for item in config['labels']
+                          if item['id'] in actual_labels}
     return jsonify(image_name=filename,
                    image_file=image_file,
                    label_file=label_file,
-                   labels=labels)
+                   labels=printed_labels)
