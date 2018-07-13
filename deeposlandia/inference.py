@@ -275,6 +275,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                 for i, j in zip(label_info, prediction)}
         return result
     elif problem == "semantic_segmentation":
+        os.makedirs(output_dir, exist_ok=True)
         predicted_labels = np.argmax(y_raw_pred, axis=3)
         encountered_labels = np.unique(predicted_labels)
         meaningful_labels = [x for i, x in enumerate(train_config["labels"])
