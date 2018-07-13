@@ -22,7 +22,9 @@ def recover_label_id(img, label_config):
         Array of pixel labels of shape (width, heigth)
     """
     reshaped_img = img.reshape([-1, 3])
-    label_img = np.zeros(shape=reshaped_img.shape[0], dtype=reshaped_img.dtype)
+    label_img = np.full(shape=reshaped_img.shape[0],
+                        fill_value=-1,
+                        dtype=reshaped_img.dtype)
     for label in label_config:
         label_img[np.all(label['color']==reshaped_img, axis=1)] = label['id']
     return label_img.reshape(img.shape[:3])
