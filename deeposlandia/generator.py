@@ -43,16 +43,14 @@ def feature_detection_labelling(img, label_config):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
-    if not (img.shape[1] == img.shape[2] and
-            (len(img.shape) == 3 or len(img.shape) == 4)):
-        raise ValueError(("Wrong image shape. Please provide batched images "
-                          "with equal width and height dimensions."))
+    if not (img.shape[1] == img.shape[2] and len(img.shape) == 4):
+        raise ValueError(("Wrong image shape. Please provide batched RGB-"
+                          "images with equal width and height dimensions."))
     label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
-    if len(img.shape) == 4 and img.shape[3] > 1:
-        img = recover_label_id(img, label_config);
+    img = recover_label_id(img, label_config);
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.equal.outer(flattened_images, label_ids)
     return one_hot_encoding.any(axis=1)
@@ -74,12 +72,14 @@ def semantic_segmentation_labelling(img, label_config):
         Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
     of the ith label for each pixel
     """
+    if not (img.shape[1] == img.shape[2] and len(img.shape) == 4):
+        raise ValueError(("Wrong image shape. Please provide batched RGB-"
+                          "images with equal width and height dimensions."))
     label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
-    if len(img.shape) == 4 and img.shape[3] > 1:
-        img = recover_label_id(img, label_config);
+    img = recover_label_id(img, label_config);
     img = img.squeeze().astype(np.uint8)
     one_hot_encoding = np.equal.outer(img, label_ids)
     return one_hot_encoding
