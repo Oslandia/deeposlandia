@@ -24,7 +24,7 @@ def test_model_training(shapes_image_size, shapes_sample, shapes_sample_config, 
     config = read_config(shapes_sample_config)
     label_ids = [x['id'] for x in config["labels"] if x['is_evaluate']]
     gen = create_generator("shapes", "feature_detection", shapes_sample,
-                           shapes_image_size, BATCH_SIZE, label_ids)
+                           shapes_image_size, BATCH_SIZE, config['labels'])
     cnn = FeatureDetectionNetwork("test", image_size=shapes_image_size, nb_labels=len(label_ids))
     model = Model(cnn.X, cnn.Y)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])

@@ -150,7 +150,8 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
 
 def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             name=None, network=None, batch_size=None, dropout=None,
-            learning_rate=None, learning_rate_decay=None, output_dir=None):
+            learning_rate=None, learning_rate_decay=None,
+            output_dir="/tmp/deeposlandia/predicted"):
     """Make label prediction on image indicated by ̀filename`, according to
     considered `problem`
 
@@ -274,6 +275,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                 for i, j in zip(label_info, prediction)}
         return result
     elif problem == "semantic_segmentation":
+        os.makedirs(output_dir, exist_ok=True)
         predicted_labels = np.argmax(y_raw_pred, axis=3)
         encountered_labels = np.unique(predicted_labels)
         meaningful_labels = [x for i, x in enumerate(train_config["labels"])

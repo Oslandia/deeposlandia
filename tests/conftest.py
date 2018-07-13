@@ -104,7 +104,7 @@ def shapes_nb_images():
 
 @pytest.fixture
 def shapes_nb_labels():
-    return 3
+    return 4
 
 
 @pytest.fixture(scope='session')

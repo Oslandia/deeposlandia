@@ -294,9 +294,13 @@ class MapillaryDataset(Dataset):
 class ShapeDataset(Dataset):
     """Dataset structure that gathers all information related to a randomly-generated shape Dataset
 
-    In such a dataset, a set of images is generated with either a square, or a circle or a
-    triangle, or two of them, or all of them. A random background color is applied, and shape color
-    itself is also randomly generated.
+    In such a dataset, a set of images is generated with either a square, or a
+    circle or a triangle, or two of them, or all of them. A random background
+    color is applied, and shape color itself is also randomly generated. Each
+    of these labels are characterized with a fixed color for comparison between
+    ground truth and predictions: squares, circles and triangles will be
+    respectively set as blue, red and green, whilst background will be set as
+    light grey.
 
     Attributes
     ----------
@@ -309,13 +313,13 @@ class ShapeDataset(Dataset):
     """
 
     SQUARE = 0
-    SQUARE_COLOR = (0, 10, 10)
+    SQUARE_COLOR = (50, 50, 200) # Blue
     CIRCLE = 1
-    CIRCLE_COLOR = (200, 10, 50)
+    CIRCLE_COLOR = (200, 50, 50) # Red
     TRIANGLE = 2
-    TRIANGLE_COLOR = (200, 130, 130)
+    TRIANGLE_COLOR = (50, 200, 50) # Green
     BACKGROUND = 3
-    BACKGROUND_COLOR = (255, 255, 255)
+    BACKGROUND_COLOR = (200, 200, 200) # Light grey
 
     def __init__(self, image_size):
         """ Class constructor
@@ -335,7 +339,7 @@ class ShapeDataset(Dataset):
         self.add_label(self.SQUARE, "square", self.SQUARE_COLOR, True)
         self.add_label(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
         self.add_label(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
-        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, False)
+        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, True)
 
     def generate_labels(self, nb_images):
         """ Generate random shape labels in order to prepare shape image
@@ -435,19 +439,19 @@ class ShapeDataset(Dataset):
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
-        label = np.full([self.image_size, self.image_size], self.BACKGROUND, dtype=np.uint8)
+        label = np.full([self.image_size, self.image_size, 3], self.BACKGROUND_COLOR, dtype=np.uint8)
 
         # Get the center x, y and the size s
         if image_info["labels"][self.SQUARE]:
             color, x, y, s = image_info["shape_specs"][self.SQUARE]
             color = tuple(map(int, color))
             image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
-            label = cv2.rectangle(label, (x - s, y - s), (x + s, y + s), self.SQUARE, -1)
+            label = cv2.rectangle(label, (x - s, y - s), (x + s, y + s), self.SQUARE_COLOR, -1)
         if image_info["labels"][self.CIRCLE]:
             color, x, y, s = image_info["shape_specs"][self.CIRCLE]
             color = tuple(map(int, color))
             image = cv2.circle(image, (x, y), s, color, -1)
-            label = cv2.circle(label, (x, y), s, self.CIRCLE, -1)
+            label = cv2.circle(label, (x, y), s, self.CIRCLE_COLOR, -1)
         if image_info["labels"][self.TRIANGLE]:
             color, x, y, s = image_info["shape_specs"][self.TRIANGLE]
             color = tuple(map(int, color))
@@ -457,10 +461,10 @@ class ShapeDataset(Dataset):
                                 (x + s / math.sin(math.radians(60)), y + s),]],
                               dtype=np.int32)
             image = cv2.fillPoly(image, points, color)
-            label = cv2.fillPoly(label, points, self.TRIANGLE)
+            label = cv2.fillPoly(label, points, self.TRIANGLE_COLOR)
         image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["image_filename"] = image_filename
-        cv2.imwrite(image_filename, image)
+        Image.fromarray(image).save(image_filename)
         label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
         self.image_info[image_id]["label_filename"] = label_filename
-        cv2.imwrite(label_filename, label)
+        Image.fromarray(label).save(label_filename)
