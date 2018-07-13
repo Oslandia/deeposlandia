@@ -42,21 +42,6 @@ def mapillary_image_size():
 
 
 @pytest.fixture
-def mapillary_sample_dir():
-    return "tests/data/mapillary/sample"
-
-
-@pytest.fixture
-def mapillary_sample_without_labels_dir():
-    return "tests/data/mapillary/sample_no_label/"
-
-
-@pytest.fixture
-def mapillary_nb_images(mapillary_sample_dir):
-    return len(os.listdir(os.path.join(mapillary_sample_dir, "images")))
-
-
-@pytest.fixture
 def mapillary_input_config():
     return "tests/data/mapillary/config_aggregate.json"
 
@@ -67,8 +52,29 @@ def mapillary_sample_config():
 
 
 @pytest.fixture
+def mapillary_raw_sample():
+    """Sample of Mapillary original images (called for populate a Mapillary
+    dataset)
+    
+    """
+    return "tests/data/mapillary/sample/"
+
+
+@pytest.fixture
 def mapillary_sample():
+    """Sample of preprocessed Mapillary images
+    """
     return "tests/data/mapillary/training/"
+
+
+@pytest.fixture
+def mapillary_sample_without_labels_dir():
+    return "tests/data/mapillary/sample_no_label/"
+
+
+@pytest.fixture
+def mapillary_nb_images(mapillary_sample):
+    return len(os.listdir(os.path.join(mapillary_sample, "images")))
 
 
 @pytest.fixture

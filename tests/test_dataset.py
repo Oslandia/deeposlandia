@@ -17,7 +17,8 @@ def test_dataset_creation(mapillary_image_size):
     d.add_label(label_id=0, label_name="test_label", color=[100, 100, 100], is_evaluate=True)
     assert d.get_nb_labels() == 1
 
-def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels, mapillary_input_config):
+def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels,
+    mapillary_input_config):
     """Create a Mapillary dataset from a configuration file
     """
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
@@ -25,14 +26,15 @@ def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels, m
     assert d.get_nb_labels(see_all=True) == mapillary_nb_labels
     assert d.get_nb_images() == 0
 
-def test_mapillary_dataset_population(mapillary_image_size, mapillary_sample_dir,
+def test_mapillary_dataset_population(mapillary_image_size,
+                                      mapillary_raw_sample,
                                       mapillary_nb_images, mapillary_nb_labels,
                                       mapillary_input_config, mapillary_config,
                                       mapillary_temp_dir):
     """Populate a Mapillary dataset
     """
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
-    d.populate(str(mapillary_temp_dir), mapillary_sample_dir, nb_images=mapillary_nb_images)
+    d.populate(str(mapillary_temp_dir), mapillary_raw_sample, nb_images=mapillary_nb_images)
     d.save(str(mapillary_config))
     assert d.get_nb_labels(see_all=True) == mapillary_nb_labels
     assert d.get_nb_images() == mapillary_nb_images
