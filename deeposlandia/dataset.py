@@ -294,9 +294,13 @@ class MapillaryDataset(Dataset):
 class ShapeDataset(Dataset):
     """Dataset structure that gathers all information related to a randomly-generated shape Dataset
 
-    In such a dataset, a set of images is generated with either a square, or a circle or a
-    triangle, or two of them, or all of them. A random background color is applied, and shape color
-    itself is also randomly generated.
+    In such a dataset, a set of images is generated with either a square, or a
+    circle or a triangle, or two of them, or all of them. A random background
+    color is applied, and shape color itself is also randomly generated. Each
+    of these labels are characterized with a fixed color for comparison between
+    ground truth and predictions: squares, circles and triangles will be
+    respectively set as blue, red and green, whilst background will be set as
+    light grey.
 
     Attributes
     ----------
@@ -309,13 +313,13 @@ class ShapeDataset(Dataset):
     """
 
     SQUARE = 0
-    SQUARE_COLOR = (50, 50, 200)
+    SQUARE_COLOR = (50, 50, 200) # Blue
     CIRCLE = 1
-    CIRCLE_COLOR = (200, 50, 50)
+    CIRCLE_COLOR = (200, 50, 50) # Red
     TRIANGLE = 2
-    TRIANGLE_COLOR = (50, 200, 50)
+    TRIANGLE_COLOR = (50, 200, 50) # Green
     BACKGROUND = 3
-    BACKGROUND_COLOR = (200, 200, 200)
+    BACKGROUND_COLOR = (200, 200, 200) # Light grey
 
     def __init__(self, image_size):
         """ Class constructor
