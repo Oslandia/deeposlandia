@@ -59,8 +59,8 @@ def aggregate_config(config, df):
     assert len(config['labels']) == df.shape[0], "should have the same size"
     result = {'folder_structure': config['folder_structure']}
     result['labels'] = []
-    nb_labels = len(df.new_label.unique())
-    intgen = (i for i in range(nb_labels))
+    nb_labels = df.new_label.nunique()
+    intgen = iter(range(nb_labels))
     palette = set_label_color(nb_labels)
     for key, group in df.groupby("new_label"):
         d = {'id': next(intgen),

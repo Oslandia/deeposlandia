@@ -110,16 +110,14 @@ class Dataset:
         if label_id in self.label_info:
             utils.logger.error("Label {} already stored into the label set.".format(label_id))
             return None
+        category = label_name if category is None else category
+        contains = label_name if contained_labels is None else contained_labels
         self.label_info.append({"name": label_name,
                                 "id": label_id,
-                                "category": (label_name
-                                             if category is None
-                                             else category),
+                                "category": category,
                                 "is_evaluate": is_evaluate,
                                 "aggregate": aggregated_label_ids,
-                                "contains": (label_name
-                                             if contained_labels is None
-                                             else contained_labels),
+                                "contains": contained_labels,
                                 "color": color})
 
     def save(self, filename):
@@ -250,7 +248,8 @@ class MapillaryDataset(Dataset):
         final_img_in = utils.mono_crop_image(img_in, crop_pix)
 
         # save final image
-        new_in_filename = os.path.join(output_dir, 'images', image_filename.split('/')[-1])
+        new_in_filename = os.path.join(output_dir, 'images',
+                                       os.path.basename(image_filename))
         final_img_in.save(new_in_filename)
 
         # label_filename vs label image
@@ -267,7 +266,7 @@ class MapillaryDataset(Dataset):
             labels = utils.mapillary_label_building(final_img_out,
                                                     self.label_ids)
             new_out_filename = os.path.join(output_dir, 'labels',
-                                            label_filename.split('/')[-1])
+                                            os.path.basename(label_filename))
             final_img_out = utils.build_image_from_config(final_img_out,
                                                           self.label_info)
             final_img_out.save(new_out_filename)

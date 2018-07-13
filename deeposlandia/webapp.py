@@ -164,7 +164,7 @@ def prediction():
     dict
         Deep learning model predictions
     """
-    filename = request.args.get('img').split("/")[-1]
+    filename = os.path.basename(request.args.get('img'))
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
@@ -232,8 +232,8 @@ def demo_image_selector():
     """
     dataset = request.args.get('dataset')
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
-    server_folder = os.path.join("deeposlandia", "static", dataset_code, "images")
-    client_folder = os.path.join("/", "static", dataset_code, "images")
+    server_folder = os.path.join(app.static_folder, dataset_code, "images")
+    client_folder = os.path.join(app.static_url_path, dataset_code, "images")
     filename = np.random.choice(os.listdir(server_folder))
     image_file = os.path.join(client_folder, filename)
     label_file = image_file.replace("images", "labels")
