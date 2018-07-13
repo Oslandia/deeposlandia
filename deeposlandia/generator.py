@@ -85,7 +85,7 @@ def semantic_segmentation_labelling(img, label_config):
     return one_hot_encoding
 
 
-def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=None):
+def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
     """Build a couple of generator fed by image and label repository, respectively
 
     The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
@@ -102,8 +102,6 @@ def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=
         Number of width (resp. height) pixels
     batch_size : integer
         Number of images in each training batch
-    color_mode : str
-        Color mode, `grayscale` if labels are stored as integer, or `rgb` if
     they are stored as RGB pixels
     seed : integer
         Random number generation for data shuffling and transformations
@@ -119,7 +117,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=
                                          target_size=(image_size, image_size),
                                          batch_size=batch_size,
                                          class_mode=None,
-                                         color_mode=color_mode,
+                                         color_mode='rgb',
                                          seed=seed)
 
 def create_generator(dataset, model, datapath, image_size, batch_size, label_config,
@@ -158,9 +156,8 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
                                      batch_size, 'rgb', seed)
     if inference:
         return image_generator
-    color_mode = 'grayscale' if dataset == 'mapillary' else 'rgb'
     label_generator = feed_generator(datapath, "labels", image_size,
-                                     batch_size, color_mode, seed)
+                                     batch_size, seed)
     if model == 'feature_detection':
         label_generator = (feature_detection_labelling(x, label_config)
                            for x in label_generator)
