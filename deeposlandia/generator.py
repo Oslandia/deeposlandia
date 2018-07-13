@@ -155,7 +155,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
     if not dataset in ['shapes', 'mapillary']:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size,
-                                     batch_size, 'rgb', seed)
+                                     batch_size, seed)
     if inference:
         return image_generator
     label_generator = feed_generator(datapath, "labels", image_size,
