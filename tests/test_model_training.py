@@ -52,7 +52,6 @@ def test_model_backup_loading(shapes_image_size, shapes_sample_config, shapes_te
     model = Model(cnn.X, cnn.Y)
     old_weights = model.get_weights()
     checkpoint_path = os.path.join(str(shapes_temp_dir), "checkpoints")
-    print(checkpoint_path)
     if os.path.isdir(checkpoint_path):
         checkpoints = os.listdir(checkpoint_path)
         if len(checkpoints) > 0:
