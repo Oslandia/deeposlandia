@@ -86,7 +86,8 @@ class Dataset:
 
 
     def add_label(self, label_id, label_name, color, is_evaluate,
-                  category=None, aggregate=None):
+                  category=None, aggregated_label_ids=None,
+                  contained_labels=None):
         """ Add a new label to the dataset with label id `label_id`
 
         Parameters
@@ -101,18 +102,22 @@ class Dataset:
         is_evaluate : bool
         category : str
             String designing the category of the dataset label
-        aggregate : list (optional)
+        aggregate_label_ids : list (optional)
             List of label ids aggregated by the current label_id
+        contained_labels : list
+            List of raw labels aggregated by the current label
         """
         if label_id in self.label_info:
             utils.logger.error("Label {} already stored into the label set.".format(label_id))
             return None
+        category = label_name if category is None else category
+        contains = label_name if contained_labels is None else contained_labels
         self.label_info.append({"name": label_name,
                                 "id": label_id,
-                                "category": (label_name if category is None
-                                             else category),
+                                "category": category,
                                 "is_evaluate": is_evaluate,
-                                "aggregate": aggregate,
+                                "aggregate": aggregated_label_ids,
+                                "contains": contained_labels,
                                 "color": color})
 
     def save(self, filename):
@@ -191,7 +196,8 @@ class MapillaryDataset(Dataset):
             name_items = label["name"].split('--')
             category = '-'.join(name_items)
             self.add_label(lab_id, name_items, label["color"],
-                           label['evaluate'], category, label.get('aggregate'))
+                           label['evaluate'], category, label["contains_id"],
+                           label['contains'])
 
     def group_image_label(self, image):
         """Group the labels
@@ -211,7 +217,7 @@ class MapillaryDataset(Dataset):
         # (manually built)
         a = np.array(image)
         for root_id, label in enumerate(self.label_info):
-            for label_id, _ in label['aggregate']:
+            for label_id in label['aggregate']:
                 mask = a == label_id
                 a[mask] = root_id
         return Image.fromarray(a, mode=image.mode)
@@ -242,7 +248,8 @@ class MapillaryDataset(Dataset):
         final_img_in = utils.mono_crop_image(img_in, crop_pix)
 
         # save final image
-        new_in_filename = os.path.join(output_dir, 'images', image_filename.split('/')[-1])
+        new_in_filename = os.path.join(output_dir, 'images',
+                                       os.path.basename(image_filename))
         final_img_in.save(new_in_filename)
 
         # label_filename vs label image
@@ -256,8 +263,12 @@ class MapillaryDataset(Dataset):
             if aggregate:
                 final_img_out = self.group_image_label(final_img_out)
 
-            labels = utils.mapillary_label_building(final_img_out, self.label_ids)
-            new_out_filename = os.path.join(output_dir, 'labels', label_filename.split('/')[-1])
+            labels = utils.mapillary_label_building(final_img_out,
+                                                    self.label_ids)
+            new_out_filename = os.path.join(output_dir, 'labels',
+                                            os.path.basename(label_filename))
+            final_img_out = utils.build_image_from_config(final_img_out,
+                                                          self.label_info)
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None

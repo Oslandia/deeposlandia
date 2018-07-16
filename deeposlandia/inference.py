@@ -286,9 +286,10 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             labelled_images[predicted_labels == i] = train_config["labels"][i]["color"]
         for predicted_labels, filename in zip(labelled_images, flattened_image_paths):
             predicted_image = Image.fromarray(predicted_labels, 'RGB')
-            predicted_image_path = os.path.join(output_dir, filename.split("/")[-1])
+            predicted_image_path = os.path.join(output_dir,
+                                                os.path.basename(filename))
             predicted_image.save(predicted_image_path)
-            result[filename] = filename.split("/")[-1]
+            result[filename] = os.path.basename(filename)
         return {'labels': summarize_config(meaningful_labels),
                 'label_images': result}
     else:

@@ -22,7 +22,9 @@ def recover_label_id(img, label_config):
         Array of pixel labels of shape (width, heigth)
     """
     reshaped_img = img.reshape([-1, 3])
-    label_img = np.zeros(shape=reshaped_img.shape[0], dtype=reshaped_img.dtype)
+    label_img = np.full(shape=reshaped_img.shape[0],
+                        fill_value=-1,
+                        dtype=reshaped_img.dtype)
     for label in label_config:
         label_img[np.all(label['color']==reshaped_img, axis=1)] = label['id']
     return label_img.reshape(img.shape[:3])
@@ -43,16 +45,14 @@ def feature_detection_labelling(img, label_config):
     numpy.array
         Label encoding, array of shape (batch_size, nb_labels)
     """
-    if not (img.shape[1] == img.shape[2] and
-            (len(img.shape) == 3 or len(img.shape) == 4)):
-        raise ValueError(("Wrong image shape. Please provide batched images "
-                          "with equal width and height dimensions."))
+    if not (img.shape[1] == img.shape[2] and len(img.shape) == 4):
+        raise ValueError(("Wrong image shape. Please provide batched RGB-"
+                          "images with equal width and height dimensions."))
     label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
-    if len(img.shape) == 4 and img.shape[3] > 1:
-        img = recover_label_id(img, label_config);
+    img = recover_label_id(img, label_config);
     flattened_images = img.reshape(img.shape[0], -1).astype(np.uint8)
     one_hot_encoding = np.equal.outer(flattened_images, label_ids)
     return one_hot_encoding.any(axis=1)
@@ -74,18 +74,20 @@ def semantic_segmentation_labelling(img, label_config):
         Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
     of the ith label for each pixel
     """
+    if not (img.shape[1] == img.shape[2] and len(img.shape) == 4):
+        raise ValueError(("Wrong image shape. Please provide batched RGB-"
+                          "images with equal width and height dimensions."))
     label_ids = [item['id'] for item in label_config if item['is_evaluate']]
     if not all(isinstance(item, (int, np.uint8, np.uint32, np.uint64)) for item in label_ids):
         raise ValueError(("List of label IDs must contains "
                           "integers: {}").format(label_ids))
-    if len(img.shape) == 4 and img.shape[3] > 1:
-        img = recover_label_id(img, label_config);
+    img = recover_label_id(img, label_config);
     img = img.squeeze().astype(np.uint8)
     one_hot_encoding = np.equal.outer(img, label_ids)
     return one_hot_encoding
 
 
-def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=None):
+def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
     """Build a couple of generator fed by image and label repository, respectively
 
     The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
@@ -102,8 +104,6 @@ def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=
         Number of width (resp. height) pixels
     batch_size : integer
         Number of images in each training batch
-    color_mode : str
-        Color mode, `grayscale` if labels are stored as integer, or `rgb` if
     they are stored as RGB pixels
     seed : integer
         Random number generation for data shuffling and transformations
@@ -119,7 +119,7 @@ def feed_generator(datapath, gen_type, image_size, batch_size, color_mode, seed=
                                          target_size=(image_size, image_size),
                                          batch_size=batch_size,
                                          class_mode=None,
-                                         color_mode=color_mode,
+                                         color_mode='rgb',
                                          seed=seed)
 
 def create_generator(dataset, model, datapath, image_size, batch_size, label_config,
@@ -155,12 +155,11 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
     if not dataset in ['shapes', 'mapillary']:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size,
-                                     batch_size, 'rgb', seed)
+                                     batch_size, seed)
     if inference:
         return image_generator
-    color_mode = 'grayscale' if dataset == 'mapillary' else 'rgb'
     label_generator = feed_generator(datapath, "labels", image_size,
-                                     batch_size, color_mode, seed)
+                                     batch_size, seed)
     if model == 'feature_detection':
         label_generator = (feature_detection_labelling(x, label_config)
                            for x in label_generator)

@@ -18,23 +18,23 @@ def test_feature_detection_labelling_concise():
     * test if both representation provides the same information (native array on the first hand and
     its one-hot version on the second hand)
     """
-    a = np.array([[[0, 0, 0],
-                   [3, 3, 0],
-                   [3, 3, 3]],
-                  [[2, 2, 0],
-                   [1, 2, 0],
-                   [2, 1, 0]]])
-    labels = np.unique(a).tolist()
-    wrong_config = [{'id': '0', 'is_evaluate': True},
-                    {'id': '1', 'is_evaluate': True},
-                    {'id': '2', 'is_evaluate': True},
-                    {'id': '3', 'is_evaluate': True}]
+    a = np.array([[[[10, 10, 200], [10, 10, 200], [10, 10, 200]],
+                   [[200, 200, 200], [200, 200, 200], [10, 10, 200]],
+                   [[200, 200, 200], [200, 200, 200], [200, 200, 200]]],
+                  [[[10, 200, 10], [10, 200, 10], [10, 10, 200]],
+                   [[200, 10, 10], [10, 200, 10], [10, 10, 200]],
+                   [[10, 200, 10], [200, 10, 10], [10, 10, 200]]]])
+    labels = np.unique(a.reshape(-1, 3), axis=0).tolist()
+    wrong_config = [{'id': '0', 'color': [10, 10, 200], 'is_evaluate': True},
+                    {'id': '1', 'color': [200, 10, 10], 'is_evaluate': True},
+                    {'id': '2', 'color': [10, 200, 10], 'is_evaluate': True},
+                    {'id': '3', 'color': [200, 200, 200], 'is_evaluate': True}]
     with pytest.raises(ValueError):
         b = generator.feature_detection_labelling(a, wrong_config)
-    config = [{'id': 0, 'is_evaluate': True},
-              {'id': 1, 'is_evaluate': True},
-              {'id': 2, 'is_evaluate': True},
-              {'id': 3, 'is_evaluate': True}]
+    config = [{'id': 0, 'color': [10, 10, 200], 'is_evaluate': True},
+              {'id': 1, 'color': [200, 10, 10], 'is_evaluate': True},
+              {'id': 2, 'color': [10, 200, 10], 'is_evaluate': True},
+              {'id': 3, 'color': [200, 200, 200], 'is_evaluate': True}]
     b = generator.feature_detection_labelling(a, config)
     assert b.shape == (a.shape[0], len(labels))
     assert b.tolist() == [[True, False, False, True],
@@ -53,23 +53,23 @@ def test_feature_detection_labelling_sparse():
     * test if both representation provides the same information (native array on the first hand and
     its one-hot version on the second hand)
     """
-    a = np.array([[[0, 0, 0, 1],
-                   [3, 3, 0, 1],
-                   [3, 3, 3, 0],
-                   [3, 3, 3, 0]],
-                  [[1, 1, 2, 1],
-                   [3, 2, 2, 2],
-                   [1, 1, 1, 3],
-                   [1, 1, 2, 3]]])
-    labels = np.unique(a).tolist()[:-1]
-    wrong_config = [{'id': '0', 'is_evaluate': True},
-                    {'id': '1', 'is_evaluate': True},
-                    {'id': '2', 'is_evaluate': True}]
+    a = np.array([[[[10, 10, 200], [10, 10, 200], [10, 10, 200], [200, 10, 10]],
+                   [[200, 200, 200], [200, 200, 200], [10, 10, 200], [200, 10, 10]],
+                   [[200, 200, 200], [200, 200, 200], [200, 200, 200], [10, 10, 200]],
+                   [[200, 200, 200], [200, 200, 200], [200, 200, 200], [10, 10, 200]]],
+                  [[[200, 10, 10], [200, 10, 10], [10, 200, 10], [200, 10, 10]],
+                   [[200, 200, 200], [10, 200, 10], [10, 200, 10], [10, 200, 10]],
+                   [[200, 10, 10], [200, 10, 10], [200, 10, 10], [200, 200, 200]],
+                   [[200, 10, 10], [200, 10, 10], [10, 200, 10], [200, 200, 200]]]])
+    labels = np.unique(a.reshape(-1, 3), axis=0).tolist()[:-1]
+    wrong_config = [{'id': '0', 'color': [10, 10, 200], 'is_evaluate': True},
+                    {'id': '1', 'color': [200, 10, 10], 'is_evaluate': True},
+                    {'id': '2', 'color': [10, 200, 10], 'is_evaluate': True}]
     with pytest.raises(ValueError):
         b = generator.feature_detection_labelling(a, wrong_config)
-    config = [{'id': 0, 'is_evaluate': True},
-              {'id': 1, 'is_evaluate': True},
-              {'id': 2, 'is_evaluate': True}]
+    config = [{'id': 0, 'color': [10, 10, 200], 'is_evaluate': True},
+              {'id': 1, 'color': [200, 10, 10], 'is_evaluate': True},
+              {'id': 2, 'color': [10, 200, 10], 'is_evaluate': True}]
     b = generator.feature_detection_labelling(a, config)
     assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.tolist() == [[True, True, False],
@@ -125,24 +125,24 @@ def test_semantic_segmentation_labelling_concise():
       first hand and its one-hot version on the second hand)
 
     """
-    a = np.array([[[1, 1, 3],
-                   [3, 3, 1],
-                   [3, 3, 3]],
-                  [[1, 1, 0],
-                   [2, 2, 0],
-                   [1, 1, 0]]])
-    labels = np.unique(a).tolist()
-    wrong_config = [{'id': '0', 'is_evaluate': True},
-                    {'id': '1', 'is_evaluate': True},
-                    {'id': '2', 'is_evaluate': True},
-                    {'id': '3', 'is_evaluate': True}]
+    a = np.array([[[[200, 10, 10], [200, 10, 10], [200, 200, 200]],
+                   [[200, 200, 200], [200, 200, 200], [200, 10, 10]],
+                   [[200, 200, 200], [200, 200, 200], [200, 200, 200]]],
+                  [[[200, 10, 10], [200, 10, 10], [10, 10, 200]],
+                   [[10, 200, 10], [10, 200, 10], [10, 10, 200]],
+                   [[200, 10, 10], [200, 10, 10], [10, 10, 200]]]])
+    labels = np.unique(a.reshape(-1, 3), axis=0).tolist()
+    wrong_config = [{'id': '0', 'color': [10, 10, 200], 'is_evaluate': True},
+                    {'id': '1', 'color': [200, 10, 10], 'is_evaluate': True},
+                    {'id': '2', 'color': [10, 200, 10], 'is_evaluate': True},
+                    {'id': '3', 'color': [200, 200, 200], 'is_evaluate': True}]
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
     with pytest.raises(ValueError):
         b = generator.semantic_segmentation_labelling(a, wrong_config)
-    config = [{'id': 0, 'is_evaluate': True},
-              {'id': 1, 'is_evaluate': True},
-              {'id': 2, 'is_evaluate': True},
-              {'id': 3, 'is_evaluate': True}]
+    config = [{'id': 0, 'color': [10, 10, 200], 'is_evaluate': True},
+              {'id': 1, 'color': [200, 10, 10], 'is_evaluate': True},
+              {'id': 2, 'color': [10, 200, 10], 'is_evaluate': True},
+              {'id': 3, 'color': [200, 200, 200], 'is_evaluate': True}]
     b = generator.semantic_segmentation_labelling(a, config)
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
     assert b.tolist() == [[[[False, True, False, False],
@@ -177,22 +177,22 @@ def test_semantic_segmentation_labelling_sparse():
       first hand and its one-hot version on the second hand)
 
     """
-    a = np.array([[[1, 1, 3],
-                   [3, 3, 1],
-                   [3, 4, 3]],
-                  [[1, 1, 0],
-                   [3, 4, 0],
-                   [1, 1, 0]]])
-    labels = [0, 2, 3]
+    a = np.array([[[[200, 10, 10], [200, 10, 10], [200, 200, 200]],
+                   [[200, 200, 200], [200, 200, 200], [200, 10, 10]],
+                   [[200, 200, 200], [100, 100, 100], [200, 200, 200]]],
+                  [[[200, 10, 10], [200, 10, 10], [10, 10, 200]],
+                   [[200, 200, 200], [100, 100, 100], [10, 10, 200]],
+                   [[200, 10, 10], [200, 10, 10], [10, 10, 200]]]])
     asum, _ = np.histogram(a.reshape(-1), range=(np.amin(a), np.amax(a)))
-    wrong_config = [{'id': '0', 'is_evaluate': True},
-                    {'id': '2', 'is_evaluate': True},
-                    {'id': '3', 'is_evaluate': True}]
+    wrong_config = [{'id': '0', 'color': [10, 10, 200], 'is_evaluate': True},
+                    {'id': '2', 'color': [10, 200, 10], 'is_evaluate': True},
+                    {'id': '3', 'color': [200, 200, 200], 'is_evaluate': True}]
     with pytest.raises(ValueError):
         b = generator.semantic_segmentation_labelling(a, wrong_config)
-    config = [{'id': 0, 'is_evaluate': True},
-              {'id': 2, 'is_evaluate': True},
-              {'id': 3, 'is_evaluate': True}]
+    config = [{'id': 0, 'color': [10, 10, 200], 'is_evaluate': True},
+              {'id': 2, 'color': [10, 200, 10], 'is_evaluate': True},
+              {'id': 3, 'color': [200, 200, 200], 'is_evaluate': True}]
+    labels = [item["id"] for item in config]
     b = generator.semantic_segmentation_labelling(a, config)
     assert len(labels) != np.amax(a) - np.amin(a) + 1
     assert b.shape == (a.shape[0], a.shape[1], a.shape[2], len(labels))
