@@ -4,6 +4,7 @@
 import argparse
 import itertools
 import json
+import numpy as np
 import os
 import sys
 
@@ -286,7 +287,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                validation_data=validation_generator,
                                validation_steps=val_steps,
                                callbacks=[checkpoints, earlystop, terminate_on_nan])
-    ref_metric = max(hist.history['val_acc'])
+    ref_metric = max(hist.history.get("val_acc", [np.nan]))
     return {'model': model, 'val_acc': ref_metric,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,
             'learning_rate': learning_rate, 'learning_rate_decay': learning_rate_decay}
