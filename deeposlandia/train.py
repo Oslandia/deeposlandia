@@ -144,7 +144,8 @@ if __name__=='__main__':
                                                       aggregate_value)
 
     # Data gathering
-    if (os.path.isfile(prepro_folder["training_config"]) and os.path.isfile(prepro_folder["validation_config"])
+    if (os.path.isfile(prepro_folder["training_config"])
+        and os.path.isfile(prepro_folder["validation_config"])
         and os.path.isfile(prepro_folder["testing_config"])):
         train_config = utils.read_config(prepro_folder["training_config"])
         label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]

@@ -154,7 +154,8 @@ def get_data(folders, dataset, model, image_size, batch_size):
 
     """
     # Data gathering
-    if (os.path.isfile(folders["training_config"]) and os.path.isfile(folders["validation_config"])
+    if (os.path.isfile(folders["training_config"])
+        and os.path.isfile(folders["validation_config"])
         and os.path.isfile(folders["testing_config"])):
         train_config = utils.read_config(folders["training_config"])
         label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]
@@ -164,7 +165,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
             folders["training"],
             image_size,
             batch_size,
-            label_ids,
+            train_config["labels"],
             seed=SEED)
         validation_generator = generator.create_generator(
             dataset,
@@ -172,7 +173,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
             folders["validation"],
             image_size,
             batch_size,
-            label_ids,
+            train_config["labels"],
             seed=SEED)
         test_generator = generator.create_generator(
             dataset,
@@ -180,7 +181,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
             folders["testing"],
             image_size,
             batch_size,
-            label_ids,
+            train_config["labels"],
             inference=True,
             seed=SEED)
     else:
