@@ -266,6 +266,23 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
     # Model training
     steps = nb_training_image // batch_size
     val_steps = nb_validation_image // batch_size
+
+
+    checkpoints = [item for item in os.listdir(output_folder)
+                   if os.path.isfile(os.path.join(output_folder, item))]
+    if len(checkpoints) > 0:
+        model_checkpoint = max(checkpoints)
+        trained_model_epoch = int(model_checkpoint[-5:-3])
+        checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
+        model.load_weights(checkpoint_complete_path)
+        utils.logger.info(("Model weights have been recovered from {}"
+                           "").format(checkpoint_complete_path))
+    else:
+        utils.logger.info(("No available checkpoint for this configuration. "
+                           "The model will be trained from scratch."))
+        trained_model_epoch = 0
+
+
     checkpoint_filename = os.path.join(output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
     checkpoints = callbacks.ModelCheckpoint(
@@ -283,6 +300,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                         mode='auto')
     hist = model.fit_generator(train_generator,
                                epochs=nb_epochs,
+                               initial_epoch=trained_model_epoch,
                                steps_per_epoch=steps,
                                validation_data=validation_generator,
                                validation_steps=val_steps,
