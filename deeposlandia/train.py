@@ -237,13 +237,19 @@ if __name__=='__main__':
         save_best_only=True,
         save_weights_only=False,
         mode='auto', period=1)
+    terminate_on_nan = callbacks.TerminateOnNaN()
+    earlystop = callbacks.EarlyStopping(monitor='val_acc',
+                                        min_delta=0.001,
+                                        patience=10,
+                                        verbose=1,
+                                        mode='max')
 
     hist = model.fit_generator(train_generator,
                                epochs=args.nb_epochs,
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
                                validation_steps=VAL_STEPS,
-                               callbacks=[checkpoints],
+                               callbacks=[checkpoints, terminate_on_nan, earlystop],
                                initial_epoch=trained_model_epoch)
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
