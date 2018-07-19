@@ -294,9 +294,9 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
         mode='auto', period=1)
     terminate_on_nan = callbacks.TerminateOnNaN()
     earlystop = callbacks.EarlyStopping(monitor='val_acc',
-                                        min_delta=0.005,
-                                        patience=5,
-                                        verbose=0,
+                                        min_delta=0.001,
+                                        patience=10,
+                                        verbose=1,
                                         mode='auto')
     hist = model.fit_generator(train_generator,
                                epochs=nb_epochs,
