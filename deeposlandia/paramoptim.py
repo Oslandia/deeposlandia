@@ -268,10 +268,10 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
     val_steps = nb_validation_image // batch_size
 
 
-    checkpoints = [item for item in os.listdir(output_folder)
+    checkpoint_files = [item for item in os.listdir(output_folder)
                    if os.path.isfile(os.path.join(output_folder, item))]
-    if len(checkpoints) > 0:
-        model_checkpoint = max(checkpoints)
+    if len(checkpoint_files) > 0:
+        model_checkpoint = max(checkpoint_files)
         trained_model_epoch = int(model_checkpoint[-5:-3])
         checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
         model.load_weights(checkpoint_complete_path)
@@ -285,7 +285,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
 
     checkpoint_filename = os.path.join(output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
-    checkpoints = callbacks.ModelCheckpoint(
+    checkpoint = callbacks.ModelCheckpoint(
         checkpoint_filename,
         monitor='val_acc',
         verbose=0,
@@ -304,7 +304,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                steps_per_epoch=steps,
                                validation_data=validation_generator,
                                validation_steps=val_steps,
-                               callbacks=[checkpoints, earlystop, terminate_on_nan])
+                               callbacks=[checkpoint, earlystop, terminate_on_nan])
     ref_metric = max(hist.history.get("val_acc", [np.nan]))
     return {'model': model, 'val_acc': ref_metric,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,

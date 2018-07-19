@@ -214,10 +214,10 @@ if __name__=='__main__':
 
     output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
                                                 args.model, instance_name)
-    checkpoints = [item for item in os.listdir(output_folder)
+    checkpoint_files = [item for item in os.listdir(output_folder)
                    if os.path.isfile(os.path.join(output_folder, item))]
-    if len(checkpoints) > 0:
-        model_checkpoint = max(checkpoints)
+    if len(checkpoint_files) > 0:
+        model_checkpoint = max(checkpoint_files)
         trained_model_epoch = int(model_checkpoint[-5:-3])
         checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
         model.load_weights(checkpoint_complete_path)
@@ -230,7 +230,7 @@ if __name__=='__main__':
 
     checkpoint_filename = os.path.join(output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
-    checkpoints = callbacks.ModelCheckpoint(
+    checkpoint = callbacks.ModelCheckpoint(
         checkpoint_filename,
         monitor='val_acc',
         verbose=0,
@@ -249,7 +249,7 @@ if __name__=='__main__':
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
                                validation_steps=VAL_STEPS,
-                               callbacks=[checkpoints, terminate_on_nan, earlystop],
+                               callbacks=[checkpoint, terminate_on_nan, earlystop],
                                initial_epoch=trained_model_epoch)
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
