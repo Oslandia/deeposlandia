@@ -34,6 +34,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         super().__init__(network_name, image_size, nb_channels,
                          nb_labels, dropout)
         if architecture == "unet":
+            error_msg = """Please consider a divisible-per-16 image size for this architecture."""
+            assert image_size % 16 == 0, error_msg
             self.Y = self.unet()
         elif architecture == "dilated":
             self.Y = self.dilated()
