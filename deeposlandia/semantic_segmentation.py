@@ -219,7 +219,7 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         conv6 = K.layers.Dropout(0.5, name="do1")(conv6)
 
         conv7 = self.convolution(conv6, nb_filters=4096, kernel_size=1,
-                                 block_name="conv6_fe")
+                                 block_name="conv7_fe")
         conv7 = K.layers.Dropout(0.5, name="do2")(conv7)
 
         conv8 = self.convolution(conv7, nb_filters=self.nb_labels,
