@@ -334,13 +334,16 @@ if __name__=='__main__':
                                         patience=10,
                                         verbose=1,
                                         mode='max')
+    csv_logger = callbacks.CSVLogger(os.path.join(output_folder,
+                                                  'training_metrics.csv'))
 
     hist = model.fit_generator(train_generator,
                                epochs=args.nb_epochs,
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
                                validation_steps=VAL_STEPS,
-                               callbacks=[checkpoint, terminate_on_nan, earlystop],
+                               callbacks=[checkpoint, terminate_on_nan,
+                                          earlystop, csv_logger],
                                initial_epoch=trained_model_epoch)
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,

@@ -300,13 +300,17 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                         patience=10,
                                         verbose=1,
                                         mode='max')
+    csv_logger = callbacks.CSVLogger(os.path.join(output_folder,
+                                                  'training_metrics.csv'))
+
     hist = model.fit_generator(train_generator,
                                epochs=nb_epochs,
                                initial_epoch=trained_model_epoch,
                                steps_per_epoch=steps,
                                validation_data=validation_generator,
                                validation_steps=val_steps,
-                               callbacks=[checkpoint, earlystop, terminate_on_nan])
+                               callbacks=[checkpoint, earlystop,
+                                          terminate_on_nan, csv_logger])
     ref_metric = max(hist.history.get("val_acc", [np.nan]))
     return {'model': model, 'val_acc': ref_metric,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,
