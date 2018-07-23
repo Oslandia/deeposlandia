@@ -241,7 +241,7 @@ def demo_image_selector():
         label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join("deeposlandia", label_file[1:])
     server_label_image = np.array(Image.open(server_label_filename))
-    size_aggregation = "224_aggregated" if dataset == "mapillary" else "64_full"
+    size_aggregation = "400_aggregated" if dataset == "mapillary" else "64_full"
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
                            , "testing.json")) as fobj:
         config = json.load(fobj)
