@@ -206,6 +206,10 @@ Some symbolic links are needed to make the application work:
   during the app session as well as their corresponding predicted labelled
   version.
 
+These symlinks are created when the web application is launched. Their name as
+well as their destination are defined in `config.ini`, a config file located on
+the project root.
+
 # License
 
 The program license is described in [LICENSE.md](./LICENSE.md).
