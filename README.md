@@ -26,7 +26,7 @@ to image borders). The shape and background colors are randomly generated as wel
 
 The picture below shows an example of image generated in this way:
 
-![Example of shape image](./images/shape_00000.png)
+![Example of shape image](./images/shapes_example_2.png)
 
 # Content
 
@@ -186,6 +186,25 @@ The list of handled parameters is as follows:
   model).
 + `-n`: neural network name. Default to `None` (aims at identifying trained model).
 + `-p`: path to datasets, on the file system. Default to `./data`.
+
+## Flask application
+
+A Flask Web application may be launched locally through
+`deeposlandia/run_webapp.py`. By default, it is launched on `0.0.0.0/7897`.
+
+Some symbolic links are needed to make the application work:
++ `deeposlandia/static/sample_images` must contain the sample images, depicted
+  on application homepage as well as in demonstration web pages (before new
+  images are generated).
++ `deeposlandia/static/shapes` refers to the server-side repository that
+  contains shapes images and their labels.
++ `deeposlandia/static/mapillary_agg` refers to the server-side repository that
+  contains Mapillary images and their aggregated labels, *i.e.* 13 labels that
+  summarize the content of the 65 native Mapillary labels.
++ `deeposlandia/static/predicted_images` links to a temporary repository (for
+  instance, `/tmp/deeposlandia/predicted/`) that contains images generated
+  during the app session as well as their corresponding predicted labelled
+  version.
 
 # License
 
