@@ -1,6 +1,7 @@
 """Flask web application for deeposlandia
 """
 
+from configparser import ConfigParser
 import daiquiri
 from flask import (abort, Flask, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
@@ -29,6 +30,11 @@ logger = daiquiri.getLogger("deeposlandia-webapp")
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+config = ConfigParser()
+config.read("config.ini")
+for link_name, path in config.items("symlink"):
+    utils.create_symlink(os.path.join(app.static_folder, link_name), path)
 
 def check_model(model):
     """Check if `model` is valid, *i.e.* equal to `feature_detection` or
