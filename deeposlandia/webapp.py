@@ -218,6 +218,10 @@ def upload_image():
             filename = secure_filename(file.filename)
             full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(full_filename)
+            target_size = 400
+            image = Image.open(full_filename)
+            image = image.resize((target_size, target_size))
+            image.save(full_filename)
             return render_template('predictor.html', image_name=filename)
 
 
