@@ -87,7 +87,7 @@ class ConvolutionalNeuralNetwork:
         """
         x = K.layers.Conv2D(nb_filters, kernel_size=kernel_size,
                             strides=strides, dilation_rate=dilation_rate,
-                            padding='same',
+                            padding=padding,
                             name=self.layer_name(block_name, '_conv'))(x)
         if batch_norm:
             x = K.layers.BatchNormalization(name=self.layer_name(block_name, '_bn'))(x)
