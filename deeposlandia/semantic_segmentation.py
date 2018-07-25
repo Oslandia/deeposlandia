@@ -38,7 +38,7 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
             assert image_size % 16 == 0, error_msg
             self.Y = self.unet()
         elif architecture == "dilated":
-            self.Y = self.dilated()
+            self.Y = self.dilated(add_context=True)
         elif architecture == "simple":
             self.Y = self.simple()
         else:
@@ -163,7 +163,7 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
                                  block_name="conv9c")
         return K.layers.Activation('softmax', name='output_activation')(conv9)
 
-    def dilated(self):
+    def dilated(self, add_context=False):
         """Build a dilated convolution network with two parts: a front-end part
         which is essentially an adapted VGG network, and a context part that
         corresponds to a sequence of layers with dilated convolutions.
@@ -171,6 +171,11 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         See: Yu, Koltun (2016). Multi-scale context aggregation by dilated
         convolutions, ArXiV technical report. Available at
         https://arxiv.org/pdf/1511.07122.pdf
+
+        Parameters
+        ----------
+        add_context : boolean
+             If true, the context block is added to the architecture
 
         Returns
         -------
@@ -180,77 +185,85 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
 
         """
         conv1 = self.convolution(self.X, nb_filters=64, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv1a_fe")
         conv1 = self.convolution(conv1, nb_filters=64, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv1b_fe")
         pool1 = self.maxpool(conv1, pool_size=2, strides=2,
                              block_name="pool1_fe")
-
         conv2 = self.convolution(pool1, nb_filters=128, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv2a_fe")
         conv2 = self.convolution(conv2, nb_filters=128, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv2b_fe")
         pool2 = self.maxpool(conv2, pool_size=2, strides=2,
                              block_name="pool2_fe")
 
         conv3 = self.convolution(pool2, nb_filters=256, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv3a_fe")
         conv3 = self.convolution(conv3, nb_filters=256, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv3b_fe")
         conv3 = self.convolution(conv3, nb_filters=256, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv3c_fe")
         pool3 = self.maxpool(conv3, pool_size=2, strides=2,
                              block_name="pool3_fe")
 
         conv4 = self.convolution(pool3, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv4a_fe")
         conv4 = self.convolution(conv4, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv4b_fe")
         conv4 = self.convolution(conv4, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  block_name="conv4c_fe")
 
         conv5 = self.convolution(conv4, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  dilation_rate=2, block_name="conv5a_fe")
         conv5 = self.convolution(conv5, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  dilation_rate=2, block_name="conv5b_fe")
         conv5 = self.convolution(conv5, nb_filters=512, kernel_size=3,
+                                 batch_norm=False,
                                  dilation_rate=2, block_name="conv5c_fe")
 
         conv6 = self.convolution(conv5, nb_filters=4096, kernel_size=7,
+                                 batch_norm=False,
                                  dilation_rate=4, block_name="conv6_fe")
         conv6 = K.layers.Dropout(0.5, name="do1")(conv6)
 
         conv7 = self.convolution(conv6, nb_filters=4096, kernel_size=1,
+                                 batch_norm=False,
                                  block_name="conv7_fe")
         conv7 = K.layers.Dropout(0.5, name="do2")(conv7)
 
         conv8 = self.convolution(conv7, nb_filters=self.nb_labels,
+                                 batch_norm=False,
                                  kernel_size=1, activation="linear",
                                  block_name="conv8_fe")
 
-        context = K.layers.ZeroPadding2D(33)(conv8)
-        context = self.convolution(context, nb_filters=2*self.nb_labels,
-                                   kernel_size=3, dilation_rate=1,
-                                   block_name="conv1_ctx")
-        context = self.convolution(context, nb_filters=2*self.nb_labels,
-                                   kernel_size=3, dilation_rate=1,
-                                   block_name="conv2_ctx")
-        context = self.convolution(context, nb_filters=4*self.nb_labels,
-                                   kernel_size=3, dilation_rate=2,
-                                   block_name="conv3_ctx")
-        context = self.convolution(context, nb_filters=8*self.nb_labels,
-                                   kernel_size=3, dilation_rate=4,
-                                   block_name="conv4_ctx")
-        context = self.convolution(context, nb_filters=16*self.nb_labels,
-                                   kernel_size=3, dilation_rate=8,
-                                   block_name="conv5_ctx")
-        context = self.convolution(context, nb_filters=32*self.nb_labels,
-                                   kernel_size=3, dilation_rate=16,
-                                   block_name="conv6_ctx")
-        context = self.convolution(context, nb_filters=32*self.nb_labels,
-                                   kernel_size=3, dilation_rate=1,
-                                   block_name="conv7_ctx")
-        context = self.convolution(context, nb_filters=self.nb_labels,
-                                   kernel_size=1, dilation_rate=1,
-                                   activation="linear", block_name="conv8_ctx")
-        return context
+        if add_context:
+            dilated_net = self.add_dilated_context(conv8)
+        else:
+            dilated_net = conv8
+
+        # upsample
+        net = self.transposed_convolution(dilated_net, nb_filters=256,
+                                          batch_norm=False,
+                                          kernel_size=3, strides=2,
+                                          block_name="trconv1")
+        net = self.transposed_convolution(net, nb_filters=256,
+                                          batch_norm=False,
+                                          kernel_size=3, strides=2,
+                                          block_name="trconv2")
+        net = self.transposed_convolution(net, nb_filters=self.nb_labels,
+                                          batch_norm=False, activation="softmax",
+                                          kernel_size=3, strides=2,
+                                          block_name="trconv3")
+        return net

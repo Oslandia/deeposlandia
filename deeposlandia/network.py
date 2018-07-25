@@ -230,3 +230,49 @@ class ConvolutionalNeuralNetwork:
         ccname = self.layer_name(block_name, "_concat")
         upsample = K.layers.UpSampling2D(size=(2, 2), name=upname)(layer1)
         return K.layers.concatenate([upsample, layer2], axis=3, name=ccname)
+
+
+    def add_dilated_context(self, input_layer):
+        """Add a context block that corresponds to Yu et al. (2016) contribution, in
+        order to aggregate multi-scale contextual information
+
+        Parameters
+        ----------
+        input_layer : tensor
+            Input layer, before to add multi-scale context
+
+        """
+        context = K.layers.ZeroPadding2D(33)(input_layer)
+        context = self.convolution(context, nb_filters=2*self.nb_labels,
+                                   kernel_size=3, dilation_rate=1,
+                                   padding="valid",
+                                   block_name="conv1_ctx")
+        context = self.convolution(context, nb_filters=2*self.nb_labels,
+                                   kernel_size=3, dilation_rate=1,
+                                   padding="valid",
+                                   block_name="conv2_ctx")
+        context = self.convolution(context, nb_filters=4*self.nb_labels,
+                                   kernel_size=3, dilation_rate=2,
+                                   padding="valid",
+                                   block_name="conv3_ctx")
+        context = self.convolution(context, nb_filters=8*self.nb_labels,
+                                   kernel_size=3, dilation_rate=4,
+                                   padding="valid",
+                                   block_name="conv4_ctx")
+        context = self.convolution(context, nb_filters=16*self.nb_labels,
+                                   kernel_size=3, dilation_rate=8,
+                                   padding="valid",
+                                   block_name="conv5_ctx")
+        context = self.convolution(context, nb_filters=32*self.nb_labels,
+                                   kernel_size=3, dilation_rate=16,
+                                   padding="valid",
+                                   block_name="conv6_ctx")
+        context = self.convolution(context, nb_filters=32*self.nb_labels,
+                                   kernel_size=3, dilation_rate=1,
+                                   padding="valid",
+                                   block_name="conv7_ctx")
+        context = self.convolution(context, nb_filters=self.nb_labels,
+                                   kernel_size=1, dilation_rate=1,
+                                   padding="valid",
+                                   activation="linear", block_name="conv8_ctx")
+        return context
