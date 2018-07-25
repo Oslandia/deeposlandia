@@ -173,8 +173,7 @@ def prediction():
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(dataset, model,
-                                                                filename))
+    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename, dataset, model))
     predictions = predict([filename], "mapillary", "semantic_segmentation",
                           aggregate=True, output_dir=PREDICT_FOLDER)
     return jsonify(predictions)
