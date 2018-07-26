@@ -67,6 +67,39 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+def recover_image_info(dataset, filename):
+    """Recover image full name on the application as well as corresponding ground-truth labels
+
+    Parameters
+    ----------
+    dataset : str
+    filename : str
+
+    Returns
+    -------
+    dict
+        Dictionary that contains image full names (raw images and labelled version) and label infos
+
+    """
+    dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
+    image_file = os.path.join(dataset_code, "images", filename)
+    label_file = image_file.replace("images", "labels")
+    if dataset == "mapillary" or dataset == "mapillary_agg":
+        label_file = label_file.replace(".jpg", ".png")
+    server_label_filename = os.path.join(app.static_folder, label_file)
+    server_label_image = np.array(Image.open(server_label_filename))
+    size_aggregation = "224_aggregated" if dataset == "mapillary" else "64_full"
+    with open(os.path.join("data", dataset, "preprocessed", size_aggregation
+                           , "testing.json")) as fobj:
+        config = json.load(fobj)
+    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+    printed_labels = [(item['category'], utils.RGBToHTMLColor(item['color']))
+                      for item in config['labels']
+                      if item['color'] in actual_labels]
+    return {"image_file": image_file, "label_file": label_file, "labels": printed_labels}
+
+
 @app.route('/')
 def index():
     """Route to application home page
@@ -117,14 +150,23 @@ def predictor():
     Jinja template
         Template for predictor web page fed with an image filename
     """
-    filename = os.path.join("sample_image", "example.jpg")
+    filename = os.path.join("sample_image", "ajaccio.png")
     return render_template("predictor.html", example_image=filename)
 
 
-@app.route("/demo_prediction")
-def demo_prediction():
+@app.route("/predictor_demo/<string:model>/<string:dataset>/<image>")
+def predictor_demo(model, dataset, image):
     """Route to a jsonified version of deep learning model predictions, for
     demo case
+
+    Parameters
+    ----------
+    model : str
+        Considered research problem (either `feature_detection` or `semantic_segmentation`)
+    dataset : str
+        Considered dataset (either `shapes` or `mapillary`)
+    image : str
+        Name of the demo image onto the server
 
     Returns
     -------
@@ -132,25 +174,48 @@ def demo_prediction():
         Deep learning model prediction for demo page (depends on the chosen
     model, either feature detection or semantic segmentation)
     """
-    filename = request.args.get('img')
-    filename = os.path.join("deeposlandia", filename[1:])
-    dataset = request.args.get('dataset')
     agg_value = dataset == "mapillary"
-    model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename,
+    utils.logger.info("file: {}, dataset: {}, model: {}".format(image,
                                                                 dataset,
                                                                 model))
+    agg_value = dataset == "mapillary"
+    image_info = recover_image_info(dataset, image)
+    gt_labels = "<ul>"
+    for label, color in image_info["labels"]:
+        gt_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
+    gt_labels += "</ul>"
+    predictions = predict([os.path.join(app.static_folder, image_info["image_file"])],
+                          dataset,
+                          model,
+                          aggregate=agg_value,
+                          output_dir=PREDICT_FOLDER)
+    print(predictions)
     if model == "feature_detection":
-        predictions = predict([filename], dataset, model, aggregate=agg_value)
-        return jsonify(predictions)
+        predicted_labels = "<ul>"
+        for label, info in predictions[os.path.join(app.static_folder, image_info["image_file"])]:
+            if label != "background":
+                predicted_labels += ("<li><font color='" + info['color'] + "'>"
+                                     + label + ": " + str(info['probability'])
+                                     + "%</font></li>")
+        predicted_labels += "</ul>"
     elif model == "semantic_segmentation":
-        predictions = predict([filename], dataset, model, aggregate=agg_value,
-                              output_dir=PREDICT_FOLDER)
-        return jsonify(predictions)
+        predicted_image = os.path.join(app.static_url_path, "predicted_images", image)
+        predicted_labels = "<img id='predictions' src='" + predicted_image + "'>"
+        predicted_labels += "<ul>"
+        for label, color in predictions["labels"]:
+            if label != "background":
+                predicted_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
+        predicted_labels += "</ul>"
     else:
-        utils.logger.error(("Unknown model. Please choose "
-                            "'feature_detection' or 'semantic_segmentation'."))
-        return ""
+        raise ValueError(("Unknown model, please provide 'feature_detection'"
+                            "or 'semantic_segmentation'."))
+    return render_template(dataset + '_demo.html',
+                           model=model,
+                           image_filename=image_info["image_file"],
+                           label_filename=image_info["label_file"],
+                           ground_truth=gt_labels,
+                           prediction_filename=image_info["label_file"],
+                           result=predicted_labels)
 
 
 @app.route("/prediction")
@@ -235,36 +300,5 @@ def demo_image_selector():
     dataset = request.args.get('dataset')
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
     server_folder = os.path.join(app.static_folder, dataset_code, "images")
-    client_folder = os.path.join(app.static_url_path, dataset_code, "images")
     filename = np.random.choice(os.listdir(server_folder))
-    image_file = os.path.join(client_folder, filename)
-    label_file = image_file.replace("images", "labels")
-    if dataset == "mapillary" or dataset == "mapillary_agg":
-        label_file = label_file.replace(".jpg", ".png")
-    server_label_filename = os.path.join("deeposlandia", label_file[1:])
-    server_label_image = np.array(Image.open(server_label_filename))
-    if dataset == 'shapes':
-        size_aggregation = "64_full"
-        datapath = "data"
-        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
-    elif dataset == 'mapillary':
-        size_aggregation = "400_aggregated"
-        datapath = "data"
-        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
-    elif dataset == 'aerial':
-        size_aggregation = "250_full"
-        datapath = "data"
-        actual_labels = np.unique(server_label_image.reshape([-1]), axis=0).tolist()
-    else:
-        raise ValueError(("Invalid dataset, please choose 'shapes', "
-                          "'mapillary' or 'aerial'."))
-    with open(os.path.join(datapath, dataset, "preprocessed", size_aggregation
-                           , "testing.json")) as fobj:
-        config = json.load(fobj)
-    printed_labels = {item['category']: utils.GetHTMLColor(item['color'])
-                      for item in config['labels']
-                      if item['color'] in actual_labels}
-    return jsonify(image_name=filename,
-                   image_file=image_file,
-                   label_file=label_file,
-                   labels=printed_labels)
+    return jsonify(image_name=filename)
