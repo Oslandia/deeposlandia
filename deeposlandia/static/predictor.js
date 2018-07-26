@@ -9,7 +9,7 @@ document.getElementById("predict_button").addEventListener("click", function(){
   console.log("Prediction OK!");
 
   function predict_labels(filename, dataset, model){
-    
+
     $.getJSON('/prediction', {
       img: filename,
       dataset: dataset,
@@ -22,9 +22,9 @@ document.getElementById("predict_button").addEventListener("click", function(){
 	result.push("<img id='predicted_image'><label>Predicted labels</label>");
       });
       result.push("<ul>");
-      $.each(data.labels, function(label, color){
+      $.each(data.labels, function(id, label){
 	if (label != "background") {
-    	  result.push("<li><font color='" + color + "'>" + label + "</font></li>" );
+    	  result.push("<li><font color='" + label[1] + "'>" + label[0] + "</font></li>" );
 	}
       });
       result.push("</ul>");
