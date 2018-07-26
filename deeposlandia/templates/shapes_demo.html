@@ -2,6 +2,8 @@
 
 {% block content %}
 
+{{ flask_util_js.js }}
+
 <script>
   const dataset = "shapes";
   const model = "{{ model }}";
@@ -41,19 +43,19 @@
   <div class="column column-left">
     <label>Raw image</label>
     <br>
-    <img id="raw_image" src="{{url_for('static', filename=sample_filename)}}">
+    <img id="raw_image" height="64" width="64" src="{{url_for('static', filename=image_filename)}}">
   </div>
   <div class="column column-center">
     <label>Ground-truth</label>
     <br>
-    <img id="ground_truth" src="{{url_for('static', filename=sample_filename)}}">
+    <img id="ground_truth" height="64" width="64" src="{{url_for('static', filename=label_filename)}}">
     <br>
-    <span id="ground_truth_labels"></span>
+    <span id="ground_truth_labels"> {{ ground_truth|safe }} </span>
   </div>
   <div class="column column-right">
     <label>Prediction</label>
     <br>
-    <span id="result">What does contain this image?</span>
+    <span id="result"> {{ result|safe }} </span>
   </div>
 </div>
 

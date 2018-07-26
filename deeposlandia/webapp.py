@@ -80,7 +80,7 @@ def index():
 
 
 @app.route("/predictor_demo/<string:model>/<string:dataset>")
-def predictor_demo(model, dataset):
+def demo_homepage(model, dataset):
     """Route to a demo page dedicated to `model` and ̀dataset`
 
     Parameters
@@ -98,19 +98,13 @@ def predictor_demo(model, dataset):
     """
     check_model(model)
     check_dataset(dataset)
-    if dataset == "shapes":
-        sample_filename = os.path.join("sample_image", "shape_example.png")
-        return render_template('shape_demo.html', model=model,
-                               sample_filename=sample_filename)
-    elif dataset == "mapillary":
-        sample_filename = os.path.join("sample_image", "example.jpg")
-        return render_template('mapillary_demo.html', model=model,
-                               sample_filename=sample_filename)
-    else:
-        sample_filename = os.path.join("sample_image",
-                                       "aerial_image_example.png")
-        return render_template('aerial_demo.html', model=model,
-                               sample_filename=sample_filename)
+    return render_template(dataset + '_demo.html',
+                           model=model,
+                           image_filename=os.path.join("sample_image", "raw_image.png"),
+                           label_filename=os.path.join("sample_image", "ground_truth.png"),
+                           ground_truth="",
+                           prediction_filename=os.path.join("sample_image", "prediction.png"),
+                           result="")
 
 
 @app.route("/predictor")
