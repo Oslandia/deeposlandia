@@ -26,6 +26,24 @@ a smaller set of 2000 images (the validation occurred at the end of each
 training epoch), in order to ensure that learned features are as generic as
 possible.</p>
 
+<p>As a recall, one can list the 13 Mapillary aggregated labels that were used during the model training:
+  <ul>
+    <li>animal: ground animal or birds</li>
+    <li>construction (barrier): curbs, fences, guard rails and other barriers</li>
+    <li>construction (flat): ground areas like roads, parkings, bike lanes...</li>
+    <li>construction (structure): buildings, bridges, tunnels</li>
+    <li>human</li>
+    <li>rider: human on a bike, a motorbike or a horse</li>
+    <li>marking</li>
+    <li>nature: mountain, sand, sky, vegetation</li>
+    <li>traffic-sign</li>
+    <li>support: pole, traffic-sign frame, utility pole</li>
+    <li>vehicule</li>
+    <li>object: miscellaneous objects</li>
+    <li>void: own vehicle or unlabeled pixels</li>
+  </ul>
+</p>
+
 <h4>Use the deep learning model to predict image labels</h4>
 
 <p>
@@ -37,6 +55,9 @@ possible.</p>
   <b>Disclaimer:</b> The model expect street-scene images. You can try whatever
   picture you want, however in the case you pick another type of scene, do not
   be surprised if the result looks weird...
+</p>
+<p>
+  <b>Disclaimer 2:</b> The neural network was trained with 400*400 pixel images, that sounds quite small in regard with current camera resolutions. You should expect a more or less important pixelization phenomenon depending on your image size.
 </p>
 
 <form method="POST"

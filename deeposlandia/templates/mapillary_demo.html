@@ -19,24 +19,26 @@
 
 <h4>Description</h4>
 
-<p>In the <a href="https://www.mapillary.com/dataset/vistas">Mapillary</a>
-dataset, there are 65 labels, and consequently the model aims at answering one
-question for each: <em>is this label on the picture?</em> We get as a result a
-vector of 65 boolean values.</p>
+<p>
+  In the <a href="https://www.mapillary.com/dataset/vistas">Mapillary</a> dataset, there are 65
+  labels, and consequently the model aims at answering one question for each: <em>is this label on
+  the picture?</em> We could get as a result a vector of 65 boolean values.
+</p>
 
-<p>The dataset glossary is subdivided into 7 larger classes. In order to take
-  advantage of this point, a lighter classification with only 11 labels has
-  been built up:
+<p>The dataset glossary is subdivided into 7 larger classes. For a sake of clarity, a lighter
+  classification with only 13 labels has been built up:
   <ul>
     <li>animal: ground animal or birds</li>
     <li>construction (barrier): curbs, fences, guard rails and other barriers</li>
     <li>construction (flat): ground areas like roads, parkings, bike lanes...</li>
     <li>construction (structure): buildings, bridges, tunnels</li>
     <li>human</li>
+    <li>rider: human on a bike, a motorbike or a horse</li>
     <li>marking</li>
     <li>nature: mountain, sand, sky, vegetation</li>
-    <li>object (traffic): traffic lights and signs</li>
-    <li>object (vehicule)</li>
+    <li>traffic-sign</li>
+    <li>support: pole, traffic-sign frame, utility pole</li>
+    <li>vehicule</li>
     <li>object: miscellaneous objects</li>
     <li>void: own vehicle or unlabeled pixels</li>
   </ul>
@@ -44,10 +46,12 @@ vector of 65 boolean values.</p>
 
 <h4>Remark about model training</h4>
 
-<p>The model used here has been trained during 4 epochs with a set of 18000
-training images. It has been validated with a smaller set of 2000 images (the
-validation occurred at the end of each training epoch), in order to ensure that
-learned features are as generic as possible.</p>
+<p>
+  The trained neural network has a <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net
+  architecture</a>. It has been trained during 20 epochs with a set of 18000 training images and
+  validated with a smaller set of 2000 images (the validation occurred at the end of each training
+  epoch), in order to ensure that learned features are as generic as possible.
+</p>
 
 <h4>Use the deep learning model to predict image labels</h4>
 
