@@ -40,7 +40,7 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def mapillary_label_building(filtered_image, label_ids):
+def label_building(filtered_image, label_ids, dataset='mapillary'):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
@@ -58,6 +58,8 @@ def mapillary_label_building(filtered_image, label_ids):
     """
     image_data = np.array(filtered_image)
     available_labels = np.unique(image_data)
+    if dataset == 'aerial':
+        available_labels[available_labels==255] = 1
     return {i: 1 if i in available_labels else 0 for i in label_ids}
 
 def resize_image(img, base_size):
