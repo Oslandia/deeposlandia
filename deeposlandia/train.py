@@ -35,7 +35,7 @@ def add_instance_arguments(parser):
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary or shapes)")
+                        help="Dataset type (either mapillary, shapes or aerial)")
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "
@@ -143,47 +143,64 @@ if __name__=='__main__':
                                                       args.image_size,
                                                       aggregate_value)
 
-    # Data gathering
-    if (os.path.isfile(prepro_folder["training_config"])
-        and os.path.isfile(prepro_folder["validation_config"])
-        and os.path.isfile(prepro_folder["testing_config"])):
+    if args.dataset == 'aerial':
+        model_input_size = utils.get_tile_resizing(args.image_size)
+    else:
+        model_input_size = args.image_size
+
+    if os.path.isfile(prepro_folder["training_config"]):
         train_config = utils.read_config(prepro_folder["training_config"])
         label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]
         train_generator = generator.create_generator(
             args.dataset,
             args.model,
             prepro_folder["training"],
-            args.image_size,
+            model_input_size,
             args.batch_size,
             train_config['labels'],
             seed=SEED)
+    else:
+        utils.logger.error(("There is no training data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
+        sys.exit(1)
+
+    if os.path.isfile(prepro_folder["validation_config"]):
         validation_generator = generator.create_generator(
             args.dataset,
             args.model,
             prepro_folder["validation"],
-            args.image_size,
+            model_input_size,
             args.batch_size,
             train_config['labels'],
             seed=SEED)
+    else:
+        utils.logger.error(("There is no validation data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
+        sys.exit(1)
+
+    if os.path.isfile(prepro_folder["testing_config"]):
         test_generator = generator.create_generator(
             args.dataset,
             args.model,
             prepro_folder["testing"],
-            args.image_size,
+            model_input_size,
             args.batch_size,
             train_config['labels'],
             inference=True,
             seed=SEED)
     else:
-        utils.logger.error(("There is no valid data with the specified parameters. "
-                           "Please generate a valid dataset before calling the training program."))
+        utils.logger.error(("There is no testing data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
         sys.exit(1)
+
     nb_labels = len(label_ids)
 
-    # Model creation
     if args.model == "feature_detection":
         net = FeatureDetectionNetwork(network_name=instance_name,
-                                      image_size=args.image_size,
+                                      image_size=model_input_size,
                                       nb_channels=3,
                                       nb_labels=nb_labels,
                                       dropout=args.dropout,
@@ -191,7 +208,7 @@ if __name__=='__main__':
         loss_function = "binary_crossentropy"
     elif args.model == "semantic_segmentation":
         net = SemanticSegmentationNetwork(network_name=instance_name,
-                                          image_size=args.image_size,
+                                          image_size=model_input_size,
                                           nb_channels=3,
                                           nb_labels=nb_labels,
                                           dropout=args.dropout,

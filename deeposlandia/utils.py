@@ -289,3 +289,24 @@ def create_symlink(link_name, directory):
         logger.error("{} is a directory!".format(link_name))
     os.symlink(directory, link_name)
     logger.info("{} now points to {}.".format(link_name, directory))
+
+
+def get_tile_resizing(tile_size):
+    """Give the biggest 32-multiplier that is smaller than `tile_size`
+
+    This method aims at converting a given image tile size into a new
+    exploitable size (*i.e.* a size compatible with neural network layer
+    operations).
+
+    Parameters
+    ----------
+    tile_size : int
+        Size of the input tiles
+
+    Returns
+    -------
+    int
+        Output size compatible with neural network layer operations
+
+    """
+    return range(0, tile_size, 32)[-1]
