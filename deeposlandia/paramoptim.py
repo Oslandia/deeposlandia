@@ -39,7 +39,7 @@ def add_instance_arguments(parser):
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary or shapes)")
+                        help="Dataset type (either mapillary, shapes or aerial)")
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "
@@ -156,9 +156,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
 
     """
     # Data gathering
-    if (os.path.isfile(folders["training_config"])
-        and os.path.isfile(folders["validation_config"])
-        and os.path.isfile(folders["testing_config"])):
+    if os.path.isfile(folders["training_config"]):
         train_config = utils.read_config(folders["training_config"])
         label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]
         train_generator = generator.create_generator(
@@ -169,6 +167,12 @@ def get_data(folders, dataset, model, image_size, batch_size):
             batch_size,
             train_config["labels"],
             seed=SEED)
+    else:
+        utils.logger.error(("There is no training data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
+        sys.exit(1)
+    if os.path.isfile(folders["validation_config"]):
         validation_generator = generator.create_generator(
             dataset,
             model,
@@ -177,6 +181,12 @@ def get_data(folders, dataset, model, image_size, batch_size):
             batch_size,
             train_config["labels"],
             seed=SEED)
+    else:
+        utils.logger.error(("There is no training data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
+        sys.exit(1)
+    if os.path.isfile(folders["testing_config"]):
         test_generator = generator.create_generator(
             dataset,
             model,
@@ -187,8 +197,9 @@ def get_data(folders, dataset, model, image_size, batch_size):
             inference=True,
             seed=SEED)
     else:
-        utils.logger.error(("There is no valid data with the specified parameters. "
-                           "Please generate a valid dataset before calling the training program."))
+        utils.logger.error(("There is no training data with the given "
+                            "parameters. Please generate a valid dataset "
+                            "before calling the training program."))
         sys.exit(1)
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator, test_generator
@@ -330,6 +341,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
+    if args.dataset == 'aerial':
+        model_input_size = utils.get_image_size_from_tile(args.image_size)
+    else:
+        model_input_size = args.image_size
 
     # Grid search
     model_output = []
@@ -344,7 +359,7 @@ if __name__ == '__main__':
         nb_labels, train_gen, valid_gen, test_gen = get_data(prepro_folder,
                                                              args.dataset,
                                                              args.model,
-                                                             args.image_size,
+                                                             model_input_size,
                                                              batch_size)
         for parameters in itertools.product(args.dropout,
                                             args.network,
@@ -364,7 +379,7 @@ if __name__ == '__main__':
             # Model running
             model_output.append(run_model(train_gen, valid_gen, args.model,
                                           output_folder, instance_name,
-                                          args.image_size, aggregate_value,
+                                          model_input_size, aggregate_value,
                                           nb_labels, args.nb_epochs,
                                           args.nb_training_image,
                                           args.nb_validation_image, batch_size,

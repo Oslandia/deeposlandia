@@ -144,7 +144,7 @@ if __name__=='__main__':
                                                       aggregate_value)
 
     if args.dataset == 'aerial':
-        model_input_size = utils.get_tile_resizing(args.image_size)
+        model_input_size = utils.get_image_size_from_tile(args.image_size)
     else:
         model_input_size = args.image_size
 

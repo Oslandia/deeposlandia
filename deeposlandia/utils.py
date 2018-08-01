@@ -291,8 +291,45 @@ def create_symlink(link_name, directory):
     logger.info("{} now points to {}.".format(link_name, directory))
 
 
-def get_tile_resizing(tile_size):
-    """Give the biggest 32-multiplier that is smaller than `tile_size`
+def tile_image_correspondance(raw_img_size):
+    """Provides a table of association between possible image sizes and tile
+    size, in the context of Aerial image dataset.
+
+    In such a dataset, large `raw_img_size`*`raw_img_size` images are tiled so
+    as to exploit smaller images during neural network training. The point is
+    to find the image size that fits the best the input tile size.
+
+    Tile sizes are chosen in order to use every original image pixel, then they
+    are 5000-divisors. Whilst image sizes are chosen to ensure a deep neural
+    network training, *i.e.* they are divisible per 16 (to allow until four
+    encoding layers).
+
+    As this relation is not bijective (each tile size gives one single image
+    size, but some image size gives several possible tile sizes), we
+    hypothesize that the best tile is the smallest one. This choice is made
+    relatively to image preprocessing, as cropping/resizing step will modify
+    the raw tiles: we prefer to minimize these image distortions.
+
+    Parameters
+    ----------
+    raw_img_size : int
+        Size of tiled image
+
+    Returns
+    -------
+    pd.DataFrame
+        Association table
+
+    """
+    associations = [[(j, i) for j in range(0, i, 16)][-1]
+                    for i in range(1, raw_img_size)
+                    if raw_img_size % i == 0]
+    df = pd.DataFrame(associations, columns=["m16", "d5000"])
+    return df.groupby("m16").min().reset_index()
+
+
+def get_image_size_from_tile(tile_size, raw_img_size=5000):
+    """Give the biggest 16-multiplier that is smaller than `tile_size`
 
     This method aims at converting a given image tile size into a new
     exploitable size (*i.e.* a size compatible with neural network layer
@@ -302,6 +339,8 @@ def get_tile_resizing(tile_size):
     ----------
     tile_size : int
         Size of the input tiles
+    raw_img_size : int
+        Size of tiled image
 
     Returns
     -------
@@ -309,4 +348,43 @@ def get_tile_resizing(tile_size):
         Output size compatible with neural network layer operations
 
     """
-    return range(0, tile_size, 32)[-1]
+    aerial_table = tile_image_correspondance(raw_img_size)
+    image_size = aerial_table.loc[aerial_table.d5000 == tile_size, "m16"]
+    if len(image_size.index) == 0:
+        raise ValueError(("There is no value in the association table that "
+                          "corresponds to this tile size ({}). Please choose "
+                          "one of these values: {}"
+                          "").format(tile_size, aerial_table.d5000.values))
+    return image_size.item()
+
+
+def get_tile_size_from_image(image_size, raw_img_size=5000):
+    """Retrieve the original dataset tile size knowing that `image_size` is the
+    biggest 16-multiplier that is smaller than it; we hypothesize that the tile
+    size is a divisor of 5000 (the original aerial dataset image size)
+
+    This method aims at converting back an exploitable image size (*i.e.* a
+    size compatible with neural network layer operations) to the tile size used
+    when the dataset was created.
+
+    Parameters
+    ----------
+    image_size : int
+        Size of the image (compatible with neural network layer operations)
+    raw_img_size : int
+        Size of tiled image
+
+    Returns
+    -------
+    int
+        Tile size used for preprocessed dataset building
+
+    """
+    aerial_table = tile_image_correspondance(raw_img_size)
+    tile_size = aerial_table.loc[aerial_table.m16 == image_size, "d5000"]
+    if len(tile_size.index) == 0:
+        raise ValueError(("There is no value in the association table that "
+                          "corresponds to this image size ({}). Please choose "
+                          "one of these values: {}"
+                          "").format(image_size, aerial_table.m16.values))
+    return tile_size.item()
