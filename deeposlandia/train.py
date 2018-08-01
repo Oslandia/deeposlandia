@@ -254,12 +254,6 @@ if __name__=='__main__':
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
                "params": hist.params}
-    utils.logger.info("History:\n{}".format(metrics["metrics"]))
-
-    # Model inference
-    score = model.predict_generator(test_generator, steps=TEST_STEPS)
-    utils.logger.info("Extract of prediction score:\n{}".format(score[:5]))
-    test_label_popularity = np.round(score).astype(np.uint8).sum(axis=0) / score.shape[0]
-    utils.logger.info("Test label popularity:\n{}".format(test_label_popularity))
+    utils.logger.info("Training OK! History:\n{}".format(metrics["metrics"]))
 
     backend.clear_session()
