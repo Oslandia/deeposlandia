@@ -48,7 +48,7 @@ def add_program_arguments(parser):
     """
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary or shapes)")
+                        help="Dataset type (either mapillary, shapes or aerial)")
     parser.add_argument('-i', '--image-paths',
                         required=True,
                         nargs='+',
@@ -160,7 +160,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     filenames : str
         Name of the image files on the file system
     dataset : str
-        Name of the dataset, either `shapes` or `mapillary`
+        Name of the dataset, either `shapes`, `mapillary` or `aerial`
     problem : str
         Name of the considered model, either `feature_detection` or
     `semantic_segmentation`
@@ -197,16 +197,20 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     # then it is flattened to get a simple list
     flattened_image_paths = sum(image_paths, [])
     images = extract_images(flattened_image_paths)
-    image_size = images.shape[1]
+    model_input_size = images.shape[1]
+    if dataset == 'aerial':
+        tile_size = utils.get_tile_size_from_image(model_input_size)
+    else:
+        tile_size = model_input_size
 
     aggregate_value = "full" if not aggregate else "aggregated"
-    instance_args = [name, image_size, network, batch_size, aggregate_value,
+    instance_args = [name, tile_size, network, batch_size, aggregate_value,
                      dropout, learning_rate, learning_rate_decay]
     instance_name = utils.list_to_str(instance_args, "_")
 
     prepro_folder = utils.prepare_preprocessed_folder(datapath,
                                                       dataset,
-                                                      image_size,
+                                                      tile_size,
                                                       aggregate_value)
 
     if os.path.isfile(prepro_folder["training_config"]):
@@ -215,8 +219,8 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                      if x['is_evaluate']]
         nb_labels = len(label_ids)
     else:
-        utils.logger.error(("There is no valid data with the specified parameters. "
-                           "Please generate a valid dataset "
+        utils.logger.error(("There is no training data with the given "
+                            "parameters. Please generate a valid dataset "
                             "before calling the program."))
         sys.exit(1)
 
@@ -226,12 +230,12 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
                                                     problem)
-        instance_filename = ("best-instance-" + str(image_size)
+        instance_filename = ("best-instance-" + str(tile_size)
                              + "-" + aggregate_value + ".json")
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
-        model = init_model(problem, instance_name, image_size, nb_labels, dropout, network)
-        checkpoint_filename = ("best-model-" + str(image_size)
+        model = init_model(problem, instance_name, model_input_size, nb_labels, dropout, network)
+        checkpoint_filename = ("best-model-" + str(tile_size)
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
@@ -249,7 +253,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                                     dataset,
                                                     problem,
                                                     instance_name)
-        model = init_model(problem, instance_name, image_size,
+        model = init_model(problem, instance_name, model_input_size,
                            nb_labels, dropout, network)
         checkpoints = [item for item in os.listdir(output_folder)
                        if os.path.isfile(os.path.join(output_folder, item))]
@@ -267,7 +271,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
 
     result = {}
     if problem == "feature_detection":
-        label_info = [(i['category'], utils.RGBToHTMLColor(i['color']))
+        label_info = [(i['category'], utils.GetHTMLColor(i['color']))
                       for i in train_config['labels']]
         for filename, prediction in zip(flattened_image_paths, y_raw_pred):
             result[filename] = {i[0]: {"probability": 100*round(float(j), 2),
@@ -311,7 +315,7 @@ def summarize_config(config):
     dict
         Simplified dataset configuration for HTML-printing purpose
     """
-    return {c['category']: utils.RGBToHTMLColor(c['color']) for c in config}
+    return {c['category']: utils.GetHTMLColor(c['color']) for c in config}
 
 def extract_images(image_paths):
     """Convert a list of image filenames into a numpy array that contains the

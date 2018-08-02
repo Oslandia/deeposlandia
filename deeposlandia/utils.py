@@ -229,19 +229,23 @@ def recover_instance(instance_path):
     return instance["dropout"], instance["network"]
 
 
-def RGBToHTMLColor(rgb_tuple):
-    """Convert an (R, G, B) tuple to #RRGGBB
+def GetHTMLColor(color):
+    """Convert single-channeled colors or (R, G, B) tuples to #RRGGBB.
+
+    If the color has only one channel (grayscale, typically), it is converted
+    to a (R, G, B) tuple first.
 
     Parameters
     ----------
-    rgb_list : list
-        List of red, green, blue pixel values
+    color : int or list
+        Grayscale value or list of red, green, blue pixel values
 
     Returns
     -------
     str
         HTML-version of color
     """
+    rgb_tuple = (color, color, color) if type(color) == int else color
     return '#%02x%02x%02x' % tuple(rgb_tuple)
 
 
