@@ -28,6 +28,10 @@ class Dataset:
 
     """
     def __init__(self, image_size):
+        if not image_size % 16 == 0:
+            raise ValueError("The chosen image size is not divisible "
+                             "per 16. To train a neural network with "
+                             "such an input size may fail.")
         self.image_size = image_size
         self.label_info = []
         self.image_info = []

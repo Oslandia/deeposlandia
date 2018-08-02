@@ -1,7 +1,11 @@
 """Define a class that represents typical convolutional neural networks
 """
 
+import sys
+
 import keras as K
+
+from deeposlandia import utils
 
 class ConvolutionalNeuralNetwork:
     """Convolutional neural network design
@@ -21,8 +25,13 @@ class ConvolutionalNeuralNetwork:
 
     """
 
-    def __init__(self, network_name="mapillary", image_size=512,
+    def __init__(self, network_name="mapillary", image_size=224,
                  nb_channels=3, nb_labels=65, dropout=1.0):
+        if not image_size % 16 == 0:
+            raise ValueError("The chosen image size is not divisible "
+                             "per 16. To train a neural network with "
+                             "such an input size may fail.")
+            sys.exit(1)
         self.network_name = network_name
         self.image_size = image_size
         self.nb_channels = nb_channels
