@@ -15,8 +15,8 @@ from deeposlandia import utils
 from deeposlandia.inference import predict
 
 MODELS = ('feature_detection', 'semantic_segmentation')
-DATASETS = ('mapillary', 'shapes')
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+DATASETS = ('mapillary', 'shapes', 'aerial')
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
 PROJECT_FOLDER = '/tmp/deeposlandia'
 UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
 PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, 'predicted/')
@@ -43,8 +43,8 @@ def check_model(model):
         abort(404, "Model {} not found".format(model))
 
 def check_dataset(dataset):
-    """Check if `dataset` is valid, *i.e.* equal to `shapes` or
-    `mapillary`
+    """Check if `dataset` is valid, *i.e.* equal to `shapes`,
+    `mapillary` or `aerial`
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def predictor_demo(model, dataset):
     model : str
         Considered research problem (either `feature_detection` or `semantic_segmentation`)
     dataset : str
-        Considered dataset (either `shapes` or `mapillary`)
+        Considered dataset (either `shapes`, `mapillary` or `aerial`)
 
     Returns
     -------
@@ -102,9 +102,14 @@ def predictor_demo(model, dataset):
         sample_filename = os.path.join("sample_image", "shape_example.png")
         return render_template('shape_demo.html', model=model,
                                sample_filename=sample_filename)
-    else:
+    elif dataset == "mapillary":
         sample_filename = os.path.join("sample_image", "example.jpg")
         return render_template('mapillary_demo.html', model=model,
+                               sample_filename=sample_filename)
+    else:
+        sample_filename = os.path.join("sample_image",
+                                       "aerial_image_example.png")
+        return render_template('aerial_demo.html', model=model,
                                sample_filename=sample_filename)
 
 
@@ -241,12 +246,25 @@ def demo_image_selector():
         label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join("deeposlandia", label_file[1:])
     server_label_image = np.array(Image.open(server_label_filename))
-    size_aggregation = "400_aggregated" if dataset == "mapillary" else "64_full"
-    with open(os.path.join("data", dataset, "preprocessed", size_aggregation
+    if dataset == 'shapes':
+        size_aggregation = "64_full"
+        datapath = "data"
+        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+    elif dataset == 'mapillary':
+        size_aggregation = "400_aggregated"
+        datapath = "data"
+        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+    elif dataset == 'aerial':
+        size_aggregation = "250_full"
+        datapath = "data"
+        actual_labels = np.unique(server_label_image.reshape([-1]), axis=0).tolist()
+    else:
+        raise ValueError(("Invalid dataset, please choose 'shapes', "
+                          "'mapillary' or 'aerial'."))
+    with open(os.path.join(datapath, dataset, "preprocessed", size_aggregation
                            , "testing.json")) as fobj:
         config = json.load(fobj)
-    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
-    printed_labels = {item['category']: utils.RGBToHTMLColor(item['color'])
+    printed_labels = {item['category']: utils.GetHTMLColor(item['color'])
                       for item in config['labels']
                       if item['color'] in actual_labels}
     return jsonify(image_name=filename,
