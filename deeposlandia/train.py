@@ -12,7 +12,7 @@ from keras import backend, callbacks
 from keras.models import Model
 from keras.optimizers import Adam
 
-from deeposlandia import generator, utils
+from deeposlandia import generator, metrics, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
@@ -203,9 +203,10 @@ if __name__=='__main__':
         sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=args.learning_rate, decay=args.learning_rate_decay)
+    metrics = [metrics.iou, metrics.dice_coef, "acc"]
     model.compile(loss=loss_function,
                   optimizer=opt,
-                  metrics=['acc'])
+                  metrics=metrics)
 
     # Model training
     STEPS = args.nb_training_image // args.batch_size
@@ -232,7 +233,7 @@ if __name__=='__main__':
                                        "checkpoint-epoch-{epoch:03d}.h5")
     checkpoint = callbacks.ModelCheckpoint(
         checkpoint_filename,
-        monitor='val_acc',
+        monitor='val_loss',
         verbose=0,
         save_best_only=True,
         save_weights_only=False,
@@ -243,13 +244,16 @@ if __name__=='__main__':
                                         patience=10,
                                         verbose=1,
                                         mode='max')
+    csv_logger = callbacks.CSVLogger(os.path.join(output_folder,
+                                                  'training_metrics.csv'))
 
     hist = model.fit_generator(train_generator,
                                epochs=args.nb_epochs,
                                steps_per_epoch=STEPS,
                                validation_data=validation_generator,
                                validation_steps=VAL_STEPS,
-                               callbacks=[checkpoint, terminate_on_nan, earlystop],
+                               callbacks=[checkpoint, terminate_on_nan,
+                                          earlystop, csv_logger],
                                initial_epoch=trained_model_epoch)
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,

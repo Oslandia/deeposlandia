@@ -17,6 +17,7 @@ from keras.optimizers import Adam
 from deeposlandia import generator, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
+from deeposlandia.train import iou, dice_coef
 
 SEED = int(datetime.now().timestamp())
 
@@ -261,7 +262,8 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
         sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=learning_rate, decay=learning_rate_decay)
-    model.compile(loss=loss_function, optimizer=opt, metrics=['acc'])
+    metrics = ['acc', iou, dice_coef]
+    model.compile(loss=loss_function, optimizer=opt, metrics=metrics)
 
     # Model training
     steps = nb_training_image // batch_size
@@ -287,7 +289,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                        "checkpoint-epoch-{epoch:03d}.h5")
     checkpoint = callbacks.ModelCheckpoint(
         checkpoint_filename,
-        monitor='val_acc',
+        monitor='val_loss',
         verbose=0,
         save_best_only=True,
         save_weights_only=False,
@@ -297,14 +299,18 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                         min_delta=0.001,
                                         patience=10,
                                         verbose=1,
-                                        mode='auto')
+                                        mode='max')
+    csv_logger = callbacks.CSVLogger(os.path.join(output_folder,
+                                                  'training_metrics.csv'))
+
     hist = model.fit_generator(train_generator,
                                epochs=nb_epochs,
                                initial_epoch=trained_model_epoch,
                                steps_per_epoch=steps,
                                validation_data=validation_generator,
                                validation_steps=val_steps,
-                               callbacks=[checkpoint, earlystop, terminate_on_nan])
+                               callbacks=[checkpoint, earlystop,
+                                          terminate_on_nan, csv_logger])
     ref_metric = max(hist.history.get("val_acc", [np.nan]))
     return {'model': model, 'val_acc': ref_metric,
             'batch_size': batch_size, 'network': network, 'dropout': dropout,
