@@ -265,3 +265,25 @@ def build_image_from_config(img, config):
         mask = data == label
         result[mask] = config[label]["color"]
     return Image.fromarray(result)
+
+
+def create_symlink(link_name, directory):
+    """Create a symbolic link
+
+    Based on https://github.com/elemoine/dotfiles/blob/master/install-dotfiles.py
+
+    Parameters
+    ----------
+    link_name : string
+        name of the symbolic link
+    directory : string
+        Targetted destination for the symbolic link
+    """
+    if os.path.islink(link_name):
+        os.unlink(link_name)
+    elif os.path.isfile(link_name):
+        logger.error("{} is a file!".format(link_name))
+    elif os.path.isdir(link_name):
+        logger.error("{} is a directory!".format(link_name))
+    os.symlink(directory, link_name)
+    logger.info("{} now points to {}.".format(link_name, directory))
