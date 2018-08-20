@@ -187,17 +187,19 @@ class MapillaryDataset(Dataset):
             String designing the relative path of the dataset glossary
         (based on Mapillary dataset)
         """
-        with open(config_filename) as config_file:
-            glossary = json.load(config_file)
+        glossary = utils.read_config(config_filename)
         if "labels" not in glossary:
             utils.logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            name_items = label["name"].split('--')
-            category = '-'.join(name_items)
-            self.add_label(lab_id, name_items, label["color"],
-                           label['evaluate'], category, label["contains_id"],
-                           label['contains'])
+            if "aggregate" in config_filename:
+                self.add_label(lab_id, label["name"], label["color"],
+                               label["evaluate"], label["family"],
+                               label["contains_id"], label["contains"])
+            else:
+                name_items = label["name"].split('--')
+                self.add_label(lab_id, name_items[-1], label["color"],
+                               label["evaluate"], name_items[0])
 
     def group_image_label(self, image):
         """Group the labels
