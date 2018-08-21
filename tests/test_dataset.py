@@ -5,7 +5,8 @@ import json
 import os
 import pytest
 
-from deeposlandia.dataset import Dataset, MapillaryDataset, ShapeDataset
+from deeposlandia.dataset import (Dataset, MapillaryDataset,
+                                  ShapeDataset, AerialDataset)
 
 def test_dataset_creation(mapillary_image_size):
     """Create a generic dataset
@@ -92,3 +93,38 @@ def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_la
     d.load(shapes_sample_config)
     assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == shapes_nb_images
+
+
+def test_aerial_dataset_creation(aerial_image_size, aerial_tile_size,
+                                 aerial_nb_labels):
+    """Create a AerialImage dataset
+    """
+    d = AerialDataset(aerial_tile_size)
+    assert d.image_size == aerial_image_size
+    assert d.get_nb_labels() == aerial_nb_labels
+    assert d.get_nb_images() == 0
+
+def test_aerial_dataset_population(aerial_tile_size, aerial_temp_dir,
+                                   aerial_raw_sample, aerial_nb_images,
+                                   aerial_config, aerial_nb_labels,
+                                   aerial_nb_output_images):
+    """Populate a AerialImage dataset
+    """
+    d = AerialDataset(aerial_tile_size)
+    d.populate(str(aerial_temp_dir), aerial_raw_sample,
+               nb_images=aerial_nb_images)
+    d.save(str(aerial_config))
+    assert d.get_nb_labels() == aerial_nb_labels
+    assert d.get_nb_images() == aerial_nb_output_images
+    assert os.path.isfile(str(aerial_config))
+    assert all(len(os.listdir(os.path.join(str(aerial_temp_dir), tmp_dir))) == aerial_nb_output_images
+               for tmp_dir in ["images", "labels"])
+
+def test_aerial_dataset_loading(aerial_tile_size, aerial_config,
+                                aerial_nb_labels, aerial_nb_output_images):
+    """Load images into a AerialImage dataset
+    """
+    d = AerialDataset(aerial_tile_size)
+    d.load(aerial_config)
+    assert d.get_nb_labels() == aerial_nb_labels
+    assert d.get_nb_images() == aerial_nb_output_images

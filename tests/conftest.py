@@ -5,7 +5,6 @@ import json
 import os
 import pytest
 
-
 @pytest.fixture
 def nb_channels():
     return 3
@@ -135,6 +134,76 @@ def shapes_temp_dir(tmpdir_factory):
     tmpdir_factory.mktemp('shapes/labels', numbered=False)
     tmpdir_factory.mktemp('shapes/checkpoints', numbered=False)
     return shapes_subdir
+
+
+@pytest.fixture
+def aerial_raw_image_size():
+    return 5000
+
+
+@pytest.fixture
+def aerial_image_size():
+    return 240
+
+
+@pytest.fixture
+def aerial_tile_size():
+    return 250
+
+
+@pytest.fixture
+def aerial_nb_images():
+    return 1
+
+
+@pytest.fixture
+def aerial_nb_output_images():
+    return aerial_nb_images() * (aerial_raw_image_size()/aerial_tile_size()) ** 2
+
+
+@pytest.fixture
+def aerial_nb_labels():
+    return 2
+
+
+@pytest.fixture(scope='session')
+def aerial_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join('aerial.json')
+
+
+@pytest.fixture
+def aerial_sample_config():
+    return "tests/data/aerial/training.json"
+
+
+@pytest.fixture
+def aerial_sample():
+    return "tests/data/aerial/training/"
+
+
+@pytest.fixture
+def aerial_raw_sample():
+    """Sample of AerialImage original images (called for populate a AerialImage
+    dataset)
+
+    """
+    return "tests/data/aerial/sample/"
+
+
+@pytest.fixture(scope='session')
+def aerial_temp_dir(tmpdir_factory):
+    aerial_subdir = tmpdir_factory.mktemp('aerial', numbered=False)
+    tmpdir_factory.mktemp('aerial/images', numbered=False)
+    tmpdir_factory.mktemp('aerial/labels', numbered=False)
+    tmpdir_factory.mktemp('aerial/checkpoints', numbered=False)
+    return aerial_subdir
+
+
+@pytest.fixture(scope='session')
+def aerial_temp_conf(tmpdir_factory):
+    temp_conf = tmpdir_factory.mktemp(".").join("aerial.json")
+    return temp_conf
+
 
 @pytest.fixture(scope='session')
 def datapath_repo(tmpdir_factory):
