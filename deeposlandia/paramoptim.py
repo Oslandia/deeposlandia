@@ -17,7 +17,7 @@ from keras.optimizers import Adam
 from deeposlandia import generator, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
-from deeposlandia.train import iou, dice_coef
+from deeposlandia.metrics import iou, dice_coef
 
 SEED = int(datetime.now().timestamp())
 
