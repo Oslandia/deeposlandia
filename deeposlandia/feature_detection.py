@@ -5,7 +5,9 @@
 import h5py
 
 import keras as K
-from keras.applications import VGG16
+from keras.applications import VGG16, inception_v3, resnet50
+
+from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
@@ -32,10 +34,18 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
     def __init__(self, network_name="mapillary", image_size=512, nb_channels=3,
                  nb_labels=65, dropout=1.0, architecture="simple"):
         super().__init__(network_name, image_size, nb_channels, nb_labels, dropout)
-        if architecture == "vgg16":
+        if architecture == "vgg":
             self.Y = self.vgg16()
-        else:
+        elif architecture == "inception":
+            self.Y = self.inception()
+        elif architecture == "resnet":
+            self.Y = self.resnet()
+        elif architecture == "simple":
             self.Y = self.simple()
+        else:
+            utils.logger.error(("Unknown network architecture. Please use "
+                                "'simple', 'vgg', 'inception' or 'resnet'."))
+            raise ValueError("Unknown network architecture.")
 
     def output_layer(self, x, depth):
         """Build an output layer to a neural network, as a dense layer with sigmoid activation
@@ -88,8 +98,43 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         tensor
             (batch_size, nb_labels)-shaped output predictions, that have to be compared with ground-truth values
         """
-        vgg16_model = VGG16(input_tensor = self.X, include_top=False)
+        vgg16_model = VGG16(input_tensor=self.X, include_top=False)
         y = self.flatten(vgg16_model.output, block_name="flatten")
         y = self.dense(y, 1024, block_name="fc1")
         y = self.dense(y, 1024, block_name="fc2")
+        return self.output_layer(y, depth=self.nb_labels)
+
+    def resnet(self):
+        """Build the structure of a convolutional neural network from input image data to the last
+        hidden layer on a similar manner than ResNet
+
+        See: He, Zhang, Ren, Sun. Deep Residual Learning for Image Recognition. ArXiv
+        technical report, 2015.
+
+        Returns
+        -------
+        tensor
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with
+        ground-truth values
+        """
+        resnet_model = resnet50.ResNet50(include_top=False, input_tensor=self.X)
+        y = self.flatten(resnet_model.output)
+        return self.output_layer(y, depth=self.nb_labels)
+
+    def inception(self):
+        """Build the structure of a convolutional neural network from input image data to the last
+        hidden layer on the model of a similar manner than Inception-V4
+
+        See: Szegedy, Vanhoucke, Ioffe, Shlens. Rethinking the Inception Architecture for
+        Computer Vision. ArXiv technical report, 2015.
+
+        Returns
+        -------
+        tensor
+            (batch_size, nb_labels)-shaped output predictions, that have to be compared with
+        ground-truth values
+
+        """
+        inception_model = inception_v3.InceptionV3(input_tensor=self.X, include_top=False)
+        y = K.layers.GlobalAveragePooling2D()(inception_model.output)
         return self.output_layer(y, depth=self.nb_labels)
