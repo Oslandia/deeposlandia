@@ -314,6 +314,26 @@ def tile_image_correspondance(raw_img_size):
     relatively to image preprocessing, as cropping/resizing step will modify
     the raw tiles: we prefer to minimize these image distortions.
 
+    As a result for `raw_img_size=5000`, one expects the following
+    correspondance table:
+    +-----------------+----------------+
+    |  Image size     +   Tile size    +
+    +-----------------+----------------+
+    |        0        |       1        |
+    |       16        |       20       |
+    |       32        |       40       |
+    |       48        |       50       |
+    |       96        |      100       |
+    |      112        |      125       |
+    |      192        |      200       |
+    |      240        |      250       |
+    |      496        |      500       |
+    |      624        |      625       |
+    |      992        |     1000       |
+    |     1248        |     1250       |
+    |     2496        |     2500       |
+    +-----------------+----------------+
+
     Parameters
     ----------
     raw_img_size : int
