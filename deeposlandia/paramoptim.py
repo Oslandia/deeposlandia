@@ -269,7 +269,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
     steps = nb_training_image // batch_size
     val_steps = nb_validation_image // batch_size
 
-    checkpoints = [item for item in os.listdir(output_folder)
+    checkpoint_files = [item for item in os.listdir(output_folder)
                    if "checkpoint-epoch" in item]
     if len(checkpoint_files) > 0:
         model_checkpoint = max(checkpoint_files)
