@@ -10,7 +10,7 @@ document.getElementById("predict_button").addEventListener("click", function(){
 
   function predict_labels(filename, dataset, model){
 
-    $.getJSON('/prediction', {
+    $.getJSON(PREFIX + '/prediction', {
       img: filename,
       dataset: dataset,
       model: model

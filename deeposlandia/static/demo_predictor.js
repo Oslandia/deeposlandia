@@ -7,7 +7,7 @@ document.getElementById("predict_labels").addEventListener("click", function(){
 
 function get_image_name(dataset, filename_callback){
   $.ajax({type: 'GET',
-	  url: '/demo_image_selector',
+	  url: PREFIX + '/demo_image_selector',
 	  data: {dataset: dataset},
 	  success: function(response){
 	    move_to_image_url(response.image_name, dataset, model);
@@ -21,8 +21,6 @@ function get_image_name(dataset, filename_callback){
 
 function move_to_image_url(filename, dataset, model){
 
-    var url = flask_util.url_for('predictor_demo', {dataset: dataset,
-						    model: model,
-						    image: filename})
-    $(location).attr('href', url)
+  var url = PREFIX + "/predictor_demo/" + model + "/" + dataset + "/" + filename;
+  $(location).attr('href', url)
 };
