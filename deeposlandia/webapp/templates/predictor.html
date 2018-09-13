@@ -49,7 +49,13 @@ possible.</p>
 <p>
   Load a <i>.png</i> or <i>.jpg</i> image from your file system, the
   corresponding label predictions will be automatically displayed, as a
-  labelled version of the picture, with the corresponding legend below.
+  labelled version of the picture, with the corresponding legend below. In
+  brief:
+  <ol type="1">
+    <li>Click on "Parcourir..." button</li>
+    <li>Click on "Upload" button</li>
+    <li>Click on "Predict" button</li>
+  </ul>
 </p>
 <p>
   <b>Disclaimer:</b> The model expect street-scene images. You can try whatever
@@ -60,6 +66,9 @@ possible.</p>
   <b>Disclaimer 2:</b> The neural network was trained with 400*400 pixel images, that sounds quite small in regard with current camera resolutions. You should expect a more or less important pixelization phenomenon depending on your image size.
 </p>
 
+<p>
+  <b>1: Get an image from your file system.</b>
+</p>
 <form method="POST"
       enctype="multipart/form-data"
       action="{{url_for('upload_image')}}"
@@ -73,6 +82,10 @@ possible.</p>
 	 id="upload_button">
 </form>
 
+<p>
+  <b>2: Upload the file to the server.</b>
+</p>
+
 {% if example_image %}
 
 <img id="example_image"
@@ -83,6 +96,9 @@ possible.</p>
 <br>
 <span id="example_label"></span>
 <br>
+<p>
+  <b>3: Run the prediction process.</b>
+</p>
 <button id="predict_button">Predict</button>
 
 {% else %}
@@ -95,6 +111,9 @@ possible.</p>
 <br>
 <span id="result_label">What does contain this image?</span>
 <br>
+<p>
+  <b>3: Run the prediction process.</b>
+</p>
 <button id="predict_button">Predict</button>
 
 {% endif %}
