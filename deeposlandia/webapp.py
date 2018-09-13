@@ -140,7 +140,7 @@ def demo_homepage(model, dataset):
                            result="")
 
 
-@app.route("/predictor_demo/<string:model>/<string:dataset>/<image>")
+@app.route("/predictor_demo/<string:model>/<string:dataset>/<string:image>")
 def predictor_demo(model, dataset, image):
     """Route to a jsonified version of deep learning model predictions, for
     demo case
@@ -175,7 +175,6 @@ def predictor_demo(model, dataset, image):
                           model,
                           aggregate=agg_value,
                           output_dir=PREDICT_FOLDER)
-    print(predictions)
     if model == "feature_detection":
         predicted_labels = "<ul>"
         for label, info in predictions[os.path.join(app.static_folder, image_info["image_file"])]:
