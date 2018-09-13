@@ -8,7 +8,7 @@ import os
 import sys
 
 from deeposlandia import utils
-from deeposlandia.webapp import app
+from deeposlandia.webapp.main import app
 
 config = ConfigParser()
 CONFIG_FILENAME = "config.ini"
