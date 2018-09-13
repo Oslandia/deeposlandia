@@ -140,20 +140,6 @@ def demo_homepage(model, dataset):
                            result="")
 
 
-@app.route("/predictor")
-def predictor():
-    """Route to the deep learning predictor web page, that considers
-    uploaded-by-client images
-
-    Returns
-    -------
-    Jinja template
-        Template for predictor web page fed with an image filename
-    """
-    filename = os.path.join("sample_image", "ajaccio.png")
-    return render_template("predictor.html", example_image=filename)
-
-
 @app.route("/predictor_demo/<string:model>/<string:dataset>/<image>")
 def predictor_demo(model, dataset, image):
     """Route to a jsonified version of deep learning model predictions, for
@@ -250,7 +236,16 @@ def send_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-@app.route("/predictor", methods=['GET', 'POST'])
+
+@app.route("/load_predictor")
+def load_predictor():
+    """
+    """
+    filename = os.path.join("sample_image", "ajaccio.png")
+    return render_template("predictor.html", example_image=filename)
+
+
+@app.route("/predictor", methods=['POST'])
 def upload_image():
     """Route to deep learning predictor that takes as an input a uploaded-by-client
     image (which is saved on the server); if the uploaded file is not valid,
@@ -262,26 +257,25 @@ def upload_image():
         Template for predictor web page fed with the uploaded image
 
     """
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            utils.logger.info('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            utils.logger.info('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(full_filename)
-            target_size = 400
-            image = Image.open(full_filename)
-            image = image.resize((target_size, target_size))
-            image.save(full_filename)
-            return render_template('predictor.html', image_name=filename)
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        utils.logger.info('No file part')
+        return redirect(request.url)
+    fobj = request.files['file']
+    # if user does not select file, browser also
+    # submit a empty part without filename
+    if fobj.filename == '':
+        utils.logger.info('No selected file')
+        return redirect(request.url)
+    if fobj and allowed_file(fobj.filename):
+        filename = secure_filename(fobj.filename)
+        full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        fobj.save(full_filename)
+        target_size = 400
+        image = Image.open(full_filename)
+        image = image.resize((target_size, target_size))
+        image.save(full_filename)
+        return render_template('predictor.html', image_name=filename)
 
 
 @app.route("/demo_image_selector")
