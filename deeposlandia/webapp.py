@@ -89,7 +89,7 @@ def recover_image_info(dataset, filename):
         label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join(app.static_folder, label_file)
     server_label_image = np.array(Image.open(server_label_filename))
-    size_aggregation = "224_aggregated" if dataset == "mapillary" else "64_full"
+    size_aggregation = "400_aggregated" if dataset == "mapillary" else "64_full"
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
                            , "testing.json")) as fobj:
         config = json.load(fobj)
