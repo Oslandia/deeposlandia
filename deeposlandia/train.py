@@ -216,7 +216,7 @@ if __name__=='__main__':
     output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
                                                 args.model, instance_name)
     checkpoint_files = [item for item in os.listdir(output_folder)
-                   if os.path.isfile(os.path.join(output_folder, item))]
+                        if "checkpoint-epoch" in item]
     if len(checkpoint_files) > 0:
         model_checkpoint = max(checkpoint_files)
         trained_model_epoch = int(model_checkpoint[-5:-3])

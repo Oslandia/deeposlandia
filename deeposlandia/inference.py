@@ -252,7 +252,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         model = init_model(problem, instance_name, image_size,
                            nb_labels, dropout, network)
         checkpoints = [item for item in os.listdir(output_folder)
-                       if os.path.isfile(os.path.join(output_folder, item))]
+                       if "checkpoint-epoch" in item]
         if len(checkpoints) > 0:
             model_checkpoint = max(checkpoints)
             checkpoint_full_path = os.path.join(output_folder, model_checkpoint)
