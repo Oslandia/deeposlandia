@@ -114,6 +114,21 @@ def test_featdet_shape_generator(shapes_image_size, shapes_sample, shapes_sample
     assert label_shape == (BATCH_SIZE, len(label_ids))
 
 
+def test_featdet_aerial_generator(aerial_image_size, aerial_sample, aerial_sample_config, nb_channels):
+    """Test the data generator for the AerialImage dataset
+    """
+    BATCH_SIZE = 10
+    config = utils.read_config(aerial_sample_config)
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator("aerial", "feature_detection", aerial_sample, aerial_image_size, BATCH_SIZE, config["labels"])
+    item = next(gen)
+    assert len(item) == 2
+    im_shape = item[0].shape
+    assert im_shape == (BATCH_SIZE, aerial_image_size, aerial_image_size, nb_channels)
+    label_shape = item[1].shape
+    assert label_shape == (BATCH_SIZE, len(label_ids))
+
+
 def test_semantic_segmentation_labelling_concise():
     """Test `semantic_segmentation_labelling` function in `generator` module by considering a
     concise labelling, *i.e.* the labels correspond to array values
@@ -254,6 +269,25 @@ def test_semseg_shape_generator(shapes_image_size, shapes_sample, shapes_sample_
     assert label_shape == (BATCH_SIZE, shapes_image_size, shapes_image_size, len(label_ids))
 
 
+def test_semseg_aerial_generator(aerial_image_size, aerial_sample,
+                                 aerial_sample_config, nb_channels):
+    """Test the data generator for the AerialImage dataset
+    """
+    BATCH_SIZE = 10
+    config = utils.read_config(aerial_sample_config)
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator("aerial", "semantic_segmentation",
+                                     aerial_sample,
+                                     aerial_image_size,
+                                     BATCH_SIZE, config["labels"])
+    item = next(gen)
+    assert(len(item)==2)
+    im_shape = item[0].shape
+    assert im_shape == (BATCH_SIZE, aerial_image_size, aerial_image_size, nb_channels)
+    label_shape = item[1].shape
+    assert label_shape == (BATCH_SIZE, aerial_image_size, aerial_image_size, len(label_ids))
+
+
 def test_wrong_model_dataset_generator(shapes_sample_config):
     """Test a wrong model and wrong dataset
     """
@@ -264,7 +298,7 @@ def test_wrong_model_dataset_generator(shapes_sample_config):
     datapath = ("./tests/data/" + dataset + "/training")
     config = utils.read_config(shapes_sample_config)
 
-    # wrong model name
+    # wrong dataset name
     with pytest.raises(ValueError) as excinfo:
         generator.create_generator(dataset, 'feature_detection', datapath, IMAGE_SIZE, BATCH_SIZE, config["labels"])
     assert str(excinfo.value) == "Wrong dataset name {}".format(dataset)

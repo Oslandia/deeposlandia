@@ -18,8 +18,11 @@ function get_image_name(dataset, filename_callback){
 	    var result = []
 	    result.push("<label>Ground-truth labels</label><ul>");
 	    $.each(response.labels, function(label, color){
-	      if (label != "background"){
-    		result.push("<li><font color='" + color + "'>" + label + "</font></li>" );
+	      if (label != "background" || dataset == "aerial") {
+    		result.push("<li><font color='" + color + "'");
+		if (color == "#ffffff") {
+		  result.push(" style='background-color: #222222'")}
+		result.push(">" + label + "</font></li>" );
 	      }
 	    });
 	    result.push("</ul>");
@@ -69,8 +72,11 @@ function predict_labels(filename, dataset, model){
       });
       result.push("<ul>");
       $.each(data.labels, function(label, color){
-	if (label != "background") {
-    	  result.push("<li><font color='" + color + "'>" + label + "</font></li>" );
+	if (label != "background" || dataset == "aerial") {
+    	  result.push("<li><font color='" + color + "'");
+	  if (color == "#ffffff") {
+	    result.push(" style='background-color: #222222'")}
+	  result.push(">" + label + "</font></li>" );
 	}
       });
       result.push("</ul>");

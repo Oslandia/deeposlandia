@@ -1,0 +1,85 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<script>
+  const dataset = "aerial";
+  const model = "{{ model }}";
+</script>
+
+<h2>Deep learning predictor: {{model}} for Aerial image dataset</h2>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"
+        aria-current="page"><a href="{{url_for('index')}}">Home</a>
+    </li>
+  </ol>
+</nav>
+
+<h4>Description</h4>
+
+<p>
+  In the <a href="https://project.inria.fr/aerialimagelabeling/files/">Aerial
+    image</a> dataset, there are only 2 labels, <i>i.e.</i> <em>building</em>
+    or <em>not building</em> and consequently the model aims at answering one
+    single question for each image pixel: <em>does this pixel belongs to a
+    building?</em>
+</p>
+
+<p>
+  The dataset contains 360 images, one half for training one half for
+  testing. Each of these images are 5000*5000 <em>tif</em> images. Amongst the
+  180 training images, we assigned 15 training images to validation.
+</p>
+
+<h4>Remark about model training</h4>
+
+<p>
+  We preprocessed the dataset images by subdividing raw images in 250*250
+  tiles, that are resized so as to get 224*224 images. The tiling process makes
+  us getting 66000 training images, 6000 validation images, and 72000 testing
+  images (each original images gives 400 preprocessed images).
+</p>
+
+<p>
+  The model used here has been trained during 2 epochs, after which a
+  validation phase ensure that learned features are as generic as possible.
+</p>
+
+<h4>Use the deep learning model to predict image labels</h4>
+
+<p>
+  Click on the below button to generate a random picture from Aerial image
+  dataset, and to display the corresponding label predictions.
+</p>
+
+<button id="predict_labels" value="Generate a new image" dataset="aerial">Generate a new image</button>
+<br>
+<div class="aerialContainer">
+  <div class="column column-left">
+    <label>Raw image</label>
+    <br>
+    <img id="raw_image" src="{{url_for('static', filename=sample_filename)}}">
+  </div>
+  <div class="column column-center">
+    <label>Ground-truth</label>
+    <br>
+    <img id="ground_truth" src="{{url_for('static', filename=sample_filename)}}">
+    <br>
+    <span id="ground_truth_labels"></span>
+  </div>
+  <div class="column column-right">
+    <label>Prediction</label>
+    <br>
+    <span id="result">What does contain this image?</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block appjs %}
+
+<script src="{{ url_for('static', filename='demo_predictor.js') }}" type="text/javascript"></script>
+
+{% endblock %}

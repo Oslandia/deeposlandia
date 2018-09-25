@@ -130,7 +130,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
     Parameters
     ----------
     dataset : str
-        Name of the dataset (*e.g.* `shapes` or `mapillary`)
+        Name of the dataset (*e.g.* `shapes`, `mapillary` or `aerial`)
     model : str
         Research problem that is addressed (either `feature_detection` or `semantic_segmentation`)
     datapath : str
@@ -152,7 +152,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
         Generator of tuples (images, labels), for each input data batch
 
     """
-    if not dataset in ['shapes', 'mapillary']:
+    if not dataset in ['shapes', 'mapillary', 'aerial']:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size,
                                      batch_size, seed)

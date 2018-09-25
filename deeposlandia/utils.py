@@ -40,7 +40,7 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def mapillary_label_building(filtered_image, label_ids):
+def label_building(filtered_image, label_ids, dataset='mapillary'):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
@@ -58,6 +58,8 @@ def mapillary_label_building(filtered_image, label_ids):
     """
     image_data = np.array(filtered_image)
     available_labels = np.unique(image_data)
+    if dataset == 'aerial':
+        available_labels[available_labels==255] = 1
     return {i: 1 if i in available_labels else 0 for i in label_ids}
 
 def resize_image(img, base_size):
@@ -227,19 +229,23 @@ def recover_instance(instance_path):
     return instance["dropout"], instance["network"]
 
 
-def RGBToHTMLColor(rgb_tuple):
-    """Convert an (R, G, B) tuple to #RRGGBB
+def GetHTMLColor(color):
+    """Convert single-channeled colors or (R, G, B) tuples to #RRGGBB.
+
+    If the color has only one channel (grayscale, typically), it is converted
+    to a (R, G, B) tuple first.
 
     Parameters
     ----------
-    rgb_list : list
-        List of red, green, blue pixel values
+    color : int or list
+        Grayscale value or list of red, green, blue pixel values
 
     Returns
     -------
     str
         HTML-version of color
     """
+    rgb_tuple = (color, color, color) if type(color) == int else color
     return '#%02x%02x%02x' % tuple(rgb_tuple)
 
 
@@ -287,3 +293,122 @@ def create_symlink(link_name, directory):
         logger.error("{} is a directory!".format(link_name))
     os.symlink(directory, link_name)
     logger.info("{} now points to {}.".format(link_name, directory))
+
+
+def tile_image_correspondance(raw_img_size):
+    """Provides a table of association between possible image sizes and tile
+    size, in the context of Aerial image dataset.
+
+    In such a dataset, large `raw_img_size`*`raw_img_size` images are tiled so
+    as to exploit smaller images during neural network training. The point is
+    to find the image size that fits the best the input tile size.
+
+    Tile sizes are chosen in order to use every original image pixel, then they
+    are 5000-divisors. Whilst image sizes are chosen to ensure a deep neural
+    network training, *i.e.* they are divisible per 16 (to allow until four
+    encoding layers).
+
+    As this relation is not bijective (each tile size gives one single image
+    size, but some image size gives several possible tile sizes), we
+    hypothesize that the best tile is the smallest one. This choice is made
+    relatively to image preprocessing, as cropping/resizing step will modify
+    the raw tiles: we prefer to minimize these image distortions.
+
+    As a result for `raw_img_size=5000`, one expects the following
+    correspondance table:
+    +-----------------+----------------+
+    |  Image size     +   Tile size    +
+    +-----------------+----------------+
+    |        0        |       1        |
+    |       16        |       20       |
+    |       32        |       40       |
+    |       48        |       50       |
+    |       96        |      100       |
+    |      112        |      125       |
+    |      192        |      200       |
+    |      240        |      250       |
+    |      496        |      500       |
+    |      624        |      625       |
+    |      992        |     1000       |
+    |     1248        |     1250       |
+    |     2496        |     2500       |
+    +-----------------+----------------+
+
+    Parameters
+    ----------
+    raw_img_size : int
+        Size of tiled image
+
+    Returns
+    -------
+    pd.DataFrame
+        Association table
+
+    """
+    associations = [[(j, i) for j in range(0, i, 16)][-1]
+                    for i in range(1, raw_img_size)
+                    if raw_img_size % i == 0]
+    df = pd.DataFrame(associations, columns=["m16", "d5000"])
+    return df.groupby("m16").min().reset_index()
+
+
+def get_image_size_from_tile(tile_size, raw_img_size=5000):
+    """Give the biggest 16-multiplier that is smaller than `tile_size`
+
+    This method aims at converting a given image tile size into a new
+    exploitable size (*i.e.* a size compatible with neural network layer
+    operations).
+
+    Parameters
+    ----------
+    tile_size : int
+        Size of the input tiles
+    raw_img_size : int
+        Size of tiled image
+
+    Returns
+    -------
+    int
+        Output size compatible with neural network layer operations
+
+    """
+    aerial_table = tile_image_correspondance(raw_img_size)
+    image_size = aerial_table.loc[aerial_table.d5000 == tile_size, "m16"]
+    if len(image_size.index) == 0:
+        raise ValueError(("There is no value in the association table that "
+                          "corresponds to this tile size ({}). Please choose "
+                          "one of these values: {}"
+                          "").format(tile_size, aerial_table.d5000.values))
+    return image_size.item()
+
+
+def get_tile_size_from_image(image_size, raw_img_size=5000):
+    """Retrieve the original dataset tile size knowing that `image_size` is the
+    biggest 16-multiplier that is smaller than it; we hypothesize that the tile
+    size is a divisor of 5000 (the original aerial dataset image size)
+
+    This method aims at converting back an exploitable image size (*i.e.* a
+    size compatible with neural network layer operations) to the tile size used
+    when the dataset was created.
+
+    Parameters
+    ----------
+    image_size : int
+        Size of the image (compatible with neural network layer operations)
+    raw_img_size : int
+        Size of tiled image
+
+    Returns
+    -------
+    int
+        Tile size used for preprocessed dataset building
+
+    """
+    aerial_table = tile_image_correspondance(raw_img_size)
+    tile_size = aerial_table.loc[aerial_table.m16 == image_size, "d5000"]
+    if len(tile_size.index) == 0:
+        raise ValueError(("There is no value in the association table that "
+                          "corresponds to this image size ({}). Please choose "
+                          "one of these values: {}"
+                          "").format(image_size, aerial_table.m16.values))
+    return tile_size.item()

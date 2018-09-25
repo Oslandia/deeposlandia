@@ -20,7 +20,7 @@ import sys
 import pandas as pd
 
 from deeposlandia import utils
-from deeposlandia.dataset import MapillaryDataset, ShapeDataset
+from deeposlandia.dataset import AerialDataset, MapillaryDataset, ShapeDataset
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -39,7 +39,7 @@ def add_instance_arguments(parser):
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary or shapes)")
+                        help="Dataset type (either mapillary, shapes or aerial)")
     parser.add_argument('-p', '--datapath',
                         default="data",
                         help="Relative path towards data directory")
@@ -91,8 +91,13 @@ if __name__=='__main__':
         test_dataset = ShapeDataset(args.image_size)
         os.makedirs(os.path.join(prepro_folder["testing"], "labels"),
                                  exist_ok=True)
+    elif args.dataset == "aerial":
+        train_dataset = AerialDataset(args.image_size)
+        validation_dataset = AerialDataset(args.image_size)
+        test_dataset = AerialDataset(args.image_size)
     else:
-        utils.logger.error("Unsupported dataset type. Please choose 'mapillary' or 'shapes'")
+        utils.logger.error("Unsupported dataset type. Please choose "
+                           "'mapillary', 'shapes' or 'aerial'")
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
@@ -107,6 +112,7 @@ if __name__=='__main__':
                                nb_images=args.nb_training_image,
                                aggregate=args.aggregate_label)
         train_dataset.save(prepro_folder["training_config"])
+
     if os.path.isfile(prepro_folder["validation_config"]):
         validation_dataset.load(prepro_folder["validation_config"],
                                 args.nb_validation_image)
@@ -119,6 +125,7 @@ if __name__=='__main__':
                                     nb_images=args.nb_validation_image,
                                     aggregate=args.aggregate_label)
         validation_dataset.save(prepro_folder["validation_config"])
+
     if os.path.isfile(prepro_folder["testing_config"]):
         test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
     else:
