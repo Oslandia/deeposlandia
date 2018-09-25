@@ -315,7 +315,7 @@ def summarize_config(config):
     dict
         Simplified dataset configuration for HTML-printing purpose
     """
-    return [(c['category'], utils.RGBToHTMLColor(c['color'])) for c in config]
+    return [(c['category'], utils.GetHTMLColor(c['color'])) for c in config]
 
 def extract_images(image_paths):
     """Convert a list of image filenames into a numpy array that contains the

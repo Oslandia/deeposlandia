@@ -89,12 +89,23 @@ def recover_image_info(dataset, filename):
         label_file = label_file.replace(".jpg", ".png")
     server_label_filename = os.path.join(app.static_folder, label_file)
     server_label_image = np.array(Image.open(server_label_filename))
-    size_aggregation = "400_aggregated" if dataset == "mapillary" else "64_full"
+    if dataset == "mapillary":
+        size_aggregation = "400_aggregated"
+    elif dataset == "aerial":
+        size_aggregation = "250_full"
+    elif dataset == "shapes":
+        size_aggregation = "64_full"
+    else:
+        raise ValueError(("Unknown dataset. Please choose 'mapillary', "
+                          "'aerial' or 'shapes'."))
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
                            , "testing.json")) as fobj:
         config = json.load(fobj)
-    actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
-    printed_labels = [(item['category'], utils.RGBToHTMLColor(item['color']))
+    if not dataset == "aerial":
+        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+    else:
+        actual_labels = np.unique(server_label_image).tolist()
+    printed_labels = [(item['category'], utils.GetHTMLColor(item['color']))
                       for item in config['labels']
                       if item['color'] in actual_labels]
     return {"image_file": image_file, "label_file": label_file, "labels": printed_labels}
@@ -168,9 +179,11 @@ def predictor_demo(model, dataset, image):
     image_info = recover_image_info(dataset, image)
     gt_labels = "<ul>"
     for label, color in image_info["labels"]:
-        gt_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
+        if dataset == "aerial" or label != "background":
+            gt_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
     gt_labels += "</ul>"
-    predictions = predict([os.path.join(app.static_folder, image_info["image_file"])],
+    predictions = predict([os.path.join(app.static_folder,
+                                        image_info["image_file"])],
                           dataset,
                           model,
                           aggregate=agg_value,
@@ -188,7 +201,7 @@ def predictor_demo(model, dataset, image):
         predicted_labels = "<img id='predictions' src='" + predicted_image + "'>"
         predicted_labels += "<ul>"
         for label, color in predictions["labels"]:
-            if label != "background":
+            if dataset == "aerial" or label != "background":
                 predicted_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
         predicted_labels += "</ul>"
     else:

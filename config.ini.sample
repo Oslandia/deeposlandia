@@ -4,3 +4,4 @@ predicted_images = /tmp/deeposlandia/predicted/
 shapes = /path/to/shape/dataset/
 mapillary = /path/to/mapillary/dataset/
 mapillary_agg = /path/to/agregated/mapillary/dataset/
+aerial = /path/to/aerial/dataset/
