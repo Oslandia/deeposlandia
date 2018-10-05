@@ -196,10 +196,10 @@ def predictor_demo(model, dataset, image):
                                      + label + ": " + str(info['probability'])
                                      + "%</font></li>")
         predicted_labels += "</ul>"
+        predicted_image = "sample_image/prediction.png"
     elif model == "semantic_segmentation":
-        predicted_image = os.path.join(app.static_url_path, "predicted_images", image)
-        predicted_labels = "<img id='predictions' src='" + predicted_image + "'>"
-        predicted_labels += "<ul>"
+        predicted_image = os.path.join("predicted", image)
+        predicted_labels = "<ul>"
         for label, color in predictions["labels"]:
             if dataset == "aerial" or label != "background":
                 predicted_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
