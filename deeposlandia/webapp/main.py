@@ -17,7 +17,7 @@ from deeposlandia.inference import predict
 MODELS = ('feature_detection', 'semantic_segmentation')
 DATASETS = ('mapillary', 'shapes', 'aerial')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
-PROJECT_FOLDER = '/tmp/deeposlandia'
+PROJECT_FOLDER = '/var/www/data/deeposlandia'
 UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
 PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, 'predicted/')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -26,7 +26,7 @@ os.makedirs(PREDICT_FOLDER, exist_ok=True)
 daiquiri.setup(level=logging.INFO)
 logger = daiquiri.getLogger("deeposlandia-webapp")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=PROJECT_FOLDER)
 app.config['ERROR_404_HELP'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
