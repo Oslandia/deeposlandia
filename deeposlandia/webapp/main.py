@@ -203,6 +203,11 @@ def predictor_demo(model, dataset, image):
         for label, color in predictions["labels"]:
             if dataset == "aerial" or label != "background":
                 predicted_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
+                # color_bg = "#111111" if color == "#ffffff" else "#ffffff"
+                # string_html = ("<li><font color='" + color + "' bgcolor='" +
+                #                      color_bg + "'>" + label + "</font></li>")
+                # print(string_html)
+                # predicted_labels += string_html
         predicted_labels += "</ul>"
     else:
         raise ValueError(("Unknown model, please provide 'feature_detection'"
