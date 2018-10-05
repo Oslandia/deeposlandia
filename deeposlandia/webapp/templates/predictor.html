@@ -109,12 +109,14 @@ possible.</p>
      title="Uploaded image">
 <label>Raw image</label>
 <br>
-<span id="result_label">What does contain this image?</span>
-<br>
 <p>
   <b>3: Run the prediction process.</b>
 </p>
 <button id="predict_button">Predict</button>
+<br>
+<img id="predictions" src="{{ url_for('static', filename=predicted_filename) }}">
+<br>
+<span id="result_label">What does contain this image?</span>
 
 {% endif %}
 

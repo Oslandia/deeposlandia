@@ -147,7 +147,7 @@ def demo_homepage(model, dataset):
                            image_filename=os.path.join("sample_image", "raw_image.png"),
                            label_filename=os.path.join("sample_image", "ground_truth.png"),
                            ground_truth="",
-                           prediction_filename=os.path.join("sample_image", "prediction.png"),
+                           predicted_filename=os.path.join("sample_image", "prediction.png"),
                            result="")
 
 
@@ -212,7 +212,7 @@ def predictor_demo(model, dataset, image):
                            image_filename=image_info["image_file"],
                            label_filename=image_info["label_file"],
                            ground_truth=gt_labels,
-                           prediction_filename=image_info["label_file"],
+                           predicted_filename=predicted_image,
                            result=predicted_labels)
 
 
@@ -287,7 +287,8 @@ def upload_image():
         image = Image.open(full_filename)
         image = image.resize((target_size, target_size))
         image.save(full_filename)
-        return render_template('predictor.html', image_name=filename)
+        return render_template('predictor.html', image_name=filename,
+                               predicted_filename="sample_image/prediction.png")
 
 
 @app.route("/demo_image_selector")

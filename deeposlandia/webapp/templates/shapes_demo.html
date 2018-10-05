@@ -59,6 +59,8 @@
   <div class="column column-right">
     <label>Prediction</label>
     <br>
+    <img id="predictions" height="64" width="64" src="{{url_for('static', filename=predicted_filename)}}">
+    <br>
     <span id="result"> {{ result|safe }} </span>
   </div>
 </div>

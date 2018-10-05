@@ -64,17 +64,19 @@ dataset, and to display the corresponding label predictions.</p>
   <div class="column column-left">
     <label>Raw image</label>
     <br>
-    <img id="raw_image" src="{{url_for('static', filename=image_filename)}}">
+    <img id="raw_image" height="400" width="400" src="{{url_for('static', filename=image_filename)}}">
   </div>
   <div class="column column-center">
     <label>Ground-truth</label>
     <br>
-    <img id="ground_truth" src="{{url_for('static', filename=label_filename)}}">
+    <img id="ground_truth" height="400" width="400" src="{{url_for('static', filename=label_filename)}}">
     <br>
     <span id="ground_truth_labels"> {{ ground_truth|safe }} </span>
   </div>
   <div class="column column-right">
     <label>Prediction</label>
+    <br>
+    <img id="predictions" height="400" width="400" src="{{url_for('static', filename=predicted_filename)}}">
     <br>
     <span id="result"> {{ result|safe }} </span>
   </div>
