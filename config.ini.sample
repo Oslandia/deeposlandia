@@ -1,6 +1,5 @@
 [symlink]
-sample_image = ../../../images/
-predicted_images = /tmp/deeposlandia/predicted/
+predicted = /path/to/predicted/images/
 shapes = /path/to/shape/dataset/
 mapillary = /path/to/mapillary/dataset/
 mapillary_agg = /path/to/agregated/mapillary/dataset/
