@@ -56,25 +56,33 @@
 
 <button id="predict_labels" value="Generate a new image" dataset="aerial">Generate a new image</button>
 <br>
-<div class="aerialContainer">
+<div class="aerialContainer", style=background-color:#dddddd>
   <div class="column column-left">
     <label>Raw image</label>
     <br>
-    <img id="raw_image" height="240" width="240" src="{{url_for('static', filename=image_filename)}}">
+    <img id="raw_image" height="320" width="320" src="{{url_for('static', filename=image_filename)}}">
   </div>
   <div class="column column-center">
     <label>Ground-truth</label>
     <br>
-    <img id="ground_truth" height="240" width="240" src="{{url_for('static', filename=label_filename)}}">
+    <img id="ground_truth" height="320" width="320" src="{{url_for('static', filename=label_filename)}}">
     <br>
-    <span id="ground_truth_labels"> {{ ground_truth|safe }} </span>
+    <ul>
+      {% for value, color in ground_truth_labels %}
+        <li style=color:{{ color }};background-color:"#cccccc">{{ value }}</li>
+      {% endfor %}
+    </ul>
   </div>
   <div class="column column-right">
     <label>Prediction</label>
     <br>
-    <img id="predictions" height="240" width="240" src="{{url_for('static', filename=predicted_filename)}}">
+    <img id="predictions" height="320" width="320" src="{{url_for('static', filename=predicted_filename)}}">
     <br>
-    <span id="result"> {{ result|safe }} </span>
+    <ul>
+      {% for value, color in predicted_labels %}
+        <li style=color:{{ color }};background-color:"#cccccc">{{ value }}</li>
+      {% endfor %}
+    </ul>
   </div>
 </div>
 

@@ -196,38 +196,17 @@ def predictor_demo(model, dataset, image):
                                                                 model))
     agg_value = dataset == "mapillary"
     image_info = recover_image_info(dataset, image)
-    gt_labels = "<ul>"
-    for label, color in image_info["labels"]:
-        if dataset == "aerial" or label != "background":
-            gt_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
-    gt_labels += "</ul>"
-    predictions = predict([os.path.join(app.static_folder,
-                                        image_info["image_file"])],
+    predictions = predict([os.path.join(app.static_folder, image_info["image_file"])],
                           dataset,
                           model,
                           aggregate=agg_value,
                           output_dir=PREDICT_FOLDER)
     if model == "feature_detection":
-        predicted_labels = "<ul>"
-        for label, info in predictions[os.path.join(app.static_folder, image_info["image_file"])]:
-            if label != "background":
-                predicted_labels += ("<li><font color='" + info['color'] + "'>"
-                                     + label + ": " + str(info['probability'])
-                                     + "%</font></li>")
-        predicted_labels += "</ul>"
         predicted_image = "sample_image/prediction.png"
+        predicted_labels = predictions[os.path.join(app.static_folder, image_info["image_file"])]
     elif model == "semantic_segmentation":
         predicted_image = os.path.join("predicted", image)
-        predicted_labels = "<ul>"
-        for label, color in predictions["labels"]:
-            if dataset == "aerial" or label != "background":
-                predicted_labels += "<li><font color='" + color + "'>" + label + "</font></li>"
-                # color_bg = "#111111" if color == "#ffffff" else "#ffffff"
-                # string_html = ("<li><font color='" + color + "' bgcolor='" +
-                #                      color_bg + "'>" + label + "</font></li>")
-                # print(string_html)
-                # predicted_labels += string_html
-        predicted_labels += "</ul>"
+        predicted_labels = predictions["labels"]
     else:
         raise ValueError(("Unknown model, please provide 'feature_detection'"
                             "or 'semantic_segmentation'."))
@@ -235,9 +214,9 @@ def predictor_demo(model, dataset, image):
                            model=model,
                            image_filename=image_info["image_file"],
                            label_filename=image_info["label_file"],
-                           ground_truth=gt_labels,
+                           ground_truth_labels=image_info["labels"],
                            predicted_filename=predicted_image,
-                           result=predicted_labels)
+                           predicted_labels=predicted_labels)
 
 
 @app.route("/prediction")

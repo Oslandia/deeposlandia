@@ -274,8 +274,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         label_info = [(i['category'], utils.GetHTMLColor(i['color']))
                       for i in train_config['labels']]
         for filename, prediction in zip(flattened_image_paths, y_raw_pred):
-            result[filename] = [(i[0], {"probability": 100*round(float(j), 2),
-                                       "color": i[1]})
+            result[filename] = [(i[0], 100*round(float(j), 2), i[1])
                                 for i, j in zip(label_info, prediction)]
         return result
     elif problem == "semantic_segmentation":
