@@ -1,0 +1,16 @@
+data
+config.ini
+config.prod.ini
+build/
+.pytest_cache/
+*__pycache__*
+deeposlandia/webapp/static/aerial
+deeposlandia/webapp/static/shapes
+deeposlandia/webapp/static/mapillary
+deeposlandia/webapp/static/mapillary_agg
+deeposlandia/webapp/static/predicted
+deeposlandia/webapp/static/bower/
+deeposlandia.egg-info/
+dist/
+*.sh
+article/*.html
