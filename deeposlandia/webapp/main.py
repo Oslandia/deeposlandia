@@ -102,10 +102,10 @@ def recover_image_info(dataset, filename):
 
     """
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
-    image_file = os.path.join(dataset_code, "images", filename)
+    image_file = os.path.join(dataset_code, "images", filename + ".png")
     label_file = image_file.replace("images", "labels")
     if dataset == "mapillary" or dataset == "mapillary_agg":
-        label_file = label_file.replace(".jpg", ".png")
+        image_file = image_file.replace(".png", ".jpg")
     server_label_filename = os.path.join(app.static_folder, label_file)
     server_label_image = np.array(Image.open(server_label_filename))
     if dataset == "mapillary":
@@ -118,7 +118,7 @@ def recover_image_info(dataset, filename):
         raise ValueError(("Unknown dataset. Please choose 'mapillary', "
                           "'aerial' or 'shapes'."))
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
-                           , "testing.json")) as fobj:
+                           , "validation.json")) as fobj:
         config = json.load(fobj)
     if not dataset == "aerial":
         actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
@@ -205,7 +205,7 @@ def predictor_demo(model, dataset, image):
         predicted_image = "sample_image/prediction.png"
         predicted_labels = predictions[os.path.join(app.static_folder, image_info["image_file"])]
     elif model == "semantic_segmentation":
-        predicted_image = os.path.join("predicted", image)
+        predicted_image = os.path.join("predicted", image_info["image_file"].split("/")[-1])
         predicted_labels = predictions["labels"]
     else:
         raise ValueError(("Unknown model, please provide 'feature_detection'"
@@ -311,4 +311,4 @@ def demo_image_selector():
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
     server_folder = os.path.join(app.static_folder, dataset_code, "images")
     filename = np.random.choice(os.listdir(server_folder))
-    return jsonify(image_name=filename)
+    return jsonify(image_name=filename.split(".")[0])
