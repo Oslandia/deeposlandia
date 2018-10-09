@@ -1,6 +1,7 @@
 """Flask web application for deeposlandia
 """
 
+from configparser import ConfigParser
 import daiquiri
 from flask import (abort, Flask, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
@@ -14,21 +15,39 @@ from werkzeug.utils import secure_filename
 from deeposlandia import utils
 from deeposlandia.inference import predict
 
-MODELS = ('feature_detection', 'semantic_segmentation')
-DATASETS = ('mapillary', 'shapes', 'aerial')
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
-PROJECT_FOLDER = '/var/www/data/deeposlandia'
+
+daiquiri.setup(level=logging.INFO)
+logger = daiquiri.getLogger("deeposlandia-webapp")
+
+
+_DEEPOSL_CONFIG = os.getenv('DEEPOSL_CONFIG')
+_DEEPOSL_CONFIG = _DEEPOSL_CONFIG if _DEEPOSL_CONFIG is not None else "config.ini"
+config = ConfigParser()
+if os.path.isfile(_DEEPOSL_CONFIG):
+    config.read(_DEEPOSL_CONFIG)
+else:
+    utils.logger.error("No file config.ini!")
+    sys.exit(1)
+
+PROJECT_FOLDER = config.get("folder", "project_folder")
 UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
 PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, 'predicted/')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREDICT_FOLDER, exist_ok=True)
 
-daiquiri.setup(level=logging.INFO)
-logger = daiquiri.getLogger("deeposlandia-webapp")
-
-app = Flask(__name__, static_folder=PROJECT_FOLDER)
-app.config['ERROR_404_HELP'] = False
+if config.get("status", "status") == "dev":
+    app = Flask(__name__)
+elif config.get("status", "status") == "prod":
+    app = Flask(__name__, static_folder=PROJECT_FOLDER)
+else:
+    utils.logger.error("No defined status, please consider 'dev' or 'prod'.")
+    sys.exit(1)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ERROR_404_HELP'] = False
+
+MODELS = ('feature_detection', 'semantic_segmentation')
+DATASETS = ('mapillary', 'shapes', 'aerial')
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
 
 def check_model(model):
     """Check if `model` is valid, *i.e.* equal to `feature_detection` or
