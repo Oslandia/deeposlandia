@@ -9,8 +9,8 @@ document.getElementById("predict_button").addEventListener("click", function(){
   console.log("Prediction OK!");
 
   function predict_labels(filename, dataset, model){
-    
-    $.getJSON('/prediction', {
+
+    $.getJSON(PREFIX + '/prediction', {
       img: filename,
       dataset: dataset,
       model: model
@@ -18,19 +18,18 @@ document.getElementById("predict_button").addEventListener("click", function(){
       var result = [];
       var predicted_image_path;
       $.each(data.label_images, function(image, predicted_image){
-	predicted_image_path = "/static/predicted_images/" + predicted_image;
-	result.push("<img id='predicted_image'><label>Predicted labels</label>");
+        predicted_image_path = "/static/predicted/" + predicted_image;
+        result.push("<label>Predicted labels</label>");
       });
       result.push("<ul>");
-      $.each(data.labels, function(label, color){
-	if (label != "background") {
-    	  result.push("<li><font color='" + color + "'>" + label + "</font></li>" );
-	}
+      $.each(data.labels, function(id, label){
+        if (label != "background") {
+          result.push("<li><font color='" + label[1] + "'>" + label[0] + "</font></li>" );
+        }
       });
       result.push("</ul>");
       document.getElementById("result_label").innerHTML = result.join("");
-      document.getElementById("predicted_image").src = predicted_image_path;
+      document.getElementById("predictions").src = predicted_image_path;
     }); //$.getJSON
   };
-
 });

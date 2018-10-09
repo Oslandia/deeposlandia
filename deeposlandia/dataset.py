@@ -226,7 +226,7 @@ class AerialDataset(Dataset):
                 new_in_filename = (basename_decomp[0] + '_' +
                                    str(img_id) + basename_decomp[1])
                 new_in_path = os.path.join(output_dir, 'images', new_in_filename)
-                tile.save(new_in_path)
+                tile.save(new_in_path.replace(".tif", ".png"))
                 result_dicts.append({"raw_filename": image_filename,
                                      "image_filename": new_in_path})
 
@@ -248,7 +248,7 @@ class AerialDataset(Dataset):
                                        str(img_id) + basename_decomp[1])
                     new_out_path = os.path.join(output_dir, 'labels',
                                                 new_out_filename)
-                    tile.save(new_out_path)
+                    tile.save(new_out_path.replace(".tif", ".png"))
                     labels = utils.label_building(tile,
                                                   self.label_ids,
                                                   dataset='aerial')

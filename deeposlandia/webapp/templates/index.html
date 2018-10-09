@@ -11,8 +11,8 @@
 <h4><a href="https://www.mapillary.com/dataset/vistas">Mapillary</a></h5>
 <p>
   <ul>
-    <li><a href="{{ url_for('predictor_demo', model='feature_detection', dataset='mapillary') }}">feature detection</a></li>
-    <li><a href="{{ url_for('predictor_demo', model='semantic_segmentation', dataset='mapillary') }}">semantic segmentation</a></li>
+    <li><a href="{{ url_for('demo_homepage', model='feature_detection', dataset='mapillary') }}">feature detection</a></li>
+    <li><a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='mapillary') }}">semantic segmentation</a></li>
   </ul>
   <a href="https://www.mapillary.com/dataset/vistas">
     <img src="{{url_for('static', filename='sample_image/mapillary_predicted_example.png')}}" alt="Mapillary image example" style="width:672px;height:224px;" title="Mapillary">
@@ -22,7 +22,7 @@
 <h4><a href="https://project.inria.fr/aerialimagelabeling/">Aerial image</a></h5>
 <p>
   <ul>
-    <li><a href="{{ url_for('predictor_demo', model='semantic_segmentation', dataset='aerial') }}">semantic segmentation</a></li>
+    <li><a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='aerial') }}">semantic segmentation</a></li>
   </ul>
   <a href="https://project.inria.fr/aerialimagelabeling/">
     <img src="{{url_for('static', filename='sample_image/aerial_example.png')}}" alt="Aerial image example" style="width:448px;height:224px;" title="Aerial image">
@@ -32,8 +32,8 @@
 <h4>Random shapes</h5>
 <p>
   <ul>
-    <li><a href="{{ url_for('predictor_demo', model='feature_detection', dataset='shapes') }}">feature detection</a></li>
-    <li><a href="{{ url_for('predictor_demo', model='semantic_segmentation', dataset='shapes') }}">semantic segmentation</a></li>
+    <li><a href="{{ url_for('demo_homepage', model='feature_detection', dataset='shapes') }}">feature detection</a></li>
+    <li><a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='shapes') }}">semantic segmentation</a></li>
   </ul>
   <img src="{{url_for('static', filename='sample_image/shape_example.png')}}" alt="Shape image example" style="width:128px;height:128px;" title="Shapes">
 </p>
@@ -41,7 +41,7 @@
 <h3>Your turn to play!</h4>
 
 <p>
-  Try our <a href="{{ url_for('predictor')}}">semantic segmentation predictor</a> with your own images!
+  Try our <a href="{{ url_for('load_predictor')}}">semantic segmentation predictor</a> with your own images!
 </p>
 
 <h3>About</h4>

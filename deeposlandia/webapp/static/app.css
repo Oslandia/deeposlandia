@@ -5,9 +5,9 @@ html, body {
     margin-right: 3em;
 }
 
-.shapeContainer{width: 450px}
-.mapillaryContainer{width: 1400px}
-.aerialContainer{width: 900px}
+.shapeContainer{width: 1100px}
+.mapillaryContainer{width: 1100px}
+.aerialContainer{width: 1100px}
 .column-left{ float: left; width: 33%; margin: 0em}
 .column-right{ float: right; width: 33%; margin: 0em}
 .column-center{ display: inline-block; width: 33%; margin: 0em}

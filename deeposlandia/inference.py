@@ -274,9 +274,8 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         label_info = [(i['category'], utils.GetHTMLColor(i['color']))
                       for i in train_config['labels']]
         for filename, prediction in zip(flattened_image_paths, y_raw_pred):
-            result[filename] = {i[0]: {"probability": 100*round(float(j), 2),
-                                       "color": i[1]}
-                                for i, j in zip(label_info, prediction)}
+            result[filename] = [(i[0], 100*round(float(j), 2), i[1])
+                                for i, j in zip(label_info, prediction)]
         return result
     elif problem == "semantic_segmentation":
         os.makedirs(output_dir, exist_ok=True)
@@ -315,7 +314,7 @@ def summarize_config(config):
     dict
         Simplified dataset configuration for HTML-printing purpose
     """
-    return {c['category']: utils.GetHTMLColor(c['color']) for c in config}
+    return [(c['category'], utils.GetHTMLColor(c['color'])) for c in config]
 
 def extract_images(image_paths):
     """Convert a list of image filenames into a numpy array that contains the
