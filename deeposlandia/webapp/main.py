@@ -205,7 +205,7 @@ def predictor_demo(model, dataset, image):
         predicted_image = "sample_image/prediction.png"
         predicted_labels = predictions[os.path.join(app.static_folder, image_info["image_file"])]
     elif model == "semantic_segmentation":
-        predicted_image = os.path.join("predicted", image_info["image_file"].split("/")[-1])
+        predicted_image = os.path.join("predicted", image_info["label_file"].split("/")[-1])
         predicted_labels = predictions["labels"]
     else:
         raise ValueError(("Unknown model, please provide 'feature_detection'"
