@@ -59,11 +59,13 @@ As inputs, Mapillary provides a bunch of street scene images of various sizes
 in a `images` repository, and the same images after filtering process in
 `instances` and `labels` repositories.
 
-![Example of image, with its filtered version](./images/MVD_M2kh294N9c72sICO990Uew.png)
-
 There are 18000 images in the training set, 2000 images in the validation set,
 and 5000 images in the testing set. The testing set is proposed only for a
-model test purpose, it does not contain filtered versions of images.
+model test purpose, it does not contain filtered versions of images. The raw
+dataset contains 66 labels, splitted into 13 categories. The following figure
+depicts a prediction result over the 13-labelled dataset version.
+
+![Example of image, with labels and predictions](./images/mapillary_prediction_example.png)
 
 ## AerialImage (INRIA)
 
@@ -79,7 +81,7 @@ testing. Each of these images are 5000*5000 `tif` images. Amongst the 180
 training images, we assigned 15 training images to validation. One example of
 this image from this dataset is depicted below.
 
-![Example of image, with its filtered version](./images/aerial_prediction_example.png)
+![Example of image, with labels and predictions](./images/aerial_prediction_example.png)
 
 ## Shapes
 
