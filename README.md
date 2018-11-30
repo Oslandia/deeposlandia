@@ -11,16 +11,15 @@ associated [web application](http://data.oslandia.io/deeposlandia):
 
 # Content
 
-The project contains following folders:
+The project contains the following folders:
 
-+ [deeposlandia](./deeposlandia) contains main Python modules to train and test
-  convolutional neural networks
++ [deeposlandia](./deeposlandia) contains the main Python modules to train and
+  test convolutional neural networks
 + [examples](./examples) contains some Jupyter notebooks that aim at
-  describing data or basic neural network construction
+  describing data and building basic neural networks
 + [images](./images) contains some example images to illustrate the Mapillary
   dataset as well as some preprocessing analysis results
-+ [tests](./tests) contains some test modules to guarantee the functioning of a
-  bunch of snippets; it uses the `pytest` framework.
++ [tests](./tests); `pytest` is used to launch several tests from this folder.
 
 Additionally, running the code may generate extra subdirectories in the chosen
 data repository.
@@ -29,9 +28,9 @@ data repository.
 
 ## Requirements
 
-The code has been run with Python3. The dependencies are recalled in `setup.py`
-file, and additional dependencies for developing purpose are listed in
-`requirements-dev.txt`.
+The code has been run with Python 3. All dependencies are specified in
+`setup.py` file, and additional dependencies for developing purpose are listed
+in `requirements-dev.txt`.
 
 ## From source
 
@@ -73,7 +72,7 @@ depicts a prediction result over the 13-labelled dataset version.
 
 ![Example of image, with labels and predictions](./images/mapillary_prediction_example.png)
 
-## AerialImage (INRIA)
+## AerialImage (Inria)
 
 In
 the
