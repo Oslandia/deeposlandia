@@ -7,26 +7,95 @@
   const model = "{{ model }}";
 </script>
 
-<h2>Deep learning predictor: {{model}} for Mapillary dataset</h2>
+<div class="od-header">
+  <h1>Mapillary: {{ model }}</h1>
+</div>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"
         aria-current="page"><a href="{{url_for('index')}}">Home</a>
     </li>
-  </ol>
+    <li class="breadcrumb-item"
+        aria-current="page">Mapillary</a>
+</li>  </ol>
 </nav>
 
-<h4>Description</h4>
+<h2>Demo</h2>
+
+<p>Click on the below button to generate a random picture from Mapillary
+  dataset, and to display the corresponding label predictions.</p>
+
+<button id="predict_labels" value="Generate a new image" dataset="mapillary">Generate a new image</button>
+
+<div class="container">
+  <div class="row widget">
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Raw image</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="raw_image" height="70%" width="100%" src="{{url_for('static', filename=image_filename)}}">
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Ground-truth</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="ground_truth" height="70%" width="100%" src="{{url_for('static', filename=label_filename)}}">
+	  <br>
+	  {% for value, color in ground_truth_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% endfor %}
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Prediction</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="predictions" height="70%" width="100%" src="{{url_for('static', filename=predicted_filename)}}">
+	  <br>
+	  {% if model=="feature_detection" %}
+	  {% for value, proba, color in predicted_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}: {{ proba }}%</span>
+	  {% endfor %}
+	  {% else %}
+	  {% for value, color in predicted_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% endfor %}
+	  {% endif %}
+	</div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<h2>Training procedure</h2>
 
 <p>
-  In the <a href="https://www.mapillary.com/dataset/vistas">Mapillary</a> dataset, there are 65
-  labels, and consequently the model aims at answering one question for each: <em>is this label on
-  the picture?</em> We could get as a result a vector of 65 boolean values.
+  A <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net</a> model has been
+  trained during 20 epochs with a set of 18000 training images, with a
+  validation procedure involving 2000 images at the end of each training
+  epoch.
 </p>
 
-<p>The dataset glossary is subdivided into 7 larger classes. For a sake of clarity, a lighter
-  classification with only 13 labels has been built up:
+<h2>Dataset description</h2>
+
+<p>
+  The original <a href="https://www.mapillary.com/dataset/vistas">Mapillary</a>
+  dataset contains 65 labels. For a sake of clarity, a lighter classification
+  with only 13 labels has been built up:
   <ul>
     <li>animal: ground animal or birds</li>
     <li>construction (barrier): curbs, fences, guard rails and other barriers</li>
@@ -43,58 +112,6 @@
     <li>void: own vehicle or unlabeled pixels</li>
   </ul>
 </p>
-
-<h4>Remark about model training</h4>
-
-<p>
-  The trained neural network has a <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net
-  architecture</a>. It has been trained during 20 epochs with a set of 18000 training images and
-  validated with a smaller set of 2000 images (the validation occurred at the end of each training
-  epoch), in order to ensure that learned features are as generic as possible.
-</p>
-
-<h4>Use the deep learning model to predict image labels</h4>
-
-<p>Click on the below button to generate a random picture from Mapillary
-dataset, and to display the corresponding label predictions.</p>
-
-<button id="predict_labels" value="Generate a new image" dataset="mapillary">Generate a new image</button>
-<br>
-<div class="mapillaryContainer", style=background-color:#dddddd>
-  <div class="column column-left">
-    <label>Raw image</label>
-    <br>
-    <img id="raw_image" height="320" width="320" src="{{url_for('static', filename=image_filename)}}">
-  </div>
-  <div class="column column-center">
-    <label>Ground-truth</label>
-    <br>
-    <img id="ground_truth" height="320" width="320" src="{{url_for('static', filename=label_filename)}}">
-    <br>
-    <ul>
-      {% for value, color in ground_truth_labels %}
-        <li><font color={{ color }}>{{ value }}</font></li>
-      {% endfor %}
-    </ul>
-  </div>
-  <div class="column column-right">
-    <label>Prediction</label>
-    <br>
-    <img id="predictions" height="320" width="320" src="{{url_for('static', filename=predicted_filename)}}">
-    <br>
-    <ul>
-      {% if model=="feature_detection" %}
-      {% for value, proba, color in predicted_labels %}
-      <li><font color={{ color }}>{{ value }}: {{ proba }}%</font></li>
-      {% endfor %}
-      {% else %}
-      {% for value, color in predicted_labels %}
-      <li><font color={{ color }}>{{ value }}</font></li>
-      {% endfor %}
-      {% endif %}
-    </ul>
-  </div>
-</div>
 
 {% endblock %}
 

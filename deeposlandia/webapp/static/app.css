@@ -13,7 +13,7 @@ __________________________________________________ */
 }
 
 .od-header h1 {
-    margin-left: 200px;
+    margin-left: 100px;
     margin-top: 20px;
     color: #ddd;
     font-weight: bold;
@@ -46,18 +46,10 @@ __________________________________________________ */
   margin-bottom: 1.2rem;
 }
 
-
-.widgets {
-    margin-top: 20px;
-}
-
 .home-widget {
     margin-right: 5px;
     margin-left: 5px;
     margin-bottom: 10px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    background: rgba(200, 200, 200, 0.9);
     border-radius: 10px;
     transition: background-color 0.5s ease;
 }
@@ -73,20 +65,17 @@ __________________________________________________ */
     height: 250px;
 }
 
-.dataset .panel-body {
-    /* height: 80%; */
-}
-
 .home-widget .panel-body:hover {
     background: #ded7d1;
 }
 
-.home-widget .dataset{
-    /* height: 400px; */
+.dataset .panel-body {
+    height: 350px;
 }
 
 /* Colored predicted labels */
 .color-label {
+    margin: 2px;
     padding: 0 8px;
     line-height: 16px;
     border-radius: 100px;
