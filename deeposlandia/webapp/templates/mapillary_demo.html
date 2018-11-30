@@ -63,13 +63,13 @@
 	  <h5>Prediction</h5>
 	</div>
         <div class="panel-body">
-	  <img id="predictions" height="70%" width="100%" src="{{url_for('static', filename=predicted_filename)}}">
-	  <br>
 	  {% if model=="feature_detection" %}
 	  {% for value, proba, color in predicted_labels %}
 	  <span class="color-label" style="background-color: {{ color }}">{{ value }}: {{ proba }}%</span>
 	  {% endfor %}
 	  {% else %}
+	  <img id="predictions" height="70%" width="100%" src="{{url_for('static', filename=predicted_filename)}}">
+	  <br>
 	  {% for value, color in predicted_labels %}
 	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
 	  {% endfor %}
