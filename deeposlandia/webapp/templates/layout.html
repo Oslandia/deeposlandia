@@ -1,13 +1,26 @@
 <html>
 
   <head>
-    <meta charset="UTF-8">
-    <meta name="description" content="Simple deep learning demonstrator">
-    <meta name="keywords" content="Artificial Intelligence, Deep Learning, image">
-    <meta name="author" content="Oslandia">
-    {% include 'deeposlandia-css.html' %}
 
-    <title>deeposlandia: deep learning on image data</title>
+    <meta charset="utf-8"> 
+    <meta name="description" content="Simple deep learning demonstrator">
+    <meta name="keywords" content="oslandia,data,analysis,data science,deep learning,neural network,gis,geospatial">
+    <meta name="author" content="Oslandia">
+
+    <title>Deeposlandia</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link media="screen" rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower/bootstrap/dist/css/bootstrap.min.css') }}" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='sample_image/icon.png') }}">
+
   </head>
 
   <body>
