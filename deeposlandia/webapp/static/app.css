@@ -73,6 +73,18 @@ __________________________________________________ */
     height: 350px;
 }
 
+.prediy {
+    width : 900px;
+}
+
+.prediy .home-widget .panel-header {
+    height: 150px;
+}
+
+.prediy .home-widget .panel-body {
+    height: 500px;
+}
+
 /* Colored predicted labels */
 .color-label {
     margin: 2px;

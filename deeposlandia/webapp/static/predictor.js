@@ -19,15 +19,13 @@ document.getElementById("predict_button").addEventListener("click", function(){
       var predicted_image_path;
       $.each(data.label_images, function(image, predicted_image){
         predicted_image_path = "/static/predicted/" + predicted_image;
-        result.push("<label>Predicted labels</label>");
       });
-      result.push("<ul>");
       $.each(data.labels, function(id, label){
         if (label != "background") {
-          result.push("<li><font color='" + label[1] + "'>" + label[0] + "</font></li>" );
+          result.push("<span class='color-label' style='background-color:" + label[1] + "'>" + label[0] + "</span>");
         }
       });
-      result.push("</ul>");
+      console.log(result.join(""));
       document.getElementById("result_label").innerHTML = result.join("");
       document.getElementById("predictions").src = predicted_image_path;
     }); //$.getJSON
