@@ -6,25 +6,113 @@
   const model = "semantic_segmentation";
 </script>
 
-<h2>Semantic segmentation predictor</h2>
-<h3>Try your own pictures!</h3>
+<div class="od-header">
+  <h1>Try It Yourself!</h1>
+</div>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"
         aria-current="page"><a href="{{url_for('index')}}">Home</a>
     </li>
+    <li class="breadcrumb-item"
+        aria-current="page">Try it yourself</a>
+    </li>
   </ol>
 </nav>
 
-<h4>Remark about model training</h4>
+<h2>Instructions</h2>
 
-<p>The model used here has been trained
-on <a href="https://www.mapillary.com/dataset/vistas">Mapillary dataset</a>
-during 5 epochs with a set of 18000 training images. It has been validated with
-a smaller set of 2000 images (the validation occurred at the end of each
-training epoch), in order to ensure that learned features are as generic as
-possible.</p>
+<p>
+  Load a <i>.png</i> or <i>.jpg</i> image from your file system, and discover
+  the amazing predictions!
+  <ol type="1">
+    <li>Click on "Parcourir..." button: <b>Get an image from your file system.</b></li>
+    <li>Click on "Upload" button: <b>Upload the file to the server.</b></li>
+    <li>Click on "Predict" button: <b>Run the prediction process.</b></li>
+  </ul>
+</p>
+
+<h2>Let's predict!</h2>
+
+<div class="container">
+  <div class="row widget prediy">
+
+    <div class="one-half column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Uploaded image</h5>
+	  <form method="POST"
+		enctype="multipart/form-data"
+		action="{{url_for('upload_image')}}"
+		id="upload_form">
+	    <input type="file"
+  		   name="file"
+  		   value="Upload"
+  		   id="upload_file">
+	    <input type="submit"
+		   value="Upload"
+		   id="upload_button">
+	  </form>
+	</div>
+        <div class="panel-body">
+	  {% if example_image %}
+	  <img id="example_image"
+	       src="{{url_for('static', filename=example_image)}}"
+	       title="Example image"
+	       alt="Example image"
+	       width="100%" height="85%">
+	  {% else %}
+	  <img id="uploaded_image"
+	       src="{{ url_for('send_image', filename=image_name) }}"
+	       alt="Uploaded image"
+	       title="Uploaded image"
+	       width="100%" height="85%">
+	  {% endif %}
+	</div>
+      </div>
+    </div>
+
+    <div class="one-half column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Prediction</h5>
+	  <button id="predict_button">Predict</button>
+	</div>
+        <div class="panel-body">
+	  {% if example_image %}
+	  {% else %}
+	  <img id="predictions" src="{{ url_for('static', filename=predicted_filename) }}" width="100%" height="85%">
+	  <br>
+	  <span id="result_label">What does contain this image?</span>
+	  {% endif %}
+	</div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<h2>Making of</h2>
+
+<p>
+  The model used here has been trained
+  on <a href="https://www.mapillary.com/dataset/vistas">Mapillary dataset</a>
+  during 5 epochs with a set of 18000 training images. It has been validated
+  with a smaller set of 2000 images.
+</p>
+
+<p>
+  The model expect street-scene images. You can try whatever picture you want,
+  however in the case you pick another type of scene, do not be surprised if
+  the result looks weird...
+</p>
+
+<p>
+  The neural network was trained with 400*400 pixel images, that sounds quite
+  small in regard with current camera resolutions. You should expect a more or
+  less important pixelization phenomenon depending on your image size.
+</p>
 
 <p>As a recall, one can list the 13 Mapillary aggregated labels that were used during the model training:
   <ul>
@@ -43,82 +131,6 @@ possible.</p>
     <li>void: own vehicle or unlabeled pixels</li>
   </ul>
 </p>
-
-<h4>Use the deep learning model to predict image labels</h4>
-
-<p>
-  Load a <i>.png</i> or <i>.jpg</i> image from your file system, the
-  corresponding label predictions will be automatically displayed, as a
-  labelled version of the picture, with the corresponding legend below. In
-  brief:
-  <ol type="1">
-    <li>Click on "Parcourir..." button</li>
-    <li>Click on "Upload" button</li>
-    <li>Click on "Predict" button</li>
-  </ul>
-</p>
-<p>
-  <b>Disclaimer:</b> The model expect street-scene images. You can try whatever
-  picture you want, however in the case you pick another type of scene, do not
-  be surprised if the result looks weird...
-</p>
-<p>
-  <b>Disclaimer 2:</b> The neural network was trained with 400*400 pixel images, that sounds quite small in regard with current camera resolutions. You should expect a more or less important pixelization phenomenon depending on your image size.
-</p>
-
-<p>
-  <b>1: Get an image from your file system.</b>
-</p>
-<form method="POST"
-      enctype="multipart/form-data"
-      action="{{url_for('upload_image')}}"
-      id="upload_form">
-  <input type="file"
-  	 name="file"
-  	 value="Upload"
-  	 id="upload_file">
-  <input type="submit"
-	 value="Upload"
-	 id="upload_button">
-</form>
-
-<p>
-  <b>2: Upload the file to the server.</b>
-</p>
-
-{% if example_image %}
-
-<img id="example_image"
-     src="{{url_for('static', filename=example_image)}}"
-     title="Example image"
-     alt="Example image">
-<label>Raw image</label>
-<br>
-<span id="example_label"></span>
-<br>
-<p>
-  <b>3: Run the prediction process.</b>
-</p>
-<button id="predict_button">Predict</button>
-
-{% else %}
-
-<img id="uploaded_image"
-     src="{{ url_for('send_image', filename=image_name) }}"
-     alt="Uploaded image"
-     title="Uploaded image">
-<label>Raw image</label>
-<br>
-<p>
-  <b>3: Run the prediction process.</b>
-</p>
-<button id="predict_button">Predict</button>
-<br>
-<img id="predictions" src="{{ url_for('static', filename=predicted_filename) }}">
-<br>
-<span id="result_label">What does contain this image?</span>
-
-{% endif %}
 
 {% endblock %}
 

@@ -7,83 +7,96 @@
   const model = "{{ model }}";
 </script>
 
-<h2>Deep learning predictor: {{model}} for Shapes dataset</h2>
+<div class="od-header">
+  <h1>Shapes: {{ model }}</h1>
+</div>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"
         aria-current="page"><a href="{{url_for('index')}}">Home</a>
     </li>
+    <li class="breadcrumb-item"
+        aria-current="page">Shapes</a>
+    </li>  </ol>
   </ol>
 </nav>
 
-<h4>Description</h4>
-
-<p>In this dataset, there are three labels, and consequently the model aims at answering one question for each:
-  <ul>
-    <li>Is this a <b>square</b> on the picture?</li>
-    <li>Is this a <b>circle</b> on the picture?</li>
-    <li>Is this a <b>triangle</b> on the picture?</li>
-  </ul>
-</p>
-
-<h4>Remark about model training</h4>
-
-<p>
-  The model used here has a simple architecture where three transposed convolution layers follow
-  three standard convolution layers. It has been trained during 30 epochs with a set of 18000
-  randomly generated images and validated with a smaller set of 2000 randomly generated images (the
-  validation occurred at the end of each training epoch), in order to ensure that learned features
-  are as generic as possible.
-</p>
-
-<h4>Use the deep learning model to predict image labels</h4>
+<h2>Demo</h2>
 
 <p>Click on the below button to generate a random picture with geometric shapes, and to display the corresponding label predictions.</p>
 
 <button id="predict_labels" value="Generate a new image" dataset="shapes">Generate a new image</button>
-<br>
-<div class="shapeContainer", style=background-color:#dddddd>
-  <div class="column column-left">
-    <label>Raw image</label>
-    <br>
-    <img id="raw_image" height="320" width="320" src="{{url_for('static', filename=image_filename)}}">
-  </div>
-  <div class="column column-center">
-    <label>Ground-truth</label>
-    <br>
-    <img id="ground_truth" height="320" width="320" src="{{url_for('static', filename=label_filename)}}">
-    <br>
-    <ul>
-      {% for value, color in ground_truth_labels %}
-      {% if value!="background" %}
-        <li><font color={{ color }}>{{ value }}</font></li>
-      {% endif %}
-      {% endfor %}
-    </ul>
-  </div>
-  <div class="column column-right">
-    <label>Prediction</label>
-    <br>
-    <img id="predictions" height="320" width="320" src="{{url_for('static', filename=predicted_filename)}}">
-    <br>
-    <ul>
-      {% if model=="feature_detection" %}
-      {% for value, proba, color in predicted_labels %}
-      {% if value!="background" %}
-      <li><font color={{ color }}>{{ value }}: {{ proba }}%</font></li>
-      {% endif %}
-      {% endfor %}
-      {% else %}
-      {% for value, color in predicted_labels %}
-      {% if value!="background" %}
-      <li><font color={{ color }}>{{ value }}</font></li>
-      {% endif %}
-      {% endfor %}
-      {% endif %}
-    </ul>
+
+<div class="container">
+  <div class="row widget">
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Raw image</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="raw_image" height="70%" width="100%" src="{{url_for('static', filename=image_filename)}}">
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Ground-truth</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="ground_truth" height="70%" width="100%" src="{{url_for('static', filename=label_filename)}}">
+	  <br>
+	  {% for value, color in ground_truth_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% endfor %}
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Prediction</h5>
+	</div>
+        <div class="panel-body">
+	  {% if model=="feature_detection" %}
+	  {% for value, proba, color in predicted_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}: {{ proba }}%</span>
+	  {% endfor %}
+	  {% else %}
+	  <img id="predictions" height="70%" width="100%" src="{{url_for('static', filename=predicted_filename)}}">
+	  <br>
+	  {% for value, color in predicted_labels %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% endfor %}
+	  {% endif %}
+	</div>
+      </div>
+    </div>
+    
   </div>
 </div>
+
+<h2>Training procedure</h2>
+
+<p>
+  The model used here has a simple architecture where three transposed
+  convolution layers follow three standard convolution layers. It has been
+  trained during 30 epochs with a set of 18000 randomly generated images
+  involving an other set of 2000 random images at the end of each training
+  epoch..
+</p>
+
+<h2>Description</h2>
+
+<p>This toy dataset contains three labels, <emph>i.e.</emph> squares, circles
+and triangles. There is at most one single items for each shape: as a
+consequence, some pictures may be empty!
+</p>
 
 {% endblock %}
 

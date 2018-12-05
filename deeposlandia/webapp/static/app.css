@@ -1,13 +1,98 @@
 /* Deeposlandia app CSS */
 
-html, body {
-    margin: 1em;
-    margin-right: 3em;
+/* Header
+__________________________________________________ */
+
+.od-header {
+    position: relative;
+    overflow: hidden;
+    height: 100px;
+    padding-top: 10px;
+    margin-bottom: 40px;
+    box-shadow: 0px 5px 14px rgba(100, 100, 100, 0.2);
 }
 
-.shapeContainer{width: 1100px}
-.mapillaryContainer{width: 1100px}
-.aerialContainer{width: 1100px}
-.column-left{ float: left; width: 33%; margin: 0em}
-.column-right{ float: right; width: 33%; margin: 0em}
-.column-center{ display: inline-block; width: 33%; margin: 0em}
+.od-header h1 {
+    margin-left: 100px;
+    margin-top: 20px;
+    color: #ddd;
+    font-weight: bold;
+}
+
+@media (max-width: 950px) {
+    .od-header h1 {
+        background: rgba(100, 100, 100, 0.5);
+        margin-left: 70px;
+        margin-top: 100px;
+        color: #fff;
+        font-weight: bold;
+    }
+}
+
+/* Shared
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.button {
+  border-radius: 100px;
+}
+
+/* Sections
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.section {
+  padding: 8rem 0 7rem;
+  text-align: center;
+}
+.section-heading,
+.section-description {
+  margin-bottom: 1.2rem;
+}
+
+.home-widget {
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: background-color 0.5s ease;
+}
+
+.home-widget .panel-header {
+    margin-left: 20px;
+    padding: 0px;
+    border-radius: 10px;
+}
+
+.home-widget .panel-body {
+    background: rgba(200, 200, 200, 0.4);
+    height: 250px;
+}
+
+.home-widget .panel-body:hover {
+    background: #ded7d1;
+}
+
+.dataset .panel-body {
+    height: 350px;
+}
+
+.prediy {
+    width : 900px;
+}
+
+.prediy .home-widget .panel-header {
+    height: 150px;
+}
+
+.prediy .home-widget .panel-body {
+    height: 500px;
+}
+
+/* Colored predicted labels */
+.color-label {
+    margin: 2px;
+    padding: 0 8px;
+    line-height: 16px;
+    border-radius: 100px;
+    font-style: bold;
+    font-weight: 400;
+    display: inline-block;
+    font-size: small;
+}
