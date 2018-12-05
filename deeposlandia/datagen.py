@@ -21,6 +21,7 @@ import pandas as pd
 
 from deeposlandia import utils
 from deeposlandia.dataset import AerialDataset, MapillaryDataset, ShapeDataset
+from deeposlandia.buildings import TanzaniaDataset
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -78,6 +79,7 @@ if __name__=='__main__':
                                                       args.image_size,
                                                       aggregate_value)
 
+    print(prepro_folder)
     # Dataset creation
     if args.dataset == "mapillary":
         config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
@@ -95,9 +97,14 @@ if __name__=='__main__':
         train_dataset = AerialDataset(args.image_size)
         validation_dataset = AerialDataset(args.image_size)
         test_dataset = AerialDataset(args.image_size)
+    elif args.dataset == "open_ai_tanzania":
+        train_dataset = TanzaniaDataset(args.image_size)
+        validation_dataset = TanzaniaDataset(args.image_size)
+        test_dataset = TanzaniaDataset(args.image_size)
     else:
         utils.logger.error("Unsupported dataset type. Please choose "
-                           "'mapillary', 'shapes' or 'aerial'")
+                           "'mapillary', 'shapes', 'aerial' "
+                           "or 'open_ai_tanzania'")
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
@@ -120,6 +127,7 @@ if __name__=='__main__':
         utils.logger.info(("No existing configuration file for this dataset. Create {}"
                            "").format(prepro_folder["validation_config"]))
         input_image_dir = os.path.join(input_folder, "validation")
+        print(input_image_dir)
         validation_dataset.populate(prepro_folder["validation"],
                                     input_image_dir,
                                     nb_images=args.nb_validation_image,
