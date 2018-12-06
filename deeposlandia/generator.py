@@ -122,15 +122,16 @@ def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
                                          color_mode='rgb',
                                          seed=seed)
 
-def create_generator(dataset, model, datapath, image_size, batch_size, label_config,
-                     inference=False, seed=None):
+def create_generator(dataset, model, datapath, image_size, batch_size,
+                     label_config, inference=False, seed=None):
     """Create a Keras data Generator starting from images contained in `datapath` repository to
     address `model`
 
     Parameters
     ----------
     dataset : str
-        Name of the dataset (*e.g.* `shapes`, `mapillary` or `aerial`)
+        Name of the dataset (*e.g.* `shapes`, `mapillary`, `aerial` or
+    `tanzania`)
     model : str
         Research problem that is addressed (either `feature_detection` or `semantic_segmentation`)
     datapath : str
@@ -152,7 +153,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size, label_con
         Generator of tuples (images, labels), for each input data batch
 
     """
-    if not dataset in ['shapes', 'mapillary', 'aerial']:
+    if not dataset in ['shapes', 'mapillary', 'aerial', 'tanzania', 'open_ai_tanzania']:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size,
                                      batch_size, seed)

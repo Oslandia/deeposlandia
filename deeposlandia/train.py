@@ -35,7 +35,8 @@ def add_instance_arguments(parser):
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        help=("Dataset type (either mapillary, shapes, aerial"
+                              " or tanzania)"))
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "

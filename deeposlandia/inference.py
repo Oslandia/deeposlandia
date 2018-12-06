@@ -48,7 +48,8 @@ def add_program_arguments(parser):
     """
     parser.add_argument('-D', '--dataset',
                         required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        help=("Dataset type (either mapillary, shapes, aerial"
+                              ", tanzania or open_ai_tanzania)"))
     parser.add_argument('-i', '--image-paths',
                         required=True,
                         nargs='+',
@@ -160,7 +161,8 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     filenames : str
         Name of the image files on the file system
     dataset : str
-        Name of the dataset, either `shapes`, `mapillary` or `aerial`
+        Name of the dataset, either `shapes`, `mapillary`, `aerial` or
+    `tanzania`
     problem : str
         Name of the considered model, either `feature_detection` or
     `semantic_segmentation`

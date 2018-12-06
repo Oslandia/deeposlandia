@@ -97,7 +97,7 @@ if __name__=='__main__':
         train_dataset = AerialDataset(args.image_size)
         validation_dataset = AerialDataset(args.image_size)
         test_dataset = AerialDataset(args.image_size)
-    elif args.dataset == "open_ai_tanzania":
+    elif args.dataset == "tanzania":
         train_dataset = TanzaniaDataset(args.image_size)
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
