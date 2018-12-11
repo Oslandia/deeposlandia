@@ -62,6 +62,48 @@ class TanzaniaDataset(Dataset):
                        color=self.FOUNDATION_COLOR, is_evaluate=True)
 
 
+    def _preprocess_tile(self, x, y, image_filename, output_dir,
+                         raster, labels=None):
+        """
+
+        """
+        basename_decomp = os.path.splitext(
+            os.path.basename(image_filename))
+        img_id_str = (str(self.image_size) + '_'
+                      + str(self.image_size) + '_'
+                      + str(x) + '_' + str(y))
+        new_in_filename = (basename_decomp[0] + '_'
+                           + img_id_str + ".png")
+        new_in_path = os.path.join(output_dir, 'images',
+                                   new_in_filename)
+        gdal.Translate(new_in_path, raster,
+                       format="PNG",
+                       srcWin=[x, y, self.image_size, self.image_size])
+        if not labels is None:
+            raster_features = get_image_features(raster)
+            tile_items = extract_tile_items(raster_features, labels,
+                                            x, y,
+                                            self.image_size,
+                                            self.image_size,
+                                            tile_srid=32737)
+            out_labelname = (new_in_path
+                             .replace("images", "labels"))
+            mask = self.load_mask(tile_items, raster_features, x, y)
+            label_dict = utils.label_building(mask,
+                                              range(self.get_nb_labels()),
+                                              "tanzania")
+            labelled_image = utils.build_image_from_config(mask,
+                                                           self.labels)
+            labelled_image.save(out_labelname)
+            return {"raw_filename": image_filename,
+                    "image_filename": new_in_path,
+                    "label_filename": out_labelname,
+                    "labels": label_dict}
+        else:
+            return {"raw_filename": image_filename,
+                    "image_filename": new_in_path}
+
+
     def _preprocess(self, image_filename, output_dir, labelling):
         """Resize/crop then save the training & label images
 
@@ -81,66 +123,28 @@ class TanzaniaDataset(Dataset):
         raw_img_width = raster.RasterXSize
         raw_img_height = raster.RasterYSize
         result_dicts = []
-        buffer_tiles = []
         utils.logger.info(f"Raw image size: {raw_img_width}, {raw_img_height}")
+        utils.logger.info(f"Image filename: {image_filename}")
 
+        labels = None
         if labelling:
             label_filename = (image_filename
                               .replace("images", "labels")
                               .replace(".tif", ".geojson"))
-            utils.logger.info(f"Image filename: {image_filename}")
-            utils.logger.info(f"Label filename: {label_filename}")
-            utils.logger.info(labelling)
             labels = gpd.read_file(label_filename)
             labels = labels.loc[~labels.geometry.isna(), ["condition", "geometry"]]
             none_mask = [lc is None for lc in labels.condition]
             labels.loc[none_mask, "condition"] = "Complete"
-            label_names = [l["name"] for l in self.labels[1:]]
 
         for x in range(0, raw_img_width, self.image_size):
             for y in range(0, raw_img_height, self.image_size):
-
-                basename_decomp = os.path.splitext(
-                    os.path.basename(image_filename))
-                img_id_str = (str(self.image_size) + '_'
-                              + str(self.image_size) + '_'
-                              + str(x) + '_' + str(y))
-                new_in_filename = (basename_decomp[0] + '_'
-                                   + img_id_str + ".png")
-                new_in_path = os.path.join(output_dir, 'images',
-                                           new_in_filename)
-                tile = gdal.Translate(new_in_path, raster,
-                                      format="PNG",
-                                      srcWin=[x, y,
-                                              self.image_size,
-                                              self.image_size])
-
-                if labelling:
-                    tile_items = extract_tile_items(raster, labels,
-                                                    x, y,
-                                                    self.image_size,
-                                                    self.image_size,
-                                                    tile_srid=32737)
-
-                    out_labelname = (new_in_path
-                                     .replace("images", "labels")
-                                     .replace(".png", ".geojson"))
-                    if tile_items.shape[0] > 0:
-                        label_dict = utils.geojson_label_building(tile_items["condition"],
-                                                          label_names)
-                        tile_items.to_file(out_labelname, driver="GeoJSON")
-                    else:
-                        label_dict = {"0": 1, "1": 0, "2": 0, "3": 0}
-                    result_dicts.append({"raw_filename": image_filename,
-                                         "image_filename": new_in_path,
-                                         "label_filename": out_labelname,
-                                         "labels": label_dict})
-                else:
-                    result_dicts.append({"raw_filename": image_filename,
-                                         "image_filename": new_in_path})
-                del tile
+                tile_results = self._preprocess_tile(x, y, image_filename,
+                                                     output_dir,
+                                                     raster, labels)
+                result_dicts.append(tile_results)
         del raster
         return result_dicts
+
 
     def populate(self, output_dir, input_dir, nb_images=None,
                  aggregate=False, labelling=True):
