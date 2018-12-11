@@ -45,6 +45,25 @@
     <div class="one-half column home-widget">
       <div class="panel panel-default">
         <div class="panel-header">
+	  <h5>Random shapes (3 labels)</h5>
+	</div>
+        <div class="panel-body">
+	  <p>
+	    <a href="{{ url_for('demo_homepage', model='feature_detection', dataset='shapes') }}" title="feature detection">
+	      <img src="{{url_for('static', filename='sample_image/shapes_fd.png')}}" width="48%" height="200px">
+	    </a>
+	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='shapes') }}" title="semantic segmentation">
+	      <img src="{{url_for('static', filename='sample_image/shapes_ss.png')}}" width="48%" height="200px">
+	    </a>
+	    <br>
+	    Toy dataset :-)
+	  </p>
+	</div>
+      </div>
+    </div>
+    <div class="one-half column home-widget">
+      <div class="panel panel-default">
+        <div class="panel-header">
 	  <h5><a href="https://project.inria.fr/aerialimagelabeling/">Aerial image</a> (2 labels)</h5>
 	</div>
         <div class="panel-body">
@@ -60,18 +79,14 @@
     <div class="one-half column home-widget">
       <div class="panel panel-default">
         <div class="panel-header">
-	  <h5>Random shapes (3 labels)</h5>
+	  <h5><a href="https://blog.werobotics.org/2018/08/06/welcome-to-the-open-ai-tanzania-challenge/">Open AI Tanzania</a> (4 labels)</h5>
 	</div>
         <div class="panel-body">
 	  <p>
-	    <a href="{{ url_for('demo_homepage', model='feature_detection', dataset='shapes') }}" title="feature detection">
-	      <img src="{{url_for('static', filename='sample_image/shapes_fd.png')}}" width="48%" height="200px">
+	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='tanzania') }}" title="semantic segmentation">
+	      <img src="{{url_for('static', filename='sample_image/tanzania_ss.png')}}" width="96%" height="200px">
 	    </a>
-	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='shapes') }}" title="semantic segmentation">
-	      <img src="{{url_for('static', filename='sample_image/shapes_ss.png')}}" width="48%" height="200px">
-	    </a>
-	    <br>
-	    Toy dataset :-)
+	    <br>Aerial imagery
 	  </p>
 	</div>
       </div>

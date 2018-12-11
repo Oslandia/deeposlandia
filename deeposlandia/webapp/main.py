@@ -46,7 +46,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['ERROR_404_HELP'] = False
 
 MODELS = ('feature_detection', 'semantic_segmentation')
-DATASETS = ('mapillary', 'shapes', 'aerial')
+DATASETS = ('mapillary', 'shapes', 'aerial', 'tanzania')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
 
 def check_model(model):
@@ -63,7 +63,7 @@ def check_model(model):
 
 def check_dataset(dataset):
     """Check if `dataset` is valid, *i.e.* equal to `shapes`,
-    `mapillary` or `aerial`
+    `mapillary`, `aerial` or `tanzania`
 
     Parameters
     ----------
@@ -112,11 +112,13 @@ def recover_image_info(dataset, filename):
         size_aggregation = "400_aggregated"
     elif dataset == "aerial":
         size_aggregation = "250_full"
+    elif dataset == "tanzania":
+        size_aggregation = "384_full"
     elif dataset == "shapes":
         size_aggregation = "64_full"
     else:
         raise ValueError(("Unknown dataset. Please choose 'mapillary', "
-                          "'aerial' or 'shapes'."))
+                          "'aerial', 'tanzania' or 'shapes'."))
     with open(os.path.join("data", dataset, "preprocessed", size_aggregation
                            , "validation.json")) as fobj:
         config = json.load(fobj)
@@ -151,7 +153,7 @@ def demo_homepage(model, dataset):
     model : str
         Considered research problem (either `feature_detection` or `semantic_segmentation`)
     dataset : str
-        Considered dataset (either `shapes`, `mapillary` or `aerial`)
+        Considered dataset (either `shapes`, `mapillary`, `aerial` or `tanzania`)
 
     Returns
     -------
