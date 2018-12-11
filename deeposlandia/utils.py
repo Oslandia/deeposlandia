@@ -272,13 +272,14 @@ def GetHTMLColor(color):
     return '#%02x%02x%02x' % tuple(rgb_tuple)
 
 
-def build_image_from_config(img, config):
+def build_image_from_config(data, config):
     """Rebuild a labelled image version from dataset configuration
 
     Parameters
     ----------
-    img : PIL.Image
-        Labelled image ; squared-size, shape (imsize, imsize)
+    data : numpy.array
+        Labelled image as a numpy array of shape (img_size, img_size, 3) ;
+    squared-size, shape (imsize, imsize)
     config : dict
         Label definition and description
 
@@ -287,7 +288,6 @@ def build_image_from_config(img, config):
     np.array
         RGB-version of labelled images, with shape (imsize, imsize, 3)
     """
-    data = np.array(img)
     result = np.zeros(shape=(data.shape[0], data.shape[1], 3),
                       dtype=data.dtype)
     for label in range(len(config)):

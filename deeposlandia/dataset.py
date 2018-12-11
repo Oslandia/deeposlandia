@@ -395,17 +395,18 @@ class MapillaryDataset(Dataset):
             label_filename = label_filename.replace(".jpg", ".png")
             img_out = Image.open(label_filename)
             img_out = utils.resize_image(img_out, self.image_size)
-            final_img_out = utils.mono_crop_image(img_out, crop_pix)
+            img_out = utils.mono_crop_image(img_out, crop_pix)
             # group some labels
             if aggregate:
-                final_img_out = self.group_image_label(final_img_out)
+                img_out = self.group_image_label(img_out)
 
-            labels = utils.label_building(final_img_out,
+            labels = utils.label_building(img_out,
                                           self.label_ids,
                                           dataset="mapillary")
             new_out_filename = os.path.join(output_dir, 'labels',
                                             os.path.basename(label_filename))
-            final_img_out = utils.build_image_from_config(final_img_out,
+            label_out = np.array(img_out)
+            final_img_out = utils.build_image_from_config(label_out,
                                                           self.label_info)
             final_img_out.save(new_out_filename)
         else:
