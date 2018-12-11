@@ -7,6 +7,7 @@ shapes = /path/to/shape/dataset/
 mapillary = /path/to/mapillary/dataset/
 mapillary_agg = /path/to/agregated/mapillary/dataset/
 aerial = /path/to/aerial/dataset/
+tanzania = /path/to/tanzania/dataset/
 
 [folder]
 project_folder = /path/to/static/files/
