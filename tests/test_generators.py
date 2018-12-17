@@ -273,7 +273,7 @@ def test_semseg_aerial_generator(aerial_image_size, aerial_sample,
                                  aerial_sample_config, nb_channels):
     """Test the data generator for the AerialImage dataset
     """
-    BATCH_SIZE = 10
+    BATCH_SIZE = 4
     config = utils.read_config(aerial_sample_config)
     label_ids = [x['id'] for x in config["labels"]]
     gen = generator.create_generator("aerial", "semantic_segmentation",
@@ -286,6 +286,25 @@ def test_semseg_aerial_generator(aerial_image_size, aerial_sample,
     assert im_shape == (BATCH_SIZE, aerial_image_size, aerial_image_size, nb_channels)
     label_shape = item[1].shape
     assert label_shape == (BATCH_SIZE, aerial_image_size, aerial_image_size, len(label_ids))
+
+
+def test_semseg_tanzania_generator(tanzania_image_size, tanzania_sample,
+                                   tanzania_sample_config, nb_channels):
+    """Test the data generator for the Open AI Tanzania dataset
+    """
+    BATCH_SIZE = 3
+    config = utils.read_config(tanzania_sample_config)
+    label_ids = [x['id'] for x in config["labels"]]
+    gen = generator.create_generator("tanzania", "semantic_segmentation",
+                                     tanzania_sample,
+                                     tanzania_image_size,
+                                     BATCH_SIZE, config["labels"])
+    item = next(gen)
+    assert(len(item)==2)
+    im_shape = item[0].shape
+    assert im_shape == (BATCH_SIZE, tanzania_image_size, tanzania_image_size, nb_channels)
+    label_shape = item[1].shape
+    assert label_shape == (BATCH_SIZE, tanzania_image_size, tanzania_image_size, len(label_ids))
 
 
 def test_wrong_model_dataset_generator(shapes_sample_config):

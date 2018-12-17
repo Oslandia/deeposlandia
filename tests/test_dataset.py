@@ -153,3 +153,38 @@ def test_aerial_tile_image_correspondance(aerial_raw_image_size):
                                         [2496, 2500]],
                                        dtype=np.int32)
     assert all(tile_image_correspondance(aerial_raw_image_size) == AERIAL_TILE_IMAGE_TABLE)
+
+
+def test_tanzania_dataset_creation(tanzania_image_size, tanzania_nb_labels):
+    """Create a Tanzania dataset
+    """
+    d = TanzaniaDataset(tanzania_image_size)
+    assert d.image_size == tanzania_image_size
+    assert d.get_nb_labels() == tanzania_nb_labels
+    assert d.get_nb_images() == 0
+
+def test_tanzania_dataset_population(tanzania_image_size, tanzania_temp_dir,
+                                     tanzania_raw_sample, tanzania_nb_images,
+                                     tanzania_config, tanzania_nb_labels,
+                                     tanzania_nb_output_images):
+    """Populate a Tanzania dataset
+    """
+    d = TanzaniaDataset(tanzania_image_size)
+    d.populate(str(tanzania_temp_dir), tanzania_raw_sample,
+               nb_images=tanzania_nb_images)
+    d.save(str(tanzania_config))
+    assert d.get_nb_labels() == tanzania_nb_labels
+    assert d.get_nb_images() == tanzania_nb_output_images
+    assert os.path.isfile(str(tanzania_config))
+    assert all(len(os.listdir(os.path.join(str(tanzania_temp_dir), tmp_dir))) == tanzania_nb_output_images
+               for tmp_dir in ["images", "labels"])
+
+def test_tanzania_dataset_loading(tanzania_image_size, tanzania_config,
+                                  tanzania_nb_labels,
+                                  tanzania_nb_output_images):
+    """Load images into a Tanzania dataset
+    """
+    d = TanzaniaDataset(tanzania_image_size)
+    d.load(tanzania_config)
+    assert d.get_nb_labels() == tanzania_nb_labels
+    assert d.get_nb_images() == tanzania_nb_output_images

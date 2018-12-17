@@ -2,6 +2,7 @@
 """
 
 import json
+import math
 import os
 import pytest
 
@@ -202,6 +203,72 @@ def aerial_temp_dir(tmpdir_factory):
 @pytest.fixture(scope='session')
 def aerial_temp_conf(tmpdir_factory):
     temp_conf = tmpdir_factory.mktemp(".").join("aerial.json")
+    return temp_conf
+
+
+@pytest.fixture
+def tanzania_raw_image_size():
+    return 1000
+
+
+@pytest.fixture
+def tanzania_image_size():
+    return 384
+
+
+@pytest.fixture
+def tanzania_nb_images():
+    return 1
+
+
+@pytest.fixture
+def tanzania_nb_output_images():
+    return (tanzania_nb_images()
+            * math.ceil(tanzania_raw_image_size()/tanzania_image_size())
+            ** 2)
+
+
+@pytest.fixture
+def tanzania_nb_labels():
+    return 4
+
+
+@pytest.fixture(scope='session')
+def tanzania_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join('tanzania.json')
+
+
+@pytest.fixture
+def tanzania_sample_config():
+    return "tests/data/tanzania/preprocessed/384_full/training.json"
+
+
+@pytest.fixture
+def tanzania_sample():
+    return "tests/data/tanzania/preprocessed/384_full/training/"
+
+
+@pytest.fixture
+def tanzania_raw_sample():
+    """Sample of Tanzania original images (called for populate a
+    TanzaniaDataset)
+
+    """
+    return "tests/data/tanzania/input/training/"
+
+
+@pytest.fixture(scope='session')
+def tanzania_temp_dir(tmpdir_factory):
+    tanzania_subdir = tmpdir_factory.mktemp('tanzania', numbered=False)
+    tmpdir_factory.mktemp('tanzania/images', numbered=False)
+    tmpdir_factory.mktemp('tanzania/labels', numbered=False)
+    tmpdir_factory.mktemp('tanzania/checkpoints', numbered=False)
+    return tanzania_subdir
+
+
+@pytest.fixture(scope='session')
+def tanzania_temp_conf(tmpdir_factory):
+    temp_conf = tmpdir_factory.mktemp(".").join("tanzania.json")
     return temp_conf
 
 
