@@ -2,29 +2,20 @@
 """
 
 import json
-import logging
 import math
 import os
 import re
 import sys
 
+import daiquiri
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
 
 
-# Define the logger for the current project
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(module)s :: %(funcName)s : %(message)s')
-ch_stdout = logging.StreamHandler(sys.stdout)
-os.makedirs("../log", exist_ok=True)
-ch_logfile = logging.FileHandler("../log/cnn_log.log")
-ch_stdout.setFormatter(formatter)
-ch_logfile.setFormatter(formatter)
-logger.addHandler(ch_stdout)
-logger.addHandler(ch_logfile)
+logger = daiquiri.getLogger(__name__)
+
 
 def read_config(filename):
     """Read the JSON configuration file.
@@ -291,11 +282,11 @@ def create_symlink(link_name, directory):
     if os.path.islink(link_name):
         os.unlink(link_name)
     elif os.path.isfile(link_name):
-        logger.error("{} is a file!".format(link_name))
+        logger.error("%s is a file!" % link_name)
     elif os.path.isdir(link_name):
-        logger.error("{} is a directory!".format(link_name))
+        logger.error("%s is a directory!" % link_name)
     os.symlink(directory, link_name)
-    logger.info("{} now points to {}.".format(link_name, directory))
+    logger.info("%s now points to %s." % (link_name, directory))
 
 
 def tile_image_correspondance(raw_img_size):
@@ -405,7 +396,6 @@ def get_tile_size_from_image(image_size, raw_img_size=5000):
     -------
     int
         Tile size used for preprocessed dataset building
-
     """
     aerial_table = tile_image_correspondance(raw_img_size)
     tile_size = aerial_table.loc[aerial_table.m16 == image_size, "d5000"]

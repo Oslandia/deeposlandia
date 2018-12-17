@@ -17,6 +17,7 @@ import argparse
 import os
 import sys
 
+import daiquiri
 import pandas as pd
 
 from deeposlandia import utils
@@ -25,6 +26,10 @@ from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
 from deeposlandia.datasets.shapes import ShapeDataset
 from deeposlandia.datasets.tanzania import TanzaniaDataset
+
+
+logger = daiquiri.getLogger(__name__)
+
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -83,7 +88,6 @@ if __name__=='__main__':
                                                       args.image_size,
                                                       aggregate_value)
 
-    print(prepro_folder)
     # Dataset creation
     if args.dataset == "mapillary":
         config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
@@ -106,8 +110,8 @@ if __name__=='__main__':
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
     else:
-        utils.logger.error(f"Unsupported dataset type. Please choose amongst"
-                           " {AVAILABLE_DATASETS}")
+        logger.error("Unsupported dataset type. Please choose amongst %s"
+                     % AVAILABLE_DATASETS)
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
@@ -115,8 +119,8 @@ if __name__=='__main__':
         train_dataset.load(prepro_folder["training_config"],
                            args.nb_training_image)
     else:
-        utils.logger.info(("No existing configuration file for this dataset. Create {}"
-                           "").format(prepro_folder["training_config"]))
+        logger.info(("No existing configuration file for this dataset. "
+                     "Create %s." % prepro_folder['training_config']))
         input_image_dir = os.path.join(input_folder, "training")
         train_dataset.populate(prepro_folder["training"], input_image_dir,
                                nb_images=args.nb_training_image,
@@ -127,10 +131,9 @@ if __name__=='__main__':
         validation_dataset.load(prepro_folder["validation_config"],
                                 args.nb_validation_image)
     else:
-        utils.logger.info(("No existing configuration file for this dataset. Create {}"
-                           "").format(prepro_folder["validation_config"]))
+        logger.info(("No existing configuration file for this dataset. "
+                     "Create %s." % prepro_folder['validation_config']))
         input_image_dir = os.path.join(input_folder, "validation")
-        print(input_image_dir)
         validation_dataset.populate(prepro_folder["validation"],
                                     input_image_dir,
                                     nb_images=args.nb_validation_image,
@@ -140,8 +143,8 @@ if __name__=='__main__':
     if os.path.isfile(prepro_folder["testing_config"]):
         test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
     else:
-        utils.logger.info(("No existing configuration file for this dataset. Create {}"
-                           "").format(prepro_folder["testing_config"]))
+        logger.info(("No existing configuration file for this dataset. "
+                     "Create %s." % prepro_folder['testing_config']))
         input_image_dir = os.path.join(input_folder, "testing")
         test_dataset.populate(prepro_folder["testing"],
                               input_image_dir,
@@ -152,5 +155,5 @@ if __name__=='__main__':
 
     glossary = pd.DataFrame(train_dataset.labels)
     glossary["popularity"] = train_dataset.get_label_popularity()
-    utils.logger.info("Data glossary:\n{}".format(glossary))
+    logger.info("Data glossary:\n%s" % glossary)
     sys.exit(0)

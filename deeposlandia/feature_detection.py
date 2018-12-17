@@ -2,13 +2,16 @@
 """Design a feature detection model with Keras API
 """
 
-import h5py
-
+import daiquiri
 import keras as K
 from keras.applications import VGG16, inception_v3, resnet50
 
 from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
+
+
+logger = daiquiri.getLogger(__name__)
+
 
 class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
     """Class that encapsulates feature detection network creation
@@ -43,8 +46,8 @@ class FeatureDetectionNetwork(ConvolutionalNeuralNetwork):
         elif architecture == "simple":
             self.Y = self.simple()
         else:
-            utils.logger.error(("Unknown network architecture. Please use "
-                                "'simple', 'vgg', 'inception' or 'resnet'."))
+            logger.error(("Unknown network architecture. Please use "
+                          "'simple', 'vgg', 'inception' or 'resnet'."))
             raise ValueError("Unknown network architecture.")
 
     def output_layer(self, x, depth):

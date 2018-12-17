@@ -16,8 +16,7 @@ from deeposlandia import utils
 from deeposlandia.inference import predict
 
 
-daiquiri.setup(level=logging.INFO)
-logger = daiquiri.getLogger("deeposlandia-webapp")
+logger = daiquiri.getLogger(__name__)
 
 
 _DEEPOSL_CONFIG = os.getenv('DEEPOSL_CONFIG')
@@ -26,7 +25,7 @@ config = ConfigParser()
 if os.path.isfile(_DEEPOSL_CONFIG):
     config.read(_DEEPOSL_CONFIG)
 else:
-    utils.logger.error("No file config.ini!")
+    logger.error("No file config.ini!")
     sys.exit(1)
 
 PROJECT_FOLDER = config.get("folder", "project_folder")
@@ -40,7 +39,7 @@ if config.get("status", "status") == "dev":
 elif config.get("status", "status") == "prod":
     app = Flask(__name__, static_folder=PROJECT_FOLDER)
 else:
-    utils.logger.error("No defined status, please consider 'dev' or 'prod'.")
+    logger.error("No defined status, please consider 'dev' or 'prod'.")
     sys.exit(1)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['ERROR_404_HELP'] = False
@@ -193,9 +192,7 @@ def predictor_demo(model, dataset, image):
     model, either feature detection or semantic segmentation)
     """
     agg_value = dataset == "mapillary"
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(image,
-                                                                dataset,
-                                                                model))
+    logger.info("file: %s, dataset: %s, model: %s" % (image, dataset, model))
     agg_value = dataset == "mapillary"
     image_info = recover_image_info(dataset, image)
     predictions = predict([os.path.join(app.static_folder, image_info["image_file"])],
@@ -235,7 +232,7 @@ def prediction():
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     dataset = request.args.get('dataset')
     model = request.args.get('model')
-    utils.logger.info("file: {}, dataset: {}, model: {}".format(filename, dataset, model))
+    logger.info("file: %s, dataset: %s, model: %s" % (image, dataset, model))
     predictions = predict([filename], "mapillary", "semantic_segmentation",
                           aggregate=True, output_dir=PREDICT_FOLDER)
     return jsonify(predictions)
@@ -276,13 +273,13 @@ def upload_image():
     """
     # check if the post request has the file part
     if 'file' not in request.files:
-        utils.logger.info('No file part')
+        logger.info('No file part')
         return redirect(request.url)
     fobj = request.files['file']
     # if user does not select file, browser also
     # submit a empty part without filename
     if fobj.filename == '':
-        utils.logger.info('No selected file')
+        logger.info('No selected file')
         return redirect(request.url)
     if fobj and allowed_file(fobj.filename):
         filename = secure_filename(fobj.filename)

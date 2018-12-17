@@ -11,10 +11,14 @@ import math
 from multiprocessing import Pool
 
 import cv2
+import daiquiri
 import numpy as np
 from PIL import Image
 
 from deeposlandia import utils
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 AVAILABLE_DATASETS = [
@@ -88,7 +92,7 @@ class Dataset(metaclass=abc.ABCMeta):
         """
         labels = [img["labels"] for img in self.image_info]
         if self.get_nb_images() == 0:
-            utils.logger.error("No images in the dataset.")
+            logger.error("No images in the dataset.")
             return None
         else:
             return np.round(np.divide(sum(np.array([list(l.values()) for l in labels])),
@@ -118,7 +122,8 @@ class Dataset(metaclass=abc.ABCMeta):
             List of raw labels aggregated by the current label
         """
         if label_id in self.label_info:
-            utils.logger.error("Label {} already stored into the label set.".format(label_id))
+            logger.error("Label %s already stored into the label set."
+                         % image_id)
             return None
         category = label_name if category is None else category
         contains = label_name if contained_labels is None else contained_labels
@@ -142,7 +147,7 @@ class Dataset(metaclass=abc.ABCMeta):
             json.dump({"image_size": self.image_size,
                        "labels": self.label_info,
                        "images": self.image_info}, fp)
-        utils.logger.info("The dataset has been saved into {}".format(filename))
+        logger.info("The dataset has been saved into %s" % filename)
 
     def load(self, filename, nb_images=None):
         """Load a dataset from a json file indicated by `filename` ; use dict comprehension instead
@@ -164,7 +169,7 @@ class Dataset(metaclass=abc.ABCMeta):
             self.image_info = ds["images"]
         else:
             self.image_info = ds["images"][:nb_images]
-        utils.logger.info("The dataset has been loaded from {}".format(filename))
+        logger.info("The dataset has been loaded from %s" % filename)
 
     @abc.abstractmethod
     def populate(self):

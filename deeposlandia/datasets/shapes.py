@@ -8,11 +8,15 @@ import os
 import math
 
 import cv2
+import daiquiri
 import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
 from deeposlandia import utils
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 class ShapeDataset(Dataset):
@@ -140,7 +144,8 @@ class ShapeDataset(Dataset):
         number of labels in the dataset
         """
         if image_id in self.image_info:
-            utils.logger.error("Image {} already stored into the label set.".format(image_id))
+            logger.error("Image %s already stored into the label set."
+                         % image_id)
             return None
         self.image_info.append({"background": background,
                                 "shape_specs": specifications,

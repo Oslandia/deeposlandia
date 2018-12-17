@@ -8,11 +8,15 @@ applications. Data is downloadable at https://www.mapillary.com/dataset/vistas.
 from multiprocessing import Pool
 import os
 
+import daiquiri
 import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
 from deeposlandia import utils
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 class MapillaryDataset(Dataset):
@@ -48,7 +52,7 @@ class MapillaryDataset(Dataset):
         """
         glossary = utils.read_config(config_filename)
         if "labels" not in glossary:
-            utils.logger.error("There is no 'label' key in the provided glossary.")
+            logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
             if "aggregate" in config_filename:

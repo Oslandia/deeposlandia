@@ -8,11 +8,15 @@ downloadable at https://project.inria.fr/aerialimagelabeling/files/.
 from multiprocessing import Pool
 import os
 
+import daiquiri
 import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
 from deeposlandia import utils
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 class AerialDataset(Dataset):
@@ -131,13 +135,13 @@ class AerialDataset(Dataset):
         image_list = os.listdir(os.path.join(input_dir, "images"))
         image_list_longname = [os.path.join(input_dir, "images", l)
                                for l in image_list if not l.startswith('.')][:nb_images]
-        utils.logger.info(("Getting {} images to preprocess..."
-                           "").format(len(image_list_longname)))
+        logger.info("Getting %s images to preprocess..."
+                    % len(image_list_longname))
         with Pool() as p:
             self.image_info = p.starmap(self._preprocess,
                                         [(x, output_dir, labelling)
                                          for x in image_list_longname])
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
-        utils.logger.info(("Saved {} images in the preprocessed dataset."
-                           "").format(len(self.image_info)))
+        logger.info("Saved %s images in the preprocessed dataset."
+                    % len(self.image_info))

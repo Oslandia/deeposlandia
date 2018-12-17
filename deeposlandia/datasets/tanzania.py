@@ -11,6 +11,7 @@ from multiprocessing import Pool
 import os
 
 import cv2
+import daiquiri
 import fiona
 import geopandas as gpd
 import numpy as np
@@ -20,6 +21,9 @@ import shapely.geometry as shgeom
 
 from deeposlandia.datasets import Dataset
 from deeposlandia import utils
+
+
+logger = daiquiri.getLogger(__name__)
 
 # Save png tiles without auxiliary information on disk
 os.environ['GDAL_PAM_ENABLED'] = 'NO'
@@ -146,8 +150,8 @@ class TanzaniaDataset(Dataset):
         raw_img_width = raster.RasterXSize
         raw_img_height = raster.RasterYSize
         result_dicts = []
-        utils.logger.info(f"Raw image size: {raw_img_width}, {raw_img_height}")
-        utils.logger.info(f"Image filename: {image_filename}")
+        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
+        logger.info("Image filename: %s" % image_filename)
 
         labels = None
         if labelling:
@@ -193,17 +197,17 @@ class TanzaniaDataset(Dataset):
                                for l in image_list
                                if not l.startswith('.')][:nb_images]
 
-        utils.logger.info(("Getting {} images to preprocess..."
-                           "").format(len(image_list_longname)))
-        utils.logger.info(image_list_longname)
+        logger.info("Getting %s images to preprocess..."
+                    % len(image_list_longname))
+        logger.info(image_list_longname)
         with Pool() as p:
             self.image_info = p.starmap(self._preprocess,
                                         [(x, output_dir, labelling)
                                          for x in image_list_longname])
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
-        utils.logger.info(("Saved {} images in the preprocessed dataset."
-                           "").format(len(self.image_info)))
+        logger.info("Saved %s images in the preprocessed dataset."
+                    % len(self.image_info))
 
 
     def load_mask(self, buildings, raster_features, min_x, min_y):
