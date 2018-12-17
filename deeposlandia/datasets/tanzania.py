@@ -17,13 +17,13 @@ from osgeo import gdal
 from PIL import Image
 import shapely.geometry as shgeom
 
+from deeposlandia.datasets import dataset
 from deeposlandia import utils
-from deeposlandia.dataset import Dataset
 
 # Save png tiles without auxiliary information on disk
 os.environ['GDAL_PAM_ENABLED'] = 'NO'
 
-class TanzaniaDataset(Dataset):
+class TanzaniaDataset(dataset.Dataset):
     """Tanzania building dataset, as released during the Open AI Tanzania
     challenge
 
@@ -47,9 +47,9 @@ class TanzaniaDataset(Dataset):
     FOUNDATION_COLOR = [200, 50, 50]
 
     def __init__(self, img_size):
-        """ Class constructor ; instanciates a AerialDataset as a standard
-        Dataset which is completed by a glossary file that describes the
-        dataset labels and images
+        """Class constructor ; instanciates a TanzaniaDataset as a standard Dataset
+        which is completed by a glossary file that describes the dataset labels
+        and images
 
         """
         super().__init__(img_size)
@@ -65,7 +65,28 @@ class TanzaniaDataset(Dataset):
 
     def _preprocess_tile(self, x, y, image_filename, output_dir,
                          raster, labels=None):
-        """
+        """Preprocess one single tile built from `image_filename`, with respect
+                         to pixel coordinates `(x, y)`
+
+        Parameters
+        ----------
+        x : int
+            Horizontal pixel coordinate (*i.e.* west bound)
+        y : int
+            Vertical pixel coordinate (*i.e.* north bound)
+        image_filename : str
+            Full path towards the image on the disk
+        output_dir : str
+            Output path where preprocessed image must be saved
+        raster : osgeo.gdal.Dataset
+            Original georeferenced raster
+        labels : geopandas.GeoDataFrame
+            Raw image labels (*i.e.* georeferenced buildings)
+
+        Returns
+        -------
+        dict
+            Key/values with the filenames and label ids
 
         """
         basename_decomp = os.path.splitext(

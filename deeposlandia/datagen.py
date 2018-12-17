@@ -20,8 +20,10 @@ import sys
 import pandas as pd
 
 from deeposlandia import utils
-from deeposlandia.dataset import AerialDataset, MapillaryDataset, ShapeDataset
-from deeposlandia.buildings import TanzaniaDataset
+from deeposlandia.datasets.mapillary import MapillaryDataset
+from deeposlandia.datasets.aerial import AerialDataset
+from deeposlandia.datasets.shapes import ShapeDataset
+from deeposlandia.datasets.tanzania import TanzaniaDataset
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line

@@ -6,8 +6,11 @@ import numpy as np
 import os
 import pytest
 
-from deeposlandia.dataset import (Dataset, MapillaryDataset,
-                                  ShapeDataset, AerialDataset)
+from deeposlandia.datasets.dataset import Dataset
+from deeposlandia.datasets.shapes import ShapeDataset
+from deeposlandia.datasets.mapillary import MapillaryDataset
+from deeposlandia.datasets.aerial import AerialDataset
+from deeposlandia.datasets.tanzania import TanzaniaDataset
 from deeposlandia.utils import tile_image_correspondance
 
 def test_dataset_creation(mapillary_image_size):
