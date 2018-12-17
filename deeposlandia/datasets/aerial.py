@@ -17,7 +17,7 @@ from deeposlandia import utils
 
 class AerialDataset(Dataset):
     """Dataset structure inspired from AerialImageDataset, a dataset released
-    by INRIA
+    by Inria
 
     The dataset is freely available at:
     https://project.inria.fr/aerialimagelabeling/files/
@@ -30,14 +30,12 @@ class AerialDataset(Dataset):
     tile_size : int
         Size of the tiles into which each raw images is decomposed during
     dataset population (height=width)
-
     """
 
     def __init__(self, tile_size):
         """ Class constructor ; instanciates a AerialDataset as a standard
         Dataset which is completed by a glossary file that describes the
         dataset labels and images
-
         """
         self.tile_size = tile_size
         img_size = utils.get_image_size_from_tile(self.tile_size)
@@ -127,7 +125,7 @@ class AerialDataset(Dataset):
         aggregate : bool
             Label aggregation parameter, useless for this dataset, but kept for
         class method genericity
-        labelling: boolean
+        labelling : boolean
             If True labels are recovered from dataset, otherwise dummy label are generated
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))
