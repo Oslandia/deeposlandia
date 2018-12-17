@@ -29,7 +29,15 @@ Following folders must be created and maintained:
 - Add the new module as a dependency in `datagen.py`
 - Add the dataset name to `datagen.py` docstrings and if-case (*hint*: search
   for all occurrence of `aerial` or `mapillary` to know the accurate places)
-  
+
+## Test
+
++ Consider a little sample of your data (less than 5Mo), and reproduce the
+  previous steps in `tests/data` folder
++ Write unit tests for :
+    - dataset handling (see `tests/test_dataset.py` for examples)
+	- generator verification (see `tests/test_generator.py` for examples)
+
 ## Model training
 
 - Add the dataset name to `train.py`, `paramoptim.py` and `inference.py`
