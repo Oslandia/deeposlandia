@@ -1,13 +1,11 @@
 """Unit test related to the feature detection model
 """
 
-from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 
 
-@keras_test
 def test_simple_network_architecture(shapes_image_size, nb_channels, shapes_nb_labels):
     """Test a simple feature detection network
 
@@ -23,7 +21,6 @@ def test_simple_network_architecture(shapes_image_size, nb_channels, shapes_nb_l
     assert output_shape[1] == shapes_nb_labels
 
 
-@keras_test
 def test_vgg16_network_architecture(mapillary_image_size, nb_channels, mapillary_nb_labels):
     """Test a VGG16-inspired feature detection network
 
@@ -40,7 +37,6 @@ def test_vgg16_network_architecture(mapillary_image_size, nb_channels, mapillary
     assert output_shape[1] == mapillary_nb_labels
 
 
-@keras_test
 def test_inception_network_architecture(mapillary_image_size, nb_channels, mapillary_nb_labels):
     """Test a Inception-inspired feature detection network
 

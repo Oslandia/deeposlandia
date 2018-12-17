@@ -1,13 +1,11 @@
 """Unit test related to the simple layer creation
 """
 
-from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 
-@keras_test
 def test_convolution_shape(shapes_image_size, kernel_size, conv_depth, conv_strides):
     """Test the convolution operation through its output layer shape
 
@@ -23,7 +21,6 @@ def test_convolution_shape(shapes_image_size, kernel_size, conv_depth, conv_stri
                                 conv_depth)
 
 
-@keras_test
 def test_transposed_convolution_shape(shapes_image_size, conv_depth, kernel_size, conv_strides):
     """Test the transposed convolution operation through its output layer shape
 
@@ -40,7 +37,6 @@ def test_transposed_convolution_shape(shapes_image_size, conv_depth, kernel_size
                                 conv_depth)
 
 
-@keras_test
 def test_maxpooling_shape(shapes_image_size, nb_channels, pool_size, pool_strides):
     """Test the max pooling operation through its output layer shape
 
@@ -53,7 +49,6 @@ def test_maxpooling_shape(shapes_image_size, nb_channels, pool_size, pool_stride
     assert output_shape[1:] == (shapes_image_size//pool_strides, shapes_image_size//pool_strides, nb_channels)
 
 
-@keras_test
 def test_dense_shape(shapes_image_size, conv_depth):
     """Test the fully-connected layer through its output shape
 
@@ -66,7 +61,6 @@ def test_dense_shape(shapes_image_size, conv_depth):
     assert output_shape[1:] == (shapes_image_size, shapes_image_size, conv_depth)
 
 
-@keras_test
 def test_flatten_shape(shapes_image_size, nb_channels):
     """Test the flattening layer through its output shape
 
@@ -79,7 +73,6 @@ def test_flatten_shape(shapes_image_size, nb_channels):
     assert output_shape[1] == shapes_image_size * shapes_image_size * nb_channels
 
 
-@keras_test
 def test_layer_name(shapes_image_size, kernel_size, conv_depth, conv_strides):
     """Test the convolution operation through its output layer shape
 
