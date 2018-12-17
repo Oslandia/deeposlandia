@@ -11,11 +11,11 @@ import os
 import numpy as np
 from PIL import Image
 
-from deeposlandia.datasets import dataset
+from deeposlandia.datasets import Dataset
 from deeposlandia import utils
 
 
-class AerialDataset(dataset.Dataset):
+class AerialDataset(Dataset):
     """Dataset structure inspired from AerialImageDataset, a dataset released
     by INRIA
 

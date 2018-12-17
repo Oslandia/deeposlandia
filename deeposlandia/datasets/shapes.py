@@ -11,11 +11,11 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from deeposlandia.datasets import dataset
+from deeposlandia.datasets import Dataset
 from deeposlandia import utils
 
 
-class ShapeDataset(dataset.Dataset):
+class ShapeDataset(Dataset):
     """Dataset structure that gathers all information related to a randomly-generated shape Dataset
 
     In such a dataset, a set of images is generated with either a square, or a

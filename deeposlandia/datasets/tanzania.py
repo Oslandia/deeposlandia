@@ -18,13 +18,13 @@ from osgeo import gdal
 from PIL import Image
 import shapely.geometry as shgeom
 
-from deeposlandia.datasets import dataset
+from deeposlandia.datasets import Dataset
 from deeposlandia import utils
 
 # Save png tiles without auxiliary information on disk
 os.environ['GDAL_PAM_ENABLED'] = 'NO'
 
-class TanzaniaDataset(dataset.Dataset):
+class TanzaniaDataset(Dataset):
     """Tanzania building dataset, as released during the Open AI Tanzania
     challenge
 

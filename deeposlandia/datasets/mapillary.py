@@ -11,11 +11,11 @@ import os
 import numpy as np
 from PIL import Image
 
-from deeposlandia.datasets import dataset
+from deeposlandia.datasets import Dataset
 from deeposlandia import utils
 
 
-class MapillaryDataset(dataset.Dataset):
+class MapillaryDataset(Dataset):
     """Dataset structure that gathers all information related to the Mapillary images
 
     Attributes
