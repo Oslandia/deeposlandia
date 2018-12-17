@@ -41,6 +41,7 @@ class TanzaniaDataset(Dataset):
 
     """
 
+    BACKGROUND_COLOR = [0, 0, 0]
     COMPLETE_COLOR = [50, 200, 50]
     INCOMPLETE_COLOR = [200, 200, 50]
     FOUNDATION_COLOR = [200, 50, 50]
@@ -53,7 +54,7 @@ class TanzaniaDataset(Dataset):
         """
         super().__init__(img_size)
         self.add_label(label_id=0, label_name="background",
-                       color=0, is_evaluate=True)
+                       color=self.BACKGROUND_COLOR, is_evaluate=True)
         self.add_label(label_id=1, label_name="complete",
                        color=self.COMPLETE_COLOR, is_evaluate=True)
         self.add_label(label_id=2, label_name="incomplete",
