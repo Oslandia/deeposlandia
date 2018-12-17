@@ -12,6 +12,7 @@ from keras import backend, callbacks
 from keras.models import Model
 from keras.optimizers import Adam
 
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia import generator, metrics, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
@@ -34,9 +35,9 @@ def add_instance_arguments(parser):
     parser.add_argument('-a', '--aggregate-label', action='store_true',
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help=("Dataset type (either mapillary, shapes, aerial"
-                              " or tanzania)"))
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "

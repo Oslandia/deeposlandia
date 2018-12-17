@@ -20,6 +20,7 @@ import sys
 import pandas as pd
 
 from deeposlandia import utils
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
 from deeposlandia.datasets.shapes import ShapeDataset
@@ -41,8 +42,9 @@ def add_instance_arguments(parser):
     parser.add_argument('-a', '--aggregate-label', action='store_true',
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-p', '--datapath',
                         default="data",
                         help="Relative path towards data directory")
@@ -104,9 +106,8 @@ if __name__=='__main__':
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
     else:
-        utils.logger.error("Unsupported dataset type. Please choose "
-                           "'mapillary', 'shapes', 'aerial' "
-                           "or 'open_ai_tanzania'")
+        utils.logger.error(f"Unsupported dataset type. Please choose amongst"
+                           " {AVAILABLE_DATASETS}")
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)

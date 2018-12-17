@@ -30,6 +30,7 @@ from keras.models import Model
 import keras.backend as K
 
 from deeposlandia import utils
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
@@ -48,9 +49,9 @@ def add_program_arguments(parser):
         Modified parser, with additional arguments
     """
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help=("Dataset type (either mapillary, shapes, aerial"
-                              ", tanzania or open_ai_tanzania)"))
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-i', '--image-paths',
                         required=True,
                         nargs='+',
@@ -162,8 +163,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     filenames : str
         Name of the image files on the file system
     dataset : str
-        Name of the dataset, either `shapes`, `mapillary`, `aerial` or
-    `tanzania`
+        Name of the dataset
     problem : str
         Name of the considered model, either `feature_detection` or
     `semantic_segmentation`

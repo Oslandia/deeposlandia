@@ -5,6 +5,9 @@ import numpy as np
 
 from keras.preprocessing.image import ImageDataGenerator
 
+from deeposlandia.datasets import AVAILABLE_DATASETS
+
+
 def recover_label_id(img, label_config):
     """Recover label ids starting from a typical RGB-colored image modeled as a
     (width, height, 3)-shaped array
@@ -153,7 +156,7 @@ def create_generator(dataset, model, datapath, image_size, batch_size,
         Generator of tuples (images, labels), for each input data batch
 
     """
-    if not dataset in ['shapes', 'mapillary', 'aerial', 'tanzania', 'open_ai_tanzania']:
+    if not dataset in AVAILABLE_DATASETS:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(datapath, "images", image_size,
                                      batch_size, seed)

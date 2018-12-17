@@ -27,8 +27,10 @@ Following folders must be created and maintained:
   images and labels are generated on the file system (image files with a fixed
   square size).
 - Add the new module as a dependency in `datagen.py`
-- Add the dataset name to `datagen.py` docstrings and if-case (*hint*: search
-  for all occurrence of `aerial` or `mapillary` to know the accurate places)
+- Manage the new dataset creation in `datagen.py` (*hint*: search for all
+  occurrence of `aerial` or `mapillary` to know the accurate place)
+- Add the dataset name to `AVAILABLE_DATASETS` variable in
+  `deeposlandia/datasets/__init__.py`
 
 ## Test
 
@@ -40,8 +42,6 @@ Following folders must be created and maintained:
 
 ## Model training
 
-- Add the dataset name to `train.py`, `paramoptim.py` and `inference.py`
-  docstrings and to `generator.py` if-case.
 - Train a neural network model with the new created dataset:
   + use `paramoptim.py` for exploring several hyperparametrization and store
     the best model in `data/dataset/output/semantic_segmentation/checkpoint/`.
