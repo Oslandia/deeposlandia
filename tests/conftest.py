@@ -153,6 +153,11 @@ def aerial_raw_image_size():
 
 
 @pytest.fixture
+def aerial_test_image_size():
+    return 1000
+
+
+@pytest.fixture
 def aerial_image_size():
     return 240
 
@@ -169,7 +174,7 @@ def aerial_nb_images():
 
 @pytest.fixture
 def aerial_nb_output_images():
-    return aerial_nb_images() * (aerial_raw_image_size()/aerial_tile_size()) ** 2
+    return aerial_nb_images() * (aerial_test_image_size()/aerial_tile_size()) ** 2
 
 
 @pytest.fixture
@@ -184,12 +189,12 @@ def aerial_config(tmpdir_factory):
 
 @pytest.fixture
 def aerial_sample_config():
-    return "tests/data/aerial/training.json"
+    return "tests/data/aerial/preprocessed/250_full/training.json"
 
 
 @pytest.fixture
 def aerial_sample():
-    return "tests/data/aerial/training/"
+    return "tests/data/aerial/preprocessed/250_full/training/"
 
 
 @pytest.fixture
@@ -198,7 +203,7 @@ def aerial_raw_sample():
     dataset)
 
     """
-    return "tests/data/aerial/sample/"
+    return "tests/data/aerial/input/training/"
 
 
 @pytest.fixture(scope='session')
