@@ -4,14 +4,13 @@
 import numpy as np
 import os
 
-from keras.utils.test_utils import keras_test
 from keras.models import Model
 
 from deeposlandia.generator import create_generator
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.utils import read_config
 
-@keras_test
+
 def test_model_training(shapes_image_size, shapes_sample, shapes_sample_config, shapes_temp_dir, shapes_nb_images):
     """Test the training of a simple neural network with Keras API, as well as model inference and
     trained model backup
