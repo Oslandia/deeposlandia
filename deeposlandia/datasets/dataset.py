@@ -9,9 +9,8 @@ import math
 from multiprocessing import Pool
 
 import cv2
-from PIL import Image
-
 import numpy as np
+from PIL import Image
 
 from deeposlandia import utils
 

@@ -20,10 +20,11 @@ Example of program call, that will infers labels on all files from
 
 import argparse
 import glob
-import numpy as np
 import os
-from PIL import Image
 import sys
+
+import numpy as np
+from PIL import Image
 
 from keras.models import Model
 import keras.backend as K

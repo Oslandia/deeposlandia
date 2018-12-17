@@ -4,13 +4,15 @@
 import json
 import logging
 import math
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-import pandas as pd
-from PIL import Image
 import re
 import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from PIL import Image
+
 
 # Define the logger for the current project
 logger = logging.getLogger(__name__)

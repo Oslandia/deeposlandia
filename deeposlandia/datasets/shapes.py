@@ -8,9 +8,8 @@ import os
 import math
 
 import cv2
-from PIL import Image
-
 import numpy as np
+from PIL import Image
 
 from deeposlandia.datasets import dataset
 from deeposlandia import utils

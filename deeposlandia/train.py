@@ -2,11 +2,11 @@
 """
 
 import argparse
+from datetime import datetime
 import os
 import sys
-import numpy as np
 
-from datetime import datetime
+import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model

@@ -6,8 +6,9 @@ applications. Data is downloadable at https://www.mapillary.com/dataset/vistas.
 """
 
 from multiprocessing import Pool
-import numpy as np
 import os
+
+import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import dataset

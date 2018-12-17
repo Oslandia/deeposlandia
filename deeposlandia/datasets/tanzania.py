@@ -6,13 +6,14 @@ passing as the first parameter the folder that contains building informations
 
 """
 
+import json
+from multiprocessing import Pool
+import os
+
 import cv2
 import fiona
 import geopandas as gpd
-import json
 import numpy as np
-from multiprocessing import Pool
-import os
 from osgeo import gdal
 from PIL import Image
 import shapely.geometry as shgeom

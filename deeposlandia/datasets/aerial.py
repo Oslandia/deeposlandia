@@ -6,8 +6,9 @@ downloadable at https://project.inria.fr/aerialimagelabeling/files/.
 """
 
 from multiprocessing import Pool
-import numpy as np
 import os
+
+import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import dataset

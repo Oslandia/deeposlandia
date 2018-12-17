@@ -2,13 +2,13 @@
 """
 
 import argparse
+from datetime import datetime
 import itertools
 import json
-import numpy as np
 import os
 import sys
 
-from datetime import datetime
+import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model
