@@ -112,9 +112,9 @@ class TanzaniaDataset(Dataset):
             out_labelname = (new_in_path
                              .replace("images", "labels"))
             mask = self.load_mask(tile_items, raster_features, x, y)
-            label_dict = utils.label_building(mask,
-                                              range(self.get_nb_labels()),
-                                              "tanzania")
+            label_dict = utils.build_labels(mask,
+                                            range(self.get_nb_labels()),
+                                            "tanzania")
             labelled_image = utils.build_image_from_config(mask,
                                                            self.labels)
             labelled_image.save(out_labelname)

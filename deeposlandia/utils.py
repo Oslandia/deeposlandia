@@ -42,7 +42,7 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def label_building(filtered_image, label_ids, dataset='mapillary'):
+def build_labels(filtered_image, label_ids, dataset='mapillary'):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
@@ -63,28 +63,6 @@ def label_building(filtered_image, label_ids, dataset='mapillary'):
     if dataset == 'aerial':
         available_labels[available_labels==255] = 1
     return {i: 1 if i in available_labels else 0 for i in label_ids}
-
-def geojson_label_building(items, label_names):
-    """Build a dict that summarizes image label composition
-
-    Parameters
-    ----------
-    items : pandas.Series
-        Type of items that must be summarized
-    label : list
-        Labels contained into the reference classification
-
-    Returns
-    -------
-    dict
-        Label ids which occur (or not) in the image
-    """
-    tile_labels = [s.lower() for s in items.unique().tolist()]
-    available_labels = [ln in tile_labels for ln in label_names]
-    out_labels = {"0": 1}
-    out_labels.update({str(1+i): int(avl)
-                       for i, avl in enumerate(available_labels)})
-    return out_labels
 
 
 def resize_image(img, base_size):

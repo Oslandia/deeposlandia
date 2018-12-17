@@ -103,9 +103,9 @@ class AerialDataset(Dataset):
                     new_out_path = os.path.join(output_dir, 'labels',
                                                 new_out_filename)
                     tile.save(new_out_path.replace(".tif", ".png"))
-                    labels = utils.label_building(tile,
-                                                  self.label_ids,
-                                                  dataset='aerial')
+                    labels = utils.build_labels(tile,
+                                                self.label_ids,
+                                                dataset='aerial')
                     result_dicts[img_id]["label_filename"] = new_out_path
                     result_dicts[img_id]["labels"] = labels
 

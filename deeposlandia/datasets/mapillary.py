@@ -124,9 +124,9 @@ class MapillaryDataset(Dataset):
             if aggregate:
                 img_out = self.group_image_label(img_out)
 
-            labels = utils.label_building(img_out,
-                                          self.label_ids,
-                                          dataset="mapillary")
+            labels = utils.build_labels(img_out,
+                                        self.label_ids,
+                                        dataset="mapillary")
             new_out_filename = os.path.join(output_dir, 'labels',
                                             os.path.basename(label_filename))
             label_out = np.array(img_out)
