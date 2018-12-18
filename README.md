@@ -46,7 +46,7 @@ $ source venv/bin/activate
 
 As a particular case, GDAL is not included into the `setup.py` file.
 
-For ̀Ubuntu` distributions, the following operations are needed to install this
+For `Ubuntu` distributions, the following operations are needed to install this
 program:
 
 ```
