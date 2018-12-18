@@ -28,20 +28,48 @@ data repository.
 
 ## Requirements
 
-The code has been run with Python 3. All dependencies are specified in
+The code has been run with Python 3. The dependencies are specified in
 `setup.py` file, and additional dependencies for developing purpose are listed
 in `requirements-dev.txt`.
 
-## From source
+### From source
 
 ```
 $ git clone https://github.com/Oslandia/deeposlandia
 $ cd deeposlandia
 $ virtualenv -p /usr/bin/python3 venv
 $ source venv/bin/activate
-(venv)$ python setup.py install
 (venv)$ pip install -r requirements-dev.txt
 ```
+
+### GDAL
+
+As a particular case, GDAL is not included into the `setup.py` file.
+
+For ̀Ubuntu` distributions, the following operations are needed to install this
+program:
+
+```
+sudo apt-get install libgdal-dev
+sudo apt-get install python3-gdal
+```
+
+The `GDAL` version can be verified by:
+
+```
+gdal-config --version
+```
+
+After that, a simple `pip install GDAL` may be sufficient, however considering
+our own experience it is not the case on Ubuntu. One has to retrieve a `GDAL`
+for Python that corresponds to the `GDAL` of system:
+
+```
+pip install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==`gdal-config --version`
+python3 -c "import osgeo;print(osgeo.__version__)"
+```
+
+For other OS, please visit the `GDAL` installation documentation.
 
 ## Running the code
 

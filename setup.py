@@ -18,16 +18,13 @@ with open('README.md', 'rb') as f:
 
 install_requires = [
     'opencv-python<=3.4.0.12',
-    'numpy<=1.14.2',
-    'pandas<=0.22.0',
     'pillow<=5.0.0',
-    'tensorflow<=1.6',
-    'keras<=2.1.5',
-    'matplotlib<=2.2.0',
-    'h5py<=2.7.1',
-    'daiquiri<=1.3.0',
+    'tensorflow<=1.10',
+    'keras<=2.2.4',
+    'daiquiri<=1.5.0',
     'Flask<=1.0.2',
-    'seaborn<=0.8.1']
+    'seaborn<=0.8.1',
+    'geopandas<=0.4.0']
 
 setup(
     name='deeposlandia',

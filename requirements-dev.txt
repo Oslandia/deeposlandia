@@ -1,5 +1,6 @@
 -e .
 pytest
 ipdb
+flake8
 ipython
 jupyter
