@@ -2,27 +2,20 @@
 """
 
 import json
-import logging
 import math
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-import pandas as pd
-from PIL import Image
 import re
 import sys
 
-# Define the logger for the current project
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(module)s :: %(funcName)s : %(message)s')
-ch_stdout = logging.StreamHandler(sys.stdout)
-os.makedirs("../log", exist_ok=True)
-ch_logfile = logging.FileHandler("../log/cnn_log.log")
-ch_stdout.setFormatter(formatter)
-ch_logfile.setFormatter(formatter)
-logger.addHandler(ch_stdout)
-logger.addHandler(ch_logfile)
+import daiquiri
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from PIL import Image
+
+
+logger = daiquiri.getLogger(__name__)
+
 
 def read_config(filename):
     """Read the JSON configuration file.
@@ -40,7 +33,7 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def label_building(filtered_image, label_ids, dataset='mapillary'):
+def build_labels(filtered_image, label_ids, dataset='mapillary'):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
@@ -61,6 +54,7 @@ def label_building(filtered_image, label_ids, dataset='mapillary'):
     if dataset == 'aerial':
         available_labels[available_labels==255] = 1
     return {i: 1 if i in available_labels else 0 for i in label_ids}
+
 
 def resize_image(img, base_size):
     """ Resize image `img` such that min(width, height)=base_size; keep image
@@ -249,13 +243,14 @@ def GetHTMLColor(color):
     return '#%02x%02x%02x' % tuple(rgb_tuple)
 
 
-def build_image_from_config(img, config):
+def build_image_from_config(data, config):
     """Rebuild a labelled image version from dataset configuration
 
     Parameters
     ----------
-    img : PIL.Image
-        Labelled image ; squared-size, shape (imsize, imsize)
+    data : numpy.array
+        Labelled image as a numpy array of shape (img_size, img_size, 3) ;
+    squared-size, shape (imsize, imsize)
     config : dict
         Label definition and description
 
@@ -264,7 +259,6 @@ def build_image_from_config(img, config):
     np.array
         RGB-version of labelled images, with shape (imsize, imsize, 3)
     """
-    data = np.array(img)
     result = np.zeros(shape=(data.shape[0], data.shape[1], 3),
                       dtype=data.dtype)
     for label in range(len(config)):
@@ -288,11 +282,11 @@ def create_symlink(link_name, directory):
     if os.path.islink(link_name):
         os.unlink(link_name)
     elif os.path.isfile(link_name):
-        logger.error("{} is a file!".format(link_name))
+        logger.error("%s is a file!" % link_name)
     elif os.path.isdir(link_name):
-        logger.error("{} is a directory!".format(link_name))
+        logger.error("%s is a directory!" % link_name)
     os.symlink(directory, link_name)
-    logger.info("{} now points to {}.".format(link_name, directory))
+    logger.info("%s now points to %s." % (link_name, directory))
 
 
 def tile_image_correspondance(raw_img_size):
@@ -402,7 +396,6 @@ def get_tile_size_from_image(image_size, raw_img_size=5000):
     -------
     int
         Tile size used for preprocessed dataset building
-
     """
     aerial_table = tile_image_correspondance(raw_img_size)
     tile_size = aerial_table.loc[aerial_table.m16 == image_size, "d5000"]

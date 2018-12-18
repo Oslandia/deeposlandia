@@ -2,10 +2,15 @@
 """Design a semantic segmentation model with Keras API
 """
 
+import daiquiri
 import keras as K
 
 from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
+
+
+logger = daiquiri.getLogger(__name__)
+
 
 class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
     """Class that encapsulates semantic segmentation network creation
@@ -42,8 +47,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         elif architecture == "simple":
             self.Y = self.simple()
         else:
-            utils.logger.error(("Unknown network architecture. Please use "
-                                "'simple' or 'unet'."))
+            logger.error(("Unknown network architecture. Please use "
+                          "'simple' or 'unet'."))
             raise ValueError("Unknown network architecture.")
 
     def output_layer(self, x, depth):

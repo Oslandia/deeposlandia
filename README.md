@@ -88,6 +88,23 @@ this image from this dataset is depicted below.
 
 ![Example of image, with labels and predictions](./images/aerial_prediction_example.png)
 
+## Open AI Tanzania
+
+This dataset comes from
+the
+[Tanzania challenge](https://blog.werobotics.org/2018/08/06/welcome-to-the-open-ai-tanzania-challenge/),
+that took place at the autumn 2018. The dataset contains 13 labelled images (2
+of them were assigned to validation in this project), and 9 additional images
+for testing purpose. The image resolution is very high (6~8 cm per pixel), that
+allowing a fine data preprocessing step.
+
+In such a dataset, one tries to automatically detect building footprints by
+distinguishing complete buildings, incomplete buildings and foudations.
+
+![Example of image, with labels and predictions](./images/tanzania_prediction_example.png)
+
+**(:warning: model training in processing... :-) )**
+
 ## Shapes
 
 To complete the project, and make the test easier, a randomly-generated shape
@@ -96,6 +113,10 @@ are inserted into each picture, on a total random mode. There can be one
 rectangle, one circle and/or one triangle per image, or neither of them. Their
 location into each image is randomly generated (they just can't be too close to
 image borders). The shape and background colors are randomly generated as well.
+
+## How to add a new dataset?
+
+If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./deeposlandia/add_a_dataset.md).
 
 # Flask application
 

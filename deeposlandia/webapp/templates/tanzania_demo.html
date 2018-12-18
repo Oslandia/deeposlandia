@@ -1,0 +1,118 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<script>
+  const dataset = "tanzania";
+  const model = "{{ model }}";
+</script>
+
+<div class="od-header">
+  <h1>Tanzania: {{ model }}</h1>
+</div>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"
+        aria-current="page"><a href="{{url_for('index')}}">Home</a>
+    </li>
+    <li class="breadcrumb-item"
+        aria-current="page">Tanzania</a>
+    </li>  </ol>
+  </ol>
+</nav>
+
+<h2>Demo</h2>
+
+<p>Click on the below button to generate a random picture from Open AI
+Tanzania, and to display the corresponding label predictions.</p>
+
+<button id="predict_labels" value="Generate a new image" dataset="tanzania">Generate a new image</button>
+
+<div class="container">
+  <div class="row widget">
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Raw image</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="raw_image" height="70%" width="100%" src="{{url_for('static', filename=image_filename)}}">
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Ground-truth</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="ground_truth" height="70%" width="100%" src="{{url_for('static', filename=label_filename)}}">
+	  <br>
+	  {% for value, color in ground_truth_labels %}
+          {% if value!="background" %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% else %}
+	  <span class="color-label" style="background-color: {{ color }}"><font color="#ffffff">{{ value }}</font></span>
+	  {% endif %}
+	  {% endfor %}
+	</div>
+      </div>
+    </div>
+
+    <div class="one-third column home-widget dataset">
+      <div class="panel panel-default">
+        <div class="panel-header">
+	  <h5>Prediction</h5>
+	</div>
+        <div class="panel-body">
+	  <img id="predictions" height="70%" width="100%" src="{{url_for('static', filename=predicted_filename)}}">
+	  <br>
+	  {% for value, color in predicted_labels %}
+          {% if value!="background" %}
+	  <span class="color-label" style="background-color: {{ color }}">{{ value }}</span>
+	  {% else %}
+	  <span class="color-label" style="background-color: {{ color }}"><font color="#ffffff">{{ value }}</font></span>
+	  {% endif %}
+	  {% endfor %}
+	</div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+
+<h2>Training procedure</h2>
+
+<p>
+  We preprocessed the dataset images by subdividing raw images in 384*384-pixel
+  tiles. The tiling process makes us getting around 131k training images, 15k
+  validation images, and 137k testing images. The model used here is
+  a <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net</a> trained during 20
+  epochs, with validation phases.
+</p>
+
+<h2>Dataset description</h2>
+
+<p>
+  The <a href="https://blog.werobotics.org/2018/08/06/welcome-to-the-open-ai-tanzania-challenge/">Open
+  AI Tanzania</a> dataset describes a building footprint recognition use case,
+  where 3 types of buildings are discriminated: <em>complete
+  buildings</em>, <em>incomplete buildings</em> and <em>foundations</em>. Doing
+  semantic segmentation here means to define if a given pixel belongs to a
+  building, and if required, the involved building type. The dataset contains
+  13 high-resolution images (6 to 8cm/pixel), amongst which 2 images are
+  assigned to validation purpose. As a remark, there are 9 additionnal images
+  without labelling information that may be used for testing models.
+</p>
+
+{% endblock %}
+
+{% block appjs %}
+
+<script src="{{ url_for('static', filename='demo_predictor.js') }}" type="text/javascript"></script>
+
+{% endblock %}

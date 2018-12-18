@@ -20,17 +20,23 @@ Example of program call, that will infers labels on all files from
 
 import argparse
 import glob
-import numpy as np
 import os
-from PIL import Image
 import sys
+
+import daiquiri
+import numpy as np
+from PIL import Image
 
 from keras.models import Model
 import keras.backend as K
 
 from deeposlandia import utils
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 def add_program_arguments(parser):
@@ -47,8 +53,9 @@ def add_program_arguments(parser):
         Modified parser, with additional arguments
     """
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-i', '--image-paths',
                         required=True,
                         nargs='+',
@@ -143,8 +150,8 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
                                           dropout=dropout,
                                           architecture=network)
     else:
-        utils.logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                            "or 'semantic_segmentation'."))
+        logger.error(("Unrecognized model. Please enter 'feature_detection' "
+                      "or 'semantic_segmentation'."))
         sys.exit(1)
     return Model(net.X, net.Y)
 
@@ -160,7 +167,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     filenames : str
         Name of the image files on the file system
     dataset : str
-        Name of the dataset, either `shapes`, `mapillary` or `aerial`
+        Name of the dataset
     problem : str
         Name of the considered model, either `feature_detection` or
     `semantic_segmentation`
@@ -219,14 +226,14 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                      if x['is_evaluate']]
         nb_labels = len(label_ids)
     else:
-        utils.logger.error(("There is no training data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the program."))
+        logger.error(("There is no training data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the program."))
         sys.exit(1)
 
     if any([arg is None for arg in instance_args]):
-        utils.logger.info(("Some arguments are None, "
-                           "the best model is considered."))
+        logger.info(("Some arguments are None, "
+                     "the best model is considered."))
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
                                                     problem)
@@ -239,16 +246,16 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
-            utils.logger.info("Checkpoint full path : {}".format(checkpoint_full_path))
+            logger.info("Checkpoint full path : %s" % checkpoint_full_path)
             model.load_weights(checkpoint_full_path)
-            utils.logger.info(("Model weights have been recovered from {}"
-                               "").format(checkpoint_full_path))
+            logger.info("Model weights have been recovered from %s"
+                        % checkpoint_full_path)
         else:
-            utils.logger.info(("No available trained model for this image size"
-                               " with optimized hyperparameters. The "
-                               "inference will be done on an untrained model"))
+            logger.info(("No available trained model for this image size"
+                         " with optimized hyperparameters. The "
+                         "inference will be done on an untrained model"))
     else:
-        utils.logger.info("All instance arguments are filled out.")
+        logger.info("All instance arguments are filled out.")
         output_folder = utils.prepare_output_folder(datapath,
                                                     dataset,
                                                     problem,
@@ -261,11 +268,11 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             model_checkpoint = max(checkpoints)
             checkpoint_full_path = os.path.join(output_folder, model_checkpoint)
             model.load_weights(checkpoint_full_path)
-            utils.logger.info(("Model weights have been recovered from {}"
-                               "").format(checkpoint_full_path))
+            logger.info("Model weights have been recovered from %s"
+                        % checkpoint_full_path)
         else:
-            utils.logger.info(("No available checkpoint for this configuration. "
-                               "The model will be trained from scratch."))
+            logger.info(("No available checkpoint for this configuration. "
+                         "The model will be trained from scratch."))
 
     y_raw_pred = model.predict(images)
 
@@ -297,8 +304,8 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
         return {'labels': summarize_config(meaningful_labels),
                 'label_images': result}
     else:
-        utils.logger.error(("Unknown model argument. Please use "
-                            "'feature_detection' or 'semantic_segmentation'."))
+        logger.error(("Unknown model argument. Please use "
+                      "'feature_detection' or 'semantic_segmentation'."))
         sys.exit(1)
 
 def summarize_config(config):
@@ -335,8 +342,8 @@ def extract_images(image_paths):
     for image_path in image_paths:
         image = Image.open(image_path)
         if image.size[0] != image.size[1]:
-            utils.logger.error(("One of the parsed images "
-                                "has non-squared dimensions."))
+            logger.error(("One of the parsed images "
+                          "has non-squared dimensions."))
             sys.exit(1)
         x_test.append(np.array(image))
     return np.array(x_test)
@@ -355,4 +362,4 @@ if __name__ == '__main__':
                          args.batch_size, args.dropout,
                          args.learning_rate, args.learning_rate_decay)
 
-    utils.logger.info(y_raw_pred)
+    logger.info(y_raw_pred)

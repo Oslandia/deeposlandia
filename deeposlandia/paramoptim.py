@@ -2,24 +2,29 @@
 """
 
 import argparse
+from datetime import datetime
 import itertools
 import json
-import numpy as np
 import os
 import sys
 
-from datetime import datetime
+import daiquiri
+import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model
 from keras.optimizers import Adam
 
 from deeposlandia import generator, utils
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 from deeposlandia.metrics import iou, dice_coef
 
 SEED = int(datetime.now().timestamp())
+
+
+logger = daiquiri.getLogger(__name__)
 
 
 def add_instance_arguments(parser):
@@ -38,8 +43,9 @@ def add_instance_arguments(parser):
     parser.add_argument('-a', '--aggregate-label', action='store_true',
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "
@@ -168,9 +174,9 @@ def get_data(folders, dataset, model, image_size, batch_size):
             train_config["labels"],
             seed=SEED)
     else:
-        utils.logger.error(("There is no training data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no training data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
     if os.path.isfile(folders["validation_config"]):
         validation_generator = generator.create_generator(
@@ -182,9 +188,9 @@ def get_data(folders, dataset, model, image_size, batch_size):
             train_config["labels"],
             seed=SEED)
     else:
-        utils.logger.error(("There is no training data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no training data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
     if os.path.isfile(folders["testing_config"]):
         test_generator = generator.create_generator(
@@ -197,9 +203,9 @@ def get_data(folders, dataset, model, image_size, batch_size):
             inference=True,
             seed=SEED)
     else:
-        utils.logger.error(("There is no training data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no training data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator, test_generator
@@ -268,8 +274,8 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
                                           architecture=network)
         loss_function = "categorical_crossentropy"
     else:
-        utils.logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                            "or 'semantic_segmentation'."))
+        logger.error(("Unrecognized model. Please enter 'feature_detection' "
+                      "or 'semantic_segmentation'."))
         sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=learning_rate, decay=learning_rate_decay)
@@ -287,11 +293,11 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
         trained_model_epoch = int(model_checkpoint[-5:-3])
         checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
         model.load_weights(checkpoint_complete_path)
-        utils.logger.info(("Model weights have been recovered from {}"
-                           "").format(checkpoint_complete_path))
+        logger.info("Model weights have been recovered from %s"
+                    % checkpoint_complete_path)
     else:
-        utils.logger.info(("No available checkpoint for this configuration. "
-                           "The model will be trained from scratch."))
+        logger.info(("No available checkpoint for this configuration. "
+                     "The model will be trained from scratch."))
         trained_model_epoch = 0
 
 
@@ -348,8 +354,7 @@ if __name__ == '__main__':
     # Grid search
     model_output = []
     for batch_size in args.batch_size:
-        utils.logger.info(("Generating data with batch of {} images..."
-                           "").format(batch_size))
+        logger.info("Generating data with batch of %s images..." % batch_size)
         # Data generator building
         prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
                                                           args.dataset,
@@ -364,7 +369,7 @@ if __name__ == '__main__':
                                             args.network,
                                             args.learning_rate,
                                             args.learning_rate_decay):
-            utils.logger.info(utils.list_to_str(parameters))
+            logger.info(utils.list_to_str(parameters))
             # Data path and repository management
             dropout, network, learning_rate, learning_rate_decay = parameters
             instance_args = [args.name, args.image_size, network,
@@ -383,7 +388,7 @@ if __name__ == '__main__':
                                           args.nb_training_image,
                                           args.nb_validation_image, batch_size,
                                           *parameters))
-            utils.logger.info("Instance result: {}".format(model_output[-1]))
+            logger.info("Instance result: %s" % model_output[-1])
 
     # Recover best instance starting from validation accuracy
     best_instance = max(model_output, key=lambda x: x['val_acc'])

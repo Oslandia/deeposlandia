@@ -2,21 +2,26 @@
 """
 
 import argparse
+from datetime import datetime
 import os
 import sys
-import numpy as np
 
-from datetime import datetime
+import daiquiri
+import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model
 from keras.optimizers import Adam
 
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia import generator, metrics, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
 SEED = int(datetime.now().timestamp())
+
+logger = daiquiri.getLogger(__name__)
+
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -34,8 +39,9 @@ def add_instance_arguments(parser):
     parser.add_argument('-a', '--aggregate-label', action='store_true',
                         help="Aggregate labels with respect to their categories")
     parser.add_argument('-D', '--dataset',
-                        required=True,
-                        help="Dataset type (either mapillary, shapes or aerial)")
+                        required=True, choices=AVAILABLE_DATASETS,
+                        help=("Dataset type (to be chosen amongst available"
+                              "datasets)"))
     parser.add_argument('-M', '--model',
                         default="feature_detection",
                         help=("Type of model to train, either "
@@ -160,9 +166,9 @@ if __name__=='__main__':
             train_config['labels'],
             seed=SEED)
     else:
-        utils.logger.error(("There is no training data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no training data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
 
     if os.path.isfile(prepro_folder["validation_config"]):
@@ -175,9 +181,9 @@ if __name__=='__main__':
             train_config['labels'],
             seed=SEED)
     else:
-        utils.logger.error(("There is no validation data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no validation data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
 
     if os.path.isfile(prepro_folder["testing_config"]):
@@ -191,9 +197,9 @@ if __name__=='__main__':
             inference=True,
             seed=SEED)
     else:
-        utils.logger.error(("There is no testing data with the given "
-                            "parameters. Please generate a valid dataset "
-                            "before calling the training program."))
+        logger.error(("There is no testing data with the given "
+                      "parameters. Please generate a valid dataset "
+                      "before calling the training program."))
         sys.exit(1)
 
     nb_labels = len(label_ids)
@@ -215,8 +221,8 @@ if __name__=='__main__':
                                           architecture=args.network)
         loss_function = "categorical_crossentropy"
     else:
-        utils.logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                            "or 'semantic_segmentation'."))
+        logger.error(("Unrecognized model. Please enter 'feature_detection' "
+                      "or 'semantic_segmentation'."))
         sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=args.learning_rate, decay=args.learning_rate_decay)
@@ -239,11 +245,11 @@ if __name__=='__main__':
         trained_model_epoch = int(model_checkpoint[-5:-3])
         checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
         model.load_weights(checkpoint_complete_path)
-        utils.logger.info(("Model weights have been recovered from {}"
-                           "").format(checkpoint_complete_path))
+        logger.info(("Model weights have been recovered "
+                     f"from {checkpoint_complete_path}"))
     else:
-        utils.logger.info(("No available checkpoint for this configuration. "
-                           "The model will be trained from scratch."))
+        logger.info(("No available checkpoint for this configuration. "
+                     "The model will be trained from scratch."))
         trained_model_epoch = 0
 
     checkpoint_filename = os.path.join(output_folder,
@@ -275,6 +281,6 @@ if __name__=='__main__':
     metrics = {"epoch": hist.epoch,
                "metrics": hist.history,
                "params": hist.params}
-    utils.logger.info("Training OK! History:\n{}".format(metrics["metrics"]))
+    logger.info("Training OK! History:\n{metrics['metrics']}")
 
     backend.clear_session()

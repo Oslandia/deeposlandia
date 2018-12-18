@@ -6,11 +6,17 @@ WARNING: only for development purpose!!
 import os
 import sys
 
+import daiquiri
+
 from deeposlandia import utils
 from deeposlandia.webapp.main import app, config
 
+
+logger = daiquiri.getLogger(__name__)
+
+
 if not "symlink" in config.sections():
-    utils.logger.error("Config.ini file does not contain any 'symlink' section.")
+    logger.error("Config.ini file does not contain any 'symlink' section.")
     sys.exit(1)
 for link_name, path in config.items("symlink"):
     utils.create_symlink(os.path.join(app.static_folder, link_name), path)
