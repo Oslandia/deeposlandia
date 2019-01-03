@@ -124,14 +124,12 @@ class TanzaniaDataset(Dataset):
         Returns
         -------
         dict
-            Information related to the serialized tile (file paths, encountered labels)
+            Information related to the serialized tile (file paths, encountered
+        labels)
         """
         dirs = self._generate_preprocessed_filenames(
             image_filename, output_dir, x, y, suffix
         )
-        # gdal.Translate(dirs["image"], raster,
-        #                format="PNG",
-        #                srcWin=[x, y, self.image_size, self.image_size])
         tile_image.save(dirs["image"])
         labelled_image.save(dirs["labels"])
         return {"raw_filename": image_filename,
@@ -228,7 +226,6 @@ class TanzaniaDataset(Dataset):
         image_data = raster.ReadAsArray()
         image_data = np.swapaxes(image_data, 0, 2)
         print(image_data.shape, raw_img_width, raw_img_height)
-        # image_data = np.swapaxes(image_data, 0, 2)
         result_dicts = []
         logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
         logger.info("Image filename: %s" % image_filename)
@@ -393,36 +390,45 @@ class TanzaniaDataset(Dataset):
         if buildings.shape[0] == 0:
             return mask
         for idx, row in buildings.iterrows():
-            points = self.extract_points_from_polygon(row["geometry"],
-                                                      raster_features)
-            points[:, 0] -= min_x
-            points[:, 1] -= min_y
+            points = extract_points_from_polygon(row["geometry"],
+                                                 raster_features,
+                                                 min_x, min_y)
             label_id = [label["id"] for label in self.labels
                         if label["name"] == row["condition"].lower()][0]
             mask = cv2.fillPoly(mask, [points], label_id)
         return mask
 
 
-    def extract_points_from_polygon(self, p, features):
-        """Extract points from a polygon
+def extract_points_from_polygon(p, features, min_x, min_y):
+    """Extract points from a polygon
 
-        Parameters
-        ----------
-        p : shapely.geometry.Polygon
-            Polygon to detail
-        features : dict
-            Geographical features associated to the image
-        Returns
-        -------
-        np.array
-            Polygon vertices
+    Parameters
+    ----------
+    p : shapely.geometry.Polygon
+        Polygon to detail
+    features : dict
+        Geographical features associated to the image
+    min_x : int
+        Minimal x-coordinate (west)
+    min_y : int
+        Minimal y-coordinate (north)
+    Returns
+    -------
+    np.array
+        Polygon vertices
 
-        """
-        raw_xs, raw_ys = p.exterior.xy
-        xs = get_x_pixel(raw_xs, features["east"], features["west"], features["width"])
-        ys = get_y_pixel(raw_ys, features["south"], features["north"], features["height"])
-        points = np.array([[x, y] for x, y in zip(xs, ys)], dtype=np.int32)
-        return points
+    """
+    raw_xs, raw_ys = p.exterior.xy
+    xs = get_x_pixel(
+        raw_xs, features["east"], features["west"], features["width"]
+    )
+    ys = get_y_pixel(
+        raw_ys, features["south"], features["north"], features["height"]
+    )
+    points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
+    points[:, 0] -= min_y
+    points[:, 1] -= min_x
+    return points
 
 
 def get_x_pixel(coord, east, west, width):
