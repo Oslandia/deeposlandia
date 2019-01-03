@@ -59,15 +59,15 @@ def add_instance_arguments(parser):
                         help=("Desired size of images (width = height)"))
     parser.add_argument('-T', '--nb-testing-image',
                         type=int,
-                        default=5000,
+                        default=0,
                         help=("Number of testing images"))
     parser.add_argument('-t', '--nb-training-image',
                         type=int,
-                        default=18000,
+                        default=0,
                         help=("Number of training images"))
     parser.add_argument('-v', '--nb-validation-image',
                         type=int,
-                        default=2000,
+                        default=0,
                         help=("Number of validation images"))
     return parser
 
@@ -115,43 +115,46 @@ if __name__=='__main__':
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
-    if os.path.isfile(prepro_folder["training_config"]):
-        train_dataset.load(prepro_folder["training_config"],
-                           args.nb_training_image)
-    else:
-        logger.info(("No existing configuration file for this dataset. "
-                     "Create %s." % prepro_folder['training_config']))
-        input_image_dir = os.path.join(input_folder, "training")
-        train_dataset.populate(prepro_folder["training"], input_image_dir,
-                               nb_images=args.nb_training_image,
-                               aggregate=args.aggregate_label)
-        train_dataset.save(prepro_folder["training_config"])
+    if args.nb_training_image > 0:
+        if os.path.isfile(prepro_folder["training_config"]):
+            train_dataset.load(prepro_folder["training_config"],
+                               args.nb_training_image)
+        else:
+            logger.info(("No existing configuration file for this dataset. "
+                         "Create %s." % prepro_folder['training_config']))
+            input_image_dir = os.path.join(input_folder, "training")
+            train_dataset.populate(prepro_folder["training"], input_image_dir,
+                                   nb_images=args.nb_training_image,
+                                   aggregate=args.aggregate_label)
+            train_dataset.save(prepro_folder["training_config"])
 
-    if os.path.isfile(prepro_folder["validation_config"]):
-        validation_dataset.load(prepro_folder["validation_config"],
-                                args.nb_validation_image)
-    else:
-        logger.info(("No existing configuration file for this dataset. "
-                     "Create %s." % prepro_folder['validation_config']))
-        input_image_dir = os.path.join(input_folder, "validation")
-        validation_dataset.populate(prepro_folder["validation"],
-                                    input_image_dir,
-                                    nb_images=args.nb_validation_image,
-                                    aggregate=args.aggregate_label)
-        validation_dataset.save(prepro_folder["validation_config"])
+    if args.nb_validation_image > 0:
+        if os.path.isfile(prepro_folder["validation_config"]):
+            validation_dataset.load(prepro_folder["validation_config"],
+                                    args.nb_validation_image)
+        else:
+            logger.info(("No existing configuration file for this dataset. "
+                         "Create %s." % prepro_folder['validation_config']))
+            input_image_dir = os.path.join(input_folder, "validation")
+            validation_dataset.populate(prepro_folder["validation"],
+                                        input_image_dir,
+                                        nb_images=args.nb_validation_image,
+                                        aggregate=args.aggregate_label)
+            validation_dataset.save(prepro_folder["validation_config"])
 
-    if os.path.isfile(prepro_folder["testing_config"]):
-        test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
-    else:
-        logger.info(("No existing configuration file for this dataset. "
-                     "Create %s." % prepro_folder['testing_config']))
-        input_image_dir = os.path.join(input_folder, "testing")
-        test_dataset.populate(prepro_folder["testing"],
-                              input_image_dir,
-                              nb_images=args.nb_testing_image,
-                              aggregate=args.aggregate_label,
-                              labelling=False)
-        test_dataset.save(prepro_folder["testing_config"])
+    if args.nb_testing_image > 0:
+        if os.path.isfile(prepro_folder["testing_config"]):
+            test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
+        else:
+            logger.info(("No existing configuration file for this dataset. "
+                         "Create %s." % prepro_folder['testing_config']))
+            input_image_dir = os.path.join(input_folder, "testing")
+            test_dataset.populate(prepro_folder["testing"],
+                                  input_image_dir,
+                                  nb_images=args.nb_testing_image,
+                                  aggregate=args.aggregate_label,
+                                  labelling=False)
+            test_dataset.save(prepro_folder["testing_config"])
 
     glossary = pd.DataFrame(train_dataset.labels)
     glossary["popularity"] = train_dataset.get_label_popularity()
