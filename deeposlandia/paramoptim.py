@@ -124,17 +124,13 @@ def add_training_arguments(parser):
                         default=0,
                         help=("Number of training epochs (one epoch means "
                               "scanning each training image once)"))
-    parser.add_argument('-ii', '--nb-testing-image',
+    parser.add_argument('-t', '--nb-training-image',
                         type=int,
-                        default=5000,
+                        default=0,
                         help=("Number of training images"))
-    parser.add_argument('-it', '--nb-training-image',
+    parser.add_argument('-v', '--nb-validation-image',
                         type=int,
-                        default=18000,
-                        help=("Number of training images"))
-    parser.add_argument('-iv', '--nb-validation-image',
-                        type=int,
-                        default=2000,
+                        default=0,
                         help=("Number of validation images"))
     return parser
 
@@ -158,7 +154,7 @@ def get_data(folders, dataset, model, image_size, batch_size):
     Returns
     -------
     tuple
-        Number of labels in the dataset, as well as training, validation and testing data generators
+        Number of labels in the dataset, as well as training and validation data generators
 
     """
     # Data gathering
@@ -192,23 +188,8 @@ def get_data(folders, dataset, model, image_size, batch_size):
                       "parameters. Please generate a valid dataset "
                       "before calling the training program."))
         sys.exit(1)
-    if os.path.isfile(folders["testing_config"]):
-        test_generator = generator.create_generator(
-            dataset,
-            model,
-            folders["testing"],
-            image_size,
-            batch_size,
-            train_config["labels"],
-            inference=True,
-            seed=SEED)
-    else:
-        logger.error(("There is no training data with the given "
-                      "parameters. Please generate a valid dataset "
-                      "before calling the training program."))
-        sys.exit(1)
     nb_labels = len(label_ids)
-    return nb_labels, train_generator, validation_generator, test_generator
+    return nb_labels, train_generator, validation_generator
 
 
 def run_model(train_generator, validation_generator, dl_model, output_folder,
@@ -360,11 +341,11 @@ if __name__ == '__main__':
                                                           args.dataset,
                                                           args.image_size,
                                                           aggregate_value)
-        nb_labels, train_gen, valid_gen, test_gen = get_data(prepro_folder,
-                                                             args.dataset,
-                                                             args.model,
-                                                             model_input_size,
-                                                             batch_size)
+        nb_labels, train_gen, valid_gen = get_data(prepro_folder,
+                                                   args.dataset,
+                                                   args.model,
+                                                   model_input_size,
+                                                   batch_size)
         for parameters in itertools.product(args.dropout,
                                             args.network,
                                             args.learning_rate,

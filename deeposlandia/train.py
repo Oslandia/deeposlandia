@@ -115,17 +115,13 @@ def add_training_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-ii', '--nb-testing-image',
+    parser.add_argument('-t', '--nb-training-image',
                         type=int,
-                        default=5000,
+                        default=0,
                         help=("Number of training images"))
-    parser.add_argument('-it', '--nb-training-image',
+    parser.add_argument('-v', '--nb-validation-image',
                         type=int,
-                        default=18000,
-                        help=("Number of training images"))
-    parser.add_argument('-iv', '--nb-validation-image',
-                        type=int,
-                        default=2000,
+                        default=0,
                         help=("Number of validation images"))
     return parser
 
@@ -186,22 +182,6 @@ if __name__=='__main__':
                       "before calling the training program."))
         sys.exit(1)
 
-    if os.path.isfile(prepro_folder["testing_config"]):
-        test_generator = generator.create_generator(
-            args.dataset,
-            args.model,
-            prepro_folder["testing"],
-            model_input_size,
-            args.batch_size,
-            train_config['labels'],
-            inference=True,
-            seed=SEED)
-    else:
-        logger.error(("There is no testing data with the given "
-                      "parameters. Please generate a valid dataset "
-                      "before calling the training program."))
-        sys.exit(1)
-
     nb_labels = len(label_ids)
 
     if args.model == "feature_detection":
@@ -234,7 +214,6 @@ if __name__=='__main__':
     # Model training
     STEPS = args.nb_training_image // args.batch_size
     VAL_STEPS = args.nb_validation_image // args.batch_size
-    TEST_STEPS = args.nb_testing_image // args.batch_size
 
     output_folder = utils.prepare_output_folder(args.datapath, args.dataset,
                                                 args.model, instance_name)
