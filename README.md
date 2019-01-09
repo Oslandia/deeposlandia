@@ -131,8 +131,6 @@ distinguishing complete buildings, incomplete buildings and foudations.
 
 ![Example of image, with labels and predictions](./images/tanzania_prediction_example.png)
 
-**(:warning: model training in processing... :-) )**
-
 ## Shapes
 
 To complete the project, and make the test easier, a randomly-generated shape
