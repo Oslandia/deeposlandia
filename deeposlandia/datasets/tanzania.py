@@ -193,8 +193,8 @@ class TanzaniaDataset(Dataset):
         raw_img_width = raster.RasterXSize
         raw_img_height = raster.RasterYSize
         result_dicts = []
-        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
         logger.info("Image filename: %s" % image_filename)
+        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
 
         for x in range(0, raw_img_width, self.image_size):
             for y in range(0, raw_img_height, self.image_size):
@@ -225,10 +225,9 @@ class TanzaniaDataset(Dataset):
         raw_img_height = raster.RasterYSize
         image_data = raster.ReadAsArray()
         image_data = np.swapaxes(image_data, 0, 2)
-        print(image_data.shape, raw_img_width, raw_img_height)
         result_dicts = []
-        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
         logger.info("Image filename: %s" % image_filename)
+        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
 
         label_filename = (image_filename
                           .replace("images", "labels")
@@ -241,7 +240,7 @@ class TanzaniaDataset(Dataset):
         nb_attempts = 0
         image_counter = 0
         empty_image_counter = 0
-        while image_counter < nb_images and nb_attempts < 3 * nb_images:
+        while image_counter < nb_images and nb_attempts < 2 * nb_images:
             # randomly pick an image
             x = np.random.randint(0, raw_img_width - self.image_size)
             y = np.random.randint(0, raw_img_height - self.image_size)
@@ -339,15 +338,12 @@ class TanzaniaDataset(Dataset):
         logger.info(image_list_longname)
         if labelling:
             nb_tile_per_image = int(nb_images/nb_image_files)
-            for x in image_list_longname:
-                self.image_info.append(self._preprocess_for_training(x,
-                                                                     output_dir, nb_tile_per_image))
-            # with Pool() as p:
-            #     self.image_info = p.starmap(self._preprocess_for_training,
-            #                                 [(x, output_dir, nb_tile_per_image)
-            #                                  for x in image_list_longname])
+            with Pool(processes=3) as p:
+                self.image_info = p.starmap(self._preprocess_for_training,
+                                            [(x, output_dir, nb_tile_per_image)
+                                             for x in image_list_longname])
         else:
-            with Pool() as p:
+            with Pool(processes=3) as p:
                 self.image_info = p.starmap(self._preprocess_for_inference,
                                             [(x, output_dir)
                                              for x in image_list_longname])
