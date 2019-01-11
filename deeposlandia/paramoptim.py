@@ -292,8 +292,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
         save_weights_only=False,
         mode='auto', period=1)
     terminate_on_nan = callbacks.TerminateOnNaN()
-    earlystop = callbacks.EarlyStopping(monitor='val_acc',
-                                        min_delta=0.001,
+    earlystop = callbacks.EarlyStopping(monitor='val_loss',
                                         patience=10,
                                         verbose=1,
                                         mode='max')
