@@ -142,7 +142,7 @@ image borders). The shape and background colors are randomly generated as well.
 
 ## How to add a new dataset?
 
-If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./deeposlandia/add_a_dataset.md).
+If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./deeposlandia/datasets/add_a_dataset.md).
 
 # Flask application
 
