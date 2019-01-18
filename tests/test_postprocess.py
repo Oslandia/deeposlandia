@@ -28,7 +28,9 @@ def test_extract_coordinates_from_filenames():
 
 
 def test_assign_label_colors():
-    """
+    """Test the label colourization function, that allows to replace label IDs
+    with pixel triplets
+
     """
     labels = [{"name": "foo", "color": [0, 0, 0]},
               {"name": "bar", "color": [200, 200, 200]}]
