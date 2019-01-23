@@ -88,10 +88,10 @@ Tanzania, and to display the corresponding label predictions.</p>
 <h2>Training procedure</h2>
 
 <p>
-  We preprocessed the dataset images by subdividing raw images in 384*384-pixel
-  tiles. The tiling process makes us getting around 131k training images, 15k
-  validation images, and 137k testing images. The model used here is
-  a <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net</a> trained during 20
+  We preprocessed the dataset images by subdividing raw images in 512*512-pixel
+  tiles. The tiling process makes us getting around 90k training images and 3k
+  validation images. The model used here is
+  a <a href="https://arxiv.org/pdf/1505.04597.pdf">U-net</a> trained during 10
   epochs, with validation phases.
 </p>
 
@@ -104,7 +104,7 @@ Tanzania, and to display the corresponding label predictions.</p>
   buildings</em>, <em>incomplete buildings</em> and <em>foundations</em>. Doing
   semantic segmentation here means to define if a given pixel belongs to a
   building, and if required, the involved building type. The dataset contains
-  13 high-resolution images (6 to 8cm/pixel), amongst which 2 images are
+  13 high-resolution images (6 to 8cm/pixel), amongst which 3 images are
   assigned to validation purpose. As a remark, there are 9 additionnal images
   without labelling information that may be used for testing models.
 </p>
