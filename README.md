@@ -144,6 +144,13 @@ image borders). The shape and background colors are randomly generated as well.
 
 If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./deeposlandia/datasets/add_a_dataset.md).
 
+## Pre-trained models
+
+This project implies non-commercial use of datasets, anyway we can work with
+the dataset emitters to get commercial licences if it fits your demand. May you
+be interested in any pre-trained models, please contact us at
+infos+data@oslandia.com!
+
 # Flask application
 
 A Flask Web application may be launched locally through
