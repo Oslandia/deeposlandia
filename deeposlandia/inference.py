@@ -246,10 +246,10 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
                                + "-" + aggregate_value + ".h5")
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
-            logger.info("Checkpoint full path : %s" % checkpoint_full_path)
+            logger.info("Checkpoint full path : %s", checkpoint_full_path)
             model.load_weights(checkpoint_full_path)
             logger.info("Model weights have been recovered from %s"
-                        % checkpoint_full_path)
+                        , checkpoint_full_path)
         else:
             logger.info(("No available trained model for this image size"
                          " with optimized hyperparameters. The "
@@ -269,7 +269,7 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
             checkpoint_full_path = os.path.join(output_folder, model_checkpoint)
             model.load_weights(checkpoint_full_path)
             logger.info("Model weights have been recovered from %s"
-                        % checkpoint_full_path)
+                        , checkpoint_full_path)
         else:
             logger.info(("No available checkpoint for this configuration. "
                          "The model will be trained from scratch."))

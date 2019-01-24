@@ -282,11 +282,11 @@ def create_symlink(link_name, directory):
     if os.path.islink(link_name):
         os.unlink(link_name)
     elif os.path.isfile(link_name):
-        logger.error("%s is a file!" % link_name)
+        logger.error("%s is a file!", link_name)
     elif os.path.isdir(link_name):
-        logger.error("%s is a directory!" % link_name)
+        logger.error("%s is a directory!", link_name)
     os.symlink(directory, link_name)
-    logger.info("%s now points to %s." % (link_name, directory))
+    logger.info("%s now points to %s.", link_name, directory)
 
 
 def tile_image_correspondance(raw_img_size):

@@ -275,7 +275,7 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
         checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
         model.load_weights(checkpoint_complete_path)
         logger.info("Model weights have been recovered from %s"
-                    % checkpoint_complete_path)
+                    , checkpoint_complete_path)
     else:
         logger.info(("No available checkpoint for this configuration. "
                      "The model will be trained from scratch."))
@@ -334,7 +334,7 @@ if __name__ == '__main__':
     # Grid search
     model_output = []
     for batch_size in args.batch_size:
-        logger.info("Generating data with batch of %s images..." % batch_size)
+        logger.info("Generating data with batch of %s images...", batch_size)
         # Data generator building
         prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
                                                           args.dataset,
@@ -368,7 +368,7 @@ if __name__ == '__main__':
                                           args.nb_training_image,
                                           args.nb_validation_image, batch_size,
                                           *parameters))
-            logger.info("Instance result: %s" % model_output[-1])
+            logger.info("Instance result: %s", model_output[-1])
 
     # Recover best instance starting from validation accuracy
     best_instance = max(model_output, key=lambda x: x['val_acc'])
