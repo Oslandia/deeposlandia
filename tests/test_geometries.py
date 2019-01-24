@@ -8,7 +8,7 @@ import numpy as np
 from osgeo import gdal
 from shapely.geometry import Polygon
 
-from deeposlandia.datasets.tanzania import (
+from deeposlandia.geometries import (
     extract_points_from_polygon, extract_tile_items,
     get_geocoord, get_image_features, get_pixel, get_tile_footprint
 )
