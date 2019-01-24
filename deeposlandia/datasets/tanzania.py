@@ -69,7 +69,7 @@ class TanzaniaDataset(Dataset):
 
 
     def _generate_preprocessed_filenames(
-            self, image_filename, output_dir, x, y, suffix
+            self, image_filename, output_dir, x, y, suffix=None
     ):
         """Generate preprocessed image and label filenames on the file system,
         starting from a raw image filename
@@ -95,7 +95,8 @@ class TanzaniaDataset(Dataset):
         basename_decomp = os.path.splitext(os.path.basename(image_filename))
         img_id_str = (str(self.image_size) + '_'
                       + str(self.image_size) + '_'
-                      + str(x) + '_' + str(y) + "_" + suffix)
+                      + str(x) + '_' + str(y))
+        img_id_str = img_id_str if suffix is None else img_id_str + "_" + suffix
         new_filename = basename_decomp[0] + '_' + img_id_str + ".png"
         out_image_name = os.path.join(output_dir, 'images', new_filename)
         out_label_name = out_image_name.replace("images", "labels")
@@ -104,7 +105,7 @@ class TanzaniaDataset(Dataset):
 
     def _serialize(
             self, tile_image, labelled_image, label_dict,
-            image_filename, output_dir, x, y, suffix
+            image_filename, output_dir, x, y, suffix=None
     ):
         """Serialize a tiled image generated from an original high-resolution
         raster as well as the labelled version of the tile
