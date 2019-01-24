@@ -112,7 +112,7 @@ def recover_image_info(dataset, filename):
     elif dataset == "aerial":
         size_aggregation = "250_full"
     elif dataset == "tanzania":
-        size_aggregation = "384_full"
+        size_aggregation = "512_full"
     elif dataset == "shapes":
         size_aggregation = "64_full"
     else:
