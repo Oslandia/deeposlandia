@@ -414,3 +414,70 @@ def rasterize_polygons(polygons, img_height, img_width):
     cv2.fillPoly(img_mask, exteriors, 1)
     cv2.fillPoly(img_mask, interiors, 0)
     return img_mask
+
+
+def pixel_to_geocoord(polygon_ring, geofeatures):
+    """Transform point coordinates from pixel to geographical coordinates in
+    the accurate geographical projection, *i.e.* the projection of original
+    image indicated in the `geofeatures` dict
+
+    Parameters
+    ----------
+    polygon_ring : shapely.geometry.polygon.LinearRing
+        Sequence of points belonging to the object of interest
+    geofeatures : dict
+        Geographical characteristics of the original image
+
+    Returns
+    -------
+    numpy.array
+        Transformed sequence of points, expressed in geographical coordinates,
+    regarding the SRID provided by `geofeatures["srid"]`
+
+    """
+    xpixels, ypixels = polygon_ring.xy
+    px = get_geocoord(
+        list(xpixels),
+        geofeatures["west"],
+        geofeatures["east"],
+        geofeatures["width"]
+    )
+    py = get_geocoord(
+        list(ypixels),
+        geofeatures["north"],
+        geofeatures["south"],
+        geofeatures["height"],
+    )
+    return np.array([px, py]).T
+
+
+def convert_to_geocoord(polygons, geofeatures):
+    """Convert pixel-defined polygons into georeferenced polygon with the
+    projection of the original raster, provided by `geofeatures["srid"]`
+
+    Parameters
+    ----------
+    polygons : shapely.geometry.MultiPolygon or list of
+    shapely.geometry.Polygons
+        Detected polygons identified with their vertex pixels on the image
+    geofeatures : dict
+        Geographical features associated to the original image
+
+    Returns
+    -------
+    shapely.geometry.MultiPolygon
+        Georeferenced multipolygon that describes every object belonging to
+    original image
+    """
+    geopolygons = []
+    for polygon in polygons:
+        exterior = pixel_to_geocoord(polygon.exterior, geofeatures)
+        interiors = [
+            pixel_to_geocoord(pi, geofeatures) for pi in polygon.interiors
+        ]
+        if len(interiors) > 0:
+            poly = shgeom.Polygon(shell=exterior, holes=[i for i in interiors])
+        else:
+            poly = shgeom.Polygon(shell=exterior)
+        geopolygons.append(poly)
+    return geopolygons
