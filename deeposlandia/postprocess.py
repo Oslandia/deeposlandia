@@ -101,11 +101,15 @@ def extract_images(image_paths):
     """
     x_test = []
     for image_path in image_paths:
+        if not image_path.endswith(".png"):
+            logger.error("The filename does not refer to an png image.")
+            raise ValueError()
         image = Image.open(image_path)
         if image.size[0] != image.size[1]:
-            logger.error(("One of the parsed images "
-                          "has non-squared dimensions."))
-            sys.exit(1)
+            logger.error(
+                "One of the parsed images has non-squared dimensions."
+            )
+            raise ValueError()
         x_test.append(np.array(image))
     return np.array(x_test)
 
