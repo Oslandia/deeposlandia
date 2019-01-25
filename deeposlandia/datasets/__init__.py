@@ -123,7 +123,7 @@ class Dataset(metaclass=abc.ABCMeta):
         """
         if label_id in self.label_info:
             logger.error("Label %s already stored into the label set."
-                         % image_id)
+                         , image_id)
             return None
         category = label_name if category is None else category
         contains = label_name if contained_labels is None else contained_labels
@@ -147,7 +147,7 @@ class Dataset(metaclass=abc.ABCMeta):
             json.dump({"image_size": self.image_size,
                        "labels": self.label_info,
                        "images": self.image_info}, fp)
-        logger.info("The dataset has been saved into %s" % filename)
+        logger.info("The dataset has been saved into %s", filename)
 
     def load(self, filename, nb_images=None):
         """Load a dataset from a json file indicated by `filename` ; use dict comprehension instead
@@ -169,7 +169,7 @@ class Dataset(metaclass=abc.ABCMeta):
             self.image_info = ds["images"]
         else:
             self.image_info = ds["images"][:nb_images]
-        logger.info("The dataset has been loaded from %s" % filename)
+        logger.info("The dataset has been loaded from %s", filename)
 
     @abc.abstractmethod
     def populate(self):

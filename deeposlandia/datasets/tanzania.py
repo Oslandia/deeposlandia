@@ -193,8 +193,8 @@ class TanzaniaDataset(Dataset):
         raw_img_width = raster.RasterXSize
         raw_img_height = raster.RasterYSize
         result_dicts = []
-        logger.info("Image filename: %s" % image_filename)
-        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
+        logger.info("Image filename: %s", image_filename)
+        logger.info("Raw image size: %s, %s", raw_img_width, raw_img_height)
 
         for x in range(0, raw_img_width, self.image_size):
             for y in range(0, raw_img_height, self.image_size):
@@ -226,8 +226,8 @@ class TanzaniaDataset(Dataset):
         image_data = raster.ReadAsArray()
         image_data = np.swapaxes(image_data, 0, 2)
         result_dicts = []
-        logger.info("Image filename: %s" % image_filename)
-        logger.info("Raw image size: %s, %s" % (raw_img_width, raw_img_height))
+        logger.info("Image filename: %s", image_filename)
+        logger.info("Raw image size: %s, %s", raw_img_width, raw_img_height)
 
         label_filename = (image_filename
                           .replace("images", "labels")
@@ -304,7 +304,7 @@ class TanzaniaDataset(Dataset):
             nb_attempts += 1
         del raster
         logger.info("Generate %s images after %s attempts."
-                    % (image_counter, nb_attempts))
+                    , image_counter, nb_attempts)
         return result_dicts
 
 
@@ -334,7 +334,7 @@ class TanzaniaDataset(Dataset):
         nb_image_files = len(image_list_longname)
 
         logger.info("Getting %s images to preprocess..."
-                    % nb_image_files)
+                    , nb_image_files)
         logger.info(image_list_longname)
         if labelling:
             nb_tile_per_image = int(nb_images/nb_image_files)
@@ -351,7 +351,7 @@ class TanzaniaDataset(Dataset):
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
         logger.info("Saved %s images in the preprocessed dataset."
-                    % len(self.image_info))
+                    , len(self.image_info))
 
 
     def load_mask(self, buildings, raster_features, min_x, min_y):

@@ -136,7 +136,7 @@ class AerialDataset(Dataset):
         image_list_longname = [os.path.join(input_dir, "images", l)
                                for l in image_list if not l.startswith('.')][:nb_images]
         logger.info("Getting %s images to preprocess..."
-                    % len(image_list_longname))
+                    , len(image_list_longname))
         with Pool() as p:
             self.image_info = p.starmap(self._preprocess,
                                         [(x, output_dir, labelling)
@@ -144,4 +144,4 @@ class AerialDataset(Dataset):
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
         logger.info("Saved %s images in the preprocessed dataset."
-                    % len(self.image_info))
+                    , len(self.image_info))

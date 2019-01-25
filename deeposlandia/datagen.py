@@ -110,8 +110,8 @@ if __name__=='__main__':
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
     else:
-        logger.error("Unsupported dataset type. Please choose amongst %s"
-                     % AVAILABLE_DATASETS)
+        logger.error("Unsupported dataset type. Please choose amongst %s",
+                     AVAILABLE_DATASETS)
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
@@ -121,7 +121,7 @@ if __name__=='__main__':
                                args.nb_training_image)
         else:
             logger.info(("No existing configuration file for this dataset. "
-                         "Create %s." % prepro_folder['training_config']))
+                         "Create %s.", prepro_folder['training_config']))
             input_image_dir = os.path.join(input_folder, "training")
             train_dataset.populate(prepro_folder["training"], input_image_dir,
                                    nb_images=args.nb_training_image,
@@ -134,7 +134,7 @@ if __name__=='__main__':
                                     args.nb_validation_image)
         else:
             logger.info(("No existing configuration file for this dataset. "
-                         "Create %s." % prepro_folder['validation_config']))
+                         "Create %s.", prepro_folder['validation_config']))
             input_image_dir = os.path.join(input_folder, "validation")
             validation_dataset.populate(prepro_folder["validation"],
                                         input_image_dir,
@@ -147,7 +147,7 @@ if __name__=='__main__':
             test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
         else:
             logger.info(("No existing configuration file for this dataset. "
-                         "Create %s." % prepro_folder['testing_config']))
+                         "Create %s.", prepro_folder['testing_config']))
             input_image_dir = os.path.join(input_folder, "testing")
             test_dataset.populate(prepro_folder["testing"],
                                   input_image_dir,
@@ -158,5 +158,5 @@ if __name__=='__main__':
 
     glossary = pd.DataFrame(train_dataset.labels)
     glossary["popularity"] = train_dataset.get_label_popularity()
-    logger.info("Data glossary:\n%s" % glossary)
+    logger.info("Data glossary:\n%s", glossary)
     sys.exit(0)

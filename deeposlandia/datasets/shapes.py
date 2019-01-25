@@ -145,7 +145,7 @@ class ShapeDataset(Dataset):
         """
         if image_id in self.image_info:
             logger.error("Image %s already stored into the label set."
-                         % image_id)
+                         , image_id)
             return None
         self.image_info.append({"background": background,
                                 "shape_specs": specifications,
