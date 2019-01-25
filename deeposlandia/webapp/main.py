@@ -1,7 +1,6 @@
 """Flask web application for deeposlandia
 """
 
-from configparser import ConfigParser
 import daiquiri
 from flask import (abort, Flask, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
@@ -9,24 +8,16 @@ import json
 import logging
 import numpy as np
 import os
+import sys
 from PIL import Image
 from werkzeug.utils import secure_filename
 
-from deeposlandia import utils
+from deeposlandia import config, utils
 from deeposlandia.inference import predict
 
 
 logger = daiquiri.getLogger(__name__)
 
-
-_DEEPOSL_CONFIG = os.getenv('DEEPOSL_CONFIG')
-_DEEPOSL_CONFIG = _DEEPOSL_CONFIG if _DEEPOSL_CONFIG is not None else "config.ini"
-config = ConfigParser()
-if os.path.isfile(_DEEPOSL_CONFIG):
-    config.read(_DEEPOSL_CONFIG)
-else:
-    logger.error("No file config.ini!")
-    sys.exit(1)
 
 PROJECT_FOLDER = config.get("folder", "project_folder")
 UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
