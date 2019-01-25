@@ -174,8 +174,10 @@ def aerial_nb_images():
 
 
 @pytest.fixture
-def aerial_nb_output_images():
-    return aerial_nb_images() * (aerial_test_image_size()/aerial_tile_size()) ** 2
+def aerial_nb_output_images(
+        aerial_nb_images, aerial_test_image_size, aerial_tile_size
+):
+    return aerial_nb_images * (aerial_test_image_size/aerial_tile_size) ** 2
 
 
 @pytest.fixture
@@ -238,9 +240,16 @@ def tanzania_nb_images():
 
 
 @pytest.fixture
-def tanzania_nb_output_images():
-    return (tanzania_nb_images()
-            * math.ceil(tanzania_raw_image_size()/tanzania_image_size())
+def tanzania_nb_output_training_images():
+    return 10
+
+
+@pytest.fixture
+def tanzania_nb_output_testing_images(
+        tanzania_nb_images, tanzania_raw_image_size, tanzania_image_size
+):
+    return (tanzania_nb_images
+            * math.ceil(tanzania_raw_image_size/tanzania_image_size)
             ** 2)
 
 
@@ -250,8 +259,13 @@ def tanzania_nb_labels():
 
 
 @pytest.fixture(scope='session')
-def tanzania_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('tanzania.json')
+def tanzania_training_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join('tanzania_training.json')
+
+
+@pytest.fixture(scope='session')
+def tanzania_testing_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join('tanzania_testing.json')
 
 
 @pytest.fixture
@@ -274,11 +288,20 @@ def tanzania_raw_sample():
 
 
 @pytest.fixture(scope='session')
-def tanzania_temp_dir(tmpdir_factory):
-    tanzania_subdir = tmpdir_factory.mktemp('tanzania', numbered=False)
-    tmpdir_factory.mktemp('tanzania/images', numbered=False)
-    tmpdir_factory.mktemp('tanzania/labels', numbered=False)
-    tmpdir_factory.mktemp('tanzania/checkpoints', numbered=False)
+def tanzania_training_temp_dir(tmpdir_factory):
+    tanzania_subdir = tmpdir_factory.mktemp('tanzania_training', numbered=False)
+    tmpdir_factory.mktemp('tanzania_training/images', numbered=False)
+    tmpdir_factory.mktemp('tanzania_training/labels', numbered=False)
+    tmpdir_factory.mktemp('tanzania_training/checkpoints', numbered=False)
+    return tanzania_subdir
+
+
+@pytest.fixture(scope='session')
+def tanzania_testing_temp_dir(tmpdir_factory):
+    tanzania_subdir = tmpdir_factory.mktemp('tanzania_testing', numbered=False)
+    tmpdir_factory.mktemp('tanzania_testing/images', numbered=False)
+    tmpdir_factory.mktemp('tanzania_testing/labels', numbered=False)
+    tmpdir_factory.mktemp('tanzania_testing/checkpoints', numbered=False)
     return tanzania_subdir
 
 
