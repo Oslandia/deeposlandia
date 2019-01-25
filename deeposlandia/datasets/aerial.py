@@ -114,7 +114,7 @@ class AerialDataset(Dataset):
         return result_dicts
 
     def populate(self, output_dir, input_dir, nb_images=None,
-                 aggregate=False, labelling=True):
+                 aggregate=False, labelling=True, nb_processes=1):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -131,16 +131,22 @@ class AerialDataset(Dataset):
         class method genericity
         labelling : boolean
             If True labels are recovered from dataset, otherwise dummy label are generated
+        nb_processes : int
+            Number of processes on which to run the preprocessing
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))
         image_list_longname = [os.path.join(input_dir, "images", l)
                                for l in image_list if not l.startswith('.')][:nb_images]
         logger.info("Getting %s images to preprocess..."
                     , len(image_list_longname))
-        with Pool() as p:
-            self.image_info = p.starmap(self._preprocess,
-                                        [(x, output_dir, labelling)
-                                         for x in image_list_longname])
+        if nb_processes == 1:
+            for x in image_list_longname:
+                self.image_info.append(self._preprocess(x, output_dir, labelling))
+        else:
+            with Pool(processes=nb_processes) as p:
+                self.image_info = p.starmap(self._preprocess,
+                                            [(x, output_dir, labelling)
+                                             for x in image_list_longname])
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
         logger.info("Saved %s images in the preprocessed dataset."

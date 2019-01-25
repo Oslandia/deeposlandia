@@ -310,7 +310,7 @@ class TanzaniaDataset(Dataset):
 
 
     def populate(self, output_dir, input_dir, nb_images=None,
-                 aggregate=False, labelling=True):
+                 aggregate=False, labelling=True, nb_processes=1):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -325,8 +325,11 @@ class TanzaniaDataset(Dataset):
         aggregate : bool
             Label aggregation parameter, useless for this dataset, but kept for
         class method genericity
-        labelling: boolean
-            If True labels are recovered from dataset, otherwise dummy label are generated
+        labelling : boolean
+            If True labels are recovered from dataset, otherwise dummy label
+        are generated
+        nb_processes : int
+            Number of processes on which to run the preprocessing
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))
         image_list_longname = [os.path.join(input_dir, "images", l)
@@ -339,15 +342,23 @@ class TanzaniaDataset(Dataset):
         logger.info(image_list_longname)
         if labelling:
             nb_tile_per_image = int(nb_images/nb_image_files)
-            with Pool(processes=3) as p:
-                self.image_info = p.starmap(self._preprocess_for_training,
-                                            [(x, output_dir, nb_tile_per_image)
-                                             for x in image_list_longname])
+            if nb_processes == 1:
+                for x in image_list_longname:
+                    self.image_info.append(self._preprocess_for_training(x, output_dir, nb_tile_per_image))
+            else:
+                with Pool(processes=nb_processes) as p:
+                    self.image_info = p.starmap(self._preprocess_for_training,
+                                                [(x, output_dir, nb_tile_per_image)
+                                                 for x in image_list_longname])
         else:
-            with Pool(processes=3) as p:
-                self.image_info = p.starmap(self._preprocess_for_inference,
-                                            [(x, output_dir)
-                                             for x in image_list_longname])
+            if nb_processes == 1:
+                for x in image_list_longname:
+                    self.image_info.append(self._preprocess_for_inference(x, output_dir))
+            else:
+                with Pool(processes=nb_processes) as p:
+                    self.image_info = p.starmap(self._preprocess_for_inference,
+                                                [(x, output_dir)
+                                                 for x in image_list_longname])
 
         self.image_info = [item for sublist in self.image_info
                            for item in sublist]
