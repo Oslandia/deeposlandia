@@ -1,16 +1,18 @@
 """Set of functions dedicated to georeferenced object handling
+
+The functions which allow to convert raster in vector and vice-versa are
+inspired from:
+  - https://www.kaggle.com/lopuhin/full-pipeline-demo-poly-pixels-ml-poly
+
 """
 
-import json
-import os
+from collections import defaultdict
 
 import cv2
 import daiquiri
 import fiona
-import geojson
 import geopandas as gpd
 import numpy as np
-from osgeo import osr
 import shapely.geometry as shgeom
 
 
@@ -272,3 +274,143 @@ def extract_tile_items(
     tile_items = gpd.overlay(tile_items, bdf)
     tile_items = tile_items.explode()  # Manage MultiPolygons
     return tile_items[["condition", "geometry"]]
+
+
+def extract_geometry_vertices(mask, structure_size=(10, 10), approx_eps=0.01):
+    """Extract polygon vertices from a boolean mask with the help of OpenCV
+    utilities, as a numpy array
+
+    Parameters
+    ----------
+    mask : numpy.array
+        Image mask where to find polygons
+    structure_size : tuple
+        Size of the cv2 structuring artefact, as a tuple of horizontal and
+    vertical pixels
+    approx_eps : double
+        Approximation coefficient, aiming at building more simplified polygons
+    (this coefficient lies between 0 and 1, the larger the value is, the more
+    important the approximation is)
+
+    Returns
+    -------
+    numpy.array
+        List of polygons contained in the mask, identified by their vertices
+    """
+    structure = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, structure_size)
+    denoised = cv2.morphologyEx(mask, cv2.MORPH_OPEN, structure)
+    grown = cv2.morphologyEx(denoised, cv2.MORPH_CLOSE, structure)
+    _, contours, hierarchy = cv2.findContours(
+        grown, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+    )
+    polygons = [
+        cv2.approxPolyDP(
+            c, epsilon=approx_eps * cv2.arcLength(c, closed=True), closed=True
+        )
+        for c in contours
+    ]
+    return polygons, hierarchy
+
+
+def vectorize_mask(
+    mask, min_area=10.0, structure_size=(10, 10), approx_eps=0.01
+):
+    """Convert a numpy array (*i.e.* rasterized information) into a shapely
+    Multipolygon (*i.e.* vectorized information), by filtering too small
+    objects. As a reminder, this function is supposed to be used for building
+    detection, hence by definition a building can not be smaller than a few
+    square meters
+
+    A large part of the function (and comments) comes from:
+      - https://www.kaggle.com/lopuhin/full-pipeline-demo-poly-pixels-ml-poly
+
+    See also
+    http://docs.opencv.org/3.1.0/d9/d8b/tutorial_py_contours_hierarchy.html
+
+    Parameters
+    ----------
+    mask : numpy.array
+    min_area : double
+    structure_size : tuple
+        Size of the cv2 structuring artefact, as a tuple of horizontal and
+    vertical pixels
+    approx_eps : double
+        Approximation coefficient, aiming at building more simplified polygons
+    (this coefficient lies between 0 and 1, the larger the value is, the more
+    important the approximation is)
+
+    Returns
+    -------
+    shapely.geometry.MultiPolygon
+        Set of detected objects grouped as a MultiPolygon object
+    """
+    contours, hierarchy = extract_geometry_vertices(
+        mask, structure_size, approx_eps
+    )
+    if not contours:
+        return shgeom.MultiPolygon()
+    # now messy stuff to associate parent and child contours
+    cnt_children = defaultdict(list)
+    child_contours = set()
+    assert hierarchy.shape[0] == 1
+    for idx, (_, _, _, parent_idx) in enumerate(hierarchy[0]):
+        if parent_idx != -1:
+            child_contours.add(idx)
+            cnt_children[parent_idx].append(contours[idx])
+    # create actual polygons filtering by area (removes artifacts)
+    all_polygons = []
+    for idx, cnt in enumerate(contours):
+        if idx not in child_contours and cv2.contourArea(cnt) >= min_area:
+            assert cnt.shape[1] == 1
+            poly = shgeom.Polygon(
+                shell=cnt[:, 0, :],
+                holes=[
+                    c[:, 0, :]
+                    for c in cnt_children.get(idx, [])
+                    if cv2.contourArea(c) >= min_area
+                ],
+            )
+            all_polygons.append(poly)
+    all_polygons = shgeom.MultiPolygon(all_polygons)
+    # approximating polygons might have created invalid ones, fix them
+    if not all_polygons.is_valid:
+        all_polygons = all_polygons.buffer(0)
+        # Sometimes buffer() converts a simple Multipolygon to just a Polygon,
+        # need to keep it a Multi throughout
+        if all_polygons.type == "Polygon":
+            all_polygons = shgeom.MultiPolygon([all_polygons])
+    return all_polygons
+
+
+def rasterize_polygons(polygons, img_height, img_width):
+    """Transform a vectorized information into a numpy mask for plotting
+    purpose
+
+    Inspired from:
+      - https://www.kaggle.com/lopuhin/full-pipeline-demo-poly-pixels-ml-poly
+
+    Parameters
+    ----------
+    polygons : shapely.geometry.MultiPolygon
+        Set of detected objects, stored as a MultiPolygon
+    img_height : int
+        Image height, in pixels
+    img_width : int
+        Image width, in pixels
+
+    Returns
+    -------
+    numpy.array
+        Rasterized polygons
+    """
+    img_mask = np.zeros(shape=(img_height, img_width), dtype=np.uint8)
+    if not polygons:
+        return img_mask
+    int_coords = lambda x: np.array(x).round().astype(np.int32)
+    exteriors = [int_coords(poly.exterior.coords) for poly in polygons]
+    interiors = [
+        int_coords(pi.coords) for poly in polygons for pi in poly.interiors
+    ]
+    cv2.fillPoly(img_mask, exteriors, 1)
+    cv2.fillPoly(img_mask, interiors, 0)
+    return img_mask
