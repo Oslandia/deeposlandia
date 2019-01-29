@@ -96,3 +96,10 @@ __________________________________________________ */
     display: inline-block;
     font-size: small;
 }
+
+.infoframe {
+    background-color:#dddddd;
+    border:1px groove black;
+    border-radius: 5px;
+    padding: 10px;
+}
