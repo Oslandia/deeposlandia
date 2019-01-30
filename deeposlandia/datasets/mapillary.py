@@ -146,7 +146,8 @@ class MapillaryDataset(Dataset):
                 "label_filename": new_out_filename,
                 "labels": labels}
 
-    def populate(self, output_dir, input_dir, nb_images=None, aggregate=False, labelling=True):
+    def populate(self, output_dir, input_dir, nb_images=None, aggregate=False,
+                 labelling=True, nb_processes=1):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -162,10 +163,18 @@ class MapillaryDataset(Dataset):
             Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
         labelling: boolean
             If True labels are recovered from dataset, otherwise dummy label are generated
+        nb_processes : int
+            Number of processes on which to run the preprocessing
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
         image_list_longname = [os.path.join(input_dir, "images", l) for l in image_list]
-        with Pool() as p:
-            self.image_info = p.starmap(self._preprocess, [(x, output_dir, aggregate, labelling)
-                                                  for x in image_list_longname])
-
+        if nb_processes == 1:
+            for x in image_list_longname:
+                self.image_info.append(self._preprocess(x, output_dir, aggregate, labelling))
+        else:
+            with Pool(processes=nb_processes) as p:
+                self.image_info = p.starmap(
+                    self._preprocess,
+                    [(x, output_dir, aggregate, labelling)
+                     for x in image_list_longname]
+                )

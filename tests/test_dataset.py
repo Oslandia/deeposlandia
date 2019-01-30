@@ -6,22 +6,12 @@ import numpy as np
 import os
 import pytest
 
-from deeposlandia.datasets.dataset import Dataset
 from deeposlandia.datasets.shapes import ShapeDataset
 from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
 from deeposlandia.datasets.tanzania import TanzaniaDataset
 from deeposlandia.utils import tile_image_correspondance
 
-def test_dataset_creation(mapillary_image_size):
-    """Create a generic dataset
-    """
-    d = Dataset(mapillary_image_size)
-    assert d.image_size == mapillary_image_size
-    assert d.get_nb_labels() == 0
-    assert d.get_nb_images() == 0
-    d.add_label(label_id=0, label_name="test_label", color=[100, 100, 100], is_evaluate=True)
-    assert d.get_nb_labels() == 1
 
 def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels,
     mapillary_input_config):
@@ -31,6 +21,7 @@ def test_mapillary_dataset_creation(mapillary_image_size, mapillary_nb_labels,
     assert d.image_size == mapillary_image_size
     assert d.get_nb_labels(see_all=True) == mapillary_nb_labels
     assert d.get_nb_images() == 0
+
 
 def test_mapillary_dataset_population(mapillary_image_size,
                                       mapillary_raw_sample,
@@ -48,6 +39,7 @@ def test_mapillary_dataset_population(mapillary_image_size,
     assert all(len(os.listdir(os.path.join(str(mapillary_temp_dir), tmp_dir))) == mapillary_nb_images
                for tmp_dir in ["images", "labels"])
 
+
 def test_mapillary_dataset_population_without_labels(mapillary_image_size, mapillary_input_config,
                                                      mapillary_sample_without_labels_dir,
                                                      mapillary_nb_images, mapillary_temp_dir):
@@ -57,6 +49,7 @@ def test_mapillary_dataset_population_without_labels(mapillary_image_size, mapil
     with pytest.raises(FileNotFoundError) as excinfo:
         d.populate(str(mapillary_temp_dir), mapillary_sample_without_labels_dir, nb_images=mapillary_nb_images)
     assert str(excinfo.value).split(':')[0] == "[Errno 2] No such file or directory"
+
 
 def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
                                    mapillary_input_config, mapillary_nb_labels,
@@ -70,6 +63,7 @@ def test_mapillary_dataset_loading(mapillary_image_size, mapillary_nb_images,
     assert d.get_nb_labels() == mapillary_nb_labels
     assert d.get_nb_images() == mapillary_nb_images
 
+
 def test_shape_dataset_creation(shapes_image_size, shapes_nb_labels):
     """Create a Shapes dataset
     """
@@ -77,6 +71,7 @@ def test_shape_dataset_creation(shapes_image_size, shapes_nb_labels):
     assert d.image_size == shapes_image_size
     assert d.get_nb_labels() == shapes_nb_labels
     assert d.get_nb_images() == 0
+
 
 def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb_labels,
                                   shapes_config, shapes_temp_dir):
@@ -90,6 +85,7 @@ def test_shape_dataset_population(shapes_image_size, shapes_nb_images, shapes_nb
     assert os.path.isfile(str(shapes_config))
     assert all(len(os.listdir(os.path.join(str(shapes_temp_dir), tmp_dir))) == shapes_nb_images
                for tmp_dir in ["images", "labels"])
+
 
 def test_shape_dataset_loading(shapes_image_size, shapes_nb_images, shapes_nb_labels, shapes_sample_config):
     """Load images into a Shapes dataset
@@ -109,10 +105,11 @@ def test_aerial_dataset_creation(aerial_image_size, aerial_tile_size,
     assert d.get_nb_labels() == aerial_nb_labels
     assert d.get_nb_images() == 0
 
-def test_aerial_dataset_population(aerial_tile_size, aerial_temp_dir,
-                                   aerial_raw_sample, aerial_nb_images,
-                                   aerial_config, aerial_nb_labels,
-                                   aerial_nb_output_images):
+def test_aerial_dataset_population(
+        aerial_tile_size, aerial_temp_dir,
+        aerial_raw_sample, aerial_nb_images,
+        aerial_config, aerial_nb_labels, aerial_nb_output_images
+):
     """Populate a AerialImage dataset
     """
     d = AerialDataset(aerial_tile_size)
@@ -125,8 +122,10 @@ def test_aerial_dataset_population(aerial_tile_size, aerial_temp_dir,
     assert all(len(os.listdir(os.path.join(str(aerial_temp_dir), tmp_dir))) == aerial_nb_output_images
                for tmp_dir in ["images", "labels"])
 
-def test_aerial_dataset_loading(aerial_tile_size, aerial_config,
-                                aerial_nb_labels, aerial_nb_output_images):
+def test_aerial_dataset_loading(
+        aerial_tile_size, aerial_config,
+        aerial_nb_labels, aerial_nb_output_images
+):
     """Load images into a AerialImage dataset
     """
     d = AerialDataset(aerial_tile_size)
@@ -163,28 +162,56 @@ def test_tanzania_dataset_creation(tanzania_image_size, tanzania_nb_labels):
     assert d.get_nb_labels() == tanzania_nb_labels
     assert d.get_nb_images() == 0
 
-def test_tanzania_dataset_population(tanzania_image_size, tanzania_temp_dir,
-                                     tanzania_raw_sample, tanzania_nb_images,
-                                     tanzania_config, tanzania_nb_labels,
-                                     tanzania_nb_output_images):
+
+def test_tanzania_training_dataset_population(
+        tanzania_image_size, tanzania_training_temp_dir,
+        tanzania_raw_sample, tanzania_nb_images,
+        tanzania_training_config, tanzania_nb_labels,
+        tanzania_nb_output_training_images
+):
     """Populate a Tanzania dataset
     """
     d = TanzaniaDataset(tanzania_image_size)
-    d.populate(str(tanzania_temp_dir), tanzania_raw_sample,
+    d.populate(str(tanzania_training_temp_dir), tanzania_raw_sample,
                nb_images=tanzania_nb_images)
-    d.save(str(tanzania_config))
+    d.save(str(tanzania_training_config))
     assert d.get_nb_labels() == tanzania_nb_labels
-    assert d.get_nb_images() == tanzania_nb_output_images
-    assert os.path.isfile(str(tanzania_config))
-    assert all(len(os.listdir(os.path.join(str(tanzania_temp_dir), tmp_dir))) == tanzania_nb_output_images
-               for tmp_dir in ["images", "labels"])
+    assert d.get_nb_images() >= 0.1 * tanzania_nb_output_training_images
+    assert d.get_nb_images() <= tanzania_nb_output_training_images + 3
+    assert os.path.isfile(str(tanzania_training_config))
+    assert all(
+        len(os.listdir(os.path.join(str(tanzania_training_temp_dir), tmp_dir)))
+        == d.get_nb_images()
+        for tmp_dir in ["images", "labels"]
+    )
 
-def test_tanzania_dataset_loading(tanzania_image_size, tanzania_config,
-                                  tanzania_nb_labels,
-                                  tanzania_nb_output_images):
+
+def test_tanzania_testing_dataset_population(
+        tanzania_image_size, tanzania_testing_temp_dir,
+        tanzania_raw_sample, tanzania_nb_images,
+        tanzania_testing_config, tanzania_nb_labels,
+        tanzania_nb_output_testing_images
+):
+    """Populate a Tanzania dataset
+    """
+    d = TanzaniaDataset(tanzania_image_size)
+    d.populate(str(tanzania_testing_temp_dir), tanzania_raw_sample,
+               nb_images=tanzania_nb_images, labelling=False)
+    d.save(str(tanzania_testing_config))
+    assert d.get_nb_labels() == tanzania_nb_labels
+    assert d.get_nb_images() == tanzania_nb_output_testing_images
+    assert os.path.isfile(str(tanzania_testing_config))
+    assert len(os.listdir(os.path.join(str(tanzania_testing_temp_dir),
+        "images"))) == d.get_nb_images()
+
+
+def test_tanzania_testing_dataset_loading(
+        tanzania_image_size, tanzania_testing_config,
+        tanzania_nb_labels, tanzania_nb_output_testing_images
+):
     """Load images into a Tanzania dataset
     """
     d = TanzaniaDataset(tanzania_image_size)
-    d.load(tanzania_config)
+    d.load(tanzania_testing_config)
     assert d.get_nb_labels() == tanzania_nb_labels
-    assert d.get_nb_images() == tanzania_nb_output_images
+    assert d.get_nb_images() == tanzania_nb_output_testing_images

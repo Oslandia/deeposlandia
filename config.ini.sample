@@ -1,6 +1,9 @@
 [status]
 status = dev
 
+[running]
+processes = 1
+
 [symlink]
 predicted = /path/to/predicted/images/
 shapes = /path/to/shape/dataset/

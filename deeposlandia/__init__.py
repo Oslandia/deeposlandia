@@ -1,7 +1,10 @@
 """Deeposlandia package
 """
 
+from configparser import ConfigParser
 import logging
+import os
+import sys
 
 import daiquiri
 
@@ -13,3 +16,12 @@ daiquiri.setup(level=logging.INFO,outputs=(
              "%(funcName)s : %(color)s%(message)s%(color_stop)s"))),
 ))
 logger = daiquiri.getLogger("root")
+
+_DEEPOSL_CONFIG = os.getenv('DEEPOSL_CONFIG')
+_DEEPOSL_CONFIG = _DEEPOSL_CONFIG if _DEEPOSL_CONFIG is not None else "config.ini"
+config = ConfigParser()
+if os.path.isfile(_DEEPOSL_CONFIG):
+    config.read(_DEEPOSL_CONFIG)
+else:
+    logger.error("No file config.ini!")
+    sys.exit(1)

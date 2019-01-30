@@ -20,7 +20,7 @@ import sys
 import daiquiri
 import pandas as pd
 
-from deeposlandia import utils
+from deeposlandia import config, utils
 from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
@@ -125,7 +125,8 @@ if __name__=='__main__':
             input_image_dir = os.path.join(input_folder, "training")
             train_dataset.populate(prepro_folder["training"], input_image_dir,
                                    nb_images=args.nb_training_image,
-                                   aggregate=args.aggregate_label)
+                                   aggregate=args.aggregate_label,
+                                   nb_processes=int(config.get("running", "processes")))
             train_dataset.save(prepro_folder["training_config"])
 
     if args.nb_validation_image > 0:
@@ -139,7 +140,8 @@ if __name__=='__main__':
             validation_dataset.populate(prepro_folder["validation"],
                                         input_image_dir,
                                         nb_images=args.nb_validation_image,
-                                        aggregate=args.aggregate_label)
+                                        aggregate=args.aggregate_label,
+                                        nb_processes=int(config.get("running", "processes")))
             validation_dataset.save(prepro_folder["validation_config"])
 
     if args.nb_testing_image > 0:
@@ -153,7 +155,8 @@ if __name__=='__main__':
                                   input_image_dir,
                                   nb_images=args.nb_testing_image,
                                   aggregate=args.aggregate_label,
-                                  labelling=False)
+                                  labelling=False,
+                                  nb_processes=int(config.get("running", "processes")))
             test_dataset.save(prepro_folder["testing_config"])
 
     glossary = pd.DataFrame(train_dataset.labels)
