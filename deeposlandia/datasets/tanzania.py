@@ -428,10 +428,10 @@ def extract_points_from_polygon(p, features, min_x, min_y):
     """
     raw_xs, raw_ys = p.exterior.xy
     xs = get_x_pixel(
-        raw_xs, features["east"], features["west"], features["width"]
+        list(raw_xs), features["west"], features["east"], features["width"]
     )
     ys = get_y_pixel(
-        raw_ys, features["south"], features["north"], features["height"]
+        list(raw_ys), features["south"], features["north"], features["height"]
     )
     points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
     points[:, 0] -= min_y
@@ -439,17 +439,17 @@ def extract_points_from_polygon(p, features, min_x, min_y):
     return points
 
 
-def get_x_pixel(coord, east, west, width):
+def get_x_pixel(coord, west, east, width):
     """Transform abscissa from geographical coordinate to pixel
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    east : float
-        East coordinates of the image
     west : float
         West coordinates of the image
+    east : float
+        East coordinates of the image
     width : int
         Image width
     Returns
@@ -457,7 +457,14 @@ def get_x_pixel(coord, east, west, width):
     list
         Transformed X-coordinates
     """
-    return [int(width * (west-c) / (west-east)) for c in coord]
+    if isinstance(coord, list):
+        return [int(width * (west - c) / (west - east)) for c in coord]
+    elif isinstance(coord, float):
+        return int(width * (west - coord) / (west - east))
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'float'", type(coord)
+        )
 
 
 def get_y_pixel(coord, south, north, height):
@@ -479,20 +486,27 @@ def get_y_pixel(coord, south, north, height):
     list
         Transformed Y-coordinates
     """
-    return [int(height * (north-c) / (north-south)) for c in coord]
+    if isinstance(coord, list):
+        return [int(height * (north - c) / (north - south)) for c in coord]
+    elif isinstance(coord, float):
+        return int(height * (north - coord) / (north - south))
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'float'", type(coord)
+        )
 
 
-def get_x_geocoord(coord, east, west, width):
+def get_x_geocoord(coord, west, east, width):
     """Transform abscissa from pixel to geographical coordinate
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    east : float
-        East coordinates of the image
     west : float
         West coordinates of the image
+    east : float
+        East coordinates of the image
     width : int
         Image width
     Returns
@@ -500,7 +514,14 @@ def get_x_geocoord(coord, east, west, width):
     list
         Transformed X-coordinates
     """
-    return west + coord * (east-west) / width
+    if isinstance(coord, list):
+        return [west + c * (east - west) / width for c in coord]
+    elif isinstance(coord, int):
+        return west + coord * (east - west) / width
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'int'", type(coord)
+        )
 
 
 def get_y_geocoord(coord, south, north, height):
@@ -522,7 +543,14 @@ def get_y_geocoord(coord, south, north, height):
     list
         Transformed Y-coordinates
     """
-    return north + coord * (south-north) / height
+    if isinstance(coord, list):
+        return [north + c * (south - north) / height for c in coord]
+    elif isinstance(coord, int):
+        return north + coord * (south - north) / height
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'int'", type(coord)
+        )
 
 
 def get_image_features(raster):
@@ -589,14 +617,20 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
 
     """
     tile_height = tile_width if tile_height is None else tile_height
-    min_x_coord = get_x_geocoord(min_x, features["east"],
-                                 features["west"], features["width"])
-    min_y_coord = get_y_geocoord(min_y, features["south"],
-                                 features["north"], features["height"])
-    max_x_coord = get_x_geocoord(min_x + tile_width, features["east"],
-                                 features["west"], features["width"])
-    max_y_coord = get_y_geocoord(min_y + tile_height, features["south"],
-                                 features["north"], features["height"])
+    min_x_coord = get_x_geocoord(
+        min_x, features["west"], features["east"], features["width"]
+    )
+    min_y_coord = get_y_geocoord(
+        min_y, features["south"], features["north"], features["height"]
+    )
+    max_x_coord = get_x_geocoord(
+        min_x + tile_width, features["west"],
+        features["east"], features["width"]
+    )
+    max_y_coord = get_y_geocoord(
+        min_y + tile_height, features["south"],
+        features["north"], features["height"]
+    )
     return shgeom.Polygon(((min_x_coord, min_y_coord),
                            (max_x_coord, min_y_coord),
                            (max_x_coord, max_y_coord),
