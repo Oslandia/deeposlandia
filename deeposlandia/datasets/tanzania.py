@@ -427,11 +427,11 @@ def extract_points_from_polygon(p, features, min_x, min_y):
 
     """
     raw_xs, raw_ys = p.exterior.xy
-    xs = get_x_pixel(
+    xs = get_pixel(
         list(raw_xs), features["west"], features["east"], features["width"]
     )
-    ys = get_y_pixel(
-        list(raw_ys), features["south"], features["north"], features["height"]
+    ys = get_pixel(
+        list(raw_ys), features["north"], features["south"], features["height"]
     )
     points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
     points[:, 0] -= min_y
@@ -439,114 +439,73 @@ def extract_points_from_polygon(p, features, min_x, min_y):
     return points
 
 
-def get_x_pixel(coord, west, east, width):
+def get_pixel(coord, min_coord, max_coord, size):
     """Transform abscissa from geographical coordinate to pixel
+
+    For horizontal operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to west and east coordinates and image width.
+
+    For vertical operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to north and south coordinates and image height.
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    west : float
-        West coordinates of the image
-    east : float
-        East coordinates of the image
-    width : int
-        Image width
+    min_coord : float
+        Georeferenced minimal coordinate of the image
+    max_coord : float
+        Georeferenced maximal coordinate of the image
+    size : int
+        Image size, in pixels
+
     Returns
     -------
     list
-        Transformed X-coordinates
+        Transformed coordinates, as pixel references within the image
     """
     if isinstance(coord, list):
-        return [int(width * (west - c) / (west - east)) for c in coord]
+        return [
+            int(size * (c - min_coord) / (max_coord - min_coord))
+            for c in coord
+        ]
     elif isinstance(coord, float):
-        return int(width * (west - coord) / (west - east))
+        return int(size * (coord - min_coord) / (max_coord - min_coord))
     else:
         raise TypeError(
             "Unknown type (%s), pass a 'list' or a 'float'", type(coord)
         )
 
 
-def get_y_pixel(coord, south, north, height):
-    """Transform abscissa from geographical coordinate to pixel
-
-    Parameters
-    ----------
-    coord : list
-        Coordinates to transform
-    south : float
-        South coordinates of the image
-    north : float
-        North coordinates of the image
-    height : int
-        Image height
-
-    Returns
-    -------
-    list
-        Transformed Y-coordinates
-    """
-    if isinstance(coord, list):
-        return [int(height * (north - c) / (north - south)) for c in coord]
-    elif isinstance(coord, float):
-        return int(height * (north - coord) / (north - south))
-    else:
-        raise TypeError(
-            "Unknown type (%s), pass a 'list' or a 'float'", type(coord)
-        )
-
-
-def get_x_geocoord(coord, west, east, width):
+def get_geocoord(coord, min_coord, max_coord, size):
     """Transform abscissa from pixel to geographical coordinate
 
-    Parameters
-    ----------
-    coord : list
-        Coordinates to transform
-    west : float
-        West coordinates of the image
-    east : float
-        East coordinates of the image
-    width : int
-        Image width
-    Returns
-    -------
-    list
-        Transformed X-coordinates
-    """
-    if isinstance(coord, list):
-        return [west + c * (east - west) / width for c in coord]
-    elif isinstance(coord, int):
-        return west + coord * (east - west) / width
-    else:
-        raise TypeError(
-            "Unknown type (%s), pass a 'list' or a 'int'", type(coord)
-        )
+    For horizontal operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to west and east coordinates and image width.
 
-
-def get_y_geocoord(coord, south, north, height):
-    """Transform abscissa from pixel to geographical coordinate
+    For vertical operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to north and south coordinates and image height.
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    south : float
-        South coordinates of the image
-    north : float
-        North coordinates of the image
-    height : int
-        Image height
+    min_coord : float
+        Minimal coordinates of the image, as a pixel reference
+    max_coord : float
+        Maximal coordinates of the image, as a pixel reference
+    size : int
+        Image size, in pixels
 
     Returns
     -------
     list
-        Transformed Y-coordinates
+        Transformed coordinates, expressed in the accurate coordinate system
     """
     if isinstance(coord, list):
-        return [north + c * (south - north) / height for c in coord]
+        return [min_coord + c * (max_coord - min_coord) / size for c in coord]
     elif isinstance(coord, int):
-        return north + coord * (south - north) / height
+        return min_coord + coord * (max_coord - min_coord) / size
     else:
         raise TypeError(
             "Unknown type (%s), pass a 'list' or a 'int'", type(coord)
@@ -617,19 +576,19 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
 
     """
     tile_height = tile_width if tile_height is None else tile_height
-    min_x_coord = get_x_geocoord(
+    min_x_coord = get_geocoord(
         min_x, features["west"], features["east"], features["width"]
     )
-    min_y_coord = get_y_geocoord(
-        min_y, features["south"], features["north"], features["height"]
+    min_y_coord = get_geocoord(
+        min_y, features["north"], features["south"], features["height"]
     )
-    max_x_coord = get_x_geocoord(
+    max_x_coord = get_geocoord(
         min_x + tile_width, features["west"],
         features["east"], features["width"]
     )
-    max_y_coord = get_y_geocoord(
-        min_y + tile_height, features["south"],
-        features["north"], features["height"]
+    max_y_coord = get_geocoord(
+        min_y + tile_height, features["north"],
+        features["south"], features["height"]
     )
     return shgeom.Polygon(((min_x_coord, min_y_coord),
                            (max_x_coord, min_y_coord),
