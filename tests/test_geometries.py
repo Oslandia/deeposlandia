@@ -16,7 +16,10 @@ from deeposlandia.datasets.tanzania import (
 
 
 def test_get_pixel():
-    """Test the transformation from georeferenced coordinates to pixel
+    """Test the transformation from georeferenced coordinates to pixel.
+
+    The transformation conserves the coordinate data structure (scalar or
+    list).
     """
     geocoords = [10000.0, 15000.0, 20000.0]
     min_coord, max_coord = 0, 30000.0
@@ -37,7 +40,10 @@ def test_get_pixel():
 
 
 def test_get_geocoord():
-    """Test the transformation from pixel to georeferenced coordinates
+    """Test the transformation from pixel to georeferenced coordinates.
+
+    The transformation conserves the coordinate data structure (scalar or
+    list).
     """
     pixels = [166, 250, 333]
     min_coord, max_coord = 0, 30000.0
@@ -56,7 +62,14 @@ def test_get_geocoord():
 
 
 def test_get_image_features(tanzania_example_image):
-    """Test the image geographic feature recovering
+    """Test the image geographic feature recovering:
+    - 'south', 'north', 'west' and 'east' are the image geographic coordinates,
+    hence floating numbers
+    - west is smaller than east
+    - south is smaller than north
+    - srid is an integer geocode
+    - width and height are strictly positive int, as they represent the image
+    size, in pixels
     """
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
@@ -74,7 +87,7 @@ def test_get_image_features(tanzania_example_image):
 
 
 def test_extract_points_from_polygon(tanzania_example_image):
-    """Test a polygon point extraction
+    """Test a polygon point extraction.
 
     Within a 1000x1000 pixel original image, consider 500x500 tiles, and more
     specifically the right-bottom tile. One wants to retrieve a triangle
@@ -102,14 +115,15 @@ def test_extract_points_from_polygon(tanzania_example_image):
     )
     points = extract_points_from_polygon(polygon, geofeatures, min_x, min_y)
     expected_points = np.array([[0, 0], [500, 0], [0, 250], [0, 0]])
-    print(points)
-    print(polygon.exterior)
-    print(expected_points)
     assert np.all(points == expected_points)
 
 
 def test_square_tile_footprint(tanzania_example_image):
-    """Test a tile footprint recovery
+    """Test a tile footprint recovery, based on the reference test image (see
+    'tests/data/tanzania/input/training/').
+
+    The full image is considered as the tile, its bounds must equal the image
+    coordinates.
     """
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
@@ -128,10 +142,11 @@ def test_square_tile_footprint(tanzania_example_image):
 
 def test_rectangle_tile_footprint(tanzania_example_image):
     """Test a tile footprint recovery, based on the reference test image (see
-    'tests/data/tanzania/input/training/')
+    'tests/data/tanzania/input/training/').
 
-    The full image is considered as the tile, its bounds must equal the image
-    coordinates
+    The considered tile is the top-half of the image, its bounds must equal
+    the image coordinates, except the south bound that must equal the mean
+    between north and south coordinates.
     """
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
@@ -156,9 +171,9 @@ def test_extract_empty_tile_items(
         tanzania_example_image, tanzania_example_labels
 ):
     """Test the extraction of polygons that overlap a given squared tile, based
-    on a reference test image (see 'tests/data/tanzania/input/training/')
+    on a reference test image (see 'tests/data/tanzania/input/training/').
 
-    The tests is focused on an empty tile, that must provide an empty item set
+    The tests is focused on an empty tile, that must provide an empty item set.
     """
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
@@ -174,7 +189,7 @@ def test_extract_empty_tile_items(
 
 def test_extract_tile_items(tanzania_example_image, tanzania_example_labels):
     """Test the extraction of polygons that overlap a given squared tile, based
-    on a reference test image (see 'tests/data/tanzania/input/training/')
+    on a reference test image (see 'tests/data/tanzania/input/training/').
 
     The tests check that:
     - the example image contains 7 valid items
