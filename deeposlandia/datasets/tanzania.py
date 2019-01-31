@@ -408,7 +408,13 @@ class TanzaniaDataset(Dataset):
 
 
 def extract_points_from_polygon(p, features, min_x, min_y):
-    """Extract points from a polygon
+    """Extract pixel points from a georeferenced polygon 'p', knowing that the
+    polygon was encoutered in a tile located at pixel ('min_x', 'min_y') in the
+    original image
+
+    Polygon point coordinates are inverted during the process, as a
+    2D-'numpy.array' first dimension refers to the rows whilst the second
+    dimension refers to the columns.
 
     Parameters
     ----------
