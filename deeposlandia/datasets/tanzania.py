@@ -250,11 +250,9 @@ class TanzaniaDataset(Dataset):
                                    y:(y+self.image_size)]
             tile_image = Image.fromarray(tile_data)
             raster_features = get_image_features(raster)
-            tile_items = extract_tile_items(raster_features, labels,
-                                            x, y,
-                                            self.image_size,
-                                            self.image_size,
-                                            tile_srid=32737)
+            tile_items = extract_tile_items(
+                raster_features, labels, x, y, self.image_size, self.image_size
+            )
             mask = self.load_mask(tile_items, raster_features, x, y)
             label_dict = utils.build_labels(mask,
                                             range(self.get_nb_labels()),
@@ -603,7 +601,7 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
 
 
 def extract_tile_items(raster_features, labels, min_x, min_y,
-                       tile_width, tile_height, tile_srid):
+                       tile_width, tile_height):
     """Extract label items that belong to the tile defined by the minimum
     horizontal pixel `min_x` (left tile limit), the minimum vertical pixel
     `min_y` (upper tile limit) and the sizes ̀tile_width` and `tile_height`
@@ -632,9 +630,6 @@ def extract_tile_items(raster_features, labels, min_x, min_y,
         Tile width, measured in pixel
     tile_height : int
         Tile height, measured in pixel
-    tile_srid : int
-        Ground-truth label projection, as an EPSG code (ex: 32737, for UTM37S
-    area)
 
     Returns
     -------
@@ -645,9 +640,9 @@ def extract_tile_items(raster_features, labels, min_x, min_y,
     """
     area = get_tile_footprint(raster_features, min_x, min_y,
                               tile_width, tile_height)
-    bdf = gpd.GeoDataFrame(crs=fiona.crs.from_epsg(tile_srid),
+    bdf = gpd.GeoDataFrame(crs=fiona.crs.from_epsg(raster_features["srid"]),
                            geometry=[area])
-    reproj_labels = labels.to_crs(epsg=tile_srid)
+    reproj_labels = labels.to_crs(epsg=raster_features["srid"])
     tile_items = gpd.sjoin(reproj_labels, bdf)
     if tile_items.shape[0] == 0:
         return tile_items[["condition", "geometry"]]
