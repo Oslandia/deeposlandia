@@ -51,8 +51,8 @@ def test_get_labels(tanzania_image_size, tanzania_nb_labels):
 def test_get_trained_model(tanzania_image_size, tanzania_nb_labels):
     """Test the semantic segmentation model retrieving
 
-    Postprocessing implies getting a 'unet' model (i.e. segmentation
-    segmentation), hence the model must be shaped as follows:
+    Postprocessing implies getting a 'unet' model (i.e. semantic segmentation),
+    hence the model must be shaped as follows:
     - an input layer of shape (None, image_size, image_size, 3)
     - an output layer of shape (None, image_size, image_size, nb_labels)
     - 69 hidden layers, amonst which:
@@ -82,9 +82,8 @@ def test_get_trained_model(tanzania_image_size, tanzania_nb_labels):
 
 
 def test_assign_label_colors():
-    """Test the label colourization function, that allows to replace label IDs
+    """Test the label colorization function, that allows to replace label IDs
     with pixel triplets
-
     """
     labels = [{"name": "foo", "color": [0, 0, 0]},
               {"name": "bar", "color": [200, 200, 200]}]
@@ -92,7 +91,7 @@ def test_assign_label_colors():
         [[1, 1, 0], [1, 1, 0], [0, 1, 1]],
         [[0, 1, 1], [0, 0, 0], [0, 1, 1]]
     ])
-    l1 = np.array([
+    expected_labels = np.array([
         [[[200, 200, 200], [200, 200, 200], [0, 0, 0]],
          [[200, 200, 200], [200, 200, 200], [0, 0, 0]],
          [[0, 0, 0], [200, 200, 200], [200, 200, 200]]],
@@ -100,8 +99,8 @@ def test_assign_label_colors():
          [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
          [[0, 0, 0], [200, 200, 200], [200, 200, 200]]]
     ])
-    l2 = postprocess.assign_label_colors(y, labels)
-    assert np.all(l1 == l2)
+    labels = postprocess.assign_label_colors(y, labels)
+    assert np.all(labels == expected_labels)
 
 
 def test_extract_coordinates_from_filenames():
@@ -140,8 +139,6 @@ def test_fill_labelled_image():
         dtype=np.int8
     )
     e2 = postprocess.fill_labelled_image(tiles, coordinates, 2, 4)
-    print(e1)
-    print(e2)
     assert np.all(e1 == e2)
 
 
@@ -178,8 +175,6 @@ def test_fill_labelled_image_incompatible_sizes():
         dtype=np.int8
     )
     e2 = postprocess.fill_labelled_image(tiles, coordinates, 2, 3, 5)
-    print(e1)
-    print(e2)
     assert np.all(e1 == e2)
 
 

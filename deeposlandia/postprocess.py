@@ -8,7 +8,6 @@ handle geographic datasets with dedicated libraries (GDAL, geopandas, shapely)
 import argparse
 import glob
 import os
-import sys
 
 import daiquiri
 from osgeo import gdal
@@ -141,8 +140,7 @@ def get_labels(datapath, dataset, tile_size):
         raise ValueError(("There is no testing data with the given "
                           "parameters. Please generate a valid dataset "
                           "before calling the program."))
-    labels = [l for l in test_config["labels"] if l["is_evaluate"]]
-    return labels
+    return [l for l in test_config["labels"] if l["is_evaluate"]]
 
 
 def get_trained_model(datapath, dataset, image_size, nb_labels):
@@ -204,12 +202,12 @@ def assign_label_colors(predicted_labels, labels):
     Returns
     -------
     numpy.array
-        Coloured predicted labels, of shape (img_size, img_size, 3)
+        Colored predicted labels, of shape (img_size, img_size, 3)
     """
     labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
                                dtype=np.uint8)
-    for i in range(len(labels)):
-        labelled_images[predicted_labels == i] = labels[i]["color"]
+    for idx, label in enumerate(labels):
+        labelled_images[predicted_labels == idx] = label["color"]
     return labelled_images
 
 
@@ -230,7 +228,7 @@ def extract_coordinates_from_filenames(filenames):
     """
     basenames = [os.path.splitext(os.path.basename(f))[0] for f in filenames]
     coordinates = [b.split("_")[-2:] for b in basenames]
-    return [[int(c[0]), int(c[1])] for c in coordinates]
+    return [[int(x), int(y)] for x, y in coordinates]
 
 
 def fill_labelled_image(
@@ -360,6 +358,9 @@ def get_image_features(datapath, dataset, filename):
       + 0.0
       + North/South pixel resolution
 
+    A GDAL dataset is opened during the function execution. The corresponding
+    variable is set to None at the end of the function so as to free memory.
+
     See GDAL documentation (https://www.gdal.org/gdal_tutorial.html)
 
     Parameters
@@ -389,7 +390,7 @@ def get_image_features(datapath, dataset, filename):
     maxx = gt[0] + width * gt[1]
     maxy = gt[3]
     srid = int(ds.GetProjection().split('"')[-2])
-    ds = None
+    ds = None  # Free memory used by the GDAL Dataset
     return {"west": minx, "south": miny, "east": maxx, "north": maxy,
             "srid": srid, "width": width, "height": height}
 
@@ -429,11 +430,11 @@ if __name__ == '__main__':
     )
     logger.info("Labelled image dimension: %s, %s"
                 % (data.shape[0], data.shape[1]))
-    coloured_data = assign_label_colors(data, labels)
-    coloured_data = draw_grid(
-        coloured_data, img_width, img_height, args.image_size
+    colored_data = assign_label_colors(data, labels)
+    colored_data = draw_grid(
+        colored_data, img_width, img_height, args.image_size
     )
-    Image.fromarray(coloured_data).save(
+    Image.fromarray(colored_data).save(
         os.path.join(
             "images", args.image_basename + "_" + str(args.image_size) + ".png"
         )
