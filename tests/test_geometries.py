@@ -6,11 +6,13 @@ import pytest
 import geopandas as gpd
 import numpy as np
 from osgeo import gdal
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 
 from deeposlandia.geometries import (
     extract_points_from_polygon, extract_tile_items,
-    get_geocoord, get_image_features, get_pixel, get_tile_footprint
+    get_geocoord, get_image_features, get_pixel, get_tile_footprint,
+    extract_geometry_vertices, vectorize_mask,
+    rasterize_polygons, pixel_to_geocoord, convert_to_geocoord
 )
 
 
@@ -222,3 +224,188 @@ def test_extract_tile_items(tanzania_example_image, tanzania_example_labels):
             and item_bounds[2] <= geofeatures["east"])
     assert (item_bounds[3] >= geofeatures["south"]
             and item_bounds[3] <= geofeatures["north"])
+
+
+def test_extract_geometry_vertices(tanzania_raw_image_size):
+    """Test the polygon vertice extraction from a raster mask
+
+    Test a simple case with two expected polygons. The considered function uses
+    OpenCV library to find polygon contours, and some approximated methods are
+    implied. Hence exact polygon vertice coordinates are not tested.
+
+    Two variant are tested, regarding the "structure" parameter, fundamental in
+    OpenCV operations. If it is too large compared to polygon sizes, they are
+    not detected.
+    """
+    mask = np.zeros([10, 10], dtype=np.uint8)
+    x1, y1 = 1, 2
+    x2, y2 = 3, 4
+    x3, y3 = 3, 6
+    x4, y4 = 7, 9
+    mask[y1:y2, x1:x2] = 1
+    mask[y3:y4, x3:x4] = 1
+    undetected_vertices, _ = extract_geometry_vertices(
+        mask, structure_size=(10, 10)
+    )
+    assert len(undetected_vertices) == 0
+    bigger_mask = np.zeros(
+        [tanzania_raw_image_size, tanzania_raw_image_size],
+        dtype=np.uint8
+    )
+    x1, y1 = 100, 200
+    x2, y2 = 300, 400
+    x3, y3 = 300, 600
+    x4, y4 = 700, 900
+    bigger_mask[y1:y2, x1:x2] = 1
+    bigger_mask[y3:y4, x3:x4] = 1
+    polygon_vertices, _ = extract_geometry_vertices(
+        bigger_mask, structure_size=(10, 10)
+    )
+    assert len(polygon_vertices) == 2
+
+
+def test_vectorize_mask(tanzania_raw_image_size):
+    """Test the mask vectorization operation, that transform raster mask into a
+    MultiPolygon.
+
+    Test a simple case with two expected polygons. The considered function uses
+    OpenCV library to find polygon contours, and some approximated methods are
+    implied. Hence exact polygon vertice coordinates are not tested.
+    """
+    mask = np.zeros(
+        [tanzania_raw_image_size, tanzania_raw_image_size],
+        dtype=np.uint8
+    )
+    empty_multipolygon = vectorize_mask(mask)
+    assert len(empty_multipolygon) == 0
+    x1, y1 = 100, 200
+    x2, y2 = 300, 400
+    x3, y3 = 300, 600
+    x4, y4 = 700, 900
+    mask[y1:y2, x1:x2] = 1
+    mask[y3:y4, x3:x4] = 1
+    multipolygon = vectorize_mask(mask)
+    assert len(multipolygon) == 2
+
+
+def test_rasterize_polygons(tanzania_raw_image_size):
+    """Test the rasterization process
+
+    Considering the "no-polygon" case, the function must return an empty mask.
+
+    Considering a polygon that fill the left part of the original image. The
+    rasterized mask must be filled with "1" on this part, and with "0" on the
+    right part.
+    """
+    polygons = []
+    mask = rasterize_polygons(
+        polygons, tanzania_raw_image_size, tanzania_raw_image_size
+    )
+    assert mask.shape == (tanzania_raw_image_size, tanzania_raw_image_size)
+    assert np.unique(mask) == np.array([0])
+    x1 = int(tanzania_raw_image_size / 2)
+    polygon = Polygon(shell=((0, 0),
+                             (x1, 0),
+                             (x1, tanzania_raw_image_size),
+                             (0, tanzania_raw_image_size),
+                             (0, 0))
+    )
+    mask = rasterize_polygons(
+        MultiPolygon([polygon]),
+        tanzania_raw_image_size,
+        tanzania_raw_image_size
+    )
+    mask_polygon = mask[:tanzania_raw_image_size, :x1]
+    assert np.all(np.unique(mask_polygon) == np.array([1]))
+    mask_no_polygon = mask[:tanzania_raw_image_size, 1+x1:]
+    assert np.all(np.unique(mask_no_polygon) == np.array([0]))
+
+
+def test_pixel_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
+    """Test the transformation of a Polygon from pixel to georeferenced
+    coordinates
+
+    Use the full image footprint as a reference polygon.
+    """
+    ds = gdal.Open(str(tanzania_example_image))
+    geofeatures = get_image_features(ds)
+    polygon = Polygon(shell=(
+        (0, 0),
+        (tanzania_raw_image_size, 0),
+        (tanzania_raw_image_size, tanzania_raw_image_size),
+        (0, tanzania_raw_image_size),
+        (0, 0)
+    ))
+    expected_points = np.array([
+        [geofeatures["west"], geofeatures["north"]],
+        [geofeatures["east"], geofeatures["north"]],
+        [geofeatures["east"], geofeatures["south"]],
+        [geofeatures["west"], geofeatures["south"]],
+        [geofeatures["west"], geofeatures["north"], ]
+    ])
+    points = pixel_to_geocoord(polygon.exterior, geofeatures)
+    assert np.all(points == expected_points)
+
+
+def test_convert_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
+    """Test the convertion of a set of pixel-referenced polygons to
+    georeferenced ones.
+
+    Some of the polygon may include holes (hence interior points). We test the
+    following design, where there are two polygons, of whom one has a hole:
+        ____
+       |1110|
+       |1010|
+       |1110|
+       |0002|
+        ----
+    """
+    x0 = y0 = 0
+    x1 = y1 = int(tanzania_raw_image_size / 4)
+    x2 = y2 = int(tanzania_raw_image_size / 2)
+    x3 = y3 = int(tanzania_raw_image_size * 3 / 4)
+    x4 = y4 = tanzania_raw_image_size
+    polygon1 = Polygon(shell=(
+        (0, 0), (x3, 0), (x3, y3), (0, y3), (0, 0)
+    ),
+                       holes=[(
+                           (x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)
+                       )]
+    )
+    polygon2 = Polygon(shell=(
+        (x3, y3), (x4, y3), (x4, y4), (x3, y4), (x3, y3)
+    ))
+    multipolygon = MultiPolygon([polygon1, polygon2])
+    ds = gdal.Open(str(tanzania_example_image))
+    geofeatures = get_image_features(ds)
+    converted_multipolygon = convert_to_geocoord(multipolygon, geofeatures)
+    expected_x = [(geofeatures["west"]
+              + (geofeatures["east"] - geofeatures["west"]) * i)
+             for i in np.linspace(0, 1, 5)]
+    expected_y = [(geofeatures["north"]
+             + (geofeatures["south"] - geofeatures["north"]) * i)
+             for i in np.linspace(0, 1, 5)]
+    expected_polygon1 = Polygon(shell=(
+        (expected_x[0], expected_y[0]),
+        (expected_x[3], expected_y[0]),
+        (expected_x[3], expected_y[3]),
+        (expected_x[0], expected_y[3]),
+        (expected_x[0], expected_y[0])
+    ),
+                       holes=[(
+                           (expected_x[1], expected_y[1]),
+                           (expected_x[2], expected_y[1]),
+                           (expected_x[2], expected_y[2]),
+                           (expected_x[1], expected_y[2]),
+                           (expected_x[1], expected_y[1])
+                       )]
+    )
+    expected_polygon2 = Polygon(shell=(
+        (expected_x[3], expected_y[3]),
+        (expected_x[4], expected_y[3]),
+        (expected_x[4], expected_y[4]),
+        (expected_x[3], expected_y[4]),
+        (expected_x[3], expected_y[3])
+        ))
+    assert converted_multipolygon[0] == expected_polygon1
+    assert converted_multipolygon[1] == expected_polygon2
