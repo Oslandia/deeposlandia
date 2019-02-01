@@ -250,11 +250,9 @@ class TanzaniaDataset(Dataset):
                                    y:(y+self.image_size)]
             tile_image = Image.fromarray(tile_data)
             raster_features = get_image_features(raster)
-            tile_items = extract_tile_items(raster_features, labels,
-                                            x, y,
-                                            self.image_size,
-                                            self.image_size,
-                                            tile_srid=32737)
+            tile_items = extract_tile_items(
+                raster_features, labels, x, y, self.image_size, self.image_size
+            )
             mask = self.load_mask(tile_items, raster_features, x, y)
             label_dict = utils.build_labels(mask,
                                             range(self.get_nb_labels()),
@@ -408,7 +406,13 @@ class TanzaniaDataset(Dataset):
 
 
 def extract_points_from_polygon(p, features, min_x, min_y):
-    """Extract points from a polygon
+    """Extract pixel points from a georeferenced polygon 'p', knowing that the
+    polygon was encoutered in a tile located at pixel ('min_x', 'min_y') in the
+    original image
+
+    Polygon point coordinates are inverted during the process, as a
+    2D-'numpy.array' first dimension refers to the rows whilst the second
+    dimension refers to the columns.
 
     Parameters
     ----------
@@ -427,11 +431,11 @@ def extract_points_from_polygon(p, features, min_x, min_y):
 
     """
     raw_xs, raw_ys = p.exterior.xy
-    xs = get_x_pixel(
-        raw_xs, features["east"], features["west"], features["width"]
+    xs = get_pixel(
+        list(raw_xs), features["west"], features["east"], features["width"]
     )
-    ys = get_y_pixel(
-        raw_ys, features["south"], features["north"], features["height"]
+    ys = get_pixel(
+        list(raw_ys), features["north"], features["south"], features["height"]
     )
     points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
     points[:, 0] -= min_y
@@ -439,90 +443,77 @@ def extract_points_from_polygon(p, features, min_x, min_y):
     return points
 
 
-def get_x_pixel(coord, east, west, width):
+def get_pixel(coord, min_coord, max_coord, size):
     """Transform abscissa from geographical coordinate to pixel
 
-    Parameters
-    ----------
-    coord : list
-        Coordinates to transform
-    east : float
-        East coordinates of the image
-    west : float
-        West coordinates of the image
-    width : int
-        Image width
-    Returns
-    -------
-    list
-        Transformed X-coordinates
-    """
-    return [int(width * (west-c) / (west-east)) for c in coord]
+    For horizontal operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to west and east coordinates and image width.
 
-
-def get_y_pixel(coord, south, north, height):
-    """Transform abscissa from geographical coordinate to pixel
+    For vertical operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to north and south coordinates and image height.
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    south : float
-        South coordinates of the image
-    north : float
-        North coordinates of the image
-    height : int
-        Image height
+    min_coord : float
+        Georeferenced minimal coordinate of the image
+    max_coord : float
+        Georeferenced maximal coordinate of the image
+    size : int
+        Image size, in pixels
 
     Returns
     -------
     list
-        Transformed Y-coordinates
+        Transformed coordinates, as pixel references within the image
     """
-    return [int(height * (north-c) / (north-south)) for c in coord]
+    if isinstance(coord, list):
+        return [
+            int(size * (c - min_coord) / (max_coord - min_coord))
+            for c in coord
+        ]
+    elif isinstance(coord, float):
+        return int(size * (coord - min_coord) / (max_coord - min_coord))
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'float'", type(coord)
+        )
 
 
-def get_x_geocoord(coord, east, west, width):
+def get_geocoord(coord, min_coord, max_coord, size):
     """Transform abscissa from pixel to geographical coordinate
 
-    Parameters
-    ----------
-    coord : list
-        Coordinates to transform
-    east : float
-        East coordinates of the image
-    west : float
-        West coordinates of the image
-    width : int
-        Image width
-    Returns
-    -------
-    list
-        Transformed X-coordinates
-    """
-    return west + coord * (east-west) / width
+    For horizontal operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to west and east coordinates and image width.
 
-
-def get_y_geocoord(coord, south, north, height):
-    """Transform abscissa from pixel to geographical coordinate
+    For vertical operations, 'min_coord', 'max_coord' and 'size' refer
+    respectively to north and south coordinates and image height.
 
     Parameters
     ----------
     coord : list
         Coordinates to transform
-    south : float
-        South coordinates of the image
-    north : float
-        North coordinates of the image
-    height : int
-        Image height
+    min_coord : float
+        Minimal coordinates of the image, as a pixel reference
+    max_coord : float
+        Maximal coordinates of the image, as a pixel reference
+    size : int
+        Image size, in pixels
 
     Returns
     -------
     list
-        Transformed Y-coordinates
+        Transformed coordinates, expressed in the accurate coordinate system
     """
-    return north + coord * (south-north) / height
+    if isinstance(coord, list):
+        return [min_coord + c * (max_coord - min_coord) / size for c in coord]
+    elif isinstance(coord, int):
+        return min_coord + coord * (max_coord - min_coord) / size
+    else:
+        raise TypeError(
+            "Unknown type (%s), pass a 'list' or a 'int'", type(coord)
+        )
 
 
 def get_image_features(raster):
@@ -589,14 +580,20 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
 
     """
     tile_height = tile_width if tile_height is None else tile_height
-    min_x_coord = get_x_geocoord(min_x, features["east"],
-                                 features["west"], features["width"])
-    min_y_coord = get_y_geocoord(min_y, features["south"],
-                                 features["north"], features["height"])
-    max_x_coord = get_x_geocoord(min_x + tile_width, features["east"],
-                                 features["west"], features["width"])
-    max_y_coord = get_y_geocoord(min_y + tile_height, features["south"],
-                                 features["north"], features["height"])
+    min_x_coord = get_geocoord(
+        min_x, features["west"], features["east"], features["width"]
+    )
+    min_y_coord = get_geocoord(
+        min_y, features["north"], features["south"], features["height"]
+    )
+    max_x_coord = get_geocoord(
+        min_x + tile_width, features["west"],
+        features["east"], features["width"]
+    )
+    max_y_coord = get_geocoord(
+        min_y + tile_height, features["north"],
+        features["south"], features["height"]
+    )
     return shgeom.Polygon(((min_x_coord, min_y_coord),
                            (max_x_coord, min_y_coord),
                            (max_x_coord, max_y_coord),
@@ -604,7 +601,7 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
 
 
 def extract_tile_items(raster_features, labels, min_x, min_y,
-                       tile_width, tile_height, tile_srid):
+                       tile_width, tile_height):
     """Extract label items that belong to the tile defined by the minimum
     horizontal pixel `min_x` (left tile limit), the minimum vertical pixel
     `min_y` (upper tile limit) and the sizes ̀tile_width` and `tile_height`
@@ -633,9 +630,6 @@ def extract_tile_items(raster_features, labels, min_x, min_y,
         Tile width, measured in pixel
     tile_height : int
         Tile height, measured in pixel
-    tile_srid : int
-        Ground-truth label projection, as an EPSG code (ex: 32737, for UTM37S
-    area)
 
     Returns
     -------
@@ -646,9 +640,9 @@ def extract_tile_items(raster_features, labels, min_x, min_y,
     """
     area = get_tile_footprint(raster_features, min_x, min_y,
                               tile_width, tile_height)
-    bdf = gpd.GeoDataFrame(crs=fiona.crs.from_epsg(tile_srid),
+    bdf = gpd.GeoDataFrame(crs=fiona.crs.from_epsg(raster_features["srid"]),
                            geometry=[area])
-    reproj_labels = labels.to_crs(epsg=tile_srid)
+    reproj_labels = labels.to_crs(epsg=raster_features["srid"])
     tile_items = gpd.sjoin(reproj_labels, bdf)
     if tile_items.shape[0] == 0:
         return tile_items[["condition", "geometry"]]

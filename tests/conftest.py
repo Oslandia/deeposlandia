@@ -286,6 +286,17 @@ def tanzania_raw_sample():
     """
     return "tests/data/tanzania/input/training/"
 
+@pytest.fixture
+def tanzania_example_image(tanzania_raw_sample):
+    return os.path.join(tanzania_raw_sample, "images", "tanzania_sample.tif")
+
+
+@pytest.fixture
+def tanzania_example_labels(tanzania_raw_sample):
+    return os.path.join(
+        tanzania_raw_sample, "labels", "tanzania_sample.geojson"
+    )
+
 
 @pytest.fixture(scope='session')
 def tanzania_training_temp_dir(tmpdir_factory):
