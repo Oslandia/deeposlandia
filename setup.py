@@ -17,14 +17,15 @@ with open('README.md', 'rb') as f:
     readme = f.read().decode('utf-8')
 
 install_requires = [
+    'tensorflow<=1.10',
     'opencv-python<=3.4.0.12',
     'pillow<=5.0.0',
-    'tensorflow<=1.10',
     'keras<=2.2.4',
     'daiquiri<=1.5.0',
     'Flask<=1.0.2',
     'seaborn<=0.8.1',
-    'geopandas<=0.4.0']
+    'geopandas<=0.4.0',
+    'rtree<=0.8']
 
 setup(
     name='deeposlandia',
