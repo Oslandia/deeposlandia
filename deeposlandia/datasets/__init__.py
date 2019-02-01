@@ -24,7 +24,7 @@ logger = daiquiri.getLogger(__name__)
 AVAILABLE_DATASETS = [
     'shapes', 'mapillary', 'aerial', 'tanzania'
 ]
-
+GEOGRAPHIC_DATASETS = ["aerial", "tanzania"]
 
 class Dataset(metaclass=abc.ABCMeta):
     """Generic class that describes the behavior of a Dataset object: it is initialized at least
