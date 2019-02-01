@@ -1,7 +1,6 @@
 """Unit tests that address geometries.py module functions
 """
 
-import os
 import pytest
 
 import geopandas as gpd
