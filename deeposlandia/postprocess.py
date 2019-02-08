@@ -10,6 +10,7 @@ import glob
 import os
 
 import daiquiri
+import geopandas as gpd
 from osgeo import gdal
 import numpy as np
 from PIL import Image
@@ -17,7 +18,7 @@ from PIL import Image
 from keras.models import Model
 import keras.backend as K
 
-from deeposlandia import utils
+from deeposlandia import utils, geometries
 from deeposlandia.datasets import GEOGRAPHIC_DATASETS
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
@@ -434,8 +435,33 @@ if __name__ == '__main__':
     colored_data = draw_grid(
         colored_data, img_width, img_height, args.image_size
     )
-    Image.fromarray(colored_data).save(
-        os.path.join(
-            "images", args.image_basename + "_" + str(args.image_size) + ".png"
-        )
+    predicted_label_file = os.path.join(
+        args.datapath, args.dataset, "output",
+        "semantic_segmentation", "predicted_labels",
+        args.image_basename + "_" + str(args.image_size) + ".png"
     )
+    Image.fromarray(colored_data).save(predicted_label_file)
+
+    vectorized_data = geometries.vectorize_mask(data)
+    gdf = gpd.GeoDataFrame({"geometry": vectorized_data})
+    predicted_geom_file = os.path.join(
+        args.datapath, args.dataset, "output",
+        "semantic_segmentation", "predicted_geometries",
+        args.image_basename + "_" + str(args.image_size) + ".geojson"
+    )
+    if not os.path.isfile(predicted_geom_file):
+        gdf.to_file(predicted_geom_file, driver="GeoJSON")
+
+    rasterized_data = geometries.rasterize_polygons(
+        vectorized_data, img_height, img_width
+    )
+    colored_raster_data = assign_label_colors(rasterized_data, labels)
+    colored_raster_data = draw_grid(
+        colored_raster_data, img_width, img_height, args.image_size
+    )
+    predicted_raster_file = os.path.join(
+        args.datapath, args.dataset, "output",
+        "semantic_segmentation", "predicted_rasters",
+        args.image_basename + "_" + str(args.image_size) + ".png"
+    )
+    Image.fromarray(colored_raster_data).save(predicted_raster_file)
