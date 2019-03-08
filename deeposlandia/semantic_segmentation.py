@@ -4,7 +4,6 @@
 import daiquiri
 import keras as K
 
-from deeposlandia import utils
 from deeposlandia.network import ConvolutionalNeuralNetwork
 
 
@@ -23,14 +22,16 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
     image_size : integer
         Input image size (height and width are equal)
     nb_channels : integer
-        Number of input image channels (1 for greyscaled images, 3 for RGB images)
+        Number of input image channels (1 for greyscaled images, 3 for RGB
+    images)
     nb_labels : integer
         Number of classes in the dataset glossary
     X : tensor
-        (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
+        (batch_size, image_size, image_size, nb_channels)-shaped input tensor;
+    input image data
     Y : tensor
-        (batch_size, image_size, image_size, nb_classes)-shaped output tensor, built as the output of the
-    last network layer
+        (batch_size, image_size, image_size, nb_classes)-shaped output tensor,
+    built as the output of the last network layer
     """
 
     def __init__(
@@ -46,7 +47,10 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
             network_name, image_size, nb_channels, nb_labels, dropout
         )
         if architecture == "unet":
-            error_msg = """Please consider a divisible-per-16 image size for this architecture."""
+            error_msg = (
+                "Please consider a divisible-per-16 image size "
+                "for this architecture."
+            )
             assert image_size % 16 == 0, error_msg
             self.Y = self.unet()
         elif architecture == "dilated":
@@ -63,8 +67,9 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
             raise ValueError("Unknown network architecture.")
 
     def output_layer(self, x, depth):
-        """Build an output layer to a neural network, as a dense layer with sigmoid activation
-        function as the point is to detect multiple labels on a single image
+        """Build an output layer to a neural network, as a dense layer with
+        sigmoid activation function as the point is to detect multiple labels
+        on a single image
 
         Parameters
         ----------
@@ -85,14 +90,14 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         return y
 
     def simple(self):
-        """Build a simple default convolutional neural network composed of 3 convolution-maxpool
-        blocks and 1 fully-connected layer
+        """Build a simple default convolutional neural network composed of 3
+        convolution-maxpool blocks and 1 fully-connected layer
 
         Returns
         -------
         tensor
-            (batch_size, image_size, image_size, nb_labels)-shaped output predictions, that have to
-        be compared with ground-truth values
+            (batch_size, image_size, image_size, nb_labels)-shaped output
+        predictions, that have to be compared with ground-truth values
         """
         layer = self.convolution(
             self.X, nb_filters=32, kernel_size=3, block_name="conv1"
@@ -144,8 +149,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         Returns
         -------
         tensor
-            (batch_size, image_size, image_size, nb_labels)-shaped output predictions, that have to
-        be compared with ground-truth values
+            (batch_size, image_size, image_size, nb_labels)-shaped output
+        predictions, that have to be compared with ground-truth values
 
         """
         conv1 = self.convolution(
@@ -243,8 +248,8 @@ class SemanticSegmentationNetwork(ConvolutionalNeuralNetwork):
         Returns
         -------
         tensor
-            (batch_size, image_size, image_size, nb_labels)-shaped output predictions, that have to
-        be compared with ground-truth values
+            (batch_size, image_size, image_size, nb_labels)-shaped output
+        predictions, that have to be compared with ground-truth values
 
         """
         conv1 = self.convolution(

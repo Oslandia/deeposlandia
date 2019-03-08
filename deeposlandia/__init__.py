@@ -8,7 +8,7 @@ import sys
 
 import daiquiri
 
-__version__ = "0.4"
+__version__ = "0.5"
 
 daiquiri.setup(
     level=logging.INFO,

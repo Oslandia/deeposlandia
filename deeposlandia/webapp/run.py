@@ -15,7 +15,7 @@ from deeposlandia.webapp.main import app, config
 logger = daiquiri.getLogger(__name__)
 
 
-if not "symlink" in config.sections():
+if "symlink" not in config.sections():
     logger.error("Config.ini file does not contain any 'symlink' section.")
     sys.exit(1)
 for link_name, path in config.items("symlink"):

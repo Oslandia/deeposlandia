@@ -406,10 +406,12 @@ def rasterize_polygons(polygons, img_height, img_width):
     img_mask = np.zeros(shape=(img_height, img_width), dtype=np.uint8)
     if not polygons:
         return img_mask
-    int_coords = lambda x: np.array(x).round().astype(np.int32)
-    exteriors = [int_coords(poly.exterior.coords) for poly in polygons]
+    exteriors = [
+        np.array(poly.exterior.coords).round().astype(np.int32)
+        for poly in polygons]
     interiors = [
-        int_coords(pi.coords) for poly in polygons for pi in poly.interiors
+        np.array(pi.coords).round().astype(np.int32)
+        for poly in polygons for pi in poly.interiors
     ]
     cv2.fillPoly(img_mask, exteriors, 1)
     cv2.fillPoly(img_mask, interiors, 0)

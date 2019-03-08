@@ -1,7 +1,6 @@
 """Unit test related to data folder organization
 """
 
-import numpy as np
 import os
 
 from deeposlandia.utils import (

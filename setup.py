@@ -39,7 +39,10 @@ setup(
         "Keras",
     ],
     version=find_version("deeposlandia", "__init__.py"),
-    description="Automatic detection and semantic image segmentation with deep learning",
+    description=(
+        "Automatic detection and semantic image segmentation "
+        "with deep learning"
+        ),
     long_description=readme,
     license="MIT",
     author="Oslandia",

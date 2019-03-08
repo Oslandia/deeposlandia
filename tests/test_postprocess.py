@@ -24,7 +24,8 @@ def test_extract_images(
     """Test the image extraction function, that retrieve the accurate data in a
     'numpy.array' starting from a list of filenames
 
-    This image data must be shaped as (nb_filenames, image_size, image_size, 3).
+    This image data must be shaped as (nb_filenames, image_size, image_size,
+    3).
     """
     filenames = postprocess.get_image_paths(
         "./tests/data", "tanzania", tanzania_image_size, "tanzania_sample"
@@ -188,8 +189,8 @@ def test_fill_labelled_image_different_sizes():
 
     Work with label tables, hence fixtures must be (n, n)-shaped structures
 
-    This test case corresponds to the situation where raw image width and height
-    are not equal.
+    This test case corresponds to the situation where raw image width and
+    height are not equal.
     """
     a1 = np.array([[1, 2], [3, 4]], dtype=np.int8)
     a2 = np.array([[5, 6], [7, 8]], dtype=np.int8)

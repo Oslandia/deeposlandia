@@ -1,7 +1,6 @@
 """Unit test related to the dataset creation, population and loading
 """
 
-import json
 import numpy as np
 import os
 import pytest
@@ -83,8 +82,6 @@ def test_mapillary_dataset_loading(
 ):
     """Load images into a Mapillary dataset
     """
-    with open(mapillary_input_config) as fobj:
-        config = json.load(fobj)
     d = MapillaryDataset(mapillary_image_size, mapillary_input_config)
     d.load(mapillary_sample_config)
     assert d.get_nb_labels() == mapillary_nb_labels

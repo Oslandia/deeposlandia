@@ -9,14 +9,15 @@ from deeposlandia import generator, utils
 
 
 def test_feature_detection_labelling_concise():
-    """Test `feature_detection_labelling` function in `generator` module by considering a concise
-    labelling, *i.e.* all labels are represented into the array:
-    * as a preliminary verification, check if passing string labels raises an AttributeError
-    exception
-    * test if output shape is first input shape (batch size) + an additional dimension given by the
-    `label_ids` length
-    * test if both representation provides the same information (native array on the first hand and
-    its one-hot version on the second hand)
+    """Test `feature_detection_labelling` function in `generator` module by
+    considering a concise labelling, *i.e.* all labels are represented into the
+    array:
+    * as a preliminary verification, check if passing string labels raises an
+    AttributeError exception
+    * test if output shape is first input shape (batch size) + an additional
+    dimension given by the `label_ids` length
+    * test if both representation provides the same information (native array
+    on the first hand and its one-hot version on the second hand)
     """
     a = np.array(
         [
@@ -56,16 +57,16 @@ def test_feature_detection_labelling_concise():
 
 
 def test_feature_detection_labelling_sparse():
-    """Test `feature_detection_labelling` function in `generator` module by considering a sparse
-    labelling, *i.e.* the array contains unknown values (to mimic the non-evaluated label
-    situations):
-    * as a preliminary verification, check if passing string labels raises an AttributeError
-    exception
+    """Test `feature_detection_labelling` function in `generator` module by
+    considering a sparse labelling, *i.e.* the array contains unknown values
+    (to mimic the non-evaluated label situations):
+    * as a preliminary verification, check if passing string labels raises an
+    AttributeError exception
     * test if label length is different from the list of values in the array
-    * test if output shape is first input shape (batch size) + an additional dimension given by the
-    `label_ids` length
-    * test if both representation provides the same information (native array on the first hand and
-    its one-hot version on the second hand)
+    * test if output shape is first input shape (batch size) + an additional
+    dimension given by the `label_ids` length
+    * test if both representation provides the same information (native array
+    on the first hand and its one-hot version on the second hand)
     """
     a = np.array(
         [
@@ -179,14 +180,15 @@ def test_featdet_shape_generator(
 
 
 def test_semantic_segmentation_labelling_concise():
-    """Test `semantic_segmentation_labelling` function in `generator` module by considering a
-    concise labelling, *i.e.* the labels correspond to array values
-    * as a preliminary verification, check if passing string labels raises an AttributeError
-    exception
-    * test if output shape is input shape + an additional dimension given by the
-      `label_ids` length
-    * test if both representation provides the same information (native array on the
-      first hand and its one-hot version on the second hand)
+    """Test `semantic_segmentation_labelling` function in `generator` module by
+    considering a concise labelling, *i.e.* the labels correspond to array
+    values
+    * as a preliminary verification, check if passing string labels raises an
+    AttributeError exception
+    * test if output shape is input shape + an additional dimension given by
+    the `label_ids` length
+    * test if both representation provides the same information (native array
+    on the first hand and its one-hot version on the second hand)
 
     """
     a = np.array(
@@ -260,15 +262,15 @@ def test_semantic_segmentation_labelling_concise():
 
 
 def test_semantic_segmentation_labelling_sparse():
-    """Test `semantic_segmentation_labelling` function in `generator` module by considering a
-    sparse labelling, *i.e.* the array contains unknown values (to mimic the non-evaluated label
-    situations)
-    * as a preliminary verification, check if passing string labels raises an AttributeError
-    exception
-    * test if output shape is input shape + an additional dimension given by the
-      `label_ids` length
-    * test if both representation provides the same information (native array on the
-      first hand and its one-hot version on the second hand)
+    """Test `semantic_segmentation_labelling` function in `generator` module by
+    considering a sparse labelling, *i.e.* the array contains unknown values
+    (to mimic the non-evaluated label situations)
+    * as a preliminary verification, check if passing string labels raises an
+    AttributeError exception
+    * test if output shape is input shape + an additional dimension given by
+    the `label_ids` length
+    * test if both representation provides the same information (native array
+    on the first hand and its one-hot version on the second hand)
 
     """
     a = np.array(

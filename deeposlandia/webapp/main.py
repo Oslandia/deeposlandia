@@ -10,10 +10,8 @@ from flask import (
     render_template,
     request,
     send_from_directory,
-    url_for,
 )
 import json
-import logging
 import numpy as np
 import os
 import sys
@@ -91,7 +89,8 @@ def allowed_file(filename):
 
 
 def recover_image_info(dataset, filename):
-    """Recover image full name on the application as well as corresponding ground-truth labels
+    """Recover image full name on the application as well as corresponding
+    ground-truth labels
 
     Parameters
     ----------
@@ -101,7 +100,8 @@ def recover_image_info(dataset, filename):
     Returns
     -------
     dict
-        Dictionary that contains image full names (raw images and labelled version) and label infos
+        Dictionary that contains image full names (raw images and labelled
+    version) and label infos
 
     """
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
@@ -173,9 +173,11 @@ def demo_homepage(model, dataset):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or `semantic_segmentation`)
+        Considered research problem (either `feature_detection` or
+    `semantic_segmentation`)
     dataset : str
-        Considered dataset (either `shapes`, `mapillary`, `aerial` or `tanzania`)
+        Considered dataset (either `shapes`, `mapillary`, `aerial` or
+    `tanzania`)
 
     Returns
     -------
@@ -204,7 +206,8 @@ def predictor_demo(model, dataset, image):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or `semantic_segmentation`)
+        Considered research problem (either `feature_detection` or
+    `semantic_segmentation`)
     dataset : str
         Considered dataset (either `shapes` or `mapillary`)
     image : str
@@ -302,9 +305,9 @@ def load_predictor():
 
 @app.route("/predictor", methods=["POST"])
 def upload_image():
-    """Route to deep learning predictor that takes as an input a uploaded-by-client
-    image (which is saved on the server); if the uploaded file is not valid,
-    the method does a simple redirection
+    """Route to deep learning predictor that takes as an input a
+    uploaded-by-client image (which is saved on the server); if the uploaded
+    file is not valid, the method does a simple redirection
 
     Returns
     -------

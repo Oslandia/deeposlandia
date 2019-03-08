@@ -9,7 +9,6 @@ from multiprocessing import Pool
 import os
 
 import daiquiri
-import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
@@ -70,7 +69,6 @@ class AerialDataset(Dataset):
         raw_img_size = img_in.size[0]
         result_dicts = []
         # crop tile_size*tile_size tiles into 5000*5000 raw images
-        buffer_tiles = []
         for x in range(0, raw_img_size, self.tile_size):
             for y in range(0, raw_img_size, self.tile_size):
                 tile = img_in.crop(
@@ -103,7 +101,6 @@ class AerialDataset(Dataset):
         if labelling:
             label_filename = image_filename.replace("images/", "gt/")
             img_out = Image.open(label_filename)
-            buffer_tiles = []
             for x in range(0, raw_img_size, self.tile_size):
                 for y in range(0, raw_img_size, self.tile_size):
                     tile = img_out.crop(
@@ -155,13 +152,14 @@ class AerialDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider the whole
-        repository
+            Number of images to be considered in the dataset; if None, consider
+        the whole repository
         aggregate : bool
             Label aggregation parameter, useless for this dataset, but kept for
         class method genericity
         labelling : boolean
-            If True labels are recovered from dataset, otherwise dummy label are generated
+            If True labels are recovered from dataset, otherwise dummy label
+        are generated
         nb_processes : int
             Number of processes on which to run the preprocessing
         """

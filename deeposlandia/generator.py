@@ -39,7 +39,8 @@ def feature_detection_labelling(img, label_config):
     Parameters
     ----------
     img : numpy.array
-        Batched input image data of size (batch_size, image_size, image_size, 1)
+        Batched input image data of size (batch_size, image_size, image_size,
+    1)
     label_config : dict
         Labels contained into the dataset
 
@@ -77,15 +78,16 @@ def semantic_segmentation_labelling(img, label_config):
     Parameters
     ----------
     img : ndarray
-        Batched input image data of size (batch_size, image_size, image_size, 1)
+        Batched input image data of size (batch_size, image_size, image_size,
+    1)
     label_config : dict
         Label contained into the dataset
 
     Returns
     -------
     ndarray
-        Label encoding, array of shape (batch_size, image_size, image_size, nb_labels), occurrence
-    of the ith label for each pixel
+        Label encoding, array of shape (batch_size, image_size, image_size,
+    nb_labels), occurrence of the ith label for each pixel
     """
     if not (img.shape[1] == img.shape[2] and len(img.shape) == 4):
         raise ValueError(
@@ -111,11 +113,12 @@ def semantic_segmentation_labelling(img, label_config):
 
 
 def feed_generator(datapath, gen_type, image_size, batch_size, seed=None):
-    """Build a couple of generator fed by image and label repository, respectively
+    """Build a couple of generator fed by image and label repository,
+    respectively
 
-    The input image are stored as RGB-images, whilst labelled image are grayscaled-images. The
-    Keras generator takes this difference into account through its `color_mode` parameter, that
-    depends on `gen_type`
+    The input image are stored as RGB-images, whilst labelled image are
+    grayscaled-images. The Keras generator takes this difference into account
+    through its `color_mode` parameter, that depends on `gen_type`
 
     Parameters
     ----------
@@ -158,8 +161,8 @@ def create_generator(
     inference=False,
     seed=None,
 ):
-    """Create a Keras data Generator starting from images contained in `datapath` repository to
-    address `model`
+    """Create a Keras data Generator starting from images contained in
+    `datapath` repository to address `model`
 
     Parameters
     ----------
@@ -167,7 +170,8 @@ def create_generator(
         Name of the dataset (*e.g.* `shapes`, `mapillary`, `aerial` or
     `tanzania`)
     model : str
-        Research problem that is addressed (either `feature_detection` or `semantic_segmentation`)
+        Research problem that is addressed (either `feature_detection` or
+    `semantic_segmentation`)
     datapath : str
         Path to image repository
     image_size : integer
@@ -177,7 +181,8 @@ def create_generator(
     label_config : dict
         Dataset valid label description
     inference : boolean
-        If True, generates only image data (labels are not considered during inference)
+        If True, generates only image data (labels are not considered during
+    inference)
     seed : integer
         Random number generation for data shuffling and transformations
 
@@ -187,7 +192,7 @@ def create_generator(
         Generator of tuples (images, labels), for each input data batch
 
     """
-    if not dataset in AVAILABLE_DATASETS:
+    if dataset not in AVAILABLE_DATASETS:
         raise ValueError("Wrong dataset name {}".format(dataset))
     image_generator = feed_generator(
         datapath, "images", image_size, batch_size, seed

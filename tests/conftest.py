@@ -68,7 +68,7 @@ def mapillary_sample_config():
 def mapillary_raw_sample():
     """Sample of Mapillary original images (called for populate a Mapillary
     dataset)
-    
+
     """
     return "tests/data/mapillary/sample/"
 

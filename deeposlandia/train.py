@@ -7,7 +7,6 @@ import os
 import sys
 
 import daiquiri
-import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model

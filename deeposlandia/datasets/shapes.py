@@ -13,14 +13,14 @@ import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
-from deeposlandia import utils
 
 
 logger = daiquiri.getLogger(__name__)
 
 
 class ShapeDataset(Dataset):
-    """Dataset structure that gathers all information related to a randomly-generated shape Dataset
+    """Dataset structure that gathers all information related to a
+    randomly-generated shape Dataset
 
     In such a dataset, a set of images is generated with either a square, or a
     circle or a triangle, or two of them, or all of them. A random background
@@ -33,10 +33,11 @@ class ShapeDataset(Dataset):
     Attributes
     ----------
     image_size : int
-        Size of considered images (height=width), raw images will be resized during the
-    preprocessing
+        Size of considered images (height=width), raw images will be resized
+    during the preprocessing
     nb_labels : int
-        Number of shape types that must be integrated into the dataset (only 1, 2 and 3 are supported)
+        Number of shape types that must be integrated into the dataset (only 1,
+    2 and 3 are supported)
 
     """
 
@@ -112,9 +113,11 @@ class ShapeDataset(Dataset):
         nb_images: integer
             Number of images that must be added in the dataset
         aggregate: bool
-            Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
+            Aggregate some labels into more generic ones, e.g. cars and bus
+        into the vehicle label
         labelling: boolean
-            Dummy parameter: in this dataset, labels are always generated, as images are drawed with them
+            Dummy parameter: in this dataset, labels are always generated, as
+        images are drawed with them
         buf: integer
             Minimal number of pixels between shape base point and image borders
         """
@@ -133,7 +136,7 @@ class ShapeDataset(Dataset):
                 else:
                     shape_specs.append([None, None, None, None])
             self.add_image(i, bg_color, shape_specs, image_label)
-            if not output_dir is None:
+            if output_dir is not None:
                 self.draw_image(i, output_dir)
 
     def add_image(self, image_id, background, specifications, labels):
@@ -174,14 +177,16 @@ class ShapeDataset(Dataset):
         """Draws an image from the specifications of its shapes and saves it on
         the file system to `datapath`
 
-        Save labels as mono-channel images on the file system by using the label ids
+        Save labels as mono-channel images on the file system by using the
+        label ids
 
         Parameters
         ----------
         image_id : integer
             Image id
         datapath : str
-            String that characterizes the repository in which images will be stored
+            String that characterizes the repository in which images will be
+        stored
         """
         image_info = self.image_info[image_id]
 

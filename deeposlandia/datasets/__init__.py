@@ -5,18 +5,10 @@ that inherits from the generic Dataset class.
 """
 
 import abc
-import os
 import json
-import math
-from multiprocessing import Pool
 
-import cv2
 import daiquiri
 import numpy as np
-from PIL import Image
-
-from deeposlandia import utils
-
 
 logger = daiquiri.getLogger(__name__)
 
@@ -26,15 +18,16 @@ GEOGRAPHIC_DATASETS = ["aerial", "tanzania"]
 
 
 class Dataset(metaclass=abc.ABCMeta):
-    """Generic class that describes the behavior of a Dataset object: it is initialized at least
-    with an image size, its label are added always through the same manner, it can be serialized (save) and
-    deserialized (load) from/to a `.json` file
+    """Generic class that describes the behavior of a Dataset object: it is
+    initialized at least with an image size, its label are added always through
+    the same manner, it can be serialized (save) and deserialized (load)
+    from/to a `.json` file
 
     Attributes
     ----------
     image_size : int
-        Size of considered images (height=width), raw images will be resized during the
-    preprocessing
+        Size of considered images (height=width), raw images will be resized
+    during the preprocessing
     """
 
     def __init__(self, image_size):
@@ -67,7 +60,8 @@ class Dataset(metaclass=abc.ABCMeta):
 
     @property
     def labels(self):
-        """Return the description of label that will be evaluated during the process
+        """Return the description of label that will be evaluated during the
+    process
         """
         return [label for label in self.label_info if label["is_evaluate"]]
 
@@ -77,8 +71,8 @@ class Dataset(metaclass=abc.ABCMeta):
         Parameters
         ----------
         see_all : boolean
-            If True, consider all labels, otherwise consider only labels for which `is_evaluate` is
-        True
+            If True, consider all labels, otherwise consider only labels for
+        which `is_evaluate` is True
         """
         if see_all:
             return len(self.label_info)
@@ -92,8 +86,8 @@ class Dataset(metaclass=abc.ABCMeta):
         return len(self.image_info)
 
     def get_label_popularity(self):
-        """Return the label popularity in the current dataset, *i.e.* the proportion of images that
-        contain corresponding object
+        """Return the label popularity in the current dataset, *i.e.* the
+        proportion of images that contain corresponding object
         """
         labels = [img["labels"] for img in self.image_info]
         if self.get_nb_images() == 0:
@@ -139,7 +133,7 @@ class Dataset(metaclass=abc.ABCMeta):
         """
         if label_id in self.label_info:
             logger.error(
-                "Label %s already stored into the label set.", image_id
+                "Label %s already stored into the label set.", label_id
             )
             return None
         category = label_name if category is None else category
@@ -151,7 +145,7 @@ class Dataset(metaclass=abc.ABCMeta):
                 "category": category,
                 "is_evaluate": is_evaluate,
                 "aggregate": aggregated_label_ids,
-                "contains": contained_labels,
+                "contains": contains,
                 "color": color,
             }
         )
@@ -176,8 +170,9 @@ class Dataset(metaclass=abc.ABCMeta):
         logger.info("The dataset has been saved into %s", filename)
 
     def load(self, filename, nb_images=None):
-        """Load a dataset from a json file indicated by `filename` ; use dict comprehension instead
-        of direct assignments in order to convert dict keys to integers
+        """Load a dataset from a json file indicated by `filename` ; use dict
+        comprehension instead of direct assignments in order to convert dict
+        keys to integers
 
         Parameters
         ----------
@@ -185,7 +180,8 @@ class Dataset(metaclass=abc.ABCMeta):
             String designing the relative path from where the dataset must be
         loaded
         nb_images : integer
-            Number of images that must be loaded (if None, the whole dataset is loaded)
+            Number of images that must be loaded (if None, the whole dataset is
+        loaded)
         """
         with open(filename) as fp:
             ds = json.load(fp)

@@ -302,7 +302,7 @@ def fill_labelled_image(
     )
     for coords, image_data in zip(coordinates, predictions):
         x, y = coords
-        predicted_image[y : y + tile_size, x : x + tile_size] = image_data
+        predicted_image[y:(y + tile_size), x:(x + tile_size)] = image_data
     return predicted_image[:img_height, :img_width]
 
 

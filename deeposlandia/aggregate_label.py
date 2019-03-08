@@ -18,7 +18,7 @@ def set_label_color(nb_colors):
     nb_colors : int
         Number of label to display
     """
-    palette = sns.hls_palette(nb_colors, l=0.6, s=0.75)
+    palette = sns.hls_palette(nb_colors, 0.01, 0.6, 0.75)
     return ([int(255 * item) for item in color] for color in palette)
 
 

@@ -205,7 +205,8 @@ def get_data(folders, dataset, model, image_size, batch_size):
     dataset : str
         Name of the used dataset (*e.g.* `shapes` or `mapillary`)
     model : str
-        Name of the addressed research problem (*e.g.* `feature_detection` or `semantic_segmentation`)
+        Name of the addressed research problem (*e.g.* `feature_detection` or
+    `semantic_segmentation`)
     image_size : int
         Size of the images, in pixel (height=width)
     batch_size : int
@@ -214,7 +215,8 @@ def get_data(folders, dataset, model, image_size, batch_size):
     Returns
     -------
     tuple
-        Number of labels in the dataset, as well as training and validation data generators
+        Number of labels in the dataset, as well as training and validation
+    data generators
 
     """
     # Data gathering
@@ -282,8 +284,8 @@ def run_model(
     learning_rate,
     learning_rate_decay,
 ):
-    """Run deep learning `dl_model` starting from training and validation data generators, depending on a
-              range of hyperparameters
+    """Run deep learning `dl_model` starting from training and validation data
+    generators, depending on a range of hyperparameters
 
     Parameters
     ----------
@@ -292,9 +294,11 @@ def run_model(
     validation_generator : generator
         Validation data generator
     dl_model : str
-        Name of the addressed research problem (*e.g.* `feature_detection` or `semantic_segmentation`)
+        Name of the addressed research problem (*e.g.* `feature_detection` or
+    `semantic_segmentation`)
     output_folder : str
-        Name of the folder where the trained model will be stored on the file system
+        Name of the folder where the trained model will be stored on the file
+    system
     instance_name : str
         Name of the instance
     image_size : int
@@ -323,8 +327,8 @@ def run_model(
     Returns
     -------
     dict
-        Dictionary that summarizes the instance and the corresponding model performance (measured
-    by validation accuracy)
+        Dictionary that summarizes the instance and the corresponding model
+    performance (measured by validation accuracy)
     """
     if dl_model == "feature_detection":
         net = FeatureDetectionNetwork(

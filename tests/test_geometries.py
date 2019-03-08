@@ -324,7 +324,7 @@ def test_rasterize_polygons(tanzania_raw_image_size):
     )
     mask_polygon = mask[:tanzania_raw_image_size, :x1]
     assert np.all(np.unique(mask_polygon) == np.array([1]))
-    mask_no_polygon = mask[:tanzania_raw_image_size, 1 + x1 :]
+    mask_no_polygon = mask[:tanzania_raw_image_size, (1 + x1):]
     assert np.all(np.unique(mask_no_polygon) == np.array([0]))
 
 
@@ -377,7 +377,7 @@ def test_convert_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
     x3 = y3 = int(tanzania_raw_image_size * 3 / 4)
     x4 = y4 = tanzania_raw_image_size
     polygon1 = Polygon(
-        shell=((0, 0), (x3, 0), (x3, y3), (0, y3), (0, 0)),
+        shell=((x0, y0), (x3, y0), (x3, y3), (x0, y3), (x0, y0)),
         holes=[((x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1))],
     )
     polygon2 = Polygon(

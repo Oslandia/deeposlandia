@@ -5,8 +5,6 @@ import sys
 
 import keras as K
 
-from deeposlandia import utils
-
 
 class ConvolutionalNeuralNetwork:
     """Convolutional neural network design
@@ -18,12 +16,13 @@ class ConvolutionalNeuralNetwork:
     image_size : integer
         Input image size (height and width are equal)
     nb_channels : integer
-        Number of input image channels (1 for greyscaled images, 3 for RGB images)
+        Number of input image channels (1 for greyscaled images, 3 for RGB
+    images)
     nb_labels : integer
         Number of classes in the dataset glossary
     X : tensor
-        (batch_size, image_size, image_size, nb_channels)-shaped input tensor; input image data
-
+        (batch_size, image_size, image_size, nb_channels)-shaped input tensor;
+    input image data
     """
 
     def __init__(
@@ -96,16 +95,17 @@ class ConvolutionalNeuralNetwork:
         strides : integer
             Convolution strides, in pixel
         dilation_rate : integer
-            Rate of dilation, for atrous convolution (default to 1, no dilation)
+            Rate of dilation, for atrous convolution (default to 1, no
+        dilation)
         padding : str
-            Border pixel management ("valid" to apply convolution pixel only on image pixels, or
-        "same" to replicate border pixels)
+            Border pixel management ("valid" to apply convolution pixel only on
+        image pixels, or "same" to replicate border pixels)
         activation : str
-            Type of activation function to apply on the tensor at the end of the convolution block
-        ('relu' by default)
+            Type of activation function to apply on the tensor at the end of
+        the convolution block ('relu' by default)
         batch_norm : boolean
-            If True, a batch normalization process is applied on `x` tensor before activation
-            layer
+            If True, a batch normalization process is applied on `x` tensor
+        before activation layer
         block_name : str
             Convolution block name, for identification purpose
 
@@ -142,8 +142,8 @@ class ConvolutionalNeuralNetwork:
         batch_norm=True,
         block_name=None,
     ):
-        """Build a layer seen as the transpose operation of classic convolution, for a convolutional neural
-        network
+        """Build a layer seen as the transpose operation of classic
+        convolution, for a convolutional neural network
 
         Use Keras API
 
@@ -158,14 +158,14 @@ class ConvolutionalNeuralNetwork:
         strides : integer
             Convolution strides, in pixel
         padding : str
-            Border pixel management ("valid" to apply convolution pixel only on image pixels, or
-        "same" to replicate border pixels)
+            Border pixel management ("valid" to apply convolution pixel only on
+        image pixels, or "same" to replicate border pixels)
         activation : str
-            Type of activation function to apply on the tensor at the end of the convolution block
-        ('relu' by default)
+            Type of activation function to apply on the tensor at the end of
+        the convolution block ('relu' by default)
         batch_norm : boolean
-            If True, a batch normalization process is applied on `x` tensor before activation
-            layer
+            If True, a batch normalization process is applied on `x` tensor
+        before activation layer
         block_name : str
             Transposed convolution block name, for identification purpose
 
@@ -206,8 +206,8 @@ class ConvolutionalNeuralNetwork:
         strides : integer
             Pooling strides, in pixel ; indicates the downscaling factor
         padding : str
-            Border pixel management ("valid" to apply convolution pixel only on image pixels, or
-        "same" to replicate border pixels)
+            Border pixel management ("valid" to apply convolution pixel only on
+        image pixels, or "same" to replicate border pixels)
         block_name : str
             Pooling block name, for identification purpose
 
@@ -237,11 +237,11 @@ class ConvolutionalNeuralNetwork:
         depth : integer
             Number of neurons used within the layer
         activation : str
-            Type of activation function to apply on the tensor at the end of the convolution block
-        ('relu' by default)
+            Type of activation function to apply on the tensor at the end of
+        the convolution block ('relu' by default)
         batch_norm : boolean
-            If True, a batch normalization process is applied on `x` tensor before activation
-            layer
+            If True, a batch normalization process is applied on `x` tensor
+        before activation layer
         block_name : str
             Fully-connected block name, for identification purpose
 
@@ -264,8 +264,8 @@ class ConvolutionalNeuralNetwork:
         return x
 
     def flatten(self, x, block_name=None):
-        """Apply a flattening operation to input tensor `x`, to reduce its dimension; arises
-        generally before a dense layer
+        """Apply a flattening operation to input tensor `x`, to reduce its
+        dimension; arises generally before a dense layer
 
         Parameters
         ----------
@@ -301,8 +301,8 @@ class ConvolutionalNeuralNetwork:
         return K.layers.concatenate([upsample, layer2], axis=3, name=ccname)
 
     def add_dilated_context(self, input_layer):
-        """Add a context block that corresponds to Yu et al. (2016) contribution, in
-        order to aggregate multi-scale contextual information
+        """Add a context block that corresponds to Yu et al. (2016)
+        contribution, in order to aggregate multi-scale contextual information
 
         Parameters
         ----------

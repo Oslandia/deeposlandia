@@ -6,7 +6,6 @@ passing as the first parameter the folder that contains building informations
 
 """
 
-import json
 from multiprocessing import Pool
 import os
 
@@ -16,7 +15,6 @@ import geopandas as gpd
 import numpy as np
 from osgeo import gdal
 from PIL import Image
-import shapely.geometry as shgeom
 
 from deeposlandia.datasets import Dataset
 from deeposlandia import geometries, utils
@@ -282,7 +280,7 @@ class TanzaniaDataset(Dataset):
             y = np.random.randint(0, raw_img_height - self.image_size)
 
             tile_data = image_data[
-                x : (x + self.image_size), y : (y + self.image_size)
+                x:(x + self.image_size), y:(y + self.image_size)
             ]
             tile_image = Image.fromarray(tile_data)
             raster_features = geometries.get_image_features(raster)
@@ -397,8 +395,8 @@ class TanzaniaDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider the whole
-        repository
+            Number of images to be considered in the dataset; if None, consider
+        the whole repository
         aggregate : bool
             Label aggregation parameter, useless for this dataset, but kept for
         class method genericity

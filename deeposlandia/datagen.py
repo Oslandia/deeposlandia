@@ -2,12 +2,13 @@
 
 Example of program calls:
 
-* generate 64*64 pixel images from Shapes dataset, 10000 images in the training set, 100 in the
-validation set, 1000 in the testing set::
+* generate 64*64 pixel images from Shapes dataset, 10000 images in the training
+  set, 100 in the validation set, 1000 in the testing set::
 
     python deeposlandia/datagen.py -D shapes -s 64 -t 10000 -v 100 -T 1000
 
-* generate 224*224 pixel images from Mapillary dataset, with aggregated labels::
+* generate 224*224 pixel images from Mapillary dataset, with aggregated
+  labels::
 
     python deeposlandia/datagen.py -D mapillary -s 224 -a
 
@@ -143,7 +144,8 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    # Dataset populating/loading (depends on the existence of a specification file)
+    # Dataset populating/loading
+    # (depends on the existence of a specification file)
     if args.nb_training_image > 0:
         if os.path.isfile(prepro_folder["training_config"]):
             train_dataset.load(

@@ -20,22 +20,24 @@ logger = daiquiri.getLogger(__name__)
 
 
 class MapillaryDataset(Dataset):
-    """Dataset structure that gathers all information related to the Mapillary images
+    """Dataset structure that gathers all information related to the Mapillary
+    images
 
     Attributes
     ----------
     image_size : int
-        Size of considered images (height=width), raw images will be resized during the
-    preprocessing
+        Size of considered images (height=width), raw images will be resized
+    during the preprocessing
     glossary_filename : str
-        Name of the Mapillary input glossary, that contains every information about Mapillary
-    labels
+        Name of the Mapillary input glossary, that contains every information
+    about Mapillary labels
 
     """
 
     def __init__(self, image_size, glossary_filename):
-        """ Class constructor ; instanciates a MapillaryDataset as a standard Dataset which is
-        completed by a glossary file that describes the dataset labels
+        """ Class constructor ; instanciates a MapillaryDataset as a standard
+        Dataset which is completed by a glossary file that describes the
+        dataset labels
         """
         super().__init__(image_size)
         self.build_glossary(glossary_filename)
@@ -78,8 +80,8 @@ class MapillaryDataset(Dataset):
     def group_image_label(self, image):
         """Group the labels
 
-        If the label ids 4, 5 and 6 belong to the same group, they will be turned
-        into the label id 4.
+        If the label ids 4, 5 and 6 belong to the same group, they will be
+        turned into the label id 4.
 
         Parameters
         ----------
@@ -89,8 +91,8 @@ class MapillaryDataset(Dataset):
         -------
         PIL.Image
         """
-        # turn all label ids into the lowest digits/label id according to its "group"
-        # (manually built)
+        # turn all label ids into the lowest digits/label id
+        # according to its "group" (manually built)
         a = np.array(image)
         for root_id, label in enumerate(self.label_info):
             for label_id in label["aggregate"]:
@@ -118,7 +120,8 @@ class MapillaryDataset(Dataset):
         # open original images
         img_in = Image.open(image_filename)
 
-        # resize images (self.image_size*larger_size or larger_size*self.image_size)
+        # resize images
+        # (self.image_size*larger_size or larger_size*self.image_size)
         img_in = utils.resize_image(img_in, self.image_size)
 
         # crop images to get self.image_size*self.image_size dimensions
@@ -182,12 +185,14 @@ class MapillaryDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider the whole
-        repository
+            Number of images to be considered in the dataset; if None, consider
+        the whole repository
         aggregate : bool
-            Aggregate some labels into more generic ones, e.g. cars and bus into the vehicle label
+            Aggregate some labels into more generic ones, e.g. cars and bus
+        into the vehicle label
         labelling: boolean
-            If True labels are recovered from dataset, otherwise dummy label are generated
+            If True labels are recovered from dataset, otherwise dummy label
+        are generated
         nb_processes : int
             Number of processes on which to run the preprocessing
         """

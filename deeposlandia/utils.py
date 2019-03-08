@@ -2,13 +2,9 @@
 """
 
 import json
-import math
 import os
-import re
-import sys
 
 import daiquiri
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -121,7 +117,8 @@ def list_to_str(seq, sep="-"):
 
 
 def prepare_input_folder(datapath, dataset):
-    """Data path and repository management; create and return the raw dataset path
+    """Data path and repository management; create and return the raw dataset
+    path
 
     Parameters
     ----------
@@ -161,8 +158,8 @@ def prepare_preprocessed_folder(
     Returns
     -------
     dict
-        All the meaningful folders and dataset configuration file as a dictionary
-
+        All the meaningful folders and dataset configuration file as a
+    dictionary
     """
     prepro_folder = os.path.join(
         datapath,
@@ -192,7 +189,8 @@ def prepare_preprocessed_folder(
 
 
 def prepare_output_folder(datapath, dataset, model, instance_name=None):
-    """Dataset and repository management; create and return the dataset output path
+    """Dataset and repository management; create and return the dataset output
+    path
 
     Parameters
     ----------
@@ -201,7 +199,8 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
     dataset : str
         Dataset name, *e.g.* `mapillary` or `shapes`
     model : str
-        Research problem that is tackled, *e.g.* `feature_detection` or `semantic_segmentation`
+        Research problem that is tackled, *e.g.* `feature_detection` or
+    `semantic_segmentation`
     instance_name : str
         Instance name, used to create the accurate output folders
 
@@ -210,7 +209,7 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
     str
         Dataset output path
     """
-    if not instance_name is None:
+    if instance_name is not None:
         output_folder = os.path.join(
             datapath, dataset, "output", model, "checkpoints", instance_name
         )
@@ -223,8 +222,8 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
 
 
 def recover_instance(instance_path):
-    """Recover instance specification for model design, *i.e.* dropout rate and network
-    architecture
+    """Recover instance specification for model design, *i.e.* dropout rate and
+    network architecture
 
     Parameters
     ----------
@@ -289,7 +288,8 @@ def build_image_from_config(data, config):
 def create_symlink(link_name, directory):
     """Create a symbolic link
 
-    Based on https://github.com/elemoine/dotfiles/blob/master/install-dotfiles.py
+    Based on
+    https://github.com/elemoine/dotfiles/blob/master/install-dotfiles.py
 
     Parameters
     ----------

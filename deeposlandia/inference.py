@@ -1,19 +1,15 @@
 """Inference on deep learning model previously trained
 
 * Build the instance name
-
-* Load one (or more) image(s) from the file system:
-
+* Load one (or more) image(s) from the file system
 * Load a trained model starting from the instance name
-
 * Make label predictions on the test image(s)
-
 * Produce a result: for instance, only predicted labels
 
 Example of program call, that will infers labels on all files from
 ̀path_to_images/shapes_00000.png` to `path_to_images/shapes_00009.png`::
 
-    python deeposlandia/inference.py -D shapes -i path_to_images/shapes_0000*.png
+    python deeposlandia/inference.py -D shapes -i path_to_img/shapes_0000*.png
 
 """
 
@@ -158,12 +154,14 @@ def add_instance_arguments(parser):
 def init_model(
     problem, instance_name, image_size, nb_labels, dropout, network
 ):
-    """Initialize a convolutional neural network with Keras API starting from a set of parameters
+    """Initialize a convolutional neural network with Keras API starting from a
+    set of parameters
 
     Parameters
     ----------
     problem : str
-        Type of solved problem, either `feature_detection` or `semantic_segmentation`
+        Type of solved problem, either `feature_detection` or
+    `semantic_segmentation`
     instance_name : str
         Name of the instance, for identification purpose
     image_size : int

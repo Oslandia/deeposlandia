@@ -18,10 +18,11 @@ def test_model_training(
     shapes_temp_dir,
     shapes_nb_images,
 ):
-    """Test the training of a simple neural network with Keras API, as well as model inference and
-    trained model backup
+    """Test the training of a simple neural network with Keras API, as well as
+    model inference and trained model backup
 
-    One big test function to avoid duplicating the training operations (that can be long)
+    One big test function to avoid duplicating the training operations (that
+    can be long)
     """
     BATCH_SIZE = 10
     NB_EPOCHS = 1
