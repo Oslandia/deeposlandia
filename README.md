@@ -15,6 +15,7 @@ The project contains the following folders:
 
 + [deeposlandia](./deeposlandia) contains the main Python modules to train and
   test convolutional neural networks
++ [docs](./docs) contains some mardown files for documentation purpose
 + [examples](./examples) contains some Jupyter notebooks that aim at
   describing data and building basic neural networks
 + [images](./images) contains some example images to illustrate the Mapillary
