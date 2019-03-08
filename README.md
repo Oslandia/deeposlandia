@@ -73,9 +73,9 @@ For other OS, please visit the `GDAL` installation documentation.
 
 ## Running the code
 
-- [Data preprocessing](deeposlandia/preprocessing.md)
-- [Train a model](deeposlandia/training.md)
-- [Infer labels](deeposlandia/inference.md)
+- [Data preprocessing](./docs/preprocessing.md)
+- [Train a model](./docs/training.md)
+- [Infer labels](./docs/inference.md)
 
 # Supported datasets
 
@@ -142,7 +142,7 @@ image borders). The shape and background colors are randomly generated as well.
 
 ## How to add a new dataset?
 
-If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./deeposlandia/datasets/add_a_dataset.md).
+If you want to contribute to the repo by adding a new dataset, please consult the [following instructions](./docs/add_a_dataset.md).
 
 ## Pre-trained models
 
