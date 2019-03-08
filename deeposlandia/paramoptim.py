@@ -40,27 +40,50 @@ def add_instance_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-a', '--aggregate-label', action='store_true',
-                        help="Aggregate labels with respect to their categories")
-    parser.add_argument('-D', '--dataset',
-                        required=True, choices=AVAILABLE_DATASETS,
-                        help=("Dataset type (to be chosen amongst available"
-                              "datasets)"))
-    parser.add_argument('-M', '--model',
-                        default="feature_detection",
-                        help=("Type of model to train, either "
-                              "'feature_detection' or 'semantic_segmentation'"))
-    parser.add_argument('-n', '--name',
-                        default="cnn",
-                        help=("Model name that will be used for results, "
-                              "checkout and graph storage on file system"))
-    parser.add_argument('-p', '--datapath',
-                        default="./data",
-                        help="Relative path towards data directory")
-    parser.add_argument('-s', '--image-size',
-                        default=224,
-                        type=int,
-                        help=("Desired size of images (width = height)"))
+    parser.add_argument(
+        "-a",
+        "--aggregate-label",
+        action="store_true",
+        help="Aggregate labels with respect to their categories",
+    )
+    parser.add_argument(
+        "-D",
+        "--dataset",
+        required=True,
+        choices=AVAILABLE_DATASETS,
+        help=("Dataset type (to be chosen amongst available" "datasets)"),
+    )
+    parser.add_argument(
+        "-M",
+        "--model",
+        default="feature_detection",
+        help=(
+            "Type of model to train, either "
+            "'feature_detection' or 'semantic_segmentation'"
+        ),
+    )
+    parser.add_argument(
+        "-n",
+        "--name",
+        default="cnn",
+        help=(
+            "Model name that will be used for results, "
+            "checkout and graph storage on file system"
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--datapath",
+        default="./data",
+        help="Relative path towards data directory",
+    )
+    parser.add_argument(
+        "-s",
+        "--image-size",
+        default=224,
+        type=int,
+        help=("Desired size of images (width = height)"),
+    )
     return parser
 
 
@@ -77,32 +100,58 @@ def add_hyperparameters(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-b', '--batch-size',
-                        type=int, nargs='+',
-                        default=[20, 50, 100],
-                        help=("Number of images that must be contained "
-                              "into a single batch"))
-    parser.add_argument('-d', '--dropout',
-                        type=float, nargs='+',
-                        default=[0.5, 0.75, 1.0],
-                        help=("Percentage of dropped out neurons "
-                              "during training"))
-    parser.add_argument('-L', '--learning-rate',
-                        default=[0.01, 0.001, 0.0001],
-                        type=float, nargs="+",
-                        help=("List of learning rate components (starting LR, "
-                              "decay steps and decay rate)"))
-    parser.add_argument('-l', '--learning-rate-decay',
-                        default=[0.001, 0.0001, 0.00001],
-                        type=float, nargs="+",
-                        help=("List of learning rate components (starting LR, "
-                              "decay steps and decay rate)"))
-    parser.add_argument('-N', '--network', nargs='+',
-                        default=['simple', 'vgg16'],
-                        help=("Neural network size, either 'simple', 'vgg' or "
-                              "'inception' ('simple' refers to 3 conv/pool "
-                              "blocks and 1 fully-connected layer; the others "
-                              "refer to state-of-the-art networks)"))
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        nargs="+",
+        default=[20, 50, 100],
+        help=(
+            "Number of images that must be contained " "into a single batch"
+        ),
+    )
+    parser.add_argument(
+        "-d",
+        "--dropout",
+        type=float,
+        nargs="+",
+        default=[0.5, 0.75, 1.0],
+        help=("Percentage of dropped out neurons " "during training"),
+    )
+    parser.add_argument(
+        "-L",
+        "--learning-rate",
+        default=[0.01, 0.001, 0.0001],
+        type=float,
+        nargs="+",
+        help=(
+            "List of learning rate components (starting LR, "
+            "decay steps and decay rate)"
+        ),
+    )
+    parser.add_argument(
+        "-l",
+        "--learning-rate-decay",
+        default=[0.001, 0.0001, 0.00001],
+        type=float,
+        nargs="+",
+        help=(
+            "List of learning rate components (starting LR, "
+            "decay steps and decay rate)"
+        ),
+    )
+    parser.add_argument(
+        "-N",
+        "--network",
+        nargs="+",
+        default=["simple", "vgg16"],
+        help=(
+            "Neural network size, either 'simple', 'vgg' or "
+            "'inception' ('simple' refers to 3 conv/pool "
+            "blocks and 1 fully-connected layer; the others "
+            "refer to state-of-the-art networks)"
+        ),
+    )
     return parser
 
 
@@ -119,19 +168,30 @@ def add_training_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-e', '--nb-epochs',
-                        type=int,
-                        default=0,
-                        help=("Number of training epochs (one epoch means "
-                              "scanning each training image once)"))
-    parser.add_argument('-t', '--nb-training-image',
-                        type=int,
-                        default=0,
-                        help=("Number of training images"))
-    parser.add_argument('-v', '--nb-validation-image',
-                        type=int,
-                        default=0,
-                        help=("Number of validation images"))
+    parser.add_argument(
+        "-e",
+        "--nb-epochs",
+        type=int,
+        default=0,
+        help=(
+            "Number of training epochs (one epoch means "
+            "scanning each training image once)"
+        ),
+    )
+    parser.add_argument(
+        "-t",
+        "--nb-training-image",
+        type=int,
+        default=0,
+        help=("Number of training images"),
+    )
+    parser.add_argument(
+        "-v",
+        "--nb-validation-image",
+        type=int,
+        default=0,
+        help=("Number of validation images"),
+    )
     return parser
 
 
@@ -160,7 +220,9 @@ def get_data(folders, dataset, model, image_size, batch_size):
     # Data gathering
     if os.path.isfile(folders["training_config"]):
         train_config = utils.read_config(folders["training_config"])
-        label_ids = [x['id'] for x in train_config['labels'] if x['is_evaluate']]
+        label_ids = [
+            x["id"] for x in train_config["labels"] if x["is_evaluate"]
+        ]
         train_generator = generator.create_generator(
             dataset,
             model,
@@ -168,11 +230,16 @@ def get_data(folders, dataset, model, image_size, batch_size):
             image_size,
             batch_size,
             train_config["labels"],
-            seed=SEED)
+            seed=SEED,
+        )
     else:
-        logger.error(("There is no training data with the given "
-                      "parameters. Please generate a valid dataset "
-                      "before calling the training program."))
+        logger.error(
+            (
+                "There is no training data with the given "
+                "parameters. Please generate a valid dataset "
+                "before calling the training program."
+            )
+        )
         sys.exit(1)
     if os.path.isfile(folders["validation_config"]):
         validation_generator = generator.create_generator(
@@ -182,20 +249,39 @@ def get_data(folders, dataset, model, image_size, batch_size):
             image_size,
             batch_size,
             train_config["labels"],
-            seed=SEED)
+            seed=SEED,
+        )
     else:
-        logger.error(("There is no training data with the given "
-                      "parameters. Please generate a valid dataset "
-                      "before calling the training program."))
+        logger.error(
+            (
+                "There is no training data with the given "
+                "parameters. Please generate a valid dataset "
+                "before calling the training program."
+            )
+        )
         sys.exit(1)
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator
 
 
-def run_model(train_generator, validation_generator, dl_model, output_folder,
-              instance_name, image_size, aggregate_value, nb_labels, nb_epochs,
-              nb_training_image, nb_validation_image,
-              batch_size, dropout, network, learning_rate, learning_rate_decay):
+def run_model(
+    train_generator,
+    validation_generator,
+    dl_model,
+    output_folder,
+    instance_name,
+    image_size,
+    aggregate_value,
+    nb_labels,
+    nb_epochs,
+    nb_training_image,
+    nb_validation_image,
+    batch_size,
+    dropout,
+    network,
+    learning_rate,
+    learning_rate_decay,
+):
     """Run deep learning `dl_model` starting from training and validation data generators, depending on a
               range of hyperparameters
 
@@ -241,92 +327,124 @@ def run_model(train_generator, validation_generator, dl_model, output_folder,
     by validation accuracy)
     """
     if dl_model == "feature_detection":
-        net = FeatureDetectionNetwork(network_name=instance_name,
-                                      image_size=image_size,
-                                      nb_channels=3,
-                                      nb_labels=nb_labels,
-                                      architecture=network)
+        net = FeatureDetectionNetwork(
+            network_name=instance_name,
+            image_size=image_size,
+            nb_channels=3,
+            nb_labels=nb_labels,
+            architecture=network,
+        )
         loss_function = "binary_crossentropy"
     elif dl_model == "semantic_segmentation":
-        net = SemanticSegmentationNetwork(network_name=instance_name,
-                                          image_size=image_size,
-                                          nb_channels=3,
-                                          nb_labels=nb_labels,
-                                          architecture=network)
+        net = SemanticSegmentationNetwork(
+            network_name=instance_name,
+            image_size=image_size,
+            nb_channels=3,
+            nb_labels=nb_labels,
+            architecture=network,
+        )
         loss_function = "categorical_crossentropy"
     else:
-        logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                      "or 'semantic_segmentation'."))
+        logger.error(
+            (
+                "Unrecognized model. Please enter 'feature_detection' "
+                "or 'semantic_segmentation'."
+            )
+        )
         sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=learning_rate, decay=learning_rate_decay)
-    metrics = ['acc', iou, dice_coef]
+    metrics = ["acc", iou, dice_coef]
     model.compile(loss=loss_function, optimizer=opt, metrics=metrics)
 
     # Model training
     steps = nb_training_image // batch_size
     val_steps = nb_validation_image // batch_size
 
-    checkpoint_files = [item for item in os.listdir(output_folder)
-                   if "checkpoint-epoch" in item]
+    checkpoint_files = [
+        item
+        for item in os.listdir(output_folder)
+        if "checkpoint-epoch" in item
+    ]
     if len(checkpoint_files) > 0:
         model_checkpoint = max(checkpoint_files)
         trained_model_epoch = int(model_checkpoint[-5:-3])
-        checkpoint_complete_path = os.path.join(output_folder, model_checkpoint)
+        checkpoint_complete_path = os.path.join(
+            output_folder, model_checkpoint
+        )
         model.load_weights(checkpoint_complete_path)
-        logger.info("Model weights have been recovered from %s"
-                    , checkpoint_complete_path)
+        logger.info(
+            "Model weights have been recovered from %s",
+            checkpoint_complete_path,
+        )
     else:
-        logger.info(("No available checkpoint for this configuration. "
-                     "The model will be trained from scratch."))
+        logger.info(
+            (
+                "No available checkpoint for this configuration. "
+                "The model will be trained from scratch."
+            )
+        )
         trained_model_epoch = 0
 
-
-    checkpoint_filename = os.path.join(output_folder,
-                                       "checkpoint-epoch-{epoch:03d}.h5")
+    checkpoint_filename = os.path.join(
+        output_folder, "checkpoint-epoch-{epoch:03d}.h5"
+    )
     checkpoint = callbacks.ModelCheckpoint(
         checkpoint_filename,
-        monitor='val_loss',
+        monitor="val_loss",
         verbose=0,
         save_best_only=True,
         save_weights_only=False,
-        mode='auto', period=1)
+        mode="auto",
+        period=1,
+    )
     terminate_on_nan = callbacks.TerminateOnNaN()
-    earlystop = callbacks.EarlyStopping(monitor='val_loss',
-                                        patience=10,
-                                        verbose=1,
-                                        mode='max')
-    csv_logger = callbacks.CSVLogger(os.path.join(output_folder,
-                                                  'training_metrics.csv'))
+    earlystop = callbacks.EarlyStopping(
+        monitor="val_loss", patience=10, verbose=1, mode="max"
+    )
+    csv_logger = callbacks.CSVLogger(
+        os.path.join(output_folder, "training_metrics.csv")
+    )
 
-    hist = model.fit_generator(train_generator,
-                               epochs=nb_epochs,
-                               initial_epoch=trained_model_epoch,
-                               steps_per_epoch=steps,
-                               validation_data=validation_generator,
-                               validation_steps=val_steps,
-                               callbacks=[checkpoint, earlystop,
-                                          terminate_on_nan, csv_logger])
+    hist = model.fit_generator(
+        train_generator,
+        epochs=nb_epochs,
+        initial_epoch=trained_model_epoch,
+        steps_per_epoch=steps,
+        validation_data=validation_generator,
+        validation_steps=val_steps,
+        callbacks=[checkpoint, earlystop, terminate_on_nan, csv_logger],
+    )
     ref_metric = max(hist.history.get("val_acc", [np.nan]))
-    return {'model': model, 'val_acc': ref_metric,
-            'batch_size': batch_size, 'network': network, 'dropout': dropout,
-            'learning_rate': learning_rate, 'learning_rate_decay': learning_rate_decay}
+    return {
+        "model": model,
+        "val_acc": ref_metric,
+        "batch_size": batch_size,
+        "network": network,
+        "dropout": dropout,
+        "learning_rate": learning_rate,
+        "learning_rate_decay": learning_rate_decay,
+    }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
-                                                  "ork on street-scene images:"
-                                                  " hyper-parameter "
-                                                  "optimization"))
+    parser = argparse.ArgumentParser(
+        description=(
+            "Convolutional Neural Netw"
+            "ork on street-scene images:"
+            " hyper-parameter "
+            "optimization"
+        )
+    )
     parser = add_instance_arguments(parser)
     parser = add_hyperparameters(parser)
     parser = add_training_arguments(parser)
     args = parser.parse_args()
 
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    if args.dataset == 'aerial':
+    if args.dataset == "aerial":
         model_input_size = utils.get_image_size_from_tile(args.image_size)
     else:
         model_input_size = args.image_size
@@ -336,53 +454,79 @@ if __name__ == '__main__':
     for batch_size in args.batch_size:
         logger.info("Generating data with batch of %s images...", batch_size)
         # Data generator building
-        prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
-                                                          args.dataset,
-                                                          args.image_size,
-                                                          aggregate_value)
-        nb_labels, train_gen, valid_gen = get_data(prepro_folder,
-                                                   args.dataset,
-                                                   args.model,
-                                                   model_input_size,
-                                                   batch_size)
-        for parameters in itertools.product(args.dropout,
-                                            args.network,
-                                            args.learning_rate,
-                                            args.learning_rate_decay):
+        prepro_folder = utils.prepare_preprocessed_folder(
+            args.datapath, args.dataset, args.image_size, aggregate_value
+        )
+        nb_labels, train_gen, valid_gen = get_data(
+            prepro_folder,
+            args.dataset,
+            args.model,
+            model_input_size,
+            batch_size,
+        )
+        for parameters in itertools.product(
+            args.dropout,
+            args.network,
+            args.learning_rate,
+            args.learning_rate_decay,
+        ):
             logger.info(utils.list_to_str(parameters))
             # Data path and repository management
             dropout, network, learning_rate, learning_rate_decay = parameters
-            instance_args = [args.name, args.image_size, network,
-                             batch_size, aggregate_value, dropout,
-                             learning_rate, learning_rate_decay]
+            instance_args = [
+                args.name,
+                args.image_size,
+                network,
+                batch_size,
+                aggregate_value,
+                dropout,
+                learning_rate,
+                learning_rate_decay,
+            ]
             instance_name = utils.list_to_str(instance_args, "_")
-            output_folder = utils.prepare_output_folder(args.datapath,
-                                                        args.dataset,
-                                                        args.model,
-                                                        instance_name)
+            output_folder = utils.prepare_output_folder(
+                args.datapath, args.dataset, args.model, instance_name
+            )
             # Model running
-            model_output.append(run_model(train_gen, valid_gen, args.model,
-                                          output_folder, instance_name,
-                                          model_input_size, aggregate_value,
-                                          nb_labels, args.nb_epochs,
-                                          args.nb_training_image,
-                                          args.nb_validation_image, batch_size,
-                                          *parameters))
+            model_output.append(
+                run_model(
+                    train_gen,
+                    valid_gen,
+                    args.model,
+                    output_folder,
+                    instance_name,
+                    model_input_size,
+                    aggregate_value,
+                    nb_labels,
+                    args.nb_epochs,
+                    args.nb_training_image,
+                    args.nb_validation_image,
+                    batch_size,
+                    *parameters
+                )
+            )
             logger.info("Instance result: %s", model_output[-1])
 
     # Recover best instance starting from validation accuracy
-    best_instance = max(model_output, key=lambda x: x['val_acc'])
+    best_instance = max(model_output, key=lambda x: x["val_acc"])
 
     # Save best model
-    output_folder = utils.prepare_output_folder(args.datapath,
-                                                args.dataset,
-                                                args.model)
-    instance_name = os.path.join(output_folder,
-                                 "best-{}-" + str(args.image_size)
-                                 + "-" + aggregate_value + ".{}")
+    output_folder = utils.prepare_output_folder(
+        args.datapath, args.dataset, args.model
+    )
+    instance_name = os.path.join(
+        output_folder,
+        "best-{}-" + str(args.image_size) + "-" + aggregate_value + ".{}",
+    )
     best_instance["model"].save(instance_name.format("model", "h5"))
     with open(instance_name.format("instance", "json"), "w") as fobj:
-              json.dump({key:best_instance[key]
-                         for key in best_instance if key != 'model'}, fobj)
+        json.dump(
+            {
+                key: best_instance[key]
+                for key in best_instance
+                if key != "model"
+            },
+            fobj,
+        )
 
     backend.clear_session()

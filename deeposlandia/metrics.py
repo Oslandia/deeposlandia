@@ -3,6 +3,7 @@
 
 from keras import backend
 
+
 def iou(actual, predicted):
     """Compute Intersection over Union statistic (i.e. Jaccard Index)
 
@@ -26,7 +27,8 @@ def iou(actual, predicted):
     union = backend.sum(actual) + backend.sum(predicted) - intersection
     print(intersection, type(intersection))
     print(union, type(union))
-    return 1. * intersection / union
+    return 1.0 * intersection / union
+
 
 def iou_loss(actual, predicted):
     """Loss function based on the Intersection over Union (IoU) statistic
@@ -47,7 +49,8 @@ def iou_loss(actual, predicted):
     float
         Intersection-over-Union-based loss
     """
-    return 1. - iou(actual, predicted)
+    return 1.0 - iou(actual, predicted)
+
 
 def dice_coef(actual, predicted, eps=1e-3):
     """Dice coef
@@ -77,7 +80,10 @@ def dice_coef(actual, predicted, eps=1e-3):
     y_true_f = backend.flatten(actual)
     y_pred_f = backend.flatten(predicted)
     intersection = backend.sum(y_true_f * y_pred_f)
-    return (2. * intersection + eps) / (backend.sum(y_true_f) + backend.sum(y_pred_f) + eps)
+    return (2.0 * intersection + eps) / (
+        backend.sum(y_true_f) + backend.sum(y_pred_f) + eps
+    )
+
 
 def dice_coef_loss(actual, predicted):
     """
@@ -94,4 +100,3 @@ def dice_coef_loss(actual, predicted):
         Dice-coef-based loss
     """
     return -dice_coef(actual, predicted)
-

@@ -41,13 +41,13 @@ class ShapeDataset(Dataset):
     """
 
     SQUARE = 0
-    SQUARE_COLOR = (50, 50, 200) # Blue
+    SQUARE_COLOR = (50, 50, 200)  # Blue
     CIRCLE = 1
-    CIRCLE_COLOR = (200, 50, 50) # Red
+    CIRCLE_COLOR = (200, 50, 50)  # Red
     TRIANGLE = 2
-    TRIANGLE_COLOR = (50, 200, 50) # Green
+    TRIANGLE_COLOR = (50, 200, 50)  # Green
     BACKGROUND = 3
-    BACKGROUND_COLOR = (200, 200, 200) # Light grey
+    BACKGROUND_COLOR = (200, 200, 200)  # Light grey
 
     def __init__(self, image_size):
         """ Class constructor
@@ -67,7 +67,9 @@ class ShapeDataset(Dataset):
         self.add_label(self.SQUARE, "square", self.SQUARE_COLOR, True)
         self.add_label(self.CIRCLE, "circle", self.CIRCLE_COLOR, True)
         self.add_label(self.TRIANGLE, "triangle", self.TRIANGLE_COLOR, True)
-        self.add_label(self.BACKGROUND, "background", self.BACKGROUND_COLOR, True)
+        self.add_label(
+            self.BACKGROUND, "background", self.BACKGROUND_COLOR, True
+        )
 
     def generate_labels(self, nb_images):
         """ Generate random shape labels in order to prepare shape image
@@ -79,16 +81,26 @@ class ShapeDataset(Dataset):
         nb_images : integer
             Number of images to label in the dataset
         """
-        raw_labels = [np.random.choice(np.arange(nb_images),
-                                            int(nb_images/2),
-                                            replace=False)
-                      for i in range(self.get_nb_labels())]
+        raw_labels = [
+            np.random.choice(
+                np.arange(nb_images), int(nb_images / 2), replace=False
+            )
+            for i in range(self.get_nb_labels())
+        ]
         labels = np.zeros([nb_images, self.get_nb_labels()], dtype=int)
         for i in range(self.get_nb_labels()):
             labels[raw_labels[i], i] = 1
         return [dict([(i, int(j)) for i, j in enumerate(l)]) for l in labels]
 
-    def populate(self, output_dir=None, input_dir=None, nb_images=10000, aggregate=False, labelling=True, buf=8):
+    def populate(
+        self,
+        output_dir=None,
+        input_dir=None,
+        nb_images=10000,
+        aggregate=False,
+        labelling=True,
+        buf=8,
+    ):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -113,7 +125,9 @@ class ShapeDataset(Dataset):
             for l in image_label.items():
                 if l:
                     shape_color = np.random.randint(0, 255, 3).tolist()
-                    x, y = np.random.randint(buf, self.image_size - buf - 1, 2).tolist()
+                    x, y = np.random.randint(
+                        buf, self.image_size - buf - 1, 2
+                    ).tolist()
                     shape_size = np.random.randint(buf, self.image_size // 4)
                     shape_specs.append([shape_color, x, y, shape_size])
                 else:
@@ -144,12 +158,17 @@ class ShapeDataset(Dataset):
         number of labels in the dataset
         """
         if image_id in self.image_info:
-            logger.error("Image %s already stored into the label set."
-                         , image_id)
+            logger.error(
+                "Image %s already stored into the label set.", image_id
+            )
             return None
-        self.image_info.append({"background": background,
-                                "shape_specs": specifications,
-                                "labels": labels})
+        self.image_info.append(
+            {
+                "background": background,
+                "shape_specs": specifications,
+                "labels": labels,
+            }
+        )
 
     def draw_image(self, image_id, datapath):
         """Draws an image from the specifications of its shapes and saves it on
@@ -168,14 +187,22 @@ class ShapeDataset(Dataset):
 
         image = np.ones([self.image_size, self.image_size, 3], dtype=np.uint8)
         image = image * np.array(image_info["background"], dtype=np.uint8)
-        label = np.full([self.image_size, self.image_size, 3], self.BACKGROUND_COLOR, dtype=np.uint8)
+        label = np.full(
+            [self.image_size, self.image_size, 3],
+            self.BACKGROUND_COLOR,
+            dtype=np.uint8,
+        )
 
         # Get the center x, y and the size s
         if image_info["labels"][self.SQUARE]:
             color, x, y, s = image_info["shape_specs"][self.SQUARE]
             color = tuple(map(int, color))
-            image = cv2.rectangle(image, (x - s, y - s), (x + s, y + s), color, -1)
-            label = cv2.rectangle(label, (x - s, y - s), (x + s, y + s), self.SQUARE_COLOR, -1)
+            image = cv2.rectangle(
+                image, (x - s, y - s), (x + s, y + s), color, -1
+            )
+            label = cv2.rectangle(
+                label, (x - s, y - s), (x + s, y + s), self.SQUARE_COLOR, -1
+            )
         if image_info["labels"][self.CIRCLE]:
             color, x, y, s = image_info["shape_specs"][self.CIRCLE]
             color = tuple(map(int, color))
@@ -185,15 +212,25 @@ class ShapeDataset(Dataset):
             color, x, y, s = image_info["shape_specs"][self.TRIANGLE]
             color = tuple(map(int, color))
             x, y, s = map(int, (x, y, s))
-            points = np.array([[(x, y - s),
-                                (x - s / math.sin(math.radians(60)), y + s),
-                                (x + s / math.sin(math.radians(60)), y + s),]],
-                              dtype=np.int32)
+            points = np.array(
+                [
+                    [
+                        (x, y - s),
+                        (x - s / math.sin(math.radians(60)), y + s),
+                        (x + s / math.sin(math.radians(60)), y + s),
+                    ]
+                ],
+                dtype=np.int32,
+            )
             image = cv2.fillPoly(image, points, color)
             label = cv2.fillPoly(label, points, self.TRIANGLE_COLOR)
-        image_filename = os.path.join(datapath, "images", "shape_{:05}.png".format(image_id))
+        image_filename = os.path.join(
+            datapath, "images", "shape_{:05}.png".format(image_id)
+        )
         self.image_info[image_id]["image_filename"] = image_filename
         Image.fromarray(image).save(image_filename)
-        label_filename = os.path.join(datapath, "labels", "shape_{:05}.png".format(image_id))
+        label_filename = os.path.join(
+            datapath, "labels", "shape_{:05}.png".format(image_id)
+        )
         self.image_info[image_id]["label_filename"] = label_filename
         Image.fromarray(label).save(label_filename)

@@ -44,53 +44,79 @@ def add_instance_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-a', '--aggregate-label', action='store_true',
-                        help="Aggregate labels with respect to their categories")
-    parser.add_argument('-D', '--dataset',
-                        required=True, choices=AVAILABLE_DATASETS,
-                        help=("Dataset type (to be chosen amongst available"
-                              "datasets)"))
-    parser.add_argument('-p', '--datapath',
-                        default="data",
-                        help="Relative path towards data directory")
-    parser.add_argument('-s', '--image-size',
-                        default=256,
-                        type=int,
-                        help=("Desired size of images (width = height)"))
-    parser.add_argument('-T', '--nb-testing-image',
-                        type=int,
-                        default=0,
-                        help=("Number of testing images"))
-    parser.add_argument('-t', '--nb-training-image',
-                        type=int,
-                        default=0,
-                        help=("Number of training images"))
-    parser.add_argument('-v', '--nb-validation-image',
-                        type=int,
-                        default=0,
-                        help=("Number of validation images"))
+    parser.add_argument(
+        "-a",
+        "--aggregate-label",
+        action="store_true",
+        help="Aggregate labels with respect to their categories",
+    )
+    parser.add_argument(
+        "-D",
+        "--dataset",
+        required=True,
+        choices=AVAILABLE_DATASETS,
+        help=("Dataset type (to be chosen amongst available" "datasets)"),
+    )
+    parser.add_argument(
+        "-p",
+        "--datapath",
+        default="data",
+        help="Relative path towards data directory",
+    )
+    parser.add_argument(
+        "-s",
+        "--image-size",
+        default=256,
+        type=int,
+        help=("Desired size of images (width = height)"),
+    )
+    parser.add_argument(
+        "-T",
+        "--nb-testing-image",
+        type=int,
+        default=0,
+        help=("Number of testing images"),
+    )
+    parser.add_argument(
+        "-t",
+        "--nb-training-image",
+        type=int,
+        default=0,
+        help=("Number of training images"),
+    )
+    parser.add_argument(
+        "-v",
+        "--nb-validation-image",
+        type=int,
+        default=0,
+        help=("Number of validation images"),
+    )
     return parser
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
 
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description=("Convolutional Neural Netw"
-                                                  "ork on street-scene images"))
+    parser = argparse.ArgumentParser(
+        description=("Convolutional Neural Netw" "ork on street-scene images")
+    )
     parser = add_instance_arguments(parser)
     args = parser.parse_args()
 
     # Data path and repository management
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
     input_folder = utils.prepare_input_folder(args.datapath, args.dataset)
-    prepro_folder = utils.prepare_preprocessed_folder(args.datapath,
-                                                      args.dataset,
-                                                      args.image_size,
-                                                      aggregate_value)
+    prepro_folder = utils.prepare_preprocessed_folder(
+        args.datapath, args.dataset, args.image_size, aggregate_value
+    )
 
     # Dataset creation
     if args.dataset == "mapillary":
-        config_name = "config.json" if not args.aggregate_label else "config_aggregate.json"
+        config_name = (
+            "config.json"
+            if not args.aggregate_label
+            else "config_aggregate.json"
+        )
         config_path = os.path.join(input_folder, config_name)
         train_dataset = MapillaryDataset(args.image_size, config_path)
         validation_dataset = MapillaryDataset(args.image_size, config_path)
@@ -99,8 +125,9 @@ if __name__=='__main__':
         train_dataset = ShapeDataset(args.image_size)
         validation_dataset = ShapeDataset(args.image_size)
         test_dataset = ShapeDataset(args.image_size)
-        os.makedirs(os.path.join(prepro_folder["testing"], "labels"),
-                                 exist_ok=True)
+        os.makedirs(
+            os.path.join(prepro_folder["testing"], "labels"), exist_ok=True
+        )
     elif args.dataset == "aerial":
         train_dataset = AerialDataset(args.image_size)
         validation_dataset = AerialDataset(args.image_size)
@@ -110,53 +137,81 @@ if __name__=='__main__':
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
     else:
-        logger.error("Unsupported dataset type. Please choose amongst %s",
-                     AVAILABLE_DATASETS)
+        logger.error(
+            "Unsupported dataset type. Please choose amongst %s",
+            AVAILABLE_DATASETS,
+        )
         sys.exit(1)
 
     # Dataset populating/loading (depends on the existence of a specification file)
     if args.nb_training_image > 0:
         if os.path.isfile(prepro_folder["training_config"]):
-            train_dataset.load(prepro_folder["training_config"],
-                               args.nb_training_image)
+            train_dataset.load(
+                prepro_folder["training_config"], args.nb_training_image
+            )
         else:
-            logger.info(("No existing configuration file for this dataset. "
-                         "Create %s.", prepro_folder['training_config']))
+            logger.info(
+                (
+                    "No existing configuration file for this dataset. "
+                    "Create %s.",
+                    prepro_folder["training_config"],
+                )
+            )
             input_image_dir = os.path.join(input_folder, "training")
-            train_dataset.populate(prepro_folder["training"], input_image_dir,
-                                   nb_images=args.nb_training_image,
-                                   aggregate=args.aggregate_label,
-                                   nb_processes=int(config.get("running", "processes")))
+            train_dataset.populate(
+                prepro_folder["training"],
+                input_image_dir,
+                nb_images=args.nb_training_image,
+                aggregate=args.aggregate_label,
+                nb_processes=int(config.get("running", "processes")),
+            )
             train_dataset.save(prepro_folder["training_config"])
 
     if args.nb_validation_image > 0:
         if os.path.isfile(prepro_folder["validation_config"]):
-            validation_dataset.load(prepro_folder["validation_config"],
-                                    args.nb_validation_image)
+            validation_dataset.load(
+                prepro_folder["validation_config"], args.nb_validation_image
+            )
         else:
-            logger.info(("No existing configuration file for this dataset. "
-                         "Create %s.", prepro_folder['validation_config']))
+            logger.info(
+                (
+                    "No existing configuration file for this dataset. "
+                    "Create %s.",
+                    prepro_folder["validation_config"],
+                )
+            )
             input_image_dir = os.path.join(input_folder, "validation")
-            validation_dataset.populate(prepro_folder["validation"],
-                                        input_image_dir,
-                                        nb_images=args.nb_validation_image,
-                                        aggregate=args.aggregate_label,
-                                        nb_processes=int(config.get("running", "processes")))
+            validation_dataset.populate(
+                prepro_folder["validation"],
+                input_image_dir,
+                nb_images=args.nb_validation_image,
+                aggregate=args.aggregate_label,
+                nb_processes=int(config.get("running", "processes")),
+            )
             validation_dataset.save(prepro_folder["validation_config"])
 
     if args.nb_testing_image > 0:
         if os.path.isfile(prepro_folder["testing_config"]):
-            test_dataset.load(prepro_folder["testing_config"], args.nb_testing_image)
+            test_dataset.load(
+                prepro_folder["testing_config"], args.nb_testing_image
+            )
         else:
-            logger.info(("No existing configuration file for this dataset. "
-                         "Create %s.", prepro_folder['testing_config']))
+            logger.info(
+                (
+                    "No existing configuration file for this dataset. "
+                    "Create %s.",
+                    prepro_folder["testing_config"],
+                )
+            )
             input_image_dir = os.path.join(input_folder, "testing")
-            test_dataset.populate(prepro_folder["testing"],
-                                  input_image_dir,
-                                  nb_images=args.nb_testing_image,
-                                  aggregate=args.aggregate_label,
-                                  labelling=False,
-                                  nb_processes=int(config.get("running", "processes")))
+            test_dataset.populate(
+                prepro_folder["testing"],
+                input_image_dir,
+                nb_images=args.nb_testing_image,
+                aggregate=args.aggregate_label,
+                labelling=False,
+                nb_processes=int(config.get("running", "processes")),
+            )
             test_dataset.save(prepro_folder["testing_config"])
 
     glossary = pd.DataFrame(train_dataset.labels)

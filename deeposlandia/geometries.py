@@ -160,13 +160,13 @@ def extract_points_from_polygon(p, geofeatures, min_x, min_y):
         list(raw_xs),
         geofeatures["west"],
         geofeatures["east"],
-        geofeatures["width"]
+        geofeatures["width"],
     )
     ys = get_pixel(
         list(raw_ys),
         geofeatures["north"],
         geofeatures["south"],
-        geofeatures["height"]
+        geofeatures["height"],
     )
     points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
     points[:, 0] -= min_y
@@ -210,7 +210,7 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
         [min_y, max_y],
         features["north"],
         features["south"],
-        features["height"]
+        features["height"],
     )
     return shgeom.Polygon(
         (
@@ -440,7 +440,7 @@ def pixel_to_geocoord(polygon_ring, geofeatures):
         list(xpixels),
         geofeatures["west"],
         geofeatures["east"],
-        geofeatures["width"]
+        geofeatures["width"],
     )
     py = get_geocoord(
         list(ypixels),

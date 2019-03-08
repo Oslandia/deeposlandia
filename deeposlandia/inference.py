@@ -1,4 +1,3 @@
-
 """Inference on deep learning model previously trained
 
 * Build the instance name
@@ -52,22 +51,37 @@ def add_program_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-D', '--dataset',
-                        required=True, choices=AVAILABLE_DATASETS,
-                        help=("Dataset type (to be chosen amongst available"
-                              "datasets)"))
-    parser.add_argument('-i', '--image-paths',
-                        required=True,
-                        nargs='+',
-                        help="Path of the image on the file system")
-    parser.add_argument('-M', '--model',
-                        default="feature_detection",
-                        help=("Type of model to train, either "
-                              "'feature_detection' or 'semantic_segmentation'"))
-    parser.add_argument('-p', '--datapath',
-                        default="./data",
-                        help="Relative path towards data directory")
+    parser.add_argument(
+        "-D",
+        "--dataset",
+        required=True,
+        choices=AVAILABLE_DATASETS,
+        help=("Dataset type (to be chosen amongst available" "datasets)"),
+    )
+    parser.add_argument(
+        "-i",
+        "--image-paths",
+        required=True,
+        nargs="+",
+        help="Path of the image on the file system",
+    )
+    parser.add_argument(
+        "-M",
+        "--model",
+        default="feature_detection",
+        help=(
+            "Type of model to train, either "
+            "'feature_detection' or 'semantic_segmentation'"
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--datapath",
+        default="./data",
+        help="Relative path towards data directory",
+    )
     return parser
+
 
 def add_instance_arguments(parser):
     """Add instance-specific arguments from the command line
@@ -82,38 +96,68 @@ def add_instance_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-a', '--aggregate-label', action='store_true',
-                        help="Aggregate labels with respect to their categories")
-    parser.add_argument('-b', '--batch-size',
-                        type=int,
-                        default=None,
-                        help=("Number of images that must be contained "
-                              "into a single batch"))
-    parser.add_argument('-d', '--dropout',
-                        type=float,
-                        default=None,
-                        help="Percentage of kept neurons during training")
-    parser.add_argument('-L', '--learning-rate',
-                        default=None,
-                        type=float,
-                        help=("Starting learning rate"))
-    parser.add_argument('-l', '--learning-rate-decay',
-                        default=None,
-                        type=float,
-                        help=("Learning rate decay"))
-    parser.add_argument('-n', '--name',
-                        default=None,
-                        help=("Model name that will be used for results, "
-                              "checkout and graph storage on file system"))
-    parser.add_argument('-N', '--network',
-                        default=None,
-                        help=("Neural network size, either 'simple', 'vgg' or "
-                              "'inception' ('simple' refers to 3 conv/pool "
-                              "blocks and 1 fully-connected layer; the others "
-                              "refer to state-of-the-art networks)"))
+    parser.add_argument(
+        "-a",
+        "--aggregate-label",
+        action="store_true",
+        help="Aggregate labels with respect to their categories",
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        default=None,
+        help=(
+            "Number of images that must be contained " "into a single batch"
+        ),
+    )
+    parser.add_argument(
+        "-d",
+        "--dropout",
+        type=float,
+        default=None,
+        help="Percentage of kept neurons during training",
+    )
+    parser.add_argument(
+        "-L",
+        "--learning-rate",
+        default=None,
+        type=float,
+        help=("Starting learning rate"),
+    )
+    parser.add_argument(
+        "-l",
+        "--learning-rate-decay",
+        default=None,
+        type=float,
+        help=("Learning rate decay"),
+    )
+    parser.add_argument(
+        "-n",
+        "--name",
+        default=None,
+        help=(
+            "Model name that will be used for results, "
+            "checkout and graph storage on file system"
+        ),
+    )
+    parser.add_argument(
+        "-N",
+        "--network",
+        default=None,
+        help=(
+            "Neural network size, either 'simple', 'vgg' or "
+            "'inception' ('simple' refers to 3 conv/pool "
+            "blocks and 1 fully-connected layer; the others "
+            "refer to state-of-the-art networks)"
+        ),
+    )
     return parser
 
-def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
+
+def init_model(
+    problem, instance_name, image_size, nb_labels, dropout, network
+):
     """Initialize a convolutional neural network with Keras API starting from a set of parameters
 
     Parameters
@@ -138,27 +182,46 @@ def init_model(problem, instance_name, image_size, nb_labels, dropout, network):
     """
     K.clear_session()
     if problem == "feature_detection":
-        net = FeatureDetectionNetwork(network_name=instance_name,
-                                      image_size=image_size,
-                                      nb_labels=nb_labels,
-                                      dropout=dropout,
-                                      architecture=network)
+        net = FeatureDetectionNetwork(
+            network_name=instance_name,
+            image_size=image_size,
+            nb_labels=nb_labels,
+            dropout=dropout,
+            architecture=network,
+        )
     elif problem == "semantic_segmentation":
-        net = SemanticSegmentationNetwork(network_name=instance_name,
-                                          image_size=image_size,
-                                          nb_labels=nb_labels,
-                                          dropout=dropout,
-                                          architecture=network)
+        net = SemanticSegmentationNetwork(
+            network_name=instance_name,
+            image_size=image_size,
+            nb_labels=nb_labels,
+            dropout=dropout,
+            architecture=network,
+        )
     else:
-        logger.error(("Unrecognized model. Please enter 'feature_detection' "
-                      "or 'semantic_segmentation'."))
+        logger.error(
+            (
+                "Unrecognized model. Please enter 'feature_detection' "
+                "or 'semantic_segmentation'."
+            )
+        )
         sys.exit(1)
     return Model(net.X, net.Y)
 
-def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
-            name=None, network=None, batch_size=None, dropout=None,
-            learning_rate=None, learning_rate_decay=None,
-            output_dir="/tmp/deeposlandia/predicted"):
+
+def predict(
+    filenames,
+    dataset,
+    problem,
+    datapath="./data",
+    aggregate=False,
+    name=None,
+    network=None,
+    batch_size=None,
+    dropout=None,
+    learning_rate=None,
+    learning_rate_decay=None,
+    output_dir="/tmp/deeposlandia/predicted",
+):
     """Make label prediction on image indicated by ̀filename`, according to
     considered `problem`
 
@@ -205,108 +268,170 @@ def predict(filenames, dataset, problem, datapath="./data", aggregate=False,
     flattened_image_paths = sum(image_paths, [])
     images = extract_images(flattened_image_paths)
     model_input_size = images.shape[1]
-    if dataset == 'aerial':
+    if dataset == "aerial":
         tile_size = utils.get_tile_size_from_image(model_input_size)
     else:
         tile_size = model_input_size
 
     aggregate_value = "full" if not aggregate else "aggregated"
-    instance_args = [name, tile_size, network, batch_size, aggregate_value,
-                     dropout, learning_rate, learning_rate_decay]
+    instance_args = [
+        name,
+        tile_size,
+        network,
+        batch_size,
+        aggregate_value,
+        dropout,
+        learning_rate,
+        learning_rate_decay,
+    ]
     instance_name = utils.list_to_str(instance_args, "_")
 
-    prepro_folder = utils.prepare_preprocessed_folder(datapath,
-                                                      dataset,
-                                                      tile_size,
-                                                      aggregate_value)
+    prepro_folder = utils.prepare_preprocessed_folder(
+        datapath, dataset, tile_size, aggregate_value
+    )
 
     if os.path.isfile(prepro_folder["training_config"]):
         train_config = utils.read_config(prepro_folder["training_config"])
-        label_ids = [x['id'] for x in train_config['labels']
-                     if x['is_evaluate']]
+        label_ids = [
+            x["id"] for x in train_config["labels"] if x["is_evaluate"]
+        ]
         nb_labels = len(label_ids)
     else:
-        logger.error(("There is no training data with the given "
-                      "parameters. Please generate a valid dataset "
-                      "before calling the program."))
+        logger.error(
+            (
+                "There is no training data with the given "
+                "parameters. Please generate a valid dataset "
+                "before calling the program."
+            )
+        )
         sys.exit(1)
 
     if any([arg is None for arg in instance_args]):
-        logger.info(("Some arguments are None, "
-                     "the best model is considered."))
-        output_folder = utils.prepare_output_folder(datapath,
-                                                    dataset,
-                                                    problem)
-        instance_filename = ("best-instance-" + str(tile_size)
-                             + "-" + aggregate_value + ".json")
+        logger.info(
+            ("Some arguments are None, " "the best model is considered.")
+        )
+        output_folder = utils.prepare_output_folder(datapath, dataset, problem)
+        instance_filename = (
+            "best-instance-" + str(tile_size) + "-" + aggregate_value + ".json"
+        )
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
-        model = init_model(problem, instance_name, model_input_size, nb_labels, dropout, network)
-        checkpoint_filename = ("best-model-" + str(tile_size)
-                               + "-" + aggregate_value + ".h5")
+        model = init_model(
+            problem,
+            instance_name,
+            model_input_size,
+            nb_labels,
+            dropout,
+            network,
+        )
+        checkpoint_filename = (
+            "best-model-" + str(tile_size) + "-" + aggregate_value + ".h5"
+        )
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):
             logger.info("Checkpoint full path : %s", checkpoint_full_path)
             model.load_weights(checkpoint_full_path)
-            logger.info("Model weights have been recovered from %s"
-                        , checkpoint_full_path)
+            logger.info(
+                "Model weights have been recovered from %s",
+                checkpoint_full_path,
+            )
         else:
-            logger.info(("No available trained model for this image size"
-                         " with optimized hyperparameters. The "
-                         "inference will be done on an untrained model"))
+            logger.info(
+                (
+                    "No available trained model for this image size"
+                    " with optimized hyperparameters. The "
+                    "inference will be done on an untrained model"
+                )
+            )
     else:
         logger.info("All instance arguments are filled out.")
-        output_folder = utils.prepare_output_folder(datapath,
-                                                    dataset,
-                                                    problem,
-                                                    instance_name)
-        model = init_model(problem, instance_name, model_input_size,
-                           nb_labels, dropout, network)
-        checkpoints = [item for item in os.listdir(output_folder)
-                       if "checkpoint-epoch" in item]
+        output_folder = utils.prepare_output_folder(
+            datapath, dataset, problem, instance_name
+        )
+        model = init_model(
+            problem,
+            instance_name,
+            model_input_size,
+            nb_labels,
+            dropout,
+            network,
+        )
+        checkpoints = [
+            item
+            for item in os.listdir(output_folder)
+            if "checkpoint-epoch" in item
+        ]
         if len(checkpoints) > 0:
             model_checkpoint = max(checkpoints)
-            checkpoint_full_path = os.path.join(output_folder, model_checkpoint)
+            checkpoint_full_path = os.path.join(
+                output_folder, model_checkpoint
+            )
             model.load_weights(checkpoint_full_path)
-            logger.info("Model weights have been recovered from %s"
-                        , checkpoint_full_path)
+            logger.info(
+                "Model weights have been recovered from %s",
+                checkpoint_full_path,
+            )
         else:
-            logger.info(("No available checkpoint for this configuration. "
-                         "The model will be trained from scratch."))
+            logger.info(
+                (
+                    "No available checkpoint for this configuration. "
+                    "The model will be trained from scratch."
+                )
+            )
 
     y_raw_pred = model.predict(images)
 
     result = {}
     if problem == "feature_detection":
-        label_info = [(i['category'], utils.GetHTMLColor(i['color']))
-                      for i in train_config['labels']]
+        label_info = [
+            (i["category"], utils.GetHTMLColor(i["color"]))
+            for i in train_config["labels"]
+        ]
         for filename, prediction in zip(flattened_image_paths, y_raw_pred):
-            result[filename] = [(i[0], 100*round(float(j), 2), i[1])
-                                for i, j in zip(label_info, prediction)]
+            result[filename] = [
+                (i[0], 100 * round(float(j), 2), i[1])
+                for i, j in zip(label_info, prediction)
+            ]
         return result
     elif problem == "semantic_segmentation":
         os.makedirs(output_dir, exist_ok=True)
         predicted_labels = np.argmax(y_raw_pred, axis=3)
         encountered_labels = np.unique(predicted_labels)
-        meaningful_labels = [x for i, x in enumerate(train_config["labels"])
-                         if i in encountered_labels]
-        labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
-                                   dtype=np.int8)
+        meaningful_labels = [
+            x
+            for i, x in enumerate(train_config["labels"])
+            if i in encountered_labels
+        ]
+        labelled_images = np.zeros(
+            shape=np.append(predicted_labels.shape, 3), dtype=np.int8
+        )
         for i in range(nb_labels):
-            labelled_images[predicted_labels == i] = train_config["labels"][i]["color"]
-        for predicted_labels, filename in zip(labelled_images, flattened_image_paths):
-            predicted_image = Image.fromarray(predicted_labels, 'RGB')
+            labelled_images[predicted_labels == i] = train_config["labels"][i][
+                "color"
+            ]
+        for predicted_labels, filename in zip(
+            labelled_images, flattened_image_paths
+        ):
+            predicted_image = Image.fromarray(predicted_labels, "RGB")
             filename = filename.replace(".jpg", ".png")
-            predicted_image_path = os.path.join(output_dir,
-                                                os.path.basename(filename))
+            predicted_image_path = os.path.join(
+                output_dir, os.path.basename(filename)
+            )
             predicted_image.save(predicted_image_path)
             result[filename] = os.path.basename(filename)
-        return {'labels': summarize_config(meaningful_labels),
-                'label_images': result}
+        return {
+            "labels": summarize_config(meaningful_labels),
+            "label_images": result,
+        }
     else:
-        logger.error(("Unknown model argument. Please use "
-                      "'feature_detection' or 'semantic_segmentation'."))
+        logger.error(
+            (
+                "Unknown model argument. Please use "
+                "'feature_detection' or 'semantic_segmentation'."
+            )
+        )
         sys.exit(1)
+
 
 def summarize_config(config):
     """Extract and reshape dataset configuration information in a HTML-printing
@@ -322,7 +447,8 @@ def summarize_config(config):
     dict
         Simplified dataset configuration for HTML-printing purpose
     """
-    return [(c['category'], utils.GetHTMLColor(c['color'])) for c in config]
+    return [(c["category"], utils.GetHTMLColor(c["color"])) for c in config]
+
 
 def extract_images(image_paths):
     """Convert a list of image filenames into a numpy array that contains the
@@ -342,24 +468,37 @@ def extract_images(image_paths):
     for image_path in image_paths:
         image = Image.open(image_path)
         if image.size[0] != image.size[1]:
-            logger.error(("One of the parsed images "
-                          "has non-squared dimensions."))
+            logger.error(
+                ("One of the parsed images " "has non-squared dimensions.")
+            )
             sys.exit(1)
         x_test.append(np.array(image))
     return np.array(x_test)
 
-if __name__ == '__main__':
 
-    program_description = ("Infer labels on one (or more) image file(s) "
-                           "from a trained deep neural network")
+if __name__ == "__main__":
+
+    program_description = (
+        "Infer labels on one (or more) image file(s) "
+        "from a trained deep neural network"
+    )
     parser = argparse.ArgumentParser(description=program_description)
     parser = add_program_arguments(parser)
     parser = add_instance_arguments(parser)
     args = parser.parse_args()
 
-    y_raw_pred = predict(args.image_paths, args.dataset, args.model, args.datapath,
-                         args.aggregate_label, args.name, args.network,
-                         args.batch_size, args.dropout,
-                         args.learning_rate, args.learning_rate_decay)
+    y_raw_pred = predict(
+        args.image_paths,
+        args.dataset,
+        args.model,
+        args.datapath,
+        args.aggregate_label,
+        args.name,
+        args.network,
+        args.batch_size,
+        args.dropout,
+        args.learning_rate,
+        args.learning_rate_decay,
+    )
 
     logger.info(y_raw_pred)

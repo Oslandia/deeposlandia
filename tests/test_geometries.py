@@ -9,10 +9,17 @@ from osgeo import gdal
 from shapely.geometry import Polygon, MultiPolygon
 
 from deeposlandia.geometries import (
-    extract_points_from_polygon, extract_tile_items,
-    get_geocoord, get_image_features, get_pixel, get_tile_footprint,
-    extract_geometry_vertices, vectorize_mask,
-    rasterize_polygons, pixel_to_geocoord, convert_to_geocoord
+    extract_points_from_polygon,
+    extract_tile_items,
+    get_geocoord,
+    get_image_features,
+    get_pixel,
+    get_tile_footprint,
+    extract_geometry_vertices,
+    vectorize_mask,
+    rasterize_polygons,
+    pixel_to_geocoord,
+    convert_to_geocoord,
 )
 
 
@@ -26,9 +33,7 @@ def test_get_pixel():
     min_coord, max_coord = 0, 30000.0
     size_in_pixel = 500
     true_pixel_coord = [166, 250, 333]
-    pixel_coord = get_pixel(
-        geocoords, min_coord, max_coord, size_in_pixel
-    )
+    pixel_coord = get_pixel(geocoords, min_coord, max_coord, size_in_pixel)
     assert np.all(pixel_coord == true_pixel_coord)
     single_geocoord = geocoords[0]
     single_pixel_coord = get_pixel(
@@ -111,9 +116,7 @@ def test_extract_points_from_polygon(tanzania_example_image):
     )
     x2 = x1 + (geofeatures["east"] - x1) / 2
     y2 = geofeatures["south"]
-    polygon = Polygon(
-        ((x1, y1), (x1, y2), (x2, y1), (x1, y1))
-    )
+    polygon = Polygon(((x1, y1), (x1, y2), (x2, y1), (x1, y1)))
     points = extract_points_from_polygon(polygon, geofeatures, min_x, min_y)
     expected_points = np.array([[0, 0], [500, 0], [0, 250], [0, 0]])
     assert np.all(points == expected_points)
@@ -130,9 +133,7 @@ def test_square_tile_footprint(tanzania_example_image):
     geofeatures = get_image_features(ds)
     min_x = min_y = 0
     tile_width = ds.RasterXSize
-    tile_footprint = get_tile_footprint(
-        geofeatures, min_x, min_y, tile_width
-    )
+    tile_footprint = get_tile_footprint(geofeatures, min_x, min_y, tile_width)
     assert tile_footprint.is_valid
     tile_bounds = tile_footprint.bounds
     assert geofeatures["north"] in tile_bounds
@@ -159,9 +160,10 @@ def test_rectangle_tile_footprint(tanzania_example_image):
     )
     assert tile_footprint.is_valid
     tile_bounds = tile_footprint.bounds
-    tile_south = (geofeatures["south"]
-                  + (geofeatures["north"] - geofeatures["south"]) / 2
-                  )
+    tile_south = (
+        geofeatures["south"]
+        + (geofeatures["north"] - geofeatures["south"]) / 2
+    )
     assert tile_south in tile_bounds
     assert geofeatures["north"] in tile_bounds
     assert geofeatures["east"] in tile_bounds
@@ -169,7 +171,7 @@ def test_rectangle_tile_footprint(tanzania_example_image):
 
 
 def test_extract_empty_tile_items(
-        tanzania_example_image, tanzania_example_labels
+    tanzania_example_image, tanzania_example_labels
 ):
     """Test the extraction of polygons that overlap a given squared tile, based
     on a reference test image (see 'tests/data/tanzania/input/training/').
@@ -204,26 +206,30 @@ def test_extract_tile_items(tanzania_example_image, tanzania_example_labels):
     labels = labels.loc[~labels.geometry.isna(), ["condition", "geometry"]]
     none_mask = [lc is None for lc in labels.condition]
     labels.loc[none_mask, "condition"] = "Complete"
-    tile_items = extract_tile_items(
-        geofeatures, labels, 0, 0, 1000, 1000
-    )
+    tile_items = extract_tile_items(geofeatures, labels, 0, 0, 1000, 1000)
     expected_items = 7
     assert tile_items.shape[0] == expected_items
-    assert np.all([
-        geom.is_valid for geom in tile_items["geometry"]
-    ])
-    assert np.all([
-        geom.geom_type == "Polygon" for geom in tile_items["geometry"]
-    ])
+    assert np.all([geom.is_valid for geom in tile_items["geometry"]])
+    assert np.all(
+        [geom.geom_type == "Polygon" for geom in tile_items["geometry"]]
+    )
     item_bounds = tile_items.unary_union.bounds
-    assert (item_bounds[0] >= geofeatures["west"]
-            and item_bounds[0] <= geofeatures["east"])
-    assert (item_bounds[1] >= geofeatures["south"]
-            and item_bounds[1] <= geofeatures["north"])
-    assert (item_bounds[2] >= geofeatures["west"]
-            and item_bounds[2] <= geofeatures["east"])
-    assert (item_bounds[3] >= geofeatures["south"]
-            and item_bounds[3] <= geofeatures["north"])
+    assert (
+        item_bounds[0] >= geofeatures["west"]
+        and item_bounds[0] <= geofeatures["east"]
+    )
+    assert (
+        item_bounds[1] >= geofeatures["south"]
+        and item_bounds[1] <= geofeatures["north"]
+    )
+    assert (
+        item_bounds[2] >= geofeatures["west"]
+        and item_bounds[2] <= geofeatures["east"]
+    )
+    assert (
+        item_bounds[3] >= geofeatures["south"]
+        and item_bounds[3] <= geofeatures["north"]
+    )
 
 
 def test_extract_geometry_vertices(tanzania_raw_image_size):
@@ -249,8 +255,7 @@ def test_extract_geometry_vertices(tanzania_raw_image_size):
     )
     assert len(undetected_vertices) == 0
     bigger_mask = np.zeros(
-        [tanzania_raw_image_size, tanzania_raw_image_size],
-        dtype=np.uint8
+        [tanzania_raw_image_size, tanzania_raw_image_size], dtype=np.uint8
     )
     x1, y1 = 100, 200
     x2, y2 = 300, 400
@@ -273,8 +278,7 @@ def test_vectorize_mask(tanzania_raw_image_size):
     implied. Hence exact polygon vertice coordinates are not tested.
     """
     mask = np.zeros(
-        [tanzania_raw_image_size, tanzania_raw_image_size],
-        dtype=np.uint8
+        [tanzania_raw_image_size, tanzania_raw_image_size], dtype=np.uint8
     )
     empty_multipolygon = vectorize_mask(mask)
     assert len(empty_multipolygon) == 0
@@ -304,20 +308,23 @@ def test_rasterize_polygons(tanzania_raw_image_size):
     assert mask.shape == (tanzania_raw_image_size, tanzania_raw_image_size)
     assert np.unique(mask) == np.array([0])
     x1 = int(tanzania_raw_image_size / 2)
-    polygon = Polygon(shell=((0, 0),
-                             (x1, 0),
-                             (x1, tanzania_raw_image_size),
-                             (0, tanzania_raw_image_size),
-                             (0, 0))
+    polygon = Polygon(
+        shell=(
+            (0, 0),
+            (x1, 0),
+            (x1, tanzania_raw_image_size),
+            (0, tanzania_raw_image_size),
+            (0, 0),
+        )
     )
     mask = rasterize_polygons(
         MultiPolygon([polygon]),
         tanzania_raw_image_size,
-        tanzania_raw_image_size
+        tanzania_raw_image_size,
     )
     mask_polygon = mask[:tanzania_raw_image_size, :x1]
     assert np.all(np.unique(mask_polygon) == np.array([1]))
-    mask_no_polygon = mask[:tanzania_raw_image_size, 1+x1:]
+    mask_no_polygon = mask[:tanzania_raw_image_size, 1 + x1 :]
     assert np.all(np.unique(mask_no_polygon) == np.array([0]))
 
 
@@ -329,20 +336,24 @@ def test_pixel_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
     """
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
-    polygon = Polygon(shell=(
-        (0, 0),
-        (tanzania_raw_image_size, 0),
-        (tanzania_raw_image_size, tanzania_raw_image_size),
-        (0, tanzania_raw_image_size),
-        (0, 0)
-    ))
-    expected_points = np.array([
-        [geofeatures["west"], geofeatures["north"]],
-        [geofeatures["east"], geofeatures["north"]],
-        [geofeatures["east"], geofeatures["south"]],
-        [geofeatures["west"], geofeatures["south"]],
-        [geofeatures["west"], geofeatures["north"], ]
-    ])
+    polygon = Polygon(
+        shell=(
+            (0, 0),
+            (tanzania_raw_image_size, 0),
+            (tanzania_raw_image_size, tanzania_raw_image_size),
+            (0, tanzania_raw_image_size),
+            (0, 0),
+        )
+    )
+    expected_points = np.array(
+        [
+            [geofeatures["west"], geofeatures["north"]],
+            [geofeatures["east"], geofeatures["north"]],
+            [geofeatures["east"], geofeatures["south"]],
+            [geofeatures["west"], geofeatures["south"]],
+            [geofeatures["west"], geofeatures["north"]],
+        ]
+    )
     points = pixel_to_geocoord(polygon.exterior, geofeatures)
     assert np.all(points == expected_points)
 
@@ -365,47 +376,54 @@ def test_convert_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
     x2 = y2 = int(tanzania_raw_image_size / 2)
     x3 = y3 = int(tanzania_raw_image_size * 3 / 4)
     x4 = y4 = tanzania_raw_image_size
-    polygon1 = Polygon(shell=(
-        (0, 0), (x3, 0), (x3, y3), (0, y3), (0, 0)
-    ),
-                       holes=[(
-                           (x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)
-                       )]
+    polygon1 = Polygon(
+        shell=((0, 0), (x3, 0), (x3, y3), (0, y3), (0, 0)),
+        holes=[((x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1))],
     )
-    polygon2 = Polygon(shell=(
-        (x3, y3), (x4, y3), (x4, y4), (x3, y4), (x3, y3)
-    ))
+    polygon2 = Polygon(
+        shell=((x3, y3), (x4, y3), (x4, y4), (x3, y4), (x3, y3))
+    )
     multipolygon = MultiPolygon([polygon1, polygon2])
     ds = gdal.Open(str(tanzania_example_image))
     geofeatures = get_image_features(ds)
     converted_multipolygon = convert_to_geocoord(multipolygon, geofeatures)
-    expected_x = [(geofeatures["west"]
-              + (geofeatures["east"] - geofeatures["west"]) * i)
-             for i in np.linspace(0, 1, 5)]
-    expected_y = [(geofeatures["north"]
-             + (geofeatures["south"] - geofeatures["north"]) * i)
-             for i in np.linspace(0, 1, 5)]
-    expected_polygon1 = Polygon(shell=(
-        (expected_x[0], expected_y[0]),
-        (expected_x[3], expected_y[0]),
-        (expected_x[3], expected_y[3]),
-        (expected_x[0], expected_y[3]),
-        (expected_x[0], expected_y[0])
-    ),
-                       holes=[(
-                           (expected_x[1], expected_y[1]),
-                           (expected_x[2], expected_y[1]),
-                           (expected_x[2], expected_y[2]),
-                           (expected_x[1], expected_y[2]),
-                           (expected_x[1], expected_y[1])
-                       )]
+    expected_x = [
+        (geofeatures["west"] + (geofeatures["east"] - geofeatures["west"]) * i)
+        for i in np.linspace(0, 1, 5)
+    ]
+    expected_y = [
+        (
+            geofeatures["north"]
+            + (geofeatures["south"] - geofeatures["north"]) * i
+        )
+        for i in np.linspace(0, 1, 5)
+    ]
+    expected_polygon1 = Polygon(
+        shell=(
+            (expected_x[0], expected_y[0]),
+            (expected_x[3], expected_y[0]),
+            (expected_x[3], expected_y[3]),
+            (expected_x[0], expected_y[3]),
+            (expected_x[0], expected_y[0]),
+        ),
+        holes=[
+            (
+                (expected_x[1], expected_y[1]),
+                (expected_x[2], expected_y[1]),
+                (expected_x[2], expected_y[2]),
+                (expected_x[1], expected_y[2]),
+                (expected_x[1], expected_y[1]),
+            )
+        ],
     )
-    expected_polygon2 = Polygon(shell=(
-        (expected_x[3], expected_y[3]),
-        (expected_x[4], expected_y[3]),
-        (expected_x[4], expected_y[4]),
-        (expected_x[3], expected_y[4]),
-        (expected_x[3], expected_y[3])
-        ))
+    expected_polygon2 = Polygon(
+        shell=(
+            (expected_x[3], expected_y[3]),
+            (expected_x[4], expected_y[3]),
+            (expected_x[4], expected_y[4]),
+            (expected_x[3], expected_y[4]),
+            (expected_x[3], expected_y[3]),
+        )
+    )
     assert converted_multipolygon[0] == expected_polygon1
     assert converted_multipolygon[1] == expected_polygon2

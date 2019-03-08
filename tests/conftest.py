@@ -8,14 +8,16 @@ import pytest
 
 from keras import backend as K
 
+
 @pytest.fixture(autouse=True)
 def clear_session_after_test():
     """Test wrapper to clean up after TensorFlow and CNTK tests.
     This wrapper runs for all the tests in the keras test suite.
     """
     yield
-    if K.backend() == 'tensorflow' or K.backend() == 'cntk':
+    if K.backend() == "tensorflow" or K.backend() == "cntk":
         K.clear_session()
+
 
 @pytest.fixture
 def nb_channels():
@@ -95,17 +97,17 @@ def mapillary_nb_labels(mapillary_input_config):
     return len(config["labels"])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def mapillary_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('mapillary.json')
+    return tmpdir_factory.getbasetemp().join("mapillary.json")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def mapillary_temp_dir(tmpdir_factory):
-    mapillary_subdir = tmpdir_factory.mktemp('mapillary', numbered=False)
-    tmpdir_factory.mktemp('mapillary/images', numbered=False)
-    tmpdir_factory.mktemp('mapillary/labels', numbered=False)
-    tmpdir_factory.mktemp('mapillary/checkpoints', numbered=False)
+    mapillary_subdir = tmpdir_factory.mktemp("mapillary", numbered=False)
+    tmpdir_factory.mktemp("mapillary/images", numbered=False)
+    tmpdir_factory.mktemp("mapillary/labels", numbered=False)
+    tmpdir_factory.mktemp("mapillary/checkpoints", numbered=False)
     return mapillary_subdir
 
 
@@ -124,9 +126,9 @@ def shapes_nb_labels():
     return 4
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def shapes_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('shapes.json')
+    return tmpdir_factory.getbasetemp().join("shapes.json")
 
 
 @pytest.fixture
@@ -139,12 +141,12 @@ def shapes_sample():
     return "tests/data/shapes/training/"
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def shapes_temp_dir(tmpdir_factory):
-    shapes_subdir = tmpdir_factory.mktemp('shapes', numbered=False)
-    tmpdir_factory.mktemp('shapes/images', numbered=False)
-    tmpdir_factory.mktemp('shapes/labels', numbered=False)
-    tmpdir_factory.mktemp('shapes/checkpoints', numbered=False)
+    shapes_subdir = tmpdir_factory.mktemp("shapes", numbered=False)
+    tmpdir_factory.mktemp("shapes/images", numbered=False)
+    tmpdir_factory.mktemp("shapes/labels", numbered=False)
+    tmpdir_factory.mktemp("shapes/checkpoints", numbered=False)
     return shapes_subdir
 
 
@@ -175,9 +177,9 @@ def aerial_nb_images():
 
 @pytest.fixture
 def aerial_nb_output_images(
-        aerial_nb_images, aerial_test_image_size, aerial_tile_size
+    aerial_nb_images, aerial_test_image_size, aerial_tile_size
 ):
-    return aerial_nb_images * (aerial_test_image_size/aerial_tile_size) ** 2
+    return aerial_nb_images * (aerial_test_image_size / aerial_tile_size) ** 2
 
 
 @pytest.fixture
@@ -185,9 +187,9 @@ def aerial_nb_labels():
     return 2
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def aerial_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('aerial.json')
+    return tmpdir_factory.getbasetemp().join("aerial.json")
 
 
 @pytest.fixture
@@ -209,16 +211,16 @@ def aerial_raw_sample():
     return "tests/data/aerial/input/training/"
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def aerial_temp_dir(tmpdir_factory):
-    aerial_subdir = tmpdir_factory.mktemp('aerial', numbered=False)
-    tmpdir_factory.mktemp('aerial/images', numbered=False)
-    tmpdir_factory.mktemp('aerial/labels', numbered=False)
-    tmpdir_factory.mktemp('aerial/checkpoints', numbered=False)
+    aerial_subdir = tmpdir_factory.mktemp("aerial", numbered=False)
+    tmpdir_factory.mktemp("aerial/images", numbered=False)
+    tmpdir_factory.mktemp("aerial/labels", numbered=False)
+    tmpdir_factory.mktemp("aerial/checkpoints", numbered=False)
     return aerial_subdir
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def aerial_temp_conf(tmpdir_factory):
     temp_conf = tmpdir_factory.mktemp(".").join("aerial.json")
     return temp_conf
@@ -246,11 +248,12 @@ def tanzania_nb_output_training_images():
 
 @pytest.fixture
 def tanzania_nb_output_testing_images(
-        tanzania_nb_images, tanzania_raw_image_size, tanzania_image_size
+    tanzania_nb_images, tanzania_raw_image_size, tanzania_image_size
 ):
-    return (tanzania_nb_images
-            * math.ceil(tanzania_raw_image_size/tanzania_image_size)
-            ** 2)
+    return (
+        tanzania_nb_images
+        * math.ceil(tanzania_raw_image_size / tanzania_image_size) ** 2
+    )
 
 
 @pytest.fixture
@@ -258,14 +261,14 @@ def tanzania_nb_labels():
     return 4
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tanzania_training_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('tanzania_training.json')
+    return tmpdir_factory.getbasetemp().join("tanzania_training.json")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tanzania_testing_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join('tanzania_testing.json')
+    return tmpdir_factory.getbasetemp().join("tanzania_testing.json")
 
 
 @pytest.fixture
@@ -286,6 +289,7 @@ def tanzania_raw_sample():
     """
     return "tests/data/tanzania/input/training/"
 
+
 @pytest.fixture
 def tanzania_example_image(tanzania_raw_sample):
     return os.path.join(tanzania_raw_sample, "images", "tanzania_sample.tif")
@@ -298,31 +302,33 @@ def tanzania_example_labels(tanzania_raw_sample):
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tanzania_training_temp_dir(tmpdir_factory):
-    tanzania_subdir = tmpdir_factory.mktemp('tanzania_training', numbered=False)
-    tmpdir_factory.mktemp('tanzania_training/images', numbered=False)
-    tmpdir_factory.mktemp('tanzania_training/labels', numbered=False)
-    tmpdir_factory.mktemp('tanzania_training/checkpoints', numbered=False)
+    tanzania_subdir = tmpdir_factory.mktemp(
+        "tanzania_training", numbered=False
+    )
+    tmpdir_factory.mktemp("tanzania_training/images", numbered=False)
+    tmpdir_factory.mktemp("tanzania_training/labels", numbered=False)
+    tmpdir_factory.mktemp("tanzania_training/checkpoints", numbered=False)
     return tanzania_subdir
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tanzania_testing_temp_dir(tmpdir_factory):
-    tanzania_subdir = tmpdir_factory.mktemp('tanzania_testing', numbered=False)
-    tmpdir_factory.mktemp('tanzania_testing/images', numbered=False)
-    tmpdir_factory.mktemp('tanzania_testing/labels', numbered=False)
-    tmpdir_factory.mktemp('tanzania_testing/checkpoints', numbered=False)
+    tanzania_subdir = tmpdir_factory.mktemp("tanzania_testing", numbered=False)
+    tmpdir_factory.mktemp("tanzania_testing/images", numbered=False)
+    tmpdir_factory.mktemp("tanzania_testing/labels", numbered=False)
+    tmpdir_factory.mktemp("tanzania_testing/checkpoints", numbered=False)
     return tanzania_subdir
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tanzania_temp_conf(tmpdir_factory):
     temp_conf = tmpdir_factory.mktemp(".").join("tanzania.json")
     return temp_conf
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def datapath_repo(tmpdir_factory):
-    datapath_subdir = tmpdir_factory.mktemp('datapath', numbered=False)
+    datapath_subdir = tmpdir_factory.mktemp("datapath", numbered=False)
     return datapath_subdir

@@ -56,13 +56,24 @@ class MapillaryDataset(Dataset):
             return None
         for lab_id, label in enumerate(glossary["labels"]):
             if "aggregate" in config_filename:
-                self.add_label(lab_id, label["name"], label["color"],
-                               label["evaluate"], label["family"],
-                               label["contains_id"], label["contains"])
+                self.add_label(
+                    lab_id,
+                    label["name"],
+                    label["color"],
+                    label["evaluate"],
+                    label["family"],
+                    label["contains_id"],
+                    label["contains"],
+                )
             else:
-                name_items = label["name"].split('--')
-                self.add_label(lab_id, name_items[-1], label["color"],
-                               label["evaluate"], name_items[0])
+                name_items = label["name"].split("--")
+                self.add_label(
+                    lab_id,
+                    name_items[-1],
+                    label["color"],
+                    label["evaluate"],
+                    name_items[0],
+                )
 
     def group_image_label(self, image):
         """Group the labels
@@ -82,12 +93,14 @@ class MapillaryDataset(Dataset):
         # (manually built)
         a = np.array(image)
         for root_id, label in enumerate(self.label_info):
-            for label_id in label['aggregate']:
+            for label_id in label["aggregate"]:
                 mask = a == label_id
                 a[mask] = root_id
         return Image.fromarray(a, mode=image.mode)
 
-    def _preprocess(self, image_filename, output_dir, aggregate, labelling=True):
+    def _preprocess(
+        self, image_filename, output_dir, aggregate, labelling=True
+    ):
         """Resize/crop then save the training & label images
 
         Parameters
@@ -113,8 +126,9 @@ class MapillaryDataset(Dataset):
         final_img_in = utils.mono_crop_image(img_in, crop_pix)
 
         # save final image
-        new_in_filename = os.path.join(output_dir, 'images',
-                                       os.path.basename(image_filename))
+        new_in_filename = os.path.join(
+            output_dir, "images", os.path.basename(image_filename)
+        )
         final_img_in.save(new_in_filename)
 
         # label_filename vs label image
@@ -128,26 +142,37 @@ class MapillaryDataset(Dataset):
             if aggregate:
                 img_out = self.group_image_label(img_out)
 
-            labels = utils.build_labels(img_out,
-                                        self.label_ids,
-                                        dataset="mapillary")
-            new_out_filename = os.path.join(output_dir, 'labels',
-                                            os.path.basename(label_filename))
+            labels = utils.build_labels(
+                img_out, self.label_ids, dataset="mapillary"
+            )
+            new_out_filename = os.path.join(
+                output_dir, "labels", os.path.basename(label_filename)
+            )
             label_out = np.array(img_out)
-            final_img_out = utils.build_image_from_config(label_out,
-                                                          self.label_info)
+            final_img_out = utils.build_image_from_config(
+                label_out, self.label_info
+            )
             final_img_out.save(new_out_filename)
         else:
             new_out_filename = None
             labels = {i: 0 for i in range(self.get_nb_labels())}
 
-        return {"raw_filename": image_filename,
-                "image_filename": new_in_filename,
-                "label_filename": new_out_filename,
-                "labels": labels}
+        return {
+            "raw_filename": image_filename,
+            "image_filename": new_in_filename,
+            "label_filename": new_out_filename,
+            "labels": labels,
+        }
 
-    def populate(self, output_dir, input_dir, nb_images=None, aggregate=False,
-                 labelling=True, nb_processes=1):
+    def populate(
+        self,
+        output_dir,
+        input_dir,
+        nb_images=None,
+        aggregate=False,
+        labelling=True,
+        nb_processes=1,
+    ):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -167,14 +192,20 @@ class MapillaryDataset(Dataset):
             Number of processes on which to run the preprocessing
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
-        image_list_longname = [os.path.join(input_dir, "images", l) for l in image_list]
+        image_list_longname = [
+            os.path.join(input_dir, "images", l) for l in image_list
+        ]
         if nb_processes == 1:
             for x in image_list_longname:
-                self.image_info.append(self._preprocess(x, output_dir, aggregate, labelling))
+                self.image_info.append(
+                    self._preprocess(x, output_dir, aggregate, labelling)
+                )
         else:
             with Pool(processes=nb_processes) as p:
                 self.image_info = p.starmap(
                     self._preprocess,
-                    [(x, output_dir, aggregate, labelling)
-                     for x in image_list_longname]
+                    [
+                        (x, output_dir, aggregate, labelling)
+                        for x in image_list_longname
+                    ],
                 )

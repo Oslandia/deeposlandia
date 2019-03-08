@@ -18,7 +18,9 @@ def test_get_image_paths(tanzania_image_size):
     assert np.all([f.endswith(".png") for f in filenames])
 
 
-def test_extract_images(tanzania_image_size, tanzania_nb_output_testing_images):
+def test_extract_images(
+    tanzania_image_size, tanzania_nb_output_testing_images
+):
     """Test the image extraction function, that retrieve the accurate data in a
     'numpy.array' starting from a list of filenames
 
@@ -64,10 +66,14 @@ def test_get_trained_model(tanzania_image_size, tanzania_nb_labels):
         "./tests.data", "tanzania", tanzania_image_size, tanzania_nb_labels
     )
     assert model.input_shape[1:] == (
-        tanzania_image_size, tanzania_image_size, 3
+        tanzania_image_size,
+        tanzania_image_size,
+        3,
     )
     assert model.output_shape[1:] == (
-        tanzania_image_size, tanzania_image_size, tanzania_nb_labels
+        tanzania_image_size,
+        tanzania_image_size,
+        tanzania_nb_labels,
     )
     model_input_layer = [ml for ml in model.layers if "input" in ml.name]
     assert len(model_input_layer) == 1
@@ -85,20 +91,27 @@ def test_assign_label_colors():
     """Test the label colorization function, that allows to replace label IDs
     with pixel triplets
     """
-    labels = [{"name": "foo", "color": [0, 0, 0]},
-              {"name": "bar", "color": [200, 200, 200]}]
-    y = np.array([
-        [[1, 1, 0], [1, 1, 0], [0, 1, 1]],
-        [[0, 1, 1], [0, 0, 0], [0, 1, 1]]
-    ])
-    expected_labels = np.array([
-        [[[200, 200, 200], [200, 200, 200], [0, 0, 0]],
-         [[200, 200, 200], [200, 200, 200], [0, 0, 0]],
-         [[0, 0, 0], [200, 200, 200], [200, 200, 200]]],
-        [[[0, 0, 0], [200, 200, 200], [200, 200, 200]],
-         [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-         [[0, 0, 0], [200, 200, 200], [200, 200, 200]]]
-    ])
+    labels = [
+        {"name": "foo", "color": [0, 0, 0]},
+        {"name": "bar", "color": [200, 200, 200]},
+    ]
+    y = np.array(
+        [[[1, 1, 0], [1, 1, 0], [0, 1, 1]], [[0, 1, 1], [0, 0, 0], [0, 1, 1]]]
+    )
+    expected_labels = np.array(
+        [
+            [
+                [[200, 200, 200], [200, 200, 200], [0, 0, 0]],
+                [[200, 200, 200], [200, 200, 200], [0, 0, 0]],
+                [[0, 0, 0], [200, 200, 200], [200, 200, 200]],
+            ],
+            [
+                [[0, 0, 0], [200, 200, 200], [200, 200, 200]],
+                [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+                [[0, 0, 0], [200, 200, 200], [200, 200, 200]],
+            ],
+        ]
+    )
     labels = postprocess.assign_label_colors(y, labels)
     assert np.all(labels == expected_labels)
 
@@ -109,8 +122,10 @@ def test_extract_coordinates_from_filenames():
     The filename chosen convention is as follows:
         <path>/<name>_<width>_<height>_<x>_<y>.<extension>
     """
-    filenames = ["./foofolder/foo_100_100_0_1000.png",
-                 "./barfolder/bar_100_100_2000_2100.png"]
+    filenames = [
+        "./foofolder/foo_100_100_0_1000.png",
+        "./barfolder/bar_100_100_2000_2100.png",
+    ]
     coordinates = postprocess.extract_coordinates_from_filenames(filenames)
     assert np.all(coordinates == [[0, 1000], [2000, 2100]])
 
@@ -129,14 +144,10 @@ def test_fill_labelled_image():
     x2, y2 = 2, 0
     x3, y3 = 0, 2
     x4, y4 = 2, 2
-    coordinates = [[x1, y1], [x2, y2],
-                   [x3, y3], [x4, y4]]
+    coordinates = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
     e1 = np.array(
-        [[1, 2, 5, 6],
-         [3, 4, 7, 8],
-         [9, 10, 13, 14],
-         [11, 12, 15, 16]],
-        dtype=np.int8
+        [[1, 2, 5, 6], [3, 4, 7, 8], [9, 10, 13, 14], [11, 12, 15, 16]],
+        dtype=np.int8,
     )
     e2 = postprocess.fill_labelled_image(tiles, coordinates, 2, 4)
     assert np.all(e1 == e2)
@@ -163,16 +174,10 @@ def test_fill_labelled_image_incompatible_sizes():
     x4, y4 = 2, 2
     x5, y5 = 0, 4
     x6, y6 = 2, 4
-    coordinates = [[x1, y1], [x2, y2],
-                   [x3, y3], [x4, y4],
-                   [x5, y5], [x6, y6]]
+    coordinates = [[x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6]]
     e1 = np.array(
-        [[1, 2, 5],
-         [3, 4, 7],
-         [9, 10, 13],
-         [11, 12, 15],
-         [17, 18, 21]],
-        dtype=np.int8
+        [[1, 2, 5], [3, 4, 7], [9, 10, 13], [11, 12, 15], [17, 18, 21]],
+        dtype=np.int8,
     )
     e2 = postprocess.fill_labelled_image(tiles, coordinates, 2, 3, 5)
     assert np.all(e1 == e2)
@@ -199,24 +204,24 @@ def test_fill_labelled_image_different_sizes():
     x4, y4 = 2, 2
     x5, y5 = 0, 4
     x6, y6 = 2, 4
-    coordinates = [[x1, y1], [x2, y2],
-                   [x3, y3], [x4, y4],
-                   [x5, y5], [x6, y6]]
+    coordinates = [[x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6]]
     e1 = np.array(
-        [[1, 2, 5, 6],
-         [3, 4, 7, 8],
-         [9, 10, 13, 14],
-         [11, 12, 15, 16],
-         [17, 18, 21, 22],
-         [19, 20, 23, 24]],
-        dtype=np.int8
+        [
+            [1, 2, 5, 6],
+            [3, 4, 7, 8],
+            [9, 10, 13, 14],
+            [11, 12, 15, 16],
+            [17, 18, 21, 22],
+            [19, 20, 23, 24],
+        ],
+        dtype=np.int8,
     )
     e2 = postprocess.fill_labelled_image(tiles, coordinates, 2, 4, 6)
     assert np.all(e1 == e2)
 
 
 def test_build_full_labelled_image(
-        tanzania_image_size, tanzania_nb_labels, tanzania_raw_image_size
+    tanzania_image_size, tanzania_nb_labels, tanzania_raw_image_size
 ):
     """Test the label prediction on a high-resolution image that has to be
         tiled during inference process
@@ -235,17 +240,20 @@ def test_build_full_labelled_image(
         datapath, dataset, tanzania_image_size, tanzania_nb_labels
     )
     labelled_image = postprocess.build_full_labelled_image(
-        images, coordinates, model,
+        images,
+        coordinates,
+        model,
         tile_size=tanzania_image_size,
         img_width=tanzania_raw_image_size,
-        batch_size=2
+        batch_size=2,
     )
     assert labelled_image.shape == (
-        tanzania_raw_image_size, tanzania_raw_image_size
+        tanzania_raw_image_size,
+        tanzania_raw_image_size,
     )
-    assert np.all([
-        ul in range(tanzania_nb_labels) for ul in np.unique(labelled_image)
-    ])
+    assert np.all(
+        [ul in range(tanzania_nb_labels) for ul in np.unique(labelled_image)]
+    )
 
 
 def test_draw_grid(tanzania_image_size, tanzania_raw_image_size):
@@ -255,12 +263,13 @@ def test_draw_grid(tanzania_image_size, tanzania_raw_image_size):
     pixel vertically and horizontally, without modifying the input data shape.
     """
     data = np.zeros(
-        [tanzania_raw_image_size, tanzania_raw_image_size, 3],
-        dtype=np.uint8
+        [tanzania_raw_image_size, tanzania_raw_image_size, 3], dtype=np.uint8
     )
     gridded_data = postprocess.draw_grid(
-        data, tanzania_raw_image_size,
-        tanzania_raw_image_size, tanzania_image_size
+        data,
+        tanzania_raw_image_size,
+        tanzania_raw_image_size,
+        tanzania_image_size,
     )
     assert data.shape == gridded_data.shape
     expected_colors = np.array([[0, 0, 0], [255, 255, 255]], dtype=np.uint8)

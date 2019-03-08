@@ -21,6 +21,6 @@ if not "symlink" in config.sections():
 for link_name, path in config.items("symlink"):
     utils.create_symlink(os.path.join(app.static_folder, link_name), path)
 
-app.config['DEBUG'] = True
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config["DEBUG"] = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.run(host="0.0.0.0", port=7897, debug=True)
