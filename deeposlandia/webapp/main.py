@@ -326,17 +326,27 @@ def upload_image():
         logger.info("No selected file")
         return redirect(request.url)
     if fobj and allowed_file(fobj.filename):
+        message_info = ""
         filename = secure_filename(fobj.filename)
         full_filename = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         fobj.save(full_filename)
         target_size = 400
         image = Image.open(full_filename)
         image = image.resize((target_size, target_size))
+        if image.mode == "RGBA":
+            image = Image.merge(mode="RGB", bands=image.split()[:3])
+            message_info = (
+                "Warning: the uploaded image has an alpha channel "
+                "(transparency feature). "
+                "Here we use only RGB channels."
+                )
+            logger.warning(message_info)
         image.save(full_filename)
         return render_template(
             "predictor.html",
             image_name=filename,
             predicted_filename="sample_image/prediction.png",
+            message=message_info
         )
 
 
