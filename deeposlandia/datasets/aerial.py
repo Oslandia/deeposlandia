@@ -9,7 +9,6 @@ from multiprocessing import Pool
 import os
 
 import daiquiri
-import numpy as np
 from PIL import Image
 
 from deeposlandia.datasets import Dataset
@@ -44,10 +43,12 @@ class AerialDataset(Dataset):
         self.tile_size = tile_size
         img_size = utils.get_image_size_from_tile(self.tile_size)
         super().__init__(img_size)
-        self.add_label(label_id=0, label_name="background",
-                       color=0, is_evaluate=True)
-        self.add_label(label_id=1, label_name="building",
-                       color=255, is_evaluate=True)
+        self.add_label(
+            label_id=0, label_name="background", color=0, is_evaluate=True
+        )
+        self.add_label(
+            label_id=1, label_name="building", color=255, is_evaluate=True
+        )
 
     def _preprocess(self, image_filename, output_dir, labelling):
         """Resize/crop then save the training & label images
@@ -68,53 +69,80 @@ class AerialDataset(Dataset):
         raw_img_size = img_in.size[0]
         result_dicts = []
         # crop tile_size*tile_size tiles into 5000*5000 raw images
-        buffer_tiles = []
         for x in range(0, raw_img_size, self.tile_size):
             for y in range(0, raw_img_size, self.tile_size):
-                tile = img_in.crop((x, y,
-                                    x + self.tile_size, y + self.tile_size))
+                tile = img_in.crop(
+                    (x, y, x + self.tile_size, y + self.tile_size)
+                )
                 tile = utils.resize_image(tile, self.image_size)
-                img_id = int((raw_img_size / self.tile_size
-                              * x / self.tile_size
-                              + y / self.tile_size))
+                img_id = int(
+                    (
+                        raw_img_size / self.tile_size * x / self.tile_size
+                        + y / self.tile_size
+                    )
+                )
                 basename_decomp = os.path.splitext(
-                    os.path.basename(image_filename))
-                new_in_filename = (basename_decomp[0] + '_' +
-                                   str(img_id) + basename_decomp[1])
-                new_in_path = os.path.join(output_dir, 'images', new_in_filename)
+                    os.path.basename(image_filename)
+                )
+                new_in_filename = (
+                    basename_decomp[0] + "_" + str(img_id) + basename_decomp[1]
+                )
+                new_in_path = os.path.join(
+                    output_dir, "images", new_in_filename
+                )
                 tile.save(new_in_path.replace(".tif", ".png"))
-                result_dicts.append({"raw_filename": image_filename,
-                                     "image_filename": new_in_path})
+                result_dicts.append(
+                    {
+                        "raw_filename": image_filename,
+                        "image_filename": new_in_path,
+                    }
+                )
 
         if labelling:
             label_filename = image_filename.replace("images/", "gt/")
-            img_out = Image.open(label_filename) 
-            buffer_tiles = []
+            img_out = Image.open(label_filename)
             for x in range(0, raw_img_size, self.tile_size):
                 for y in range(0, raw_img_size, self.tile_size):
-                    tile = img_out.crop((x, y,
-                                         x + self.tile_size, y + self.tile_size))
+                    tile = img_out.crop(
+                        (x, y, x + self.tile_size, y + self.tile_size)
+                    )
                     tile = utils.resize_image(tile, self.image_size)
-                    img_id = int((raw_img_size / self.tile_size
-                                  * x / self.tile_size
-                                  + y / self.tile_size))
+                    img_id = int(
+                        (
+                            raw_img_size / self.tile_size * x / self.tile_size
+                            + y / self.tile_size
+                        )
+                    )
                     basename_decomp = os.path.splitext(
-                        os.path.basename(image_filename))
-                    new_out_filename = (basename_decomp[0] + '_' +
-                                       str(img_id) + basename_decomp[1])
-                    new_out_path = os.path.join(output_dir, 'labels',
-                                                new_out_filename)
+                        os.path.basename(image_filename)
+                    )
+                    new_out_filename = (
+                        basename_decomp[0]
+                        + "_"
+                        + str(img_id)
+                        + basename_decomp[1]
+                    )
+                    new_out_path = os.path.join(
+                        output_dir, "labels", new_out_filename
+                    )
                     tile.save(new_out_path.replace(".tif", ".png"))
-                    labels = utils.build_labels(tile,
-                                                self.label_ids,
-                                                dataset='aerial')
+                    labels = utils.build_labels(
+                        tile, self.label_ids, dataset="aerial"
+                    )
                     result_dicts[img_id]["label_filename"] = new_out_path
                     result_dicts[img_id]["labels"] = labels
 
         return result_dicts
 
-    def populate(self, output_dir, input_dir, nb_images=None,
-                 aggregate=False, labelling=True, nb_processes=1):
+    def populate(
+        self,
+        output_dir,
+        input_dir,
+        nb_images=None,
+        aggregate=False,
+        labelling=True,
+        nb_processes=1,
+    ):
         """ Populate the dataset with images contained into `datadir` directory
 
         Parameters
@@ -124,30 +152,41 @@ class AerialDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider the whole
-        repository
+            Number of images to be considered in the dataset; if None, consider
+        the whole repository
         aggregate : bool
             Label aggregation parameter, useless for this dataset, but kept for
         class method genericity
         labelling : boolean
-            If True labels are recovered from dataset, otherwise dummy label are generated
+            If True labels are recovered from dataset, otherwise dummy label
+        are generated
         nb_processes : int
             Number of processes on which to run the preprocessing
         """
         image_list = os.listdir(os.path.join(input_dir, "images"))
-        image_list_longname = [os.path.join(input_dir, "images", l)
-                               for l in image_list if not l.startswith('.')][:nb_images]
-        logger.info("Getting %s images to preprocess..."
-                    , len(image_list_longname))
+        image_list_longname = [
+            os.path.join(input_dir, "images", l)
+            for l in image_list
+            if not l.startswith(".")
+        ][:nb_images]
+        logger.info(
+            "Getting %s images to preprocess...", len(image_list_longname)
+        )
         if nb_processes == 1:
             for x in image_list_longname:
-                self.image_info.append(self._preprocess(x, output_dir, labelling))
+                self.image_info.append(
+                    self._preprocess(x, output_dir, labelling)
+                )
         else:
             with Pool(processes=nb_processes) as p:
-                self.image_info = p.starmap(self._preprocess,
-                                            [(x, output_dir, labelling)
-                                             for x in image_list_longname])
-        self.image_info = [item for sublist in self.image_info
-                           for item in sublist]
-        logger.info("Saved %s images in the preprocessed dataset."
-                    , len(self.image_info))
+                self.image_info = p.starmap(
+                    self._preprocess,
+                    [(x, output_dir, labelling) for x in image_list_longname],
+                )
+        self.image_info = [
+            item for sublist in self.image_info for item in sublist
+        ]
+        logger.info(
+            "Saved %s images in the preprocessed dataset.",
+            len(self.image_info),
+        )

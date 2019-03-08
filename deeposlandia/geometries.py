@@ -160,13 +160,13 @@ def extract_points_from_polygon(p, geofeatures, min_x, min_y):
         list(raw_xs),
         geofeatures["west"],
         geofeatures["east"],
-        geofeatures["width"]
+        geofeatures["width"],
     )
     ys = get_pixel(
         list(raw_ys),
         geofeatures["north"],
         geofeatures["south"],
-        geofeatures["height"]
+        geofeatures["height"],
     )
     points = np.array([[y, x] for x, y in zip(xs, ys)], dtype=np.int32)
     points[:, 0] -= min_y
@@ -210,7 +210,7 @@ def get_tile_footprint(features, min_x, min_y, tile_width, tile_height=None):
         [min_y, max_y],
         features["north"],
         features["south"],
-        features["height"]
+        features["height"],
     )
     return shgeom.Polygon(
         (
@@ -406,10 +406,12 @@ def rasterize_polygons(polygons, img_height, img_width):
     img_mask = np.zeros(shape=(img_height, img_width), dtype=np.uint8)
     if not polygons:
         return img_mask
-    int_coords = lambda x: np.array(x).round().astype(np.int32)
-    exteriors = [int_coords(poly.exterior.coords) for poly in polygons]
+    exteriors = [
+        np.array(poly.exterior.coords).round().astype(np.int32)
+        for poly in polygons]
     interiors = [
-        int_coords(pi.coords) for poly in polygons for pi in poly.interiors
+        np.array(pi.coords).round().astype(np.int32)
+        for poly in polygons for pi in poly.interiors
     ]
     cv2.fillPoly(img_mask, exteriors, 1)
     cv2.fillPoly(img_mask, interiors, 0)
@@ -440,7 +442,7 @@ def pixel_to_geocoord(polygon_ring, geofeatures):
         list(xpixels),
         geofeatures["west"],
         geofeatures["east"],
-        geofeatures["width"]
+        geofeatures["width"],
     )
     py = get_geocoord(
         list(ypixels),

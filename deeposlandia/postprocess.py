@@ -39,21 +39,41 @@ def add_program_arguments(parser):
     argparse.ArgumentParser
         Modified parser, with additional arguments
     """
-    parser.add_argument('-b', '--batch-size', type=int,
-                        help=("Number of images in each inference batch"))
-    parser.add_argument('-D', '--dataset',
-                        required=True, choices=GEOGRAPHIC_DATASETS,
-                        help=("Dataset type (to be chosen amongst available"
-                              " geographic datasets)"))
-    parser.add_argument('-i', '--image-basename',
-                        required=True,
-                        help="Basename of the image within the dataset")
-    parser.add_argument('-p', '--datapath',
-                        default="./data",
-                        help="Relative path towards data directory")
-    parser.add_argument('-s', '--image-size',
-                        required=True, type=int,
-                        help="Image patch size, in pixels")
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        help=("Number of images in each inference batch"),
+    )
+    parser.add_argument(
+        "-D",
+        "--dataset",
+        required=True,
+        choices=GEOGRAPHIC_DATASETS,
+        help=(
+            "Dataset type (to be chosen amongst available"
+            " geographic datasets)"
+        ),
+    )
+    parser.add_argument(
+        "-i",
+        "--image-basename",
+        required=True,
+        help="Basename of the image within the dataset",
+    )
+    parser.add_argument(
+        "-p",
+        "--datapath",
+        default="./data",
+        help="Relative path towards data directory",
+    )
+    parser.add_argument(
+        "-s",
+        "--image-size",
+        required=True,
+        type=int,
+        help="Image patch size, in pixels",
+    )
     return parser
 
 
@@ -79,8 +99,13 @@ def get_image_paths(datapath, dataset, image_size, image_basename):
         List of image full paths
     """
     image_raw_paths = os.path.join(
-        datapath, dataset, "preprocessed", str(image_size) + "_full",
-        "testing", "images", image_basename + "*"
+        datapath,
+        dataset,
+        "preprocessed",
+        str(image_size) + "_full",
+        "testing",
+        "images",
+        image_basename + "*",
     )
     return [glob.glob(f) for f in [image_raw_paths]][0]
 
@@ -138,9 +163,13 @@ def get_labels(datapath, dataset, tile_size):
     if os.path.isfile(prepro_folder["testing_config"]):
         test_config = utils.read_config(prepro_folder["testing_config"])
     else:
-        raise ValueError(("There is no testing data with the given "
-                          "parameters. Please generate a valid dataset "
-                          "before calling the program."))
+        raise ValueError(
+            (
+                "There is no testing data with the given "
+                "parameters. Please generate a valid dataset "
+                "before calling the program."
+            )
+        )
     return [l for l in test_config["labels"] if l["is_evaluate"]]
 
 
@@ -170,7 +199,7 @@ def get_trained_model(datapath, dataset, image_size, nb_labels):
         image_size=image_size,
         nb_labels=nb_labels,
         dropout=1.0,
-        architecture="unet"
+        architecture="unet",
     )
     model = Model(net.X, net.Y)
     output_folder = utils.prepare_output_folder(
@@ -180,12 +209,17 @@ def get_trained_model(datapath, dataset, image_size, nb_labels):
     checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
     if os.path.isfile(checkpoint_full_path):
         model.load_weights(checkpoint_full_path)
-        logger.info("Model weights have been recovered from %s"
-                    % checkpoint_full_path)
+        logger.info(
+            "Model weights have been recovered from %s" % checkpoint_full_path
+        )
     else:
-        logger.info(("No available trained model for this image size"
-                     " with optimized hyperparameters. The "
-                     "inference will be done on an untrained model"))
+        logger.info(
+            (
+                "No available trained model for this image size"
+                " with optimized hyperparameters. The "
+                "inference will be done on an untrained model"
+            )
+        )
     return model
 
 
@@ -205,8 +239,9 @@ def assign_label_colors(predicted_labels, labels):
     numpy.array
         Colored predicted labels, of shape (img_size, img_size, 3)
     """
-    labelled_images = np.zeros(shape=np.append(predicted_labels.shape, 3),
-                               dtype=np.uint8)
+    labelled_images = np.zeros(
+        shape=np.append(predicted_labels.shape, 3), dtype=np.uint8
+    )
     for idx, label in enumerate(labels):
         labelled_images[predicted_labels == idx] = label["color"]
     return labelled_images
@@ -233,7 +268,7 @@ def extract_coordinates_from_filenames(filenames):
 
 
 def fill_labelled_image(
-        predictions, coordinates, tile_size, img_width, img_height=None
+    predictions, coordinates, tile_size, img_width, img_height=None
 ):
     """Fill labelled version of the original image with the labelled version of
     the corresponding tiles
@@ -263,18 +298,22 @@ def fill_labelled_image(
     extended_width = img_width + tile_size - img_width % tile_size
     extended_height = img_height + tile_size - img_height % tile_size
     predicted_image = np.zeros(
-        [extended_height, extended_width],
-        dtype=np.uint8
+        [extended_height, extended_width], dtype=np.uint8
     )
     for coords, image_data in zip(coordinates, predictions):
         x, y = coords
-        predicted_image[y:y+tile_size, x:x+tile_size] = image_data
+        predicted_image[y:(y + tile_size), x:(x + tile_size)] = image_data
     return predicted_image[:img_height, :img_width]
 
 
 def build_full_labelled_image(
-        images, coordinates, model, tile_size,
-        img_width, img_height=None, batch_size=2
+    images,
+    coordinates,
+    model,
+    tile_size,
+    img_width,
+    img_height=None,
+    batch_size=2,
 ):
     """Generate a full labelled version of an image (of shape (`img_width`,
         `img_height`)), knowing that it was previously splitted in tiles (of
@@ -392,16 +431,25 @@ def get_image_features(datapath, dataset, filename):
     maxy = gt[3]
     srid = int(ds.GetProjection().split('"')[-2])
     ds = None  # Free memory used by the GDAL Dataset
-    return {"west": minx, "south": miny, "east": maxx, "north": maxy,
-            "srid": srid, "width": width, "height": height}
+    return {
+        "west": minx,
+        "south": miny,
+        "east": maxx,
+        "north": maxy,
+        "srid": srid,
+        "width": width,
+        "height": height,
+    }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    program_description = ("Build a high-resolution image labelling by"
-                           "predicting semantic segmentation labels on "
-                           "image patches, and by postprocessing resulting "
-                           "arrays so as to get geographic entities.")
+    program_description = (
+        "Build a high-resolution image labelling by"
+        "predicting semantic segmentation labels on "
+        "image patches, and by postprocessing resulting "
+        "arrays so as to get geographic entities."
+    )
     parser = argparse.ArgumentParser(description=program_description)
     parser = add_program_arguments(parser)
     args = parser.parse_args()
@@ -426,28 +474,40 @@ if __name__ == '__main__':
     )
 
     data = build_full_labelled_image(
-        images, coordinates, model, args.image_size,
-        img_width, img_height, args.batch_size
+        images,
+        coordinates,
+        model,
+        args.image_size,
+        img_width,
+        img_height,
+        args.batch_size,
     )
-    logger.info("Labelled image dimension: %s, %s"
-                % (data.shape[0], data.shape[1]))
+    logger.info(
+        "Labelled image dimension: %s, %s" % (data.shape[0], data.shape[1])
+    )
     colored_data = assign_label_colors(data, labels)
     colored_data = draw_grid(
         colored_data, img_width, img_height, args.image_size
     )
     predicted_label_file = os.path.join(
-        args.datapath, args.dataset, "output",
-        "semantic_segmentation", "predicted_labels",
-        args.image_basename + "_" + str(args.image_size) + ".png"
+        args.datapath,
+        args.dataset,
+        "output",
+        "semantic_segmentation",
+        "predicted_labels",
+        args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_data).save(predicted_label_file)
 
     vectorized_data = geometries.vectorize_mask(data)
     gdf = gpd.GeoDataFrame({"geometry": vectorized_data})
     predicted_geom_file = os.path.join(
-        args.datapath, args.dataset, "output",
-        "semantic_segmentation", "predicted_geometries",
-        args.image_basename + "_" + str(args.image_size) + ".geojson"
+        args.datapath,
+        args.dataset,
+        "output",
+        "semantic_segmentation",
+        "predicted_geometries",
+        args.image_basename + "_" + str(args.image_size) + ".geojson",
     )
     if not os.path.isfile(predicted_geom_file):
         gdf.to_file(predicted_geom_file, driver="GeoJSON")
@@ -460,8 +520,11 @@ if __name__ == '__main__':
         colored_raster_data, img_width, img_height, args.image_size
     )
     predicted_raster_file = os.path.join(
-        args.datapath, args.dataset, "output",
-        "semantic_segmentation", "predicted_rasters",
-        args.image_basename + "_" + str(args.image_size) + ".png"
+        args.datapath,
+        args.dataset,
+        "output",
+        "semantic_segmentation",
+        "predicted_rasters",
+        args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_raster_data).save(predicted_raster_file)

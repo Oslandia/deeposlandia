@@ -2,13 +2,9 @@
 """
 
 import json
-import math
 import os
-import re
-import sys
 
 import daiquiri
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -33,7 +29,8 @@ def read_config(filename):
     with open(filename) as fobj:
         return json.load(fobj)
 
-def build_labels(filtered_image, label_ids, dataset='mapillary'):
+
+def build_labels(filtered_image, label_ids, dataset="mapillary"):
     """Build a list of integer labels that are contained into a candidate
     filtered image; according to its pixels
 
@@ -51,8 +48,8 @@ def build_labels(filtered_image, label_ids, dataset='mapillary'):
     """
     image_data = np.array(filtered_image)
     available_labels = np.unique(image_data)
-    if dataset == 'aerial':
-        available_labels[available_labels==255] = 1
+    if dataset == "aerial":
+        available_labels[available_labels == 255] = 1
     return {i: 1 if i in available_labels else 0 for i in label_ids}
 
 
@@ -74,14 +71,16 @@ def resize_image(img, base_size):
         new_size = (int(base_size * old_width / old_height), base_size)
     return img.resize(new_size)
 
+
 def mono_crop_image(img, crop_pixel):
     """Crop image `img` so as its dimensions become equal (width=height),
     without modifying its smallest dimension
     """
     if img.width > img.height:
-        return img.crop((crop_pixel, 0, crop_pixel+img.height, img.height))
+        return img.crop((crop_pixel, 0, crop_pixel + img.height, img.height))
     else:
-        return img.crop((0, crop_pixel, img.width, crop_pixel+img.width))
+        return img.crop((0, crop_pixel, img.width, crop_pixel + img.width))
+
 
 def flip_image(img, proba=0.5):
     """ Flip image `img` horizontally with a probability of `proba`
@@ -98,7 +97,8 @@ def flip_image(img, proba=0.5):
     else:
         return img.transpose(Image.FLIP_LEFT_RIGHT)
 
-def list_to_str(seq, sep='-'):
+
+def list_to_str(seq, sep="-"):
     """Transform the input sequence into a ready-to-print string
 
     Parameters
@@ -115,8 +115,10 @@ def list_to_str(seq, sep='-'):
     """
     return sep.join(str(i) for i in seq)
 
+
 def prepare_input_folder(datapath, dataset):
-    """Data path and repository management; create and return the raw dataset path
+    """Data path and repository management; create and return the raw dataset
+    path
 
     Parameters
     ----------
@@ -135,7 +137,10 @@ def prepare_input_folder(datapath, dataset):
     os.makedirs(input_folder, exist_ok=True)
     return input_folder
 
-def prepare_preprocessed_folder(datapath, dataset, image_size, aggregate_value):
+
+def prepare_preprocessed_folder(
+    datapath, dataset, image_size, aggregate_value
+):
     """Data path and repository management; create all the folders needed to
     accomplish the current instance training/testing
 
@@ -153,11 +158,15 @@ def prepare_preprocessed_folder(datapath, dataset, image_size, aggregate_value):
     Returns
     -------
     dict
-        All the meaningful folders and dataset configuration file as a dictionary
-
+        All the meaningful folders and dataset configuration file as a
+    dictionary
     """
-    prepro_folder = os.path.join(datapath, dataset, "preprocessed",
-                                       str(image_size) + "_" + aggregate_value)
+    prepro_folder = os.path.join(
+        datapath,
+        dataset,
+        "preprocessed",
+        str(image_size) + "_" + aggregate_value,
+    )
     training_filename = os.path.join(prepro_folder, "training.json")
     validation_filename = os.path.join(prepro_folder, "validation.json")
     testing_filename = os.path.join(prepro_folder, "testing.json")
@@ -169,15 +178,19 @@ def prepare_preprocessed_folder(datapath, dataset, image_size, aggregate_value):
     os.makedirs(os.path.join(validation_folder, "images"), exist_ok=True)
     os.makedirs(os.path.join(validation_folder, "labels"), exist_ok=True)
     os.makedirs(os.path.join(testing_folder, "images"), exist_ok=True)
-    return {"training": training_folder,
-            "validation": validation_folder,
-            "testing": testing_folder,
-            "training_config": training_filename,
-            "validation_config": validation_filename,
-            "testing_config": testing_filename}
+    return {
+        "training": training_folder,
+        "validation": validation_folder,
+        "testing": testing_folder,
+        "training_config": training_filename,
+        "validation_config": validation_filename,
+        "testing_config": testing_filename,
+    }
+
 
 def prepare_output_folder(datapath, dataset, model, instance_name=None):
-    """Dataset and repository management; create and return the dataset output path
+    """Dataset and repository management; create and return the dataset output
+    path
 
     Parameters
     ----------
@@ -186,7 +199,8 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
     dataset : str
         Dataset name, *e.g.* `mapillary` or `shapes`
     model : str
-        Research problem that is tackled, *e.g.* `feature_detection` or `semantic_segmentation`
+        Research problem that is tackled, *e.g.* `feature_detection` or
+    `semantic_segmentation`
     instance_name : str
         Instance name, used to create the accurate output folders
 
@@ -195,18 +209,21 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
     str
         Dataset output path
     """
-    if not instance_name is None:
-        output_folder = os.path.join(datapath, dataset, "output",
-                                     model, "checkpoints", instance_name)
+    if instance_name is not None:
+        output_folder = os.path.join(
+            datapath, dataset, "output", model, "checkpoints", instance_name
+        )
     else:
-        output_folder = os.path.join(datapath, dataset, "output",
-                                     model, "checkpoints")
+        output_folder = os.path.join(
+            datapath, dataset, "output", model, "checkpoints"
+        )
     os.makedirs(output_folder, exist_ok=True)
     return output_folder
 
+
 def recover_instance(instance_path):
-    """Recover instance specification for model design, *i.e.* dropout rate and network
-    architecture
+    """Recover instance specification for model design, *i.e.* dropout rate and
+    network architecture
 
     Parameters
     ----------
@@ -240,7 +257,7 @@ def GetHTMLColor(color):
         HTML-version of color
     """
     rgb_tuple = (color, color, color) if type(color) == int else color
-    return '#%02x%02x%02x' % tuple(rgb_tuple)
+    return "#%02x%02x%02x" % tuple(rgb_tuple)
 
 
 def build_image_from_config(data, config):
@@ -259,8 +276,9 @@ def build_image_from_config(data, config):
     np.array
         RGB-version of labelled images, with shape (imsize, imsize, 3)
     """
-    result = np.zeros(shape=(data.shape[0], data.shape[1], 3),
-                      dtype=data.dtype)
+    result = np.zeros(
+        shape=(data.shape[0], data.shape[1], 3), dtype=data.dtype
+    )
     for label in range(len(config)):
         mask = data == label
         result[mask] = config[label]["color"]
@@ -270,7 +288,8 @@ def build_image_from_config(data, config):
 def create_symlink(link_name, directory):
     """Create a symbolic link
 
-    Based on https://github.com/elemoine/dotfiles/blob/master/install-dotfiles.py
+    Based on
+    https://github.com/elemoine/dotfiles/blob/master/install-dotfiles.py
 
     Parameters
     ----------
@@ -339,9 +358,11 @@ def tile_image_correspondance(raw_img_size):
         Association table
 
     """
-    associations = [[(j, i) for j in range(0, i, 16)][-1]
-                    for i in range(1, raw_img_size)
-                    if raw_img_size % i == 0]
+    associations = [
+        [(j, i) for j in range(0, i, 16)][-1]
+        for i in range(1, raw_img_size)
+        if raw_img_size % i == 0
+    ]
     df = pd.DataFrame(associations, columns=["m16", "d5000"])
     return df.groupby("m16").min().reset_index()
 
@@ -369,10 +390,14 @@ def get_image_size_from_tile(tile_size, raw_img_size=5000):
     aerial_table = tile_image_correspondance(raw_img_size)
     image_size = aerial_table.loc[aerial_table.d5000 == tile_size, "m16"]
     if len(image_size.index) == 0:
-        raise ValueError(("There is no value in the association table that "
-                          "corresponds to this tile size ({}). Please choose "
-                          "one of these values: {}"
-                          "").format(tile_size, aerial_table.d5000.values))
+        raise ValueError(
+            (
+                "There is no value in the association table that "
+                "corresponds to this tile size ({}). Please choose "
+                "one of these values: {}"
+                ""
+            ).format(tile_size, aerial_table.d5000.values)
+        )
     return image_size.item()
 
 
@@ -400,8 +425,12 @@ def get_tile_size_from_image(image_size, raw_img_size=5000):
     aerial_table = tile_image_correspondance(raw_img_size)
     tile_size = aerial_table.loc[aerial_table.m16 == image_size, "d5000"]
     if len(tile_size.index) == 0:
-        raise ValueError(("There is no value in the association table that "
-                          "corresponds to this image size ({}). Please choose "
-                          "one of these values: {}"
-                          "").format(image_size, aerial_table.m16.values))
+        raise ValueError(
+            (
+                "There is no value in the association table that "
+                "corresponds to this image size ({}). Please choose "
+                "one of these values: {}"
+                ""
+            ).format(image_size, aerial_table.m16.values)
+        )
     return tile_size.item()

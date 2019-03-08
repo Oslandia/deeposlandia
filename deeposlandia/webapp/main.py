@@ -2,10 +2,16 @@
 """
 
 import daiquiri
-from flask import (abort, Flask, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
+from flask import (
+    abort,
+    Flask,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+)
 import json
-import logging
 import numpy as np
 import os
 import sys
@@ -20,8 +26,8 @@ logger = daiquiri.getLogger(__name__)
 
 
 PROJECT_FOLDER = config.get("folder", "project_folder")
-UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, 'uploads/')
-PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, 'predicted/')
+UPLOAD_FOLDER = os.path.join(PROJECT_FOLDER, "uploads/")
+PREDICT_FOLDER = os.path.join(PROJECT_FOLDER, "predicted/")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREDICT_FOLDER, exist_ok=True)
 
@@ -32,12 +38,13 @@ elif config.get("status", "status") == "prod":
 else:
     logger.error("No defined status, please consider 'dev' or 'prod'.")
     sys.exit(1)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ERROR_404_HELP'] = False
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["ERROR_404_HELP"] = False
 
-MODELS = ('feature_detection', 'semantic_segmentation')
-DATASETS = ('mapillary', 'shapes', 'aerial', 'tanzania')
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'tif'])
+MODELS = ("feature_detection", "semantic_segmentation")
+DATASETS = ("mapillary", "shapes", "aerial", "tanzania")
+ALLOWED_EXTENSIONS = set(["png", "jpg", "jpeg", "tif"])
+
 
 def check_model(model):
     """Check if `model` is valid, *i.e.* equal to `feature_detection` or
@@ -51,6 +58,7 @@ def check_model(model):
     if model not in MODELS:
         abort(404, "Model {} not found".format(model))
 
+
 def check_dataset(dataset):
     """Check if `dataset` is valid, *i.e.* equal to `shapes`,
     `mapillary`, `aerial` or `tanzania`
@@ -63,6 +71,7 @@ def check_dataset(dataset):
     if dataset not in DATASETS:
         abort(404, "Dataset {} not found".format(dataset))
 
+
 def allowed_file(filename):
     """Check if `filename` is really an image file name on the file system,
     *i.e.* composed of at least one '.' character, and which ends with an
@@ -73,12 +82,15 @@ def allowed_file(filename):
     filename : str
         String to verify
     """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
 
 
 def recover_image_info(dataset, filename):
-    """Recover image full name on the application as well as corresponding ground-truth labels
+    """Recover image full name on the application as well as corresponding
+    ground-truth labels
 
     Parameters
     ----------
@@ -88,7 +100,8 @@ def recover_image_info(dataset, filename):
     Returns
     -------
     dict
-        Dictionary that contains image full names (raw images and labelled version) and label infos
+        Dictionary that contains image full names (raw images and labelled
+    version) and label infos
 
     """
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
@@ -107,22 +120,41 @@ def recover_image_info(dataset, filename):
     elif dataset == "shapes":
         size_aggregation = "64_full"
     else:
-        raise ValueError(("Unknown dataset. Please choose 'mapillary', "
-                          "'aerial', 'tanzania' or 'shapes'."))
-    with open(os.path.join("data", dataset, "preprocessed", size_aggregation
-                           , "validation.json")) as fobj:
+        raise ValueError(
+            (
+                "Unknown dataset. Please choose 'mapillary', "
+                "'aerial', 'tanzania' or 'shapes'."
+            )
+        )
+    with open(
+        os.path.join(
+            "data",
+            dataset,
+            "preprocessed",
+            size_aggregation,
+            "validation.json",
+        )
+    ) as fobj:
         config = json.load(fobj)
     if not dataset == "aerial":
-        actual_labels = np.unique(server_label_image.reshape([-1, 3]), axis=0).tolist()
+        actual_labels = np.unique(
+            server_label_image.reshape([-1, 3]), axis=0
+        ).tolist()
     else:
         actual_labels = np.unique(server_label_image).tolist()
-    printed_labels = [(item['category'], utils.GetHTMLColor(item['color']))
-                      for item in config['labels']
-                      if item['color'] in actual_labels]
-    return {"image_file": image_file, "label_file": label_file, "labels": printed_labels}
+    printed_labels = [
+        (item["category"], utils.GetHTMLColor(item["color"]))
+        for item in config["labels"]
+        if item["color"] in actual_labels
+    ]
+    return {
+        "image_file": image_file,
+        "label_file": label_file,
+        "labels": printed_labels,
+    }
 
 
-@app.route('/')
+@app.route("/")
 def index():
     """Route to application home page
 
@@ -141,9 +173,11 @@ def demo_homepage(model, dataset):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or `semantic_segmentation`)
+        Considered research problem (either `feature_detection` or
+    `semantic_segmentation`)
     dataset : str
-        Considered dataset (either `shapes`, `mapillary`, `aerial` or `tanzania`)
+        Considered dataset (either `shapes`, `mapillary`, `aerial` or
+    `tanzania`)
 
     Returns
     -------
@@ -153,13 +187,15 @@ def demo_homepage(model, dataset):
     """
     check_model(model)
     check_dataset(dataset)
-    return render_template(dataset + '_demo.html',
-                           model=model,
-                           image_filename=os.path.join("sample_image", "raw_image.png"),
-                           label_filename=os.path.join("sample_image", "ground_truth.png"),
-                           ground_truth="",
-                           predicted_filename=os.path.join("sample_image", "prediction.png"),
-                           result="")
+    return render_template(
+        dataset + "_demo.html",
+        model=model,
+        image_filename=os.path.join("sample_image", "raw_image.png"),
+        label_filename=os.path.join("sample_image", "ground_truth.png"),
+        ground_truth="",
+        predicted_filename=os.path.join("sample_image", "prediction.png"),
+        result="",
+    )
 
 
 @app.route("/predictor_demo/<string:model>/<string:dataset>/<string:image>")
@@ -170,7 +206,8 @@ def predictor_demo(model, dataset, image):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or `semantic_segmentation`)
+        Considered research problem (either `feature_detection` or
+    `semantic_segmentation`)
     dataset : str
         Considered dataset (either `shapes` or `mapillary`)
     image : str
@@ -186,27 +223,39 @@ def predictor_demo(model, dataset, image):
     logger.info("file: %s, dataset: %s, model: %s", image, dataset, model)
     agg_value = dataset == "mapillary"
     image_info = recover_image_info(dataset, image)
-    predictions = predict([os.path.join(app.static_folder, image_info["image_file"])],
-                          dataset,
-                          model,
-                          aggregate=agg_value,
-                          output_dir=PREDICT_FOLDER)
+    predictions = predict(
+        [os.path.join(app.static_folder, image_info["image_file"])],
+        dataset,
+        model,
+        aggregate=agg_value,
+        output_dir=PREDICT_FOLDER,
+    )
     if model == "feature_detection":
         predicted_image = "sample_image/prediction.png"
-        predicted_labels = predictions[os.path.join(app.static_folder, image_info["image_file"])]
+        predicted_labels = predictions[
+            os.path.join(app.static_folder, image_info["image_file"])
+        ]
     elif model == "semantic_segmentation":
-        predicted_image = os.path.join("predicted", image_info["label_file"].split("/")[-1])
+        predicted_image = os.path.join(
+            "predicted", image_info["label_file"].split("/")[-1]
+        )
         predicted_labels = predictions["labels"]
     else:
-        raise ValueError(("Unknown model, please provide 'feature_detection'"
-                            "or 'semantic_segmentation'."))
-    return render_template(dataset + '_demo.html',
-                           model=model,
-                           image_filename=image_info["image_file"],
-                           label_filename=image_info["label_file"],
-                           ground_truth_labels=image_info["labels"],
-                           predicted_filename=predicted_image,
-                           predicted_labels=predicted_labels)
+        raise ValueError(
+            (
+                "Unknown model, please provide 'feature_detection'"
+                "or 'semantic_segmentation'."
+            )
+        )
+    return render_template(
+        dataset + "_demo.html",
+        model=model,
+        image_filename=image_info["image_file"],
+        label_filename=image_info["label_file"],
+        ground_truth_labels=image_info["labels"],
+        predicted_filename=predicted_image,
+        predicted_labels=predicted_labels,
+    )
 
 
 @app.route("/prediction")
@@ -219,17 +268,22 @@ def prediction():
     dict
         Deep learning model predictions
     """
-    filename = os.path.basename(request.args.get('img'))
-    filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    dataset = request.args.get('dataset')
-    model = request.args.get('model')
+    filename = os.path.basename(request.args.get("img"))
+    filename = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    dataset = request.args.get("dataset")
+    model = request.args.get("model")
     logger.info("file: %s, dataset: %s, model: %s", filename, dataset, model)
-    predictions = predict([filename], "mapillary", "semantic_segmentation",
-                          aggregate=True, output_dir=PREDICT_FOLDER)
+    predictions = predict(
+        [filename],
+        "mapillary",
+        "semantic_segmentation",
+        aggregate=True,
+        output_dir=PREDICT_FOLDER,
+    )
     return jsonify(predictions)
 
 
-@app.route('/uploads/<filename>')
+@app.route("/uploads/<filename>")
 def send_image(filename):
     """Route to uploaded-by-client images
 
@@ -238,8 +292,7 @@ def send_image(filename):
     file
         Image file on the server (see Flask documentation)
     """
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 @app.route("/load_predictor")
@@ -250,11 +303,11 @@ def load_predictor():
     return render_template("predictor.html", example_image=filename)
 
 
-@app.route("/predictor", methods=['POST'])
+@app.route("/predictor", methods=["POST"])
 def upload_image():
-    """Route to deep learning predictor that takes as an input a uploaded-by-client
-    image (which is saved on the server); if the uploaded file is not valid,
-    the method does a simple redirection
+    """Route to deep learning predictor that takes as an input a
+    uploaded-by-client image (which is saved on the server); if the uploaded
+    file is not valid, the method does a simple redirection
 
     Returns
     -------
@@ -263,25 +316,28 @@ def upload_image():
 
     """
     # check if the post request has the file part
-    if 'file' not in request.files:
-        logger.info('No file part')
+    if "file" not in request.files:
+        logger.info("No file part")
         return redirect(request.url)
-    fobj = request.files['file']
+    fobj = request.files["file"]
     # if user does not select file, browser also
     # submit a empty part without filename
-    if fobj.filename == '':
-        logger.info('No selected file')
+    if fobj.filename == "":
+        logger.info("No selected file")
         return redirect(request.url)
     if fobj and allowed_file(fobj.filename):
         filename = secure_filename(fobj.filename)
-        full_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        full_filename = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         fobj.save(full_filename)
         target_size = 400
         image = Image.open(full_filename)
         image = image.resize((target_size, target_size))
         image.save(full_filename)
-        return render_template('predictor.html', image_name=filename,
-                               predicted_filename="sample_image/prediction.png")
+        return render_template(
+            "predictor.html",
+            image_name=filename,
+            predicted_filename="sample_image/prediction.png",
+        )
 
 
 @app.route("/demo_image_selector")
@@ -297,7 +353,7 @@ def demo_image_selector():
     labelled version on the server, and `labels` is a dictionary that
     summarizes the label information for displyaing purpose
     """
-    dataset = request.args.get('dataset')
+    dataset = request.args.get("dataset")
     dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
     server_folder = os.path.join(app.static_folder, dataset_code, "images")
     filename = np.random.choice(os.listdir(server_folder))
