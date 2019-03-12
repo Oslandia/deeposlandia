@@ -3,59 +3,66 @@
 
 import argparse
 from datetime import datetime
+import itertools
+import json
 import os
 import sys
 
 import daiquiri
+import numpy as np
 
 from keras import backend, callbacks
 from keras.models import Model
 from keras.optimizers import Adam
 
+from deeposlandia import generator, utils
 from deeposlandia.datasets import AVAILABLE_DATASETS
-from deeposlandia import generator, metrics, utils
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
+from deeposlandia.metrics import iou, dice_coef
 
 SEED = int(datetime.now().timestamp())
+
 
 logger = daiquiri.getLogger(__name__)
 
 
-def main(args):
-    # Data path and repository management
-    aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    instance_args = [
-        args.name,
-        args.image_size,
-        args.network,
-        args.batch_size,
-        aggregate_value,
-        args.dropout,
-        args.learning_rate,
-        args.learning_rate_decay,
-    ]
-    instance_name = utils.list_to_str(instance_args, "_")
-    prepro_folder = utils.prepare_preprocessed_folder(
-        args.datapath, args.dataset, args.image_size, aggregate_value
-    )
+def get_data(folders, dataset, model, image_size, batch_size):
+    """On the file system, recover `dataset` that can solve `model` problem
 
-    if args.dataset == "aerial":
-        model_input_size = utils.get_image_size_from_tile(args.image_size)
-    else:
-        model_input_size = args.image_size
+    Parameters
+    ----------
+    folders : dict
+        Dictionary of useful folders that indicates paths to data
+    dataset : str
+        Name of the used dataset (*e.g.* `shapes` or `mapillary`)
+    model : str
+        Name of the addressed research problem (*e.g.* `feature_detection` or
+    `semantic_segmentation`)
+    image_size : int
+        Size of the images, in pixel (height=width)
+    batch_size : int
+        Number of images in each batch
 
-    if os.path.isfile(prepro_folder["training_config"]):
-        train_config = utils.read_config(prepro_folder["training_config"])
+    Returns
+    -------
+    tuple
+        Number of labels in the dataset, as well as training and validation
+    data generators
+
+    """
+    # Data gathering
+    if os.path.isfile(folders["training_config"]):
+        train_config = utils.read_config(folders["training_config"])
         label_ids = [
             x["id"] for x in train_config["labels"] if x["is_evaluate"]
         ]
         train_generator = generator.create_generator(
-            args.dataset,
-            args.model,
-            prepro_folder["training"],
-            model_input_size,
-            args.batch_size,
+            dataset,
+            model,
+            folders["training"],
+            image_size,
+            batch_size,
             train_config["labels"],
             seed=SEED,
         )
@@ -68,14 +75,13 @@ def main(args):
             )
         )
         sys.exit(1)
-
-    if os.path.isfile(prepro_folder["validation_config"]):
+    if os.path.isfile(folders["validation_config"]):
         validation_generator = generator.create_generator(
-            args.dataset,
-            args.model,
-            prepro_folder["validation"],
-            model_input_size,
-            args.batch_size,
+            dataset,
+            model,
+            folders["validation"],
+            image_size,
+            batch_size,
             train_config["labels"],
             seed=SEED,
         )
@@ -88,27 +94,90 @@ def main(args):
             )
         )
         sys.exit(1)
-
     nb_labels = len(label_ids)
+    return nb_labels, train_generator, validation_generator
 
-    if args.model == "feature_detection":
+
+def run_model(
+    train_generator,
+    validation_generator,
+    dl_model,
+    output_folder,
+    instance_name,
+    image_size,
+    aggregate_value,
+    nb_labels,
+    nb_epochs,
+    nb_training_image,
+    nb_validation_image,
+    batch_size,
+    dropout,
+    network,
+    learning_rate,
+    learning_rate_decay,
+):
+    """Run deep learning `dl_model` starting from training and validation data
+    generators, depending on a range of hyperparameters
+
+    Parameters
+    ----------
+    train_generator : generator
+        Training data generator
+    validation_generator : generator
+        Validation data generator
+    dl_model : str
+        Name of the addressed research problem (*e.g.* `feature_detection` or
+    `semantic_segmentation`)
+    output_folder : str
+        Name of the folder where the trained model will be stored on the file
+    system
+    instance_name : str
+        Name of the instance
+    image_size : int
+        Size of images, in pixel (height=width)
+    aggregate_value : str
+        Label aggregation policy (either `full` or `aggregated`)
+    nb_labels : int
+        Number of labels into the dataset
+    nb_epochs : int
+        Number of epochs during which models will be trained
+    nb_training_image : int
+        Number of images into the training dataset
+    nb_validation_image : int
+        Number of images into the validation dataset
+    batch_size : int
+        Number of images into each batch
+    dropout : float
+        Probability of keeping a neuron during dropout phase
+    network : str
+        Neural network architecture (*e.g.* `simple`, `vgg`, `inception`)
+    learning_rate : float
+        Starting learning rate
+    learning_rate_decay : float
+        Learning rate decay
+
+    Returns
+    -------
+    dict
+        Dictionary that summarizes the instance and the corresponding model
+    performance (measured by validation accuracy)
+    """
+    if dl_model == "feature_detection":
         net = FeatureDetectionNetwork(
             network_name=instance_name,
-            image_size=model_input_size,
+            image_size=image_size,
             nb_channels=3,
             nb_labels=nb_labels,
-            dropout=args.dropout,
-            architecture=args.network,
+            architecture=network,
         )
         loss_function = "binary_crossentropy"
-    elif args.model == "semantic_segmentation":
+    elif dl_model == "semantic_segmentation":
         net = SemanticSegmentationNetwork(
             network_name=instance_name,
-            image_size=model_input_size,
+            image_size=image_size,
             nb_channels=3,
             nb_labels=nb_labels,
-            dropout=args.dropout,
-            architecture=args.network,
+            architecture=network,
         )
         loss_function = "categorical_crossentropy"
     else:
@@ -120,17 +189,14 @@ def main(args):
         )
         sys.exit(1)
     model = Model(net.X, net.Y)
-    opt = Adam(lr=args.learning_rate, decay=args.learning_rate_decay)
-    metrics = [metrics.iou, metrics.dice_coef, "acc"]
+    opt = Adam(lr=learning_rate, decay=learning_rate_decay)
+    metrics = ["acc", iou, dice_coef]
     model.compile(loss=loss_function, optimizer=opt, metrics=metrics)
 
     # Model training
-    STEPS = args.nb_training_image // args.batch_size
-    VAL_STEPS = args.nb_validation_image // args.batch_size
+    steps = nb_training_image // batch_size
+    val_steps = nb_validation_image // batch_size
 
-    output_folder = utils.prepare_output_folder(
-        args.datapath, args.dataset, args.model, instance_name
-    )
     checkpoint_files = [
         item
         for item in os.listdir(output_folder)
@@ -144,10 +210,8 @@ def main(args):
         )
         model.load_weights(checkpoint_complete_path)
         logger.info(
-            (
-                "Model weights have been recovered "
-                f"from {checkpoint_complete_path}"
-            )
+            "Model weights have been recovered from %s",
+            checkpoint_complete_path,
         )
     else:
         logger.info(
@@ -180,18 +244,110 @@ def main(args):
 
     hist = model.fit_generator(
         train_generator,
-        epochs=args.nb_epochs,
-        steps_per_epoch=STEPS,
-        validation_data=validation_generator,
-        validation_steps=VAL_STEPS,
-        callbacks=[checkpoint, terminate_on_nan, earlystop, csv_logger],
+        epochs=nb_epochs,
         initial_epoch=trained_model_epoch,
+        steps_per_epoch=steps,
+        validation_data=validation_generator,
+        validation_steps=val_steps,
+        callbacks=[checkpoint, earlystop, terminate_on_nan, csv_logger],
     )
-    metrics = {
-        "epoch": hist.epoch,
-        "metrics": hist.history,
-        "params": hist.params,
+    ref_metric = max(hist.history.get("val_acc", [np.nan]))
+    return {
+        "model": model,
+        "val_acc": ref_metric,
+        "batch_size": batch_size,
+        "network": network,
+        "dropout": dropout,
+        "learning_rate": learning_rate,
+        "learning_rate_decay": learning_rate_decay,
     }
-    logger.info("Training OK! History:\n{metrics['metrics']}")
+
+
+def main(args):
+    aggregate_value = "full" if not args.aggregate_label else "aggregated"
+    if args.dataset == "aerial":
+        model_input_size = utils.get_image_size_from_tile(args.image_size)
+    else:
+        model_input_size = args.image_size
+
+    # Grid search
+    model_output = []
+    for batch_size in args.batch_size:
+        logger.info("Generating data with batch of %s images...", batch_size)
+        # Data generator building
+        prepro_folder = utils.prepare_preprocessed_folder(
+            args.datapath, args.dataset, args.image_size, aggregate_value
+        )
+        nb_labels, train_gen, valid_gen = get_data(
+            prepro_folder,
+            args.dataset,
+            args.model,
+            model_input_size,
+            batch_size,
+        )
+        for parameters in itertools.product(
+            args.dropout,
+            args.network,
+            args.learning_rate,
+            args.learning_rate_decay,
+        ):
+            logger.info("Instance: %s", utils.list_to_str(parameters))
+            # Data path and repository management
+            dropout, network, learning_rate, learning_rate_decay = parameters
+            instance_args = [
+                args.name,
+                args.image_size,
+                network,
+                batch_size,
+                aggregate_value,
+                dropout,
+                learning_rate,
+                learning_rate_decay,
+            ]
+            instance_name = utils.list_to_str(instance_args, "_")
+            output_folder = utils.prepare_output_folder(
+                args.datapath, args.dataset, args.model, instance_name
+            )
+            # Model running
+            model_output.append(
+                run_model(
+                    train_gen,
+                    valid_gen,
+                    args.model,
+                    output_folder,
+                    instance_name,
+                    model_input_size,
+                    aggregate_value,
+                    nb_labels,
+                    args.nb_epochs,
+                    args.nb_training_image,
+                    args.nb_validation_image,
+                    batch_size,
+                    *parameters
+                )
+            )
+            logger.info("Instance result: %s", model_output[-1])
+
+    # Recover best instance starting from validation accuracy
+    best_instance = max(model_output, key=lambda x: x["val_acc"])
+
+    # Save best model
+    output_folder = utils.prepare_output_folder(
+        args.datapath, args.dataset, args.model
+    )
+    instance_name = os.path.join(
+        output_folder,
+        "best-{}-" + str(args.image_size) + "-" + aggregate_value + ".{}",
+    )
+    best_instance["model"].save(instance_name.format("model", "h5"))
+    with open(instance_name.format("instance", "json"), "w") as fobj:
+        json.dump(
+            {
+                key: best_instance[key]
+                for key in best_instance
+                if key != "model"
+            },
+            fobj,
+        )
 
     backend.clear_session()

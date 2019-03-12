@@ -3,7 +3,6 @@
 Available choices::
     - deepo datagen [args]
     - deepo train [args]
-    - deepo paramoptim [args]
     - deepo infer [args]
     - deepo postprocess [args]
 """
@@ -11,7 +10,7 @@ Available choices::
 import argparse
 import os
 
-from deeposlandia import datagen, train, paramoptim, inference, postprocess
+from deeposlandia import datagen, train, inference, postprocess
 from deeposlandia.datasets import AVAILABLE_DATASETS, GEOGRAPHIC_DATASETS
 
 
@@ -63,41 +62,6 @@ def train_parser(subparser, reference_func):
     parser = subparser.add_parser(
         "train",
         help="Train convolutional neural networks for automated image analysis"
-    )
-    add_dataset_args(parser)
-    add_nb_image_args(parser)
-    add_training_args(parser)
-    parser.add_argument(
-        "-s",
-        "--image-size",
-        default=224,
-        type=int,
-        help=("Desired size of images (width = height)"),
-    )
-    parser.add_argument(
-        "-e",
-        "--nb-epochs",
-        type=int,
-        default=0,
-        help=(
-            "Number of training epochs (one epoch means "
-            "scanning each training image once)"
-        ),
-    )
-    parser.set_defaults(func=reference_func)
-
-
-def paramoptim_parser(subparser, reference_func):
-    """Add instance-specific arguments from the command line
-
-    Parameters
-    ----------
-    subparser : argparser.parser.SubParsersAction
-    reference_func : function
-    """
-    parser = subparser.add_parser(
-        "paramoptim",
-        help="Optimize image automated analysis hyperparameters"
     )
     add_dataset_args(parser)
     add_nb_image_args(parser)
@@ -256,7 +220,8 @@ def add_training_args(parser):
     parser.add_argument(
         "-N",
         "--network",
-        default="simple",
+        default=["simple"],
+        nargs="+",
         help=(
             "Neural network size, either 'simple', 'vgg', "
             "'inception' or 'unet' ('simple' refers to 3 "
@@ -268,7 +233,8 @@ def add_training_args(parser):
         "-b",
         "--batch-size",
         type=int,
-        default=50,
+        nargs="+",
+        default=[50],
         help=(
             "Number of images that must be contained " "into a single batch"
         ),
@@ -276,21 +242,24 @@ def add_training_args(parser):
     parser.add_argument(
         "-d",
         "--dropout",
+        nargs="+",
+        default=[1.0],
         type=float,
-        default=1.0,
         help="Percentage of kept neurons during training",
     )
     parser.add_argument(
         "-L",
         "--learning-rate",
-        default=0.001,
+        nargs="+",
+        default=[0.001],
         type=float,
         help=("Starting learning rate"),
     )
     parser.add_argument(
         "-l",
         "--learning-rate-decay",
-        default=0.0001,
+        nargs="+",
+        default=[0.0001],
         type=float,
         help=("Learning rate decay"),
     )
@@ -306,7 +275,6 @@ def main():
     sub_parsers = parser.add_subparsers(dest="command")
     datagen_parser(sub_parsers, reference_func=datagen.main)
     train_parser(sub_parsers, reference_func=train.main)
-    paramoptim_parser(sub_parsers, reference_func=paramoptim.main)
     inference_parser(sub_parsers, reference_func=inference.main)
     postprocess_parser(sub_parsers, reference_func=postprocess.main)
     args = parser.parse_args()
