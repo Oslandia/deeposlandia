@@ -34,123 +34,6 @@ from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 logger = daiquiri.getLogger(__name__)
 
 
-def add_program_arguments(parser):
-    """Add instance-specific arguments from the command line
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        Input parser
-
-    Returns
-    -------
-    argparse.ArgumentParser
-        Modified parser, with additional arguments
-    """
-    parser.add_argument(
-        "-D",
-        "--dataset",
-        required=True,
-        choices=AVAILABLE_DATASETS,
-        help=("Dataset type (to be chosen amongst available" "datasets)"),
-    )
-    parser.add_argument(
-        "-i",
-        "--image-paths",
-        required=True,
-        nargs="+",
-        help="Path of the image on the file system",
-    )
-    parser.add_argument(
-        "-M",
-        "--model",
-        default="feature_detection",
-        help=(
-            "Type of model to train, either "
-            "'feature_detection' or 'semantic_segmentation'"
-        ),
-    )
-    parser.add_argument(
-        "-p",
-        "--datapath",
-        default="./data",
-        help="Relative path towards data directory",
-    )
-    return parser
-
-
-def add_instance_arguments(parser):
-    """Add instance-specific arguments from the command line
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        Input parser
-
-    Returns
-    -------
-    argparse.ArgumentParser
-        Modified parser, with additional arguments
-    """
-    parser.add_argument(
-        "-a",
-        "--aggregate-label",
-        action="store_true",
-        help="Aggregate labels with respect to their categories",
-    )
-    parser.add_argument(
-        "-b",
-        "--batch-size",
-        type=int,
-        default=None,
-        help=(
-            "Number of images that must be contained " "into a single batch"
-        ),
-    )
-    parser.add_argument(
-        "-d",
-        "--dropout",
-        type=float,
-        default=None,
-        help="Percentage of kept neurons during training",
-    )
-    parser.add_argument(
-        "-L",
-        "--learning-rate",
-        default=None,
-        type=float,
-        help=("Starting learning rate"),
-    )
-    parser.add_argument(
-        "-l",
-        "--learning-rate-decay",
-        default=None,
-        type=float,
-        help=("Learning rate decay"),
-    )
-    parser.add_argument(
-        "-n",
-        "--name",
-        default=None,
-        help=(
-            "Model name that will be used for results, "
-            "checkout and graph storage on file system"
-        ),
-    )
-    parser.add_argument(
-        "-N",
-        "--network",
-        default=None,
-        help=(
-            "Neural network size, either 'simple', 'vgg' or "
-            "'inception' ('simple' refers to 3 conv/pool "
-            "blocks and 1 fully-connected layer; the others "
-            "refer to state-of-the-art networks)"
-        ),
-    )
-    return parser
-
-
 def init_model(
     problem, instance_name, image_size, nb_labels, dropout, network
 ):
@@ -474,17 +357,7 @@ def extract_images(image_paths):
     return np.array(x_test)
 
 
-if __name__ == "__main__":
-
-    program_description = (
-        "Infer labels on one (or more) image file(s) "
-        "from a trained deep neural network"
-    )
-    parser = argparse.ArgumentParser(description=program_description)
-    parser = add_program_arguments(parser)
-    parser = add_instance_arguments(parser)
-    args = parser.parse_args()
-
+def main(args):
     y_raw_pred = predict(
         args.image_paths,
         args.dataset,

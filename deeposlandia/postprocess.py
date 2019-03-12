@@ -19,62 +19,10 @@ from keras.models import Model
 import keras.backend as K
 
 from deeposlandia import utils, geometries
-from deeposlandia.datasets import GEOGRAPHIC_DATASETS
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 
 
 logger = daiquiri.getLogger(__name__)
-
-
-def add_program_arguments(parser):
-    """Add instance-specific arguments from the command line
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        Input parser
-
-    Returns
-    -------
-    argparse.ArgumentParser
-        Modified parser, with additional arguments
-    """
-    parser.add_argument(
-        "-b",
-        "--batch-size",
-        type=int,
-        help=("Number of images in each inference batch"),
-    )
-    parser.add_argument(
-        "-D",
-        "--dataset",
-        required=True,
-        choices=GEOGRAPHIC_DATASETS,
-        help=(
-            "Dataset type (to be chosen amongst available"
-            " geographic datasets)"
-        ),
-    )
-    parser.add_argument(
-        "-i",
-        "--image-basename",
-        required=True,
-        help="Basename of the image within the dataset",
-    )
-    parser.add_argument(
-        "-p",
-        "--datapath",
-        default="./data",
-        help="Relative path towards data directory",
-    )
-    parser.add_argument(
-        "-s",
-        "--image-size",
-        required=True,
-        type=int,
-        help="Image patch size, in pixels",
-    )
-    return parser
 
 
 def get_image_paths(datapath, dataset, image_size, image_basename):
@@ -442,18 +390,7 @@ def get_image_features(datapath, dataset, filename):
     }
 
 
-if __name__ == "__main__":
-
-    program_description = (
-        "Build a high-resolution image labelling by"
-        "predicting semantic segmentation labels on "
-        "image patches, and by postprocessing resulting "
-        "arrays so as to get geographic entities."
-    )
-    parser = argparse.ArgumentParser(description=program_description)
-    parser = add_program_arguments(parser)
-    args = parser.parse_args()
-
+def main(args):
     features = get_image_features(
         args.datapath, args.dataset, args.image_basename
     )

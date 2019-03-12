@@ -19,6 +19,7 @@ with open("README.md", "rb") as f:
     readme = f.read().decode("utf-8")
 
 install_requires = [
+    "setuptools<=39.1.0",
     "tensorflow<=1.10",
     "opencv-python<=3.4.0.12",
     "pillow<=5.0.0",
@@ -64,4 +65,7 @@ setup(
     python_requires=">=3",
     install_requires=install_requires,
     packages=find_packages(),
+    entry_points = {
+        "console_scripts": ["deepo=deeposlandia.__main__:main"],
+    }
 )
