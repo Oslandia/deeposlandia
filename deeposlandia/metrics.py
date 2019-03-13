@@ -25,8 +25,6 @@ def iou(actual, predicted):
     predicted = backend.flatten(predicted)
     intersection = backend.sum(actual * predicted)
     union = backend.sum(actual) + backend.sum(predicted) - intersection
-    print(intersection, type(intersection))
-    print(union, type(union))
     return 1.0 * intersection / union
 
 
