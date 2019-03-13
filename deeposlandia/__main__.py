@@ -11,6 +11,7 @@ import argparse
 import os
 
 from deeposlandia import datagen, train, inference, postprocess
+from deeposlandia import AVAILABLE_MODELS
 from deeposlandia.datasets import AVAILABLE_DATASETS, GEOGRAPHIC_DATASETS
 
 
@@ -69,7 +70,7 @@ def train_parser(subparser, reference_func):
     parser.add_argument(
         "-s",
         "--image-size",
-        default=224,
+        default=256,
         type=int,
         help=("Desired size of images (width = height)"),
     )
@@ -113,10 +114,9 @@ def inference_parser(subparser, reference_func):
 def postprocess_parser(subparser, reference_func):
     """Add instance-specific arguments from the command line
 
-        Build a high-resolution image labelling by
-        predicting semantic segmentation labels on
-        image patches, and by postprocessing resulting
-        arrays so as to get geographic entities.
+    Build a high-resolution image labelling by predicting semantic segmentation
+    labels on image patches, and by postprocessing resulting arrays so as to
+    get geographic entities.
 
     Parameters
     ----------
@@ -134,6 +134,7 @@ def postprocess_parser(subparser, reference_func):
     parser.add_argument(
         "-b",
         "--batch-size",
+        default=2,
         type=int,
         help=("Number of images in each inference batch"),
     )
@@ -202,10 +203,11 @@ def add_training_args(parser):
     parser.add_argument(
         "-M",
         "--model",
-        default="feature_detection",
+        choices=AVAILABLE_MODELS,
+        required=True,
         help=(
             "Type of model to train, either "
-            "'feature_detection' or 'semantic_segmentation'"
+            "'featdet' (feature detection) or 'semseg' (semantic segmentation)"
         ),
     )
     parser.add_argument(
@@ -220,13 +222,15 @@ def add_training_args(parser):
     parser.add_argument(
         "-N",
         "--network",
+        choices=["simple", "vgg", "resnet", "inception", "unet", "dilated"],
         default=["simple"],
         nargs="+",
         help=(
-            "Neural network size, either 'simple', 'vgg', "
-            "'inception' or 'unet' ('simple' refers to 3 "
-            "conv/pool blocks and 1 fully-connected layer; "
-            "the others refer to state-of-the-art networks)"
+            "Neural network architecture, either 'simple', 'vgg', "
+            "'inception' or 'resnet' for feature detection, and 'either', "
+            "'unet' or 'dilated' for semantic segmentation "
+            "('simple' refers to 3 conv/pool blocks and 1 fully-connected "
+            "layer; the others refer to state-of-the-art networks)"
         ),
     )
     parser.add_argument(

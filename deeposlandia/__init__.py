@@ -25,6 +25,8 @@ daiquiri.setup(
 )
 logger = daiquiri.getLogger("root")
 
+AVAILABLE_MODELS = ["featdet", "semseg"]
+
 _DEEPOSL_CONFIG = os.getenv("DEEPOSL_CONFIG")
 _DEEPOSL_CONFIG = (
     _DEEPOSL_CONFIG if _DEEPOSL_CONFIG is not None else "config.ini"

@@ -5,6 +5,7 @@ import numpy as np
 
 from keras.preprocessing.image import ImageDataGenerator
 
+from deeposlandia import AVAILABLE_MODELS
 from deeposlandia.datasets import AVAILABLE_DATASETS
 
 
@@ -202,16 +203,20 @@ def create_generator(
     label_generator = feed_generator(
         datapath, "labels", image_size, batch_size, seed
     )
-    if model == "feature_detection":
+    if model == "featdet":
         label_generator = (
             feature_detection_labelling(x, label_config)
             for x in label_generator
         )
-    elif model == "semantic_segmentation":
+    elif model == "semseg":
         label_generator = (
             semantic_segmentation_labelling(x, label_config)
             for x in label_generator
         )
     else:
-        raise ValueError("Wrong model name {}".format(model))
+        raise ValueError(
+            "Wrong model name {} (choose amongst {})".format(
+                model, AVAILABLE_MODELS
+            )
+        )
     return zip(image_generator, label_generator)

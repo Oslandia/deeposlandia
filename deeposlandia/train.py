@@ -16,6 +16,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 
 from deeposlandia import generator, utils
+from deeposlandia import AVAILABLE_MODELS
 from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.feature_detection import FeatureDetectionNetwork
 from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
@@ -162,7 +163,7 @@ def run_model(
         Dictionary that summarizes the instance and the corresponding model
     performance (measured by validation accuracy)
     """
-    if dl_model == "feature_detection":
+    if dl_model == "featdet":
         net = FeatureDetectionNetwork(
             network_name=instance_name,
             image_size=image_size,
@@ -171,7 +172,7 @@ def run_model(
             architecture=network,
         )
         loss_function = "binary_crossentropy"
-    elif dl_model == "semantic_segmentation":
+    elif dl_model == "semseg":
         net = SemanticSegmentationNetwork(
             network_name=instance_name,
             image_size=image_size,
@@ -183,8 +184,8 @@ def run_model(
     else:
         logger.error(
             (
-                "Unrecognized model. Please enter 'feature_detection' "
-                "or 'semantic_segmentation'."
+                "Unrecognized model: %s. Please choose amongst %s",
+                dl_model, AVAILABLE_MODELS
             )
         )
         sys.exit(1)
@@ -194,8 +195,8 @@ def run_model(
     model.compile(loss=loss_function, optimizer=opt, metrics=metrics)
 
     # Model training
-    steps = nb_training_image // batch_size
-    val_steps = nb_validation_image // batch_size
+    steps = max(nb_training_image // batch_size, 1)
+    val_steps = max(nb_validation_image // batch_size, 1)
 
     checkpoint_files = [
         item
