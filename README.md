@@ -74,9 +74,19 @@ For other OS, please visit the `GDAL` installation documentation.
 
 ## Running the code
 
-- [Data preprocessing](./docs/preprocessing.md)
+A command-line interface is proposed with 4 available actions (`datagen`,
+`train`, `infer` and `postprocess`), callable as follows:
+
+```
+deepo action --params
+```
+
+Some files document the command use:
+
+- [Preprocessed dataset generation](./docs/preprocessing.md)
 - [Train a model](./docs/training.md)
 - [Infer labels](./docs/inference.md)
+- [Postprocess results for geographic datasets](./docs/postprocess.md)
 
 # Supported datasets
 
