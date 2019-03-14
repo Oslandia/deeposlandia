@@ -25,7 +25,7 @@ daiquiri.setup(
 )
 logger = daiquiri.getLogger("root")
 
-AVAILABLE_MODELS = ["featdet", "semseg"]
+AVAILABLE_MODELS = ("featdet", "semseg")
 
 _DEEPOSL_CONFIG = os.getenv("DEEPOSL_CONFIG")
 _DEEPOSL_CONFIG = (

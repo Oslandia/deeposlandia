@@ -78,7 +78,7 @@ A command-line interface is proposed with 4 available actions (`datagen`,
 `train`, `infer` and `postprocess`), callable as follows:
 
 ```
-deepo action --params
+deepo [command] --options
 ```
 
 Some files document the command use:

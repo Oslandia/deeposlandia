@@ -155,7 +155,21 @@ def postprocess_parser(subparser, reference_func):
 
 
 def add_dataset_args(parser, available_datasets=AVAILABLE_DATASETS):
-    """
+    """Add arguments to "parser" that are related to the dataset material
+    identification on the file system
+
+    There are:
+      - "datapath" that indicates where the datasets are stored on the file
+    system
+      - "dataset" gives the name of the dataset (which is also the dataset
+    folder name on the file system)
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        Parser that must be "augmented"
+    available_datasets : tuple
+        List of available datasets for the related command
     """
     parser.add_argument(
         "-P",
@@ -173,7 +187,20 @@ def add_dataset_args(parser, available_datasets=AVAILABLE_DATASETS):
 
 
 def add_nb_image_args(parser):
-    """
+    """Add arguments to "parser" that are related to the amount of preprocessed
+    data to prepare
+
+    There are:
+      - "nb_training_image" indicates the number of training image to process
+      - "nb_validation_image" indicates the number of images to scan at each
+    validation step
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        Parser that must be "augmented"
+    available_datasets : tuple
+        List of available datasets for the related command
     """
     parser.add_argument(
         "-t",
@@ -192,7 +219,31 @@ def add_nb_image_args(parser):
 
 
 def add_training_args(parser):
-    """
+    """Add arguments to "parser" that are related to the convolutional neural
+    network model training
+
+    Such arguments are defined as follows:
+      - "aggregated_label" indicates whether the dataset labels must be
+    aggregated into larger classes
+      - "model" gives the problem that is solved, either semantic segmentation
+    or feature detection
+      - "name" refers to the instance name, for identification on the file
+    system
+      - "network" is the first hyperparameter, that describes the neural
+    network architecture
+      - "batch_size" is the second hyperparameter, namely the number of image
+    in each training/validation batch
+      - "dropout" indicates the rates of neurons that must be shutted down
+    during each iteration, in order to reduce overfitting (third hyperparameter)
+      - "learning_rate" gives the learning rate of the training process (fourth
+    hyperparameter)
+      - "learning_rate_decay" gives the decay rate of the learning rate
+    throughout the training process (fifth hyperparameter)
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        Parser that must be "augmented"
     """
     parser.add_argument(
         "-a",
