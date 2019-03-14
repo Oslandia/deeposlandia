@@ -407,7 +407,7 @@ def run_model(
         monitor="val_loss", patience=10, verbose=1, mode="max"
     )
     csv_logger = callbacks.CSVLogger(
-        os.path.join(output_folder, "training_metrics.csv")
+        os.path.join(output_folder, "training_metrics.csv"), append=True
     )
 
     hist = model.fit_generator(
