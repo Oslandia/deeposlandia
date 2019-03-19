@@ -131,51 +131,83 @@ def test_shape_dataset_loading(
 
 
 def test_aerial_dataset_creation(
-    aerial_image_size, aerial_tile_size, aerial_nb_labels
+    aerial_image_size, aerial_nb_labels
 ):
     """Create a AerialImage dataset
     """
-    d = AerialDataset(aerial_tile_size)
+    d = AerialDataset(aerial_image_size)
     assert d.image_size == aerial_image_size
     assert d.get_nb_labels() == aerial_nb_labels
     assert d.get_nb_images() == 0
 
 
-def test_aerial_dataset_population(
-    aerial_tile_size,
-    aerial_temp_dir,
+def test_aerial_training_dataset_population(
+    aerial_image_size,
+    aerial_training_temp_dir,
     aerial_raw_sample,
     aerial_nb_images,
-    aerial_config,
+    aerial_training_config,
     aerial_nb_labels,
-    aerial_nb_output_images,
+    aerial_nb_output_training_images,
 ):
-    """Populate a AerialImage dataset
+    """Populate a Aerial dataset
     """
-    d = AerialDataset(aerial_tile_size)
+    d = AerialDataset(aerial_image_size)
     d.populate(
-        str(aerial_temp_dir), aerial_raw_sample, nb_images=aerial_nb_images
+        str(aerial_training_temp_dir),
+        aerial_raw_sample,
+        nb_images=aerial_nb_images,
     )
-    d.save(str(aerial_config))
+    d.save(str(aerial_training_config))
     assert d.get_nb_labels() == aerial_nb_labels
-    assert d.get_nb_images() == aerial_nb_output_images
-    assert os.path.isfile(str(aerial_config))
+    assert d.get_nb_images() >= 0.1 * aerial_nb_output_training_images
+    assert d.get_nb_images() <= aerial_nb_output_training_images + 3
+    assert os.path.isfile(str(aerial_training_config))
     assert all(
-        len(os.listdir(os.path.join(str(aerial_temp_dir), tmp_dir)))
-        == aerial_nb_output_images
+        len(os.listdir(os.path.join(str(aerial_training_temp_dir), tmp_dir)))
+        == d.get_nb_images()
         for tmp_dir in ["images", "labels"]
     )
 
 
+def test_aerial_testing_dataset_population(
+    aerial_image_size,
+    aerial_testing_temp_dir,
+    aerial_raw_sample,
+    aerial_nb_images,
+    aerial_testing_config,
+    aerial_nb_labels,
+    aerial_nb_output_testing_images,
+):
+    """Populate a Aerial dataset
+    """
+    d = AerialDataset(aerial_image_size)
+    d.populate(
+        str(aerial_testing_temp_dir),
+        aerial_raw_sample,
+        nb_images=aerial_nb_images,
+        labelling=False
+    )
+    d.save(str(aerial_testing_config))
+    assert d.get_nb_labels() == aerial_nb_labels
+    assert d.get_nb_images() == aerial_nb_output_testing_images
+    assert os.path.isfile(str(aerial_testing_config))
+    assert (
+        len(os.listdir(os.path.join(str(aerial_testing_temp_dir), "images")))
+        == d.get_nb_images()
+    )
+
+
 def test_aerial_dataset_loading(
-    aerial_tile_size, aerial_config, aerial_nb_labels, aerial_nb_output_images
+        aerial_image_size, aerial_testing_config, aerial_nb_labels,
+        aerial_nb_output_testing_images
 ):
     """Load images into a AerialImage dataset
     """
-    d = AerialDataset(aerial_tile_size)
-    d.load(aerial_config)
+    d = AerialDataset(aerial_image_size)
+    d.load(aerial_testing_config)
     assert d.get_nb_labels() == aerial_nb_labels
-    assert d.get_nb_images() == aerial_nb_output_images
+    assert d.get_nb_images() == aerial_nb_output_testing_images
 
 
 def test_aerial_tile_image_correspondance(aerial_raw_image_size):
