@@ -151,7 +151,7 @@ def get_trained_model(datapath, dataset, image_size, nb_labels):
     )
     model = Model(net.X, net.Y)
     output_folder = utils.prepare_output_folder(
-        datapath, dataset, "semantic_segmentation"
+        datapath, dataset, "semseg"
     )
     checkpoint_filename = "best-model-" + str(image_size) + "-full" + ".h5"
     checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
@@ -430,7 +430,7 @@ def main(args):
         args.datapath,
         args.dataset,
         "output",
-        "semantic_segmentation",
+        "semseg",
         "predicted_labels",
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
@@ -442,7 +442,7 @@ def main(args):
         args.datapath,
         args.dataset,
         "output",
-        "semantic_segmentation",
+        "semseg",
         "predicted_geometries",
         args.image_basename + "_" + str(args.image_size) + ".geojson",
     )
@@ -460,7 +460,7 @@ def main(args):
         args.datapath,
         args.dataset,
         "output",
-        "semantic_segmentation",
+        "semseg",
         "predicted_rasters",
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
