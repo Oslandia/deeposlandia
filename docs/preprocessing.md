@@ -1,13 +1,15 @@
+# Data preprocessing
+
 Preprocessed versions of raw datasets has to be generated before any neural
 network training:
 
 ```
-python deeposlandia/datagen.py -D mapillary -s 224 -a -p ./any-data-path -t 18000 -v 2000 -T 5000
+deepo datagen -D mapillary -s 224 -a -P ./any-data-path -t 18000 -v 2000 -T 5000
 ```
 
-The previous command will generates a set of 224 * 224 images based on
-Mapillary dataset. The raw dataset must be in `./any-data-path/input`. If the
-`-a` argument is specified, the preprocessed dataset will be stored in
+This command will generates a set of 224 * 224 images based on Mapillary
+dataset. The raw dataset must be in `./any-data-path/input`. If the `-a`
+argument is specified, the preprocessed dataset will be stored in
 `./any-data-path/preprocessed/224_aggregated`, otherwise it will be stored in
 `./any-data-path/preprocessed/224_full`. The aggregation is applied on dataset
 labels, that can be grouped in Mapillary case (and only in Mapillary case) to
@@ -27,3 +29,5 @@ from scratch.
 
 As an easter-egg feature, label popularity is also printed by this command
 (proportion of images where each label appears in the preprocessed dataset).
+
+See more details with `deepo datagen -h`.

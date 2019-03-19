@@ -32,78 +32,7 @@ from deeposlandia.datasets.tanzania import TanzaniaDataset
 logger = daiquiri.getLogger(__name__)
 
 
-def add_instance_arguments(parser):
-    """Add instance-specific arguments from the command line
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        Input parser
-
-    Returns
-    -------
-    argparse.ArgumentParser
-        Modified parser, with additional arguments
-    """
-    parser.add_argument(
-        "-a",
-        "--aggregate-label",
-        action="store_true",
-        help="Aggregate labels with respect to their categories",
-    )
-    parser.add_argument(
-        "-D",
-        "--dataset",
-        required=True,
-        choices=AVAILABLE_DATASETS,
-        help=("Dataset type (to be chosen amongst available" "datasets)"),
-    )
-    parser.add_argument(
-        "-p",
-        "--datapath",
-        default="data",
-        help="Relative path towards data directory",
-    )
-    parser.add_argument(
-        "-s",
-        "--image-size",
-        default=256,
-        type=int,
-        help=("Desired size of images (width = height)"),
-    )
-    parser.add_argument(
-        "-T",
-        "--nb-testing-image",
-        type=int,
-        default=0,
-        help=("Number of testing images"),
-    )
-    parser.add_argument(
-        "-t",
-        "--nb-training-image",
-        type=int,
-        default=0,
-        help=("Number of training images"),
-    )
-    parser.add_argument(
-        "-v",
-        "--nb-validation-image",
-        type=int,
-        default=0,
-        help=("Number of validation images"),
-    )
-    return parser
-
-
-if __name__ == "__main__":
-
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(
-        description=("Convolutional Neural Netw" "ork on street-scene images")
-    )
-    parser = add_instance_arguments(parser)
-    args = parser.parse_args()
-
+def main(args):
     # Data path and repository management
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
     input_folder = utils.prepare_input_folder(args.datapath, args.dataset)

@@ -13,8 +13,8 @@ import numpy as np
 logger = daiquiri.getLogger(__name__)
 
 
-AVAILABLE_DATASETS = ["shapes", "mapillary", "aerial", "tanzania"]
-GEOGRAPHIC_DATASETS = ["aerial", "tanzania"]
+AVAILABLE_DATASETS = ("shapes", "mapillary", "aerial", "tanzania")
+GEOGRAPHIC_DATASETS = ("aerial", "tanzania")
 
 
 class Dataset(metaclass=abc.ABCMeta):

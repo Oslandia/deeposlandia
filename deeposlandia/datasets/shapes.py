@@ -101,6 +101,7 @@ class ShapeDataset(Dataset):
         aggregate=False,
         labelling=True,
         buf=8,
+        nb_processes=None
     ):
         """ Populate the dataset with images contained into `datadir` directory
 
@@ -120,6 +121,9 @@ class ShapeDataset(Dataset):
         images are drawed with them
         buf: integer
             Minimal number of pixels between shape base point and image borders
+        nb_processes : int
+            Number of processes on which to run the preprocessing (dummy
+        parameter for "shapes" datasets)
         """
         shape_gen = self.generate_labels(nb_images)
         for i, image_label in enumerate(shape_gen):
