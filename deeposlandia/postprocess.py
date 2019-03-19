@@ -426,24 +426,32 @@ def main(args):
     colored_data = draw_grid(
         colored_data, img_width, img_height, args.image_size
     )
-    predicted_label_file = os.path.join(
+    predicted_label_folder = os.path.join(
         args.datapath,
         args.dataset,
         "output",
         "semseg",
-        "predicted_labels",
+        "predicted_labels"
+    )
+    os.makedirs(predicted_label_folder, exist_ok=True)
+    predicted_label_file = os.path.join(
+        predicted_label_folder,
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_data).save(predicted_label_file)
 
     vectorized_data = geometries.vectorize_mask(data)
     gdf = gpd.GeoDataFrame({"geometry": vectorized_data})
-    predicted_geom_file = os.path.join(
+    predicted_geom_folder = os.path.join(
         args.datapath,
         args.dataset,
         "output",
         "semseg",
         "predicted_geometries",
+    )
+    os.makedirs(predicted_label_folder, exist_ok=True)
+    predicted_geom_file = os.path.join(
+        predicted_geom_folder,
         args.image_basename + "_" + str(args.image_size) + ".geojson",
     )
     if not os.path.isfile(predicted_geom_file):
@@ -456,12 +464,16 @@ def main(args):
     colored_raster_data = draw_grid(
         colored_raster_data, img_width, img_height, args.image_size
     )
-    predicted_raster_file = os.path.join(
+    predicted_raster_folder = os.path.join(
         args.datapath,
         args.dataset,
         "output",
         "semseg",
         "predicted_rasters",
+    )
+    os.makedirs(predicted_raster_folder, exist_ok=True)
+    predicted_raster_file = os.path.join(
+        predicted_raster_folder,
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_raster_data).save(predicted_raster_file)
