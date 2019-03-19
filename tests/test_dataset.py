@@ -9,7 +9,6 @@ from deeposlandia.datasets.shapes import ShapeDataset
 from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
 from deeposlandia.datasets.tanzania import TanzaniaDataset
-from deeposlandia.utils import tile_image_correspondance
 
 
 def test_mapillary_dataset_creation(
@@ -208,34 +207,6 @@ def test_aerial_dataset_loading(
     d.load(aerial_testing_config)
     assert d.get_nb_labels() == aerial_nb_labels
     assert d.get_nb_images() == aerial_nb_output_testing_images
-
-
-def test_aerial_tile_image_correspondance(aerial_raw_image_size):
-    """Test the `utils.tile_image_correspondance(.)` to verify tile and image
-    sizes mapping
-    """
-    AERIAL_TILE_IMAGE_TABLE = np.array(
-        [
-            [0, 1],
-            [16, 20],
-            [32, 40],
-            [48, 50],
-            [96, 100],
-            [112, 125],
-            [192, 200],
-            [240, 250],
-            [496, 500],
-            [624, 625],
-            [992, 1000],
-            [1248, 1250],
-            [2496, 2500],
-        ],
-        dtype=np.int32,
-    )
-    assert all(
-        tile_image_correspondance(aerial_raw_image_size)
-        == AERIAL_TILE_IMAGE_TABLE
-    )
 
 
 def test_tanzania_dataset_creation(tanzania_image_size, tanzania_nb_labels):

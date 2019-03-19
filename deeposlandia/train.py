@@ -266,10 +266,6 @@ def run_model(
 
 def main(args):
     aggregate_value = "full" if not args.aggregate_label else "aggregated"
-    if args.dataset == "aerial":
-        model_input_size = utils.get_image_size_from_tile(args.image_size)
-    else:
-        model_input_size = args.image_size
 
     # Grid search
     model_output = []
@@ -283,7 +279,7 @@ def main(args):
             prepro_folder,
             args.dataset,
             args.model,
-            model_input_size,
+            args.image_size,
             batch_size,
         )
         for parameters in itertools.product(
@@ -317,7 +313,7 @@ def main(args):
                     args.model,
                     output_folder,
                     instance_name,
-                    model_input_size,
+                    args.image_size,
                     aggregate_value,
                     nb_labels,
                     args.nb_epochs,

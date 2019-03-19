@@ -202,12 +202,12 @@ def aerial_testing_config(tmpdir_factory):
 
 @pytest.fixture
 def aerial_sample_config():
-    return "tests/data/aerial/preprocessed/250_full/training.json"
+    return "tests/data/aerial/preprocessed/240_full/training.json"
 
 
 @pytest.fixture
 def aerial_sample():
-    return "tests/data/aerial/preprocessed/250_full/training/"
+    return "tests/data/aerial/preprocessed/240_full/training/"
 
 
 @pytest.fixture
