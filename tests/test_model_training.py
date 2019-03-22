@@ -31,7 +31,7 @@ def test_model_training(
     label_ids = [x["id"] for x in config["labels"] if x["is_evaluate"]]
     gen = create_generator(
         "shapes",
-        "feature_detection",
+        "featdet",
         shapes_sample,
         shapes_image_size,
         BATCH_SIZE,
@@ -88,6 +88,8 @@ def test_model_backup_loading(
                 checkpoint_path, model_checkpoint
             )
             model.load_weights(checkpoint_complete_path)
+        else:
+            trained_model_epoch = 0
     else:
         trained_model_epoch = 0
     new_weights = model.get_weights()

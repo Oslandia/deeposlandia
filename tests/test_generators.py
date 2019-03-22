@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 
 from deeposlandia import generator, utils
+from deeposlandia import AVAILABLE_MODELS
 
 
 def test_feature_detection_labelling_concise():
@@ -131,7 +132,7 @@ def test_featdet_mapillary_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "mapillary",
-        "feature_detection",
+        "featdet",
         mapillary_sample,
         mapillary_image_size,
         BATCH_SIZE,
@@ -160,7 +161,7 @@ def test_featdet_shape_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "shapes",
-        "feature_detection",
+        "featdet",
         shapes_sample,
         shapes_image_size,
         BATCH_SIZE,
@@ -355,7 +356,7 @@ def test_semseg_mapillary_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "mapillary",
-        "semantic_segmentation",
+        "semseg",
         mapillary_sample,
         mapillary_image_size,
         BATCH_SIZE,
@@ -389,7 +390,7 @@ def test_semseg_shape_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "shapes",
-        "semantic_segmentation",
+        "semseg",
         shapes_sample,
         shapes_image_size,
         BATCH_SIZE,
@@ -423,7 +424,7 @@ def test_semseg_aerial_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "aerial",
-        "semantic_segmentation",
+        "semseg",
         aerial_sample,
         aerial_image_size,
         BATCH_SIZE,
@@ -457,7 +458,7 @@ def test_semseg_tanzania_generator(
     label_ids = [x["id"] for x in config["labels"]]
     gen = generator.create_generator(
         "tanzania",
-        "semantic_segmentation",
+        "semseg",
         tanzania_sample,
         tanzania_image_size,
         BATCH_SIZE,
@@ -495,7 +496,7 @@ def test_wrong_model_dataset_generator(shapes_sample_config):
     with pytest.raises(ValueError) as excinfo:
         generator.create_generator(
             dataset,
-            "feature_detection",
+            "featdet",
             datapath,
             IMAGE_SIZE,
             BATCH_SIZE,
@@ -508,4 +509,7 @@ def test_wrong_model_dataset_generator(shapes_sample_config):
         generator.create_generator(
             "shapes", model, datapath, IMAGE_SIZE, BATCH_SIZE, config["labels"]
         )
-    assert str(excinfo.value) == "Wrong model name {}".format(model)
+    expected_failure_msg = "Wrong model name {} (choose amongst {})".format(
+        model, AVAILABLE_MODELS
+    )
+    assert str(excinfo.value) == expected_failure_msg
