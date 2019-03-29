@@ -148,7 +148,8 @@ class TanzaniaDataset(GeoreferencedDataset):
                     y,
                     "nw",
                 )
-                result_dicts.append(tiled_results)
+                if tiled_results:
+                    result_dicts.append(tiled_results)
                 image_counter += 1
                 tile_image_ne = tile_image.transpose(Image.FLIP_LEFT_RIGHT)
                 labelled_image_ne = labelled_image.transpose(
@@ -164,7 +165,8 @@ class TanzaniaDataset(GeoreferencedDataset):
                     y,
                     "ne",
                 )
-                result_dicts.append(tiled_results_ne)
+                if tiled_results_ne:
+                    result_dicts.append(tiled_results_ne)
                 image_counter += 1
                 tile_image_sw = tile_image.transpose(Image.FLIP_TOP_BOTTOM)
                 labelled_image_sw = labelled_image.transpose(
@@ -180,7 +182,8 @@ class TanzaniaDataset(GeoreferencedDataset):
                     y,
                     "sw",
                 )
-                result_dicts.append(tiled_results_sw)
+                if tiled_results_sw:
+                    result_dicts.append(tiled_results_sw)
                 image_counter += 1
                 tile_image_se = tile_image_sw.transpose(Image.FLIP_LEFT_RIGHT)
                 labelled_image_se = labelled_image_sw.transpose(
@@ -196,7 +199,8 @@ class TanzaniaDataset(GeoreferencedDataset):
                     y,
                     "se",
                 )
-                result_dicts.append(tiled_results_se)
+                if tiled_results_se:
+                    result_dicts.append(tiled_results_se)
                 image_counter += 1
                 del tile_image_se, tile_image_sw, tile_image_ne
                 del labelled_image_se, labelled_image_sw, labelled_image_ne
@@ -212,7 +216,8 @@ class TanzaniaDataset(GeoreferencedDataset):
                         y,
                         "nw",
                     )
-                    result_dicts.append(tiled_results)
+                    if tiled_results:
+                        result_dicts.append(tiled_results)
                     image_counter += 1
                     empty_image_counter += 1
             nb_attempts += 1

@@ -291,14 +291,23 @@ class GeoreferencedDataset(Dataset):
         dirs = self._generate_preprocessed_filenames(
             image_filename, output_dir, x, y, suffix
         )
-        tile_image.save(dirs["image"])
-        labelled_image.save(dirs["labels"])
-        return {
-            "raw_filename": image_filename,
-            "image_filename": dirs["image"],
-            "label_filename": dirs["labels"],
-            "labels": label_dict,
-        }
+        try:
+            tile_image.verify()
+            labelled_image.verify()
+            tile_image.save(dirs["image"])
+            labelled_image.save(dirs["labels"])
+            return {
+                "raw_filename": image_filename,
+                "image_filename": dirs["image"],
+                "label_filename": dirs["labels"],
+                "labels": label_dict,
+            }
+        except SyntaxError as se:
+            logger.error(
+                "The image %s is corrupt, hence not serialized.",
+                image_filename
+            )
+            return None
 
     def _preprocess_tile(
         self, x, y, image_filename, output_dir, raster, labels=None
