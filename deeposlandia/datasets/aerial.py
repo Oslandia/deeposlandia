@@ -74,8 +74,10 @@ class AerialDataset(GeoreferencedDataset):
         image_data = raster.ReadAsArray()
         image_data = np.swapaxes(image_data, 0, 2)
         result_dicts = []
-        logger.info("Image filename: %s", image_filename)
-        logger.info("Raw image size: %s, %s", raw_img_width, raw_img_height)
+        logger.info(
+            "Image filename: %s, size: (%s, %s)",
+            image_filename.split("/")[-1], raw_img_width, raw_img_height
+        )
 
         label_filename = image_filename.replace("images", "gt")
         label_raster = gdal.Open(label_filename)
