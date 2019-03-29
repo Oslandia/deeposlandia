@@ -62,7 +62,7 @@ def init_model(
         Convolutional neural network
     """
     K.clear_session()
-    if problem == "feature_detection":
+    if problem == "featdet":
         net = FeatureDetectionNetwork(
             network_name=instance_name,
             image_size=image_size,
@@ -70,7 +70,7 @@ def init_model(
             dropout=dropout,
             architecture=network,
         )
-    elif problem == "semantic_segmentation":
+    elif problem == "semseg":
         net = SemanticSegmentationNetwork(
             network_name=instance_name,
             image_size=image_size,
@@ -261,7 +261,7 @@ def predict(
     y_raw_pred = model.predict(images)
 
     result = {}
-    if problem == "feature_detection":
+    if problem == "featdet":
         label_info = [
             (i["category"], utils.GetHTMLColor(i["color"]))
             for i in train_config["labels"]
@@ -272,7 +272,7 @@ def predict(
                 for i, j in zip(label_info, prediction)
             ]
         return result
-    elif problem == "semantic_segmentation":
+    elif problem == "semseg":
         os.makedirs(output_dir, exist_ok=True)
         predicted_labels = np.argmax(y_raw_pred, axis=3)
         encountered_labels = np.unique(predicted_labels)
