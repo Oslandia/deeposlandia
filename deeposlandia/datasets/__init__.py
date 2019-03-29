@@ -431,7 +431,6 @@ class GeoreferencedDataset(Dataset):
         output_dir,
         input_dir,
         nb_images=None,
-        aggregate=False,
         labelling=True,
         nb_processes=1,
     ):
@@ -446,9 +445,6 @@ class GeoreferencedDataset(Dataset):
         nb_images : integer
             Number of images to be considered in the dataset; if None, consider
         the whole repository
-        aggregate : bool
-            Label aggregation parameter, useless for this dataset, but kept for
-        class method genericity
         labelling : boolean
             If True labels are recovered from dataset, otherwise dummy label
         are generated

@@ -30,12 +30,6 @@ def datagen_parser(subparser, reference_func):
     add_dataset_args(parser)
     add_nb_image_args(parser)
     parser.add_argument(
-        "-a",
-        "--aggregate-label",
-        action="store_true",
-        help="Aggregate labels with respect to their categories",
-    )
-    parser.add_argument(
         "-s",
         "--image-size",
         default=256,
@@ -223,8 +217,6 @@ def add_training_args(parser):
     network model training
 
     Such arguments are defined as follows:
-      - "aggregated_label" indicates whether the dataset labels must be
-    aggregated into larger classes
       - "model" gives the problem that is solved, either semantic segmentation
     or feature detection
       - "name" refers to the instance name, for identification on the file
@@ -245,12 +237,6 @@ def add_training_args(parser):
     parser : argparse.ArgumentParser
         Parser that must be "augmented"
     """
-    parser.add_argument(
-        "-a",
-        "--aggregate-label",
-        action="store_true",
-        help="Aggregate labels with respect to their categories",
-    )
     parser.add_argument(
         "-M",
         "--model",
