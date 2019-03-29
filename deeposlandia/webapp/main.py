@@ -19,6 +19,8 @@ from PIL import Image
 from werkzeug.utils import secure_filename
 
 from deeposlandia import config, utils
+from deeposlandia import AVAILABLE_MODELS
+from deeposlandia.datasets import AVAILABLE_DATASETS
 from deeposlandia.inference import predict
 
 
@@ -41,34 +43,30 @@ else:
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["ERROR_404_HELP"] = False
 
-MODELS = ("feature_detection", "semantic_segmentation")
-DATASETS = ("mapillary", "shapes", "aerial", "tanzania")
 ALLOWED_EXTENSIONS = set(["png", "jpg", "jpeg", "tif"])
 
 
 def check_model(model):
-    """Check if `model` is valid, *i.e.* equal to `feature_detection` or
-    `semantic_segmentation`
+    """Check if `model` is valid
 
     Parameters
     ----------
     model : str
         String to verify
     """
-    if model not in MODELS:
+    if model not in AVAILABLE_MODELS:
         abort(404, "Model {} not found".format(model))
 
 
 def check_dataset(dataset):
-    """Check if `dataset` is valid, *i.e.* equal to `shapes`,
-    `mapillary`, `aerial` or `tanzania`
+    """Check if `dataset` is valid
 
     Parameters
     ----------
     dataset : str
         String to verify
     """
-    if dataset not in DATASETS:
+    if dataset not in AVAILABLE_DATASETS:
         abort(404, "Dataset {} not found".format(dataset))
 
 
@@ -173,11 +171,9 @@ def demo_homepage(model, dataset):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or
-    `semantic_segmentation`)
+        Considered research problem
     dataset : str
-        Considered dataset (either `shapes`, `mapillary`, `aerial` or
-    `tanzania`)
+        Considered dataset
 
     Returns
     -------
@@ -206,10 +202,9 @@ def predictor_demo(model, dataset, image):
     Parameters
     ----------
     model : str
-        Considered research problem (either `feature_detection` or
-    `semantic_segmentation`)
+        Considered research problem
     dataset : str
-        Considered dataset (either `shapes` or `mapillary`)
+        Considered dataset
     image : str
         Name of the demo image onto the server
 
@@ -230,12 +225,12 @@ def predictor_demo(model, dataset, image):
         aggregate=agg_value,
         output_dir=PREDICT_FOLDER,
     )
-    if model == "feature_detection":
+    if model == "featdet":
         predicted_image = "sample_image/prediction.png"
         predicted_labels = predictions[
             os.path.join(app.static_folder, image_info["image_file"])
         ]
-    elif model == "semantic_segmentation":
+    elif model == "semseg":
         predicted_image = os.path.join(
             "predicted", image_info["label_file"].split("/")[-1]
         )
@@ -243,8 +238,7 @@ def predictor_demo(model, dataset, image):
     else:
         raise ValueError(
             (
-                "Unknown model, please provide 'feature_detection'"
-                "or 'semantic_segmentation'."
+                "Unknown model, please choose amongst %s.", AVAILABLE_MODELS
             )
         )
     return render_template(
@@ -276,8 +270,7 @@ def prediction():
     predictions = predict(
         [filename],
         "mapillary",
-        "semantic_segmentation",
-        aggregate=True,
+        "semseg",
         output_dir=PREDICT_FOLDER,
     )
     return jsonify(predictions)

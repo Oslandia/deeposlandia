@@ -63,7 +63,7 @@
 	  <h5>Prediction</h5>
 	</div>
         <div class="panel-body">
-	  {% if model=="feature_detection" %}
+	  {% if model=="featdet" %}
 	  {% for value, proba, color in predicted_labels %}
 	  <span class="color-label" style="background-color: {{ color }}">{{ value }}: {{ proba }}%</span>
 	  {% endfor %}

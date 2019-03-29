@@ -31,10 +31,10 @@
 	</div>
         <div class="panel-body">
 	  <p>
-	    <a href="{{ url_for('demo_homepage', model='feature_detection', dataset='mapillary') }}" title="feature detection">
+	    <a href="{{ url_for('demo_homepage', model='featdet', dataset='mapillary') }}" title="feature detection">
 	      <img src="{{url_for('static', filename='sample_image/mapillary_fd.png')}}" width="48%" height="200px">
 	    </a>
-	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='mapillary') }}" title="semantic segmentation">
+	    <a href="{{ url_for('demo_homepage', model='semseg', dataset='mapillary') }}" title="semantic segmentation">
 	      <img src="{{url_for('static', filename='sample_image/mapillary_ss.png')}}" width="48%" height="200px">
 	    </a>
 	    <br>Street-scene imagery
@@ -49,10 +49,10 @@
 	</div>
         <div class="panel-body">
 	  <p>
-	    <a href="{{ url_for('demo_homepage', model='feature_detection', dataset='shapes') }}" title="feature detection">
+	    <a href="{{ url_for('demo_homepage', model='featdet', dataset='shapes') }}" title="feature detection">
 	      <img src="{{url_for('static', filename='sample_image/shapes_fd.png')}}" width="48%" height="200px">
 	    </a>
-	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='shapes') }}" title="semantic segmentation">
+	    <a href="{{ url_for('demo_homepage', model='semseg', dataset='shapes') }}" title="semantic segmentation">
 	      <img src="{{url_for('static', filename='sample_image/shapes_ss.png')}}" width="48%" height="200px">
 	    </a>
 	    <br>
@@ -68,7 +68,7 @@
 	</div>
         <div class="panel-body">
 	  <p>
-	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='aerial') }}" title="semantic segmentation">
+	    <a href="{{ url_for('demo_homepage', model='semseg', dataset='aerial') }}" title="semantic segmentation">
 	      <img src="{{url_for('static', filename='sample_image/aerial_ss.png')}}" width="96%" height="200px">
 	    </a>
 	    <br>Aerial imagery
@@ -83,7 +83,7 @@
 	</div>
         <div class="panel-body">
 	  <p>
-	    <a href="{{ url_for('demo_homepage', model='semantic_segmentation', dataset='tanzania') }}" title="semantic segmentation">
+	    <a href="{{ url_for('demo_homepage', model='semseg', dataset='tanzania') }}" title="semantic segmentation">
 	      <img src="{{url_for('static', filename='sample_image/tanzania_ss.png')}}" width="96%" height="200px">
 	    </a>
 	    <br>Aerial imagery
