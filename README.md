@@ -15,7 +15,7 @@ The project contains the following folders:
 
 + [deeposlandia](./deeposlandia) contains the main Python modules to train and
   test convolutional neural networks
-+ [docs](./docs) contains some mardown files for documentation purpose
++ [docs](./docs) contains some markdown files for documentation purpose
 + [examples](./examples) contains some Jupyter notebooks that aim at
   describing data and building basic neural networks
 + [images](./images) contains some example images to illustrate the Mapillary
@@ -113,9 +113,7 @@ depicts a prediction result over the 13-labelled dataset version.
 
 ## AerialImage (Inria)
 
-In
-the
-[Aerial image dataset](https://project.inria.fr/aerialimagelabeling/files/),
+In the [Aerial image dataset](https://project.inria.fr/aerialimagelabeling/files/),
 there are only 2 labels, i.e. `building` or `background` and consequently the
 model aims at answering one single question for each image pixel: does this
 pixel belongs to a building?
