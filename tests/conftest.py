@@ -166,20 +166,23 @@ def aerial_image_size():
 
 
 @pytest.fixture
-def aerial_tile_size():
-    return 250
-
-
-@pytest.fixture
 def aerial_nb_images():
     return 1
 
 
 @pytest.fixture
-def aerial_nb_output_images(
-    aerial_nb_images, aerial_test_image_size, aerial_tile_size
+def aerial_nb_output_training_images():
+    return 10
+
+
+@pytest.fixture
+def aerial_nb_output_testing_images(
+    aerial_nb_images, aerial_test_image_size, aerial_image_size
 ):
-    return aerial_nb_images * (aerial_test_image_size / aerial_tile_size) ** 2
+    return (
+        aerial_nb_images
+        * math.ceil(aerial_test_image_size / aerial_image_size) ** 2
+    )
 
 
 @pytest.fixture
@@ -188,18 +191,23 @@ def aerial_nb_labels():
 
 
 @pytest.fixture(scope="session")
-def aerial_config(tmpdir_factory):
-    return tmpdir_factory.getbasetemp().join("aerial.json")
+def aerial_training_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join("aerial_training.json")
+
+
+@pytest.fixture(scope="session")
+def aerial_testing_config(tmpdir_factory):
+    return tmpdir_factory.getbasetemp().join("aerial_testing.json")
 
 
 @pytest.fixture
 def aerial_sample_config():
-    return "tests/data/aerial/preprocessed/250_full/training.json"
+    return "tests/data/aerial/preprocessed/240_full/training.json"
 
 
 @pytest.fixture
 def aerial_sample():
-    return "tests/data/aerial/preprocessed/250_full/training/"
+    return "tests/data/aerial/preprocessed/240_full/training/"
 
 
 @pytest.fixture
@@ -212,11 +220,21 @@ def aerial_raw_sample():
 
 
 @pytest.fixture(scope="session")
-def aerial_temp_dir(tmpdir_factory):
-    aerial_subdir = tmpdir_factory.mktemp("aerial", numbered=False)
-    tmpdir_factory.mktemp("aerial/images", numbered=False)
-    tmpdir_factory.mktemp("aerial/labels", numbered=False)
-    tmpdir_factory.mktemp("aerial/checkpoints", numbered=False)
+def aerial_training_temp_dir(tmpdir_factory):
+    aerial_subdir = tmpdir_factory.mktemp("aerial_training", numbered=False)
+    tmpdir_factory.mktemp("aerial_training/images", numbered=False)
+    tmpdir_factory.mktemp("aerial_training/labels", numbered=False)
+    tmpdir_factory.mktemp("aerial_training/checkpoints", numbered=False)
+    return aerial_subdir
+
+
+
+@pytest.fixture(scope="session")
+def aerial_testing_temp_dir(tmpdir_factory):
+    aerial_subdir = tmpdir_factory.mktemp("aerial_testing", numbered=False)
+    tmpdir_factory.mktemp("aerial_testing/images", numbered=False)
+    tmpdir_factory.mktemp("aerial_testing/labels", numbered=False)
+    tmpdir_factory.mktemp("aerial_testing/checkpoints", numbered=False)
     return aerial_subdir
 
 

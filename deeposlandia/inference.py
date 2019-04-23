@@ -149,15 +149,11 @@ def predict(
     flattened_image_paths = sum(image_paths, [])
     images = extract_images(flattened_image_paths)
     model_input_size = images.shape[1]
-    if dataset == "aerial":
-        tile_size = utils.get_tile_size_from_image(model_input_size)
-    else:
-        tile_size = model_input_size
 
     aggregate_value = "full" if not aggregate else "aggregated"
     instance_args = [
         name,
-        tile_size,
+        model_input_size,
         network,
         batch_size,
         aggregate_value,
@@ -168,7 +164,7 @@ def predict(
     instance_name = utils.list_to_str(instance_args, "_")
 
     prepro_folder = utils.prepare_preprocessed_folder(
-        datapath, dataset, tile_size, aggregate_value
+        datapath, dataset, model_input_size, aggregate_value
     )
 
     if os.path.isfile(prepro_folder["training_config"]):
@@ -193,7 +189,8 @@ def predict(
         )
         output_folder = utils.prepare_output_folder(datapath, dataset, problem)
         instance_filename = (
-            "best-instance-" + str(tile_size) + "-" + aggregate_value + ".json"
+            "best-instance-" + str(model_input_size)
+            + "-" + aggregate_value + ".json"
         )
         instance_path = os.path.join(output_folder, instance_filename)
         dropout, network = utils.recover_instance(instance_path)
@@ -206,7 +203,8 @@ def predict(
             network,
         )
         checkpoint_filename = (
-            "best-model-" + str(tile_size) + "-" + aggregate_value + ".h5"
+            "best-model-" + str(model_input_size)
+            + "-" + aggregate_value + ".h5"
         )
         checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
         if os.path.isfile(checkpoint_full_path):

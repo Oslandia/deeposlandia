@@ -449,7 +449,7 @@ def main(args):
         "semseg",
         "predicted_geometries",
     )
-    os.makedirs(predicted_label_folder, exist_ok=True)
+    os.makedirs(predicted_geom_folder, exist_ok=True)
     predicted_geom_file = os.path.join(
         predicted_geom_folder,
         args.image_basename + "_" + str(args.image_size) + ".geojson",
