@@ -20,7 +20,7 @@ with open("README.md", "rb") as f:
 
 install_requires = [
     "setuptools<=39.1.0",
-    "tensorflow<=1.10",
+    "tensorflow<=1.12.2",
     "opencv-python<=3.4.0.12",
     "pillow<=5.0.0",
     "keras<=2.2.4",
