@@ -178,80 +178,35 @@ def predict(
         )
         sys.exit(1)
 
-    if any([arg is None for arg in instance_args]):
+    output_folder = utils.prepare_output_folder(datapath, dataset, problem)
+    instance_filename = "best-instance-" + str(model_input_size) + ".json"
+    instance_path = os.path.join(output_folder, instance_filename)
+    dropout, network = utils.recover_instance(instance_path)
+    model = init_model(
+        problem,
+        instance_name,
+        model_input_size,
+        nb_labels,
+        dropout,
+        network,
+    )
+    checkpoint_filename = "best-model-" + str(model_input_size) + ".h5"
+    checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
+    if os.path.isfile(checkpoint_full_path):
+        logger.info("Checkpoint full path : %s", checkpoint_full_path)
+        model.load_weights(checkpoint_full_path)
         logger.info(
-            ("Some arguments are None, " "the best model is considered.")
+            "Model weights have been recovered from %s",
+            checkpoint_full_path,
         )
-        output_folder = utils.prepare_output_folder(datapath, dataset, problem)
-        instance_filename = (
-            "best-instance-" + str(model_input_size)
-            + "-" + aggregate_value + ".json"
-        )
-        instance_path = os.path.join(output_folder, instance_filename)
-        dropout, network = utils.recover_instance(instance_path)
-        model = init_model(
-            problem,
-            instance_name,
-            model_input_size,
-            nb_labels,
-            dropout,
-            network,
-        )
-        checkpoint_filename = (
-            "best-model-" + str(model_input_size)
-            + "-" + aggregate_value + ".h5"
-        )
-        checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
-        if os.path.isfile(checkpoint_full_path):
-            logger.info("Checkpoint full path : %s", checkpoint_full_path)
-            model.load_weights(checkpoint_full_path)
-            logger.info(
-                "Model weights have been recovered from %s",
-                checkpoint_full_path,
-            )
-        else:
-            logger.info(
-                (
-                    "No available trained model for this image size"
-                    " with optimized hyperparameters. The "
-                    "inference will be done on an untrained model"
-                )
-            )
     else:
-        logger.info("All instance arguments are filled out.")
-        output_folder = utils.prepare_output_folder(
-            datapath, dataset, problem, instance_name
+        logger.info(
+            (
+                "No available trained model for this image size"
+                " with optimized hyperparameters. The "
+                "inference will be done on an untrained model"
+            )
         )
-        model = init_model(
-            problem,
-            instance_name,
-            model_input_size,
-            nb_labels,
-            dropout,
-            network,
-        )
-        checkpoints = [
-            item
-            for item in os.listdir(output_folder)
-            if "checkpoint-epoch" in item
-        ]
-        if len(checkpoints) > 0:
-            model_checkpoint = max(checkpoints)
-            checkpoint_full_path = os.path.join(
-                output_folder, model_checkpoint
-            )
-            model.load_weights(checkpoint_full_path)
-            logger.info(
-                "Model weights have been recovered from %s",
-                checkpoint_full_path,
-            )
-        else:
-            logger.info(
-                (
-                    "No available checkpoint for this configuration. "
-                    "The model will be trained from scratch."
-                )
-            )
 
     y_raw_pred = model.predict(images)
 
