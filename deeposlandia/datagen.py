@@ -1,16 +1,11 @@
 """Main method to generate new datasets
 
-Example of program calls:
+Example of program call:
 
 * generate 64*64 pixel images from Shapes dataset, 10000 images in the training
   set, 100 in the validation set, 1000 in the testing set::
 
     python deeposlandia/datagen.py -D shapes -s 64 -t 10000 -v 100 -T 1000
-
-* generate 224*224 pixel images from Mapillary dataset, with aggregated
-  labels::
-
-    python deeposlandia/datagen.py -D mapillary -s 224 -a
 
 """
 
@@ -34,20 +29,14 @@ logger = daiquiri.getLogger(__name__)
 
 def main(args):
     # Data path and repository management
-    aggregate_value = "full" if not args.aggregate_label else "aggregated"
     input_folder = utils.prepare_input_folder(args.datapath, args.dataset)
     prepro_folder = utils.prepare_preprocessed_folder(
-        args.datapath, args.dataset, args.image_size, aggregate_value
+        args.datapath, args.dataset, args.image_size
     )
 
     # Dataset creation
     if args.dataset == "mapillary":
-        config_name = (
-            "config.json"
-            if not args.aggregate_label
-            else "config_aggregate.json"
-        )
-        config_path = os.path.join(input_folder, config_name)
+        config_path = os.path.join(input_folder, "config_aggregate.json")
         train_dataset = MapillaryDataset(args.image_size, config_path)
         validation_dataset = MapillaryDataset(args.image_size, config_path)
         test_dataset = MapillaryDataset(args.image_size, config_path)
@@ -93,7 +82,6 @@ def main(args):
                 prepro_folder["training"],
                 input_image_dir,
                 nb_images=args.nb_training_image,
-                aggregate=args.aggregate_label,
                 nb_processes=int(config.get("running", "processes")),
             )
             train_dataset.save(prepro_folder["training_config"])
@@ -116,7 +104,6 @@ def main(args):
                 prepro_folder["validation"],
                 input_image_dir,
                 nb_images=args.nb_validation_image,
-                aggregate=args.aggregate_label,
                 nb_processes=int(config.get("running", "processes")),
             )
             validation_dataset.save(prepro_folder["validation_config"])
@@ -139,7 +126,6 @@ def main(args):
                 prepro_folder["testing"],
                 input_image_dir,
                 nb_images=args.nb_testing_image,
-                aggregate=args.aggregate_label,
                 labelling=False,
                 nb_processes=int(config.get("running", "processes")),
             )

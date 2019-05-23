@@ -102,21 +102,20 @@ def recover_image_info(dataset, filename):
     version) and label infos
 
     """
-    dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
-    image_file = os.path.join(dataset_code, "images", filename + ".png")
+    image_file = os.path.join(dataset, "images", filename + ".png")
     label_file = image_file.replace("images", "labels")
-    if dataset == "mapillary" or dataset == "mapillary_agg":
+    if dataset == "mapillary":
         image_file = image_file.replace(".png", ".jpg")
     server_label_filename = os.path.join(app.static_folder, label_file)
     server_label_image = np.array(Image.open(server_label_filename))
     if dataset == "mapillary":
-        size_aggregation = "400_aggregated"
+        image_size = "400"
     elif dataset == "aerial":
-        size_aggregation = "250_full"
+        image_size = "240"
     elif dataset == "tanzania":
-        size_aggregation = "512_full"
+        image_size = "512"
     elif dataset == "shapes":
-        size_aggregation = "64_full"
+        image_size = "64"
     else:
         raise ValueError(
             (
@@ -129,7 +128,7 @@ def recover_image_info(dataset, filename):
             "data",
             dataset,
             "preprocessed",
-            size_aggregation,
+            image_size,
             "validation.json",
         )
     ) as fobj:
@@ -214,15 +213,12 @@ def predictor_demo(model, dataset, image):
         Deep learning model prediction for demo page (depends on the chosen
     model, either feature detection or semantic segmentation)
     """
-    agg_value = dataset == "mapillary"
     logger.info("file: %s, dataset: %s, model: %s", image, dataset, model)
-    agg_value = dataset == "mapillary"
     image_info = recover_image_info(dataset, image)
     predictions = predict(
         [os.path.join(app.static_folder, image_info["image_file"])],
         dataset,
         model,
-        aggregate=agg_value,
         output_dir=PREDICT_FOLDER,
     )
     if model == "featdet":
@@ -357,7 +353,6 @@ def demo_image_selector():
     summarizes the label information for displyaing purpose
     """
     dataset = request.args.get("dataset")
-    dataset_code = dataset + "_agg" if dataset == "mapillary" else dataset
-    server_folder = os.path.join(app.static_folder, dataset_code, "images")
+    server_folder = os.path.join(app.static_folder, dataset, "images")
     filename = np.random.choice(os.listdir(server_folder))
     return jsonify(image_name=filename.split(".")[0])

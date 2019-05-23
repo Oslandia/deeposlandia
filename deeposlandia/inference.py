@@ -94,7 +94,6 @@ def predict(
     dataset,
     problem,
     datapath="./data",
-    aggregate=False,
     name=None,
     network=None,
     batch_size=None,
@@ -117,8 +116,6 @@ def predict(
     `semantic_segmentation`
     datapath : str
         Relative path of dataset repository
-    aggregate : bool
-        Either or not the labels are aggregated
     name : str
         Name of the saved network
     network : str
@@ -150,13 +147,11 @@ def predict(
     images = extract_images(flattened_image_paths)
     model_input_size = images.shape[1]
 
-    aggregate_value = "full" if not aggregate else "aggregated"
     instance_args = [
         name,
         model_input_size,
         network,
         batch_size,
-        aggregate_value,
         dropout,
         learning_rate,
         learning_rate_decay,
@@ -164,7 +159,7 @@ def predict(
     instance_name = utils.list_to_str(instance_args, "_")
 
     prepro_folder = utils.prepare_preprocessed_folder(
-        datapath, dataset, model_input_size, aggregate_value
+        datapath, dataset, model_input_size
     )
 
     if os.path.isfile(prepro_folder["training_config"]):
@@ -361,7 +356,6 @@ def main(args):
         args.dataset,
         args.model,
         args.datapath,
-        args.aggregate_label,
         args.name,
         args.network,
         args.batch_size,

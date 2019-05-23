@@ -57,25 +57,15 @@ class MapillaryDataset(Dataset):
             logger.error("There is no 'label' key in the provided glossary.")
             return None
         for lab_id, label in enumerate(glossary["labels"]):
-            if "aggregate" in config_filename:
-                self.add_label(
-                    lab_id,
-                    label["name"],
-                    label["color"],
-                    label["evaluate"],
-                    label["family"],
-                    label["contains_id"],
-                    label["contains"],
-                )
-            else:
-                name_items = label["name"].split("--")
-                self.add_label(
-                    lab_id,
-                    name_items[-1],
-                    label["color"],
-                    label["evaluate"],
-                    name_items[0],
-                )
+            self.add_label(
+                lab_id,
+                label["name"],
+                label["color"],
+                label["evaluate"],
+                label["family"],
+                label["contains_id"],
+                label["contains"]
+            )
 
     def group_image_label(self, image):
         """Group the labels
@@ -95,13 +85,13 @@ class MapillaryDataset(Dataset):
         # according to its "group" (manually built)
         a = np.array(image)
         for root_id, label in enumerate(self.label_info):
-            for label_id in label["aggregate"]:
+            for label_id in label.get("aggregate"):
                 mask = a == label_id
                 a[mask] = root_id
         return Image.fromarray(a, mode=image.mode)
 
     def _preprocess(
-        self, image_filename, output_dir, aggregate, labelling=True
+        self, image_filename, output_dir, labelling=True
     ):
         """Resize/crop then save the training & label images
 
@@ -109,7 +99,6 @@ class MapillaryDataset(Dataset):
         ----------
         datadir : str
         image_filaname : str
-        aggregate : boolean
         labelling : boolean
 
         Returns
@@ -141,9 +130,8 @@ class MapillaryDataset(Dataset):
             img_out = Image.open(label_filename)
             img_out = utils.resize_image(img_out, self.image_size)
             img_out = utils.mono_crop_image(img_out, crop_pix)
-            # group some labels
-            if aggregate:
-                img_out = self.group_image_label(img_out)
+            # aggregate some labels
+            img_out = self.group_image_label(img_out)
 
             labels = utils.build_labels(
                 img_out, self.label_ids, dataset="mapillary"
@@ -172,7 +160,6 @@ class MapillaryDataset(Dataset):
         output_dir,
         input_dir,
         nb_images=None,
-        aggregate=False,
         labelling=True,
         nb_processes=1,
     ):
@@ -187,9 +174,6 @@ class MapillaryDataset(Dataset):
         nb_images : integer
             Number of images to be considered in the dataset; if None, consider
         the whole repository
-        aggregate : bool
-            Aggregate some labels into more generic ones, e.g. cars and bus
-        into the vehicle label
         labelling: boolean
             If True labels are recovered from dataset, otherwise dummy label
         are generated
@@ -203,14 +187,14 @@ class MapillaryDataset(Dataset):
         if nb_processes == 1:
             for x in image_list_longname:
                 self.image_info.append(
-                    self._preprocess(x, output_dir, aggregate, labelling)
+                    self._preprocess(x, output_dir, labelling)
                 )
         else:
             with Pool(processes=nb_processes) as p:
                 self.image_info = p.starmap(
                     self._preprocess,
                     [
-                        (x, output_dir, aggregate, labelling)
+                        (x, output_dir, labelling)
                         for x in image_list_longname
                     ],
                 )

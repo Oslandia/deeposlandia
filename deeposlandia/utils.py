@@ -139,7 +139,7 @@ def prepare_input_folder(datapath, dataset):
 
 
 def prepare_preprocessed_folder(
-    datapath, dataset, image_size, aggregate_value
+    datapath, dataset, image_size
 ):
     """Data path and repository management; create all the folders needed to
     accomplish the current instance training/testing
@@ -150,8 +150,6 @@ def prepare_preprocessed_folder(
         Data root directory, contain all used the datasets
     dataset : str
         Dataset name, *e.g.* `mapillary` or `shapes`
-    aggregate_value : str
-        Indicates the label aggregation status, either `full` or `aggregated`
     image_size : int
         Size of the considered images (height and width are equal)
 
@@ -165,7 +163,7 @@ def prepare_preprocessed_folder(
         datapath,
         dataset,
         "preprocessed",
-        str(image_size) + "_" + aggregate_value,
+        str(image_size)
     )
     training_filename = os.path.join(prepro_folder, "training.json")
     validation_filename = os.path.join(prepro_folder, "validation.json")

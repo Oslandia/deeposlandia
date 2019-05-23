@@ -106,7 +106,6 @@ def run_model(
     output_folder,
     instance_name,
     image_size,
-    aggregate_value,
     nb_labels,
     nb_epochs,
     nb_training_image,
@@ -136,8 +135,6 @@ def run_model(
         Name of the instance
     image_size : int
         Size of images, in pixel (height=width)
-    aggregate_value : str
-        Label aggregation policy (either `full` or `aggregated`)
     nb_labels : int
         Number of labels into the dataset
     nb_epochs : int
@@ -265,15 +262,13 @@ def run_model(
 
 
 def main(args):
-    aggregate_value = "full" if not args.aggregate_label else "aggregated"
-
     # Grid search
     model_output = []
     for batch_size in args.batch_size:
         logger.info("Generating data with batch of %s images...", batch_size)
         # Data generator building
         prepro_folder = utils.prepare_preprocessed_folder(
-            args.datapath, args.dataset, args.image_size, aggregate_value
+            args.datapath, args.dataset, args.image_size
         )
         nb_labels, train_gen, valid_gen = get_data(
             prepro_folder,
@@ -296,7 +291,6 @@ def main(args):
                 args.image_size,
                 network,
                 batch_size,
-                aggregate_value,
                 dropout,
                 learning_rate,
                 learning_rate_decay,
@@ -314,7 +308,6 @@ def main(args):
                     output_folder,
                     instance_name,
                     args.image_size,
-                    aggregate_value,
                     nb_labels,
                     args.nb_epochs,
                     args.nb_training_image,
@@ -334,7 +327,7 @@ def main(args):
     )
     instance_name = os.path.join(
         output_folder,
-        "best-{}-" + str(args.image_size) + "-" + aggregate_value + ".{}",
+        "best-{}-" + str(args.image_size) + ".{}",
     )
     best_instance["model"].save(instance_name.format("model", "h5"))
     with open(instance_name.format("instance", "json"), "w") as fobj:
