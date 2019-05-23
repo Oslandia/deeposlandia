@@ -202,12 +202,12 @@ def aerial_testing_config(tmpdir_factory):
 
 @pytest.fixture
 def aerial_sample_config():
-    return "tests/data/aerial/preprocessed/240_full/training.json"
+    return "tests/data/aerial/preprocessed/240/training.json"
 
 
 @pytest.fixture
 def aerial_sample():
-    return "tests/data/aerial/preprocessed/240_full/training/"
+    return "tests/data/aerial/preprocessed/240/training/"
 
 
 @pytest.fixture
@@ -291,12 +291,12 @@ def tanzania_testing_config(tmpdir_factory):
 
 @pytest.fixture
 def tanzania_sample_config():
-    return "tests/data/tanzania/preprocessed/384_full/training.json"
+    return "tests/data/tanzania/preprocessed/384/training.json"
 
 
 @pytest.fixture
 def tanzania_sample():
-    return "tests/data/tanzania/preprocessed/384_full/training/"
+    return "tests/data/tanzania/preprocessed/384/training/"
 
 
 @pytest.fixture

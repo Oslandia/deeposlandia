@@ -50,7 +50,7 @@ def get_image_paths(datapath, dataset, image_size, image_basename):
         datapath,
         dataset,
         "preprocessed",
-        str(image_size) + "_full",
+        str(image_size),
         "testing",
         "images",
         image_basename + "*",
@@ -106,7 +106,7 @@ def get_labels(datapath, dataset, tile_size):
         List of dictionnaries that describes the dataset labels
     """
     prepro_folder = utils.prepare_preprocessed_folder(
-        datapath, dataset, tile_size, "full"
+        datapath, dataset, tile_size,
     )
     if os.path.isfile(prepro_folder["testing_config"]):
         test_config = utils.read_config(prepro_folder["testing_config"])

@@ -31,15 +31,14 @@ def test_preprocessed_folder(datapath_repo):
     datapath = str(datapath_repo)
     dataset = "shapes"
     image_size = 64
-    aggregate = "full"
-    prepare_preprocessed_folder(datapath, dataset, image_size, aggregate)
+    prepare_preprocessed_folder(datapath, dataset, image_size)
     assert os.path.isdir(os.path.join(datapath, dataset, "preprocessed"))
     assert os.path.isdir(
         os.path.join(
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
         )
     )
     assert os.path.isdir(
@@ -47,7 +46,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "training",
         )
     )
@@ -56,7 +55,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "training",
             "images",
         )
@@ -66,7 +65,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "training",
             "labels",
         )
@@ -76,7 +75,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "validation",
         )
     )
@@ -85,7 +84,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "validation",
             "images",
         )
@@ -95,7 +94,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "validation",
             "labels",
         )
@@ -105,7 +104,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "testing",
         )
     )
@@ -114,7 +113,7 @@ def test_preprocessed_folder(datapath_repo):
             datapath,
             dataset,
             "preprocessed",
-            str(image_size) + "_" + aggregate,
+            str(image_size),
             "testing",
             "images",
         )
