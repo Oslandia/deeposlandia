@@ -440,8 +440,12 @@ def main(args):
     )
     Image.fromarray(colored_data).save(predicted_label_file)
 
-    vectorized_data = geometries.vectorize_mask(data)
-    gdf = gpd.GeoDataFrame({"geometry": vectorized_data})
+    vectorized_labels, vectorized_data = geometries.vectorize_mask(
+        data, colored_data, labels
+    )
+    gdf = gpd.GeoDataFrame(
+        {"labels": vectorized_labels, "geometry": vectorized_data}
+    )
     predicted_geom_folder = os.path.join(
         args.datapath,
         args.dataset,
@@ -454,11 +458,12 @@ def main(args):
         predicted_geom_folder,
         args.image_basename + "_" + str(args.image_size) + ".geojson",
     )
-    if not os.path.isfile(predicted_geom_file):
-        gdf.to_file(predicted_geom_file, driver="GeoJSON")
+    if os.path.isfile(predicted_geom_file):
+        os.remove(predicted_geom_file)
+    gdf.to_file(predicted_geom_file, driver="GeoJSON")
 
     rasterized_data = geometries.rasterize_polygons(
-        vectorized_data, img_height, img_width
+        vectorized_data, vectorized_labels, img_height, img_width
     )
     colored_raster_data = assign_label_colors(rasterized_data, labels)
     colored_raster_data = draw_grid(

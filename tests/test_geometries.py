@@ -16,6 +16,7 @@ from deeposlandia.geometries import (
     get_pixel,
     get_tile_footprint,
     extract_geometry_vertices,
+    retrieve_area_color,
     vectorize_mask,
     rasterize_polygons,
     pixel_to_geocoord,
@@ -269,6 +270,37 @@ def test_extract_geometry_vertices(tanzania_raw_image_size):
     assert len(polygon_vertices) == 2
 
 
+def test_retrieve_area_color(tanzania_raw_image_size):
+    """Test the label retrieving function, in order to assign a label to a
+    given area thanks to its color
+
+    One tests three cases:
+      - an empty area must return "0" label
+      - an area filled with a color must return corresponding label
+      - an area partially filled must return the most encountered label
+    """
+    label_dicts = [
+        {"id": 0, "color": [0, 0, 0]},
+        {"id": 1, "color": [50, 200, 50]}
+    ]
+    data = np.zeros(
+        [tanzania_raw_image_size, tanzania_raw_image_size, 3], dtype=np.uint8
+    )
+    x1, y1 = 100, 200
+    x2, y2 = 300, 400
+    contour = np.array(
+        [[[x1, y1]], [[x1, y2]], [[x2, y2]], [[x2, y1]]],
+    )
+    assert retrieve_area_color(data, contour, label_dicts) == 0
+    data[y1:y2, x1:x2] = label_dicts[1]["color"]
+    assert retrieve_area_color(data, contour, label_dicts) == 1
+    x2 += 100
+    contour = np.array(
+        [[[x1, y1]], [[x1, y2]], [[x2, y2]], [[x2, y1]]],
+    )
+    assert retrieve_area_color(data, contour, label_dicts) == 1
+
+
 def test_vectorize_mask(tanzania_raw_image_size):
     """Test the mask vectorization operation, that transform raster mask into a
     MultiPolygon.
@@ -277,18 +309,31 @@ def test_vectorize_mask(tanzania_raw_image_size):
     OpenCV library to find polygon contours, and some approximated methods are
     implied. Hence exact polygon vertice coordinates are not tested.
     """
+    label_dicts = [
+        {"id": 1, "color": [50, 200, 50]},
+        {"id": 2, "color": [200, 50, 50]}
+    ]
     mask = np.zeros(
         [tanzania_raw_image_size, tanzania_raw_image_size], dtype=np.uint8
     )
-    empty_multipolygon = vectorize_mask(mask)
+    data = np.zeros(
+        [tanzania_raw_image_size, tanzania_raw_image_size, 3], dtype=np.uint8
+    )
+    empty_labels, empty_multipolygon = vectorize_mask(mask, data, label_dicts)
+    assert len(empty_labels) == 0
     assert len(empty_multipolygon) == 0
     x1, y1 = 100, 200
     x2, y2 = 300, 400
     x3, y3 = 300, 600
     x4, y4 = 700, 900
-    mask[y1:y2, x1:x2] = 1
-    mask[y3:y4, x3:x4] = 1
-    multipolygon = vectorize_mask(mask)
+    mask[y1:y2, x1:x2] = label_dicts[0]["id"]
+    mask[y3:y4, x3:x4] = label_dicts[1]["id"]
+    data[y1:y2, x1:x2] = label_dicts[0]["color"]
+    data[y3:y4, x3:x4] = label_dicts[1]["color"]
+    labels, multipolygon = vectorize_mask(mask, data, label_dicts)
+    assert len(labels) == 2
+    assert np.sum(labels == 1) == 1
+    assert np.sum(labels == 2) == 1
     assert len(multipolygon) == 2
 
 
@@ -301,14 +346,17 @@ def test_rasterize_polygons(tanzania_raw_image_size):
     rasterized mask must be filled with "1" on this part, and with "0" on the
     right part.
     """
-    polygons = []
     mask = rasterize_polygons(
-        polygons, tanzania_raw_image_size, tanzania_raw_image_size
+        [],
+        np.array([]),
+        tanzania_raw_image_size,
+        tanzania_raw_image_size
     )
     assert mask.shape == (tanzania_raw_image_size, tanzania_raw_image_size)
     assert np.unique(mask) == np.array([0])
-    x1 = int(tanzania_raw_image_size / 2)
-    polygon = Polygon(
+    x1 = int(tanzania_raw_image_size / 3)
+    x2 = int(2 * tanzania_raw_image_size / 3)
+    polygon1 = Polygon(
         shell=(
             (0, 0),
             (x1, 0),
@@ -317,15 +365,28 @@ def test_rasterize_polygons(tanzania_raw_image_size):
             (0, 0),
         )
     )
+    polygon2 = Polygon(
+        shell=(
+            (x1, 0),
+            (x2, 0),
+            (x2, tanzania_raw_image_size),
+            (x1, tanzania_raw_image_size),
+            (x1, 0),
+        )
+    )
+    labels = [1, 2]
     mask = rasterize_polygons(
-        MultiPolygon([polygon]),
+        MultiPolygon([polygon1, polygon2]),
+        np.array(labels),
         tanzania_raw_image_size,
         tanzania_raw_image_size,
     )
-    mask_polygon = mask[:tanzania_raw_image_size, :x1]
-    assert np.all(np.unique(mask_polygon) == np.array([1]))
-    mask_no_polygon = mask[:tanzania_raw_image_size, (1 + x1):]
-    assert np.all(np.unique(mask_no_polygon) == np.array([0]))
+    mask_polygon_1 = mask[:tanzania_raw_image_size, :x1]
+    assert np.unique(mask_polygon_1) == labels[0]
+    mask_polygon_2 = mask[:tanzania_raw_image_size, (1 + x1):x2]
+    assert np.unique(mask_polygon_2) == labels[1]
+    mask_no_polygon = mask[:tanzania_raw_image_size, (1 + x2):]
+    assert np.unique(mask_no_polygon) == 0
 
 
 def test_pixel_to_geocoord(tanzania_example_image, tanzania_raw_image_size):
