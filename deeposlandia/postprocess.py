@@ -153,7 +153,7 @@ def get_trained_model(datapath, dataset, image_size, nb_labels):
     output_folder = utils.prepare_output_folder(
         datapath, dataset, "semseg"
     )
-    checkpoint_filename = "best-model-" + str(image_size) + "-full" + ".h5"
+    checkpoint_filename = "best-model-" + str(image_size) + ".h5"
     checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
     if os.path.isfile(checkpoint_full_path):
         model.load_weights(checkpoint_full_path)
