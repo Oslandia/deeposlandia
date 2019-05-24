@@ -52,9 +52,9 @@ Following folders must be created and maintained:
 
 As an example that illustrates the required trained model files, in the
 `aerial` dataset case we have:
-- `data/aerial/output/semantic_segmentation/checkpoints/best-model-250-full.h5`
+- `data/aerial/output/semantic_segmentation/checkpoints/best-model-250.h5`
   that contains the trained model weights
-- `data/aerial/output/semantic_segmentation/checkpoints/best-instance-250-full.json`
+- `data/aerial/output/semantic_segmentation/checkpoints/best-instance-250.json`
   that contains a single dictionary with values of validation accuracy
   (`val_acc`), batch size (`batch_size`), network, dropout, learning rate
   (`learning_rate`) and learning rate decay (`learning_rate_decay`).

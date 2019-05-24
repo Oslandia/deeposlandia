@@ -7,7 +7,7 @@ trained, a checkpoint structure is recorded in
 The model testing is done as follows:
 
 ```
-deepo infer -D shapes -M featdet -i ./data/shapes/preprocessed/64_full/testing/images/shape_00000.png
+deepo infer -D shapes -M featdet -i ./data/shapes/preprocessed/64/testing/images/shape_00000.png
 ```
 
 In this example, a label prediction will be done on a single image, for
@@ -22,7 +22,7 @@ image, the trained model is recovered in
 `<instance>` is defined as:
 
 ```
-<model_name>-<image_size>-<network_architecture>-<batch_size>-<aggregation_mode>-<dropout>-<start_lr>-<lr_decay>
+<model_name>-<image_size>-<network_architecture>-<batch_size>-<dropout>-<start_lr>-<lr_decay>
 ```
 
 If no trained model can be found in the computed path, the label prediction is

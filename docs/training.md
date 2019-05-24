@@ -26,7 +26,7 @@ Considering several options makes the program iterate over all possibilities,
 and launch as many training processes as the number of parameter combinations. As an example:
 
 ```
-deepo train -M featder -D mapillary -s 512 -e 5 -t 1000 -L 0.01 0.001
+deepo train -M featdet -D mapillary -s 512 -e 5 -t 1000 -L 0.01 0.001
 ```
 
 will run two training processes, with learning rates respectively equal to 0.01

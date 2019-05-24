@@ -4,16 +4,12 @@ Preprocessed versions of raw datasets has to be generated before any neural
 network training:
 
 ```
-deepo datagen -D mapillary -s 224 -a -P ./any-data-path -t 18000 -v 2000 -T 5000
+deepo datagen -D mapillary -s 224 -P ./any-data-path -t 18000 -v 2000 -T 5000
 ```
 
 This command will generates a set of 224 * 224 images based on Mapillary
-dataset. The raw dataset must be in `./any-data-path/input`. If the `-a`
-argument is specified, the preprocessed dataset will be stored in
-`./any-data-path/preprocessed/224_aggregated`, otherwise it will be stored in
-`./any-data-path/preprocessed/224_full`. The aggregation is applied on dataset
-labels, that can be grouped in Mapillary case (and only in Mapillary case) to
-reduce their number from 65 to 11.
+dataset. The raw dataset must be in `./any-data-path/input`, and the
+preprocessed dataset will be stored in `./any-data-path/preprocessed/224`.
 
 Additionally, the preprocessed dataset may contain less images than the raw
 dataset: the `-t`, `-v` and `-T` arguments refer respectively to training,
