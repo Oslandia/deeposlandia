@@ -79,7 +79,7 @@ class AerialDataset(GeoreferencedDataset):
             image_filename.split("/")[-1], raw_img_width, raw_img_height
         )
 
-        label_filename = image_filename.replace("images", "gt")
+        label_filename = image_filename.replace("images", "labels")
         label_raster = gdal.Open(label_filename)
         labels = label_raster.ReadAsArray()
 
