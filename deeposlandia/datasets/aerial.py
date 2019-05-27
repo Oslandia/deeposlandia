@@ -82,6 +82,7 @@ class AerialDataset(GeoreferencedDataset):
         label_filename = image_filename.replace("images", "labels")
         label_raster = gdal.Open(label_filename)
         labels = label_raster.ReadAsArray()
+        labels = np.swapaxes(labels, 0, 1)
 
         nb_attempts = 0
         image_counter = 0
@@ -101,7 +102,7 @@ class AerialDataset(GeoreferencedDataset):
             label_dict = utils.build_labels(
                 mask, range(self.get_nb_labels()), "aerial"
             )
-            labelled_image = utils.build_image_from_config(mask, self.labels)
+            labelled_image = Image.fromarray(mask)
             if np.unique(mask).shape[0] > 1:
                 tiled_results = self._serialize(
                     tile_image,
