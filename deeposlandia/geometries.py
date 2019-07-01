@@ -312,8 +312,36 @@ def extract_geometry_vertices(mask, structure_size=(10, 10), approx_eps=0.01):
     return polygons, hierarchy
 
 
+def retrieve_area_color(data, contour, labels):
+    """Mask an image area and retrieve its dominant color starting from a label
+    glossary, by determining its closest label (regarding euclidean distance).
+
+    Largely inspired from : https://www.pyimagesearch.com/\
+    2016/02/15/determining-object-color-with-opencv/
+
+    Parameters
+    ----------
+    data : np.array
+        3-channelled image
+    contour : np.array
+        List of points that delimits the area
+    labels : list
+        List of dictionnary that describes each labels (with "id" and "color" keys)
+    """
+    mask = np.zeros(data.shape[:2], dtype="uint8")
+    cv2.drawContours(mask, [contour], -1, 255, -1)
+    mean = cv2.mean(data, mask=mask)[:3]
+    min_dist = (np.inf, None)
+    for label in labels:
+        d = np.linalg.norm(label["color"] - np.array(mean))
+        if d < min_dist[0]:
+            min_dist = (d, label["id"])
+    return min_dist[1]
+
+
 def vectorize_mask(
-    mask, min_area=10.0, structure_size=(10, 10), approx_eps=0.01
+    mask, colored_data, labels,
+    min_area=10.0, structure_size=(10, 10), approx_eps=0.01
 ):
     """Convert a numpy array (*i.e.* rasterized information) into a shapely
     Multipolygon (*i.e.* vectorized information), by filtering too small
@@ -330,6 +358,11 @@ def vectorize_mask(
     Parameters
     ----------
     mask : numpy.array
+        1-channelled version of the input image
+    data : numpy.array
+        3-channelled version of the input  image
+    labels : list of dicts
+        List of labels, as dicts that contain at least a "id"
     min_area : double
     structure_size : tuple
         Size of the cv2 structuring artefact, as a tuple of horizontal and
@@ -348,7 +381,7 @@ def vectorize_mask(
         mask, structure_size, approx_eps
     )
     if not contours:
-        return shgeom.MultiPolygon()
+        return np.array([]), shgeom.MultiPolygon()
     # now messy stuff to associate parent and child contours
     cnt_children = defaultdict(list)
     child_contours = set()
@@ -359,6 +392,7 @@ def vectorize_mask(
             cnt_children[parent_idx].append(contours[idx])
     # create actual polygons filtering by area (removes artifacts)
     all_polygons = []
+    out_labels = []
     for idx, cnt in enumerate(contours):
         if idx not in child_contours and cv2.contourArea(cnt) >= min_area:
             assert cnt.shape[1] == 1
@@ -370,7 +404,9 @@ def vectorize_mask(
                     if cv2.contourArea(c) >= min_area
                 ],
             )
+            poly_label = retrieve_area_color(colored_data, cnt, labels)
             all_polygons.append(poly)
+            out_labels.append(poly_label)
     all_polygons = shgeom.MultiPolygon(all_polygons)
     # approximating polygons might have created invalid ones, fix them
     if not all_polygons.is_valid:
@@ -379,10 +415,10 @@ def vectorize_mask(
         # need to keep it a Multi throughout
         if all_polygons.type == "Polygon":
             all_polygons = shgeom.MultiPolygon([all_polygons])
-    return all_polygons
+    return np.array(out_labels), all_polygons
 
 
-def rasterize_polygons(polygons, img_height, img_width):
+def rasterize_polygons(polygons, labels, img_height, img_width):
     """Transform a vectorized information into a numpy mask for plotting
     purpose
 
@@ -393,6 +429,8 @@ def rasterize_polygons(polygons, img_height, img_width):
     ----------
     polygons : shapely.geometry.MultiPolygon
         Set of detected objects, stored as a MultiPolygon
+    labels : np.array
+        List of corresponding labels that describes polygon classes
     img_height : int
         Image height, in pixels
     img_width : int
@@ -406,15 +444,14 @@ def rasterize_polygons(polygons, img_height, img_width):
     img_mask = np.zeros(shape=(img_height, img_width), dtype=np.uint8)
     if not polygons:
         return img_mask
-    exteriors = [
-        np.array(poly.exterior.coords).round().astype(np.int32)
-        for poly in polygons]
-    interiors = [
-        np.array(pi.coords).round().astype(np.int32)
-        for poly in polygons for pi in poly.interiors
-    ]
-    cv2.fillPoly(img_mask, exteriors, 1)
-    cv2.fillPoly(img_mask, interiors, 0)
+    for polygon, label in zip(polygons, labels):
+        exterior = np.array(polygon.exterior.coords).round().astype(np.int32)
+        interiors = [
+            np.array(pi.coords).round().astype(np.int32)
+            for pi in polygon.interiors
+        ]
+        cv2.fillPoly(img_mask, [exterior], int(label))
+        cv2.fillPoly(img_mask, interiors, 0)
     return img_mask
 
 
