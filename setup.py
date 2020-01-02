@@ -19,10 +19,9 @@ with open("README.md", "rb") as f:
     readme = f.read().decode("utf-8")
 
 install_requires = [
-    "setuptools<=39.1.0",
-    "tensorflow<=1.12.2",
+    "tensorflow<=1.15",
     "opencv-python<=3.4.0.12",
-    "pillow<=5.0.0",
+    "pillow<=6.2.0",
     "keras<=2.2.4",
     "daiquiri<=1.5.0",
     "Flask<=1.0.2",
