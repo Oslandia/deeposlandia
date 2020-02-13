@@ -19,7 +19,7 @@ with open("README.md", "rb") as f:
     readme = f.read().decode("utf-8")
 
 install_requires = [
-    "tensorflow<=1.15",
+    "tensorflow==1.15.2",
     "opencv-python<=3.4.0.12",
     "pillow<=6.2.0",
     "keras<=2.2.4",
