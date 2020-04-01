@@ -13,6 +13,17 @@ Les sections conserveront leur nom en anglais.
 
 ### Removed
 
+## v0.6.1 (2020-04-01)
+
+*Packaging clean-up*
+
+When preparing a major release, or an old release, you necessarily forget details.
+
+### Changed
+
+- Package version 0.5 -> 0.6.1
+- Long description
+
 ## v0.6 (2020-04-01)
 
 *Georeferenced dataset post-processing*

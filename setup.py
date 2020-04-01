@@ -16,7 +16,7 @@ def find_version(*file_paths):
 
 
 with open("README.md", encoding="utf-8") as f:
-    readme = f.read()
+    long_description = f.read()
 
 install_requires = [
     "tensorflow==1.15.2",
@@ -43,7 +43,7 @@ setup(
         "Automatic detection and semantic image segmentation "
         "with deep learning"
         ),
-    long_description=readme,
+    long_description=long_description,
     license="MIT",
     author="Oslandia",
     author_email="info@oslandia.com",
