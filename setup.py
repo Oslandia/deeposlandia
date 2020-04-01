@@ -15,8 +15,8 @@ def find_version(*file_paths):
     )
 
 
-with open("README.md", "rb") as f:
-    readme = f.read().decode("utf-8")
+with open("README.md", encoding="utf-8") as f:
+    readme = f.read()
 
 install_requires = [
     "tensorflow==1.15.2",
