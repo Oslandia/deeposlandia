@@ -479,8 +479,14 @@ class GeoreferencedDataset(Dataset):
                         ],
                     )
         else:
+            if nb_image_files < nb_images:
+                logger.warning(
+                    "Asking to preprocess %s images, but only got %s files",
+                    nb_images, nb_image_files)
+                nb_images = nb_image_files
+                logger.warning("Preprocessing %s images..", nb_images)
             image_list_longname = np.random.choice(
-                image_list_longname, nb_images
+                image_list_longname, nb_images, replace=False
             )
             if nb_processes == 1:
                 for x in image_list_longname:
@@ -501,3 +507,4 @@ class GeoreferencedDataset(Dataset):
             "Saved %s images in the preprocessed dataset.",
             len(self.image_info),
         )
+
