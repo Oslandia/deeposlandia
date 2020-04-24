@@ -81,11 +81,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["training_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "training")
             train_dataset.populate(
@@ -104,11 +101,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["validation_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "validation")
             validation_dataset.populate(
@@ -127,11 +121,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["testing_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "testing")
             test_dataset.populate(
