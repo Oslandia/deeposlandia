@@ -193,7 +193,6 @@ def predict(
     checkpoint_filename = "best-model-" + str(model_input_size) + ".h5"
     checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
     if os.path.isfile(checkpoint_full_path):
-        logger.info("Checkpoint full path : %s", checkpoint_full_path)
         model.load_weights(checkpoint_full_path)
         logger.info(
             "Model weights have been recovered from %s",
