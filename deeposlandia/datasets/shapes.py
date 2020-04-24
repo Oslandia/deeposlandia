@@ -98,6 +98,7 @@ class ShapeDataset(Dataset):
         output_dir=None,
         input_dir=None,
         nb_images=10000,
+        nb_tiles_per_images=None,
         aggregate=False,
         labelling=True,
         buf=8,
@@ -113,6 +114,9 @@ class ShapeDataset(Dataset):
             Path of the directory that contains input images
         nb_images: integer
             Number of images that must be added in the dataset
+        nb_tiles_per_image : integer
+            Number of tiles that must be picked into the raw image (useless there, added
+        for consistency)
         aggregate: bool
             Aggregate some labels into more generic ones, e.g. cars and bus
         into the vehicle label
@@ -125,6 +129,8 @@ class ShapeDataset(Dataset):
             Number of processes on which to run the preprocessing (dummy
         parameter for "shapes" datasets)
         """
+        if nb_tiles_per_image is not None:
+            logger.warning("The ``nb_tiles_per_image`` parameter is useless, it will be ignored.")
         shape_gen = self.generate_labels(nb_images)
         for i, image_label in enumerate(shape_gen):
             bg_color = np.random.randint(0, 255, 3).tolist()

@@ -160,6 +160,7 @@ class MapillaryDataset(Dataset):
         output_dir,
         input_dir,
         nb_images=None,
+        nb_tiles_per_image=None,
         labelling=True,
         nb_processes=1,
     ):
@@ -172,14 +173,18 @@ class MapillaryDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider
-        the whole repository
+            Number of images to be considered in the dataset; if None, consider the whole
+        repository
+        nb_tiles_per_image : integer
+            Number of tiles that must be picked into the raw image (useless there, added
+        for consistency)
         labelling: boolean
-            If True labels are recovered from dataset, otherwise dummy label
-        are generated
+            If True labels are recovered from dataset, otherwise dummy label are generated
         nb_processes : int
             Number of processes on which to run the preprocessing
         """
+        if nb_tiles_per_image is not None:
+            logger.warning("The ``nb_tiles_per_image`` parameter is useless, it will be ignored.")
         image_list = os.listdir(os.path.join(input_dir, "images"))[:nb_images]
         image_list_longname = [
             os.path.join(input_dir, "images", l) for l in image_list
