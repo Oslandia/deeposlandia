@@ -14,7 +14,6 @@ from flask import (
 import json
 import numpy as np
 import os
-import sys
 from PIL import Image
 from werkzeug.utils import secure_filename
 
@@ -38,8 +37,7 @@ if config.get("status", "status") == "dev":
 elif config.get("status", "status") == "prod":
     app = Flask(__name__, static_folder=PROJECT_FOLDER)
 else:
-    logger.error("No defined status, please consider 'dev' or 'prod'.")
-    sys.exit(1)
+    raise ValueError("No defined status, please consider 'dev' or 'prod'.")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["ERROR_404_HELP"] = False
 

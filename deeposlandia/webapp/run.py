@@ -4,7 +4,6 @@ WARNING: only for development purpose!!
 """
 
 import os
-import sys
 
 import daiquiri
 
@@ -16,8 +15,7 @@ logger = daiquiri.getLogger(__name__)
 
 
 if "symlink" not in config.sections():
-    logger.error("Config.ini file does not contain any 'symlink' section.")
-    sys.exit(1)
+    raise KeyError("Config.ini file does not contain any 'symlink' section.")
 for link_name, path in config.items("symlink"):
     utils.create_symlink(os.path.join(app.static_folder, link_name), path)
 

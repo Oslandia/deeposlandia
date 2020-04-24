@@ -30,6 +30,8 @@ Les sections conserveront leur nom en anglais.
 
 ### Removed
 
+- `sys.exit` statements (#150)
+
 ## v0.6.1 (2020-04-01)
 
 *Packaging clean-up*

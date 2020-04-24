@@ -4,7 +4,6 @@
 from configparser import ConfigParser
 import logging
 import os
-import sys
 
 import daiquiri
 
@@ -35,5 +34,4 @@ config = ConfigParser()
 if os.path.isfile(_DEEPOSL_CONFIG):
     config.read(_DEEPOSL_CONFIG)
 else:
-    logger.error("No file config.ini!")
-    sys.exit(1)
+    raise FileNotFoundError("No file config.ini!")

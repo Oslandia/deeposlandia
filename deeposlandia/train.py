@@ -6,7 +6,6 @@ from datetime import datetime
 import itertools
 import json
 import os
-import sys
 
 import daiquiri
 import numpy as np
@@ -68,14 +67,10 @@ def get_data(folders, dataset, model, image_size, batch_size):
             seed=SEED,
         )
     else:
-        logger.error(
-            (
-                "There is no training data with the given "
-                "parameters. Please generate a valid dataset "
-                "before calling the training program."
-            )
+        raise FileNotFoundError(
+            "There is no training data with the given parameters. Please "
+            "generate a valid dataset before calling the training program."
         )
-        sys.exit(1)
     if os.path.isfile(folders["validation_config"]):
         validation_generator = generator.create_generator(
             dataset,
@@ -87,14 +82,10 @@ def get_data(folders, dataset, model, image_size, batch_size):
             seed=SEED,
         )
     else:
-        logger.error(
-            (
-                "There is no validation data with the given "
-                "parameters. Please generate a valid dataset "
-                "before calling the training program."
-            )
+        raise FileNotFoundError(
+            "There is no validation data with the given parameters. Please "
+            "generate a valid dataset before calling the training program."
         )
-        sys.exit(1)
     nb_labels = len(label_ids)
     return nb_labels, train_generator, validation_generator
 
@@ -179,13 +170,9 @@ def run_model(
         )
         loss_function = "categorical_crossentropy"
     else:
-        logger.error(
-            (
-                "Unrecognized model: %s. Please choose amongst %s",
-                dl_model, AVAILABLE_MODELS
-            )
+        raise ValueError(
+            f"Unrecognized model: {dl_model}. Please choose amongst {AVAILABLE_MODELS}"
         )
-        sys.exit(1)
     model = Model(net.X, net.Y)
     opt = Adam(lr=learning_rate, decay=learning_rate_decay)
     metrics = ["acc", iou, dice_coef]
