@@ -9,7 +9,24 @@ Les sections conserveront leur nom en anglais.
 
 ### Added
 
+- `--nb-tiles-per-image` as a new argument for `datagen` command.
+
 ### Changed
+
+- Some dependency updates (Tensorflow, opencv, pillow, keras, daiquiri)
+- The preprocessing has been modified for geographic datasets: `-t`, `-v` and `-T` now
+  refer to raw images, the amount of preprocessed tiles being obtained by a combination
+  of `--nb-tiles-per-image` and these last arguments.
+
+### Fixed
+
+- Draws *without replacement* instead of *with replacement* in the case of preprocessing
+  of geographic dataset testing images (`np.random.choice` wrong parameterization). #146
+
+### Security
+
+- `pillow` was updated to `7.1.1` (moderate severity vulnerability alert for
+  `pillow<6.2.2`)
 
 ### Removed
 
@@ -165,7 +182,7 @@ object-oriented programming.
 ## v0.1 (2017-12-19)
 
 *Street-scene object detection*
- 
+
 This repository runs a convolutional neural network on Mapillary Vistas Dataset, so as to
 detect a range of street-scene objects (car, pedestrian, street-lights, pole,
 ... ). Developments are still under progress, as the model is unable to provide a
