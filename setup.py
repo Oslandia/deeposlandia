@@ -19,7 +19,7 @@ with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
 install_requires = [
-    "tensorflow==2.0.0",
+    "tensorflow==2.0.1",
     "opencv-python<=4.2.0.34",
     "numpy<=1.16.2",
     "pillow<=7.1.1",
