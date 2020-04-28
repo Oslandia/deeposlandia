@@ -17,7 +17,7 @@ import daiquiri
 import pandas as pd
 
 from deeposlandia import config, utils
-from deeposlandia.datasets import AVAILABLE_DATASETS
+from deeposlandia.datasets import AVAILABLE_DATASETS, GEOGRAPHIC_DATASETS
 from deeposlandia.datasets.mapillary import MapillaryDataset
 from deeposlandia.datasets.aerial import AerialDataset
 from deeposlandia.datasets.shapes import ShapeDataset
@@ -33,6 +33,16 @@ def main(args):
     prepro_folder = utils.prepare_preprocessed_folder(
         args.datapath, args.dataset, args.image_size
     )
+    if (
+            args.dataset in GEOGRAPHIC_DATASETS
+            and (args.nb_training_image > 0 or args.nb_validation_image > 0)
+            and args.nb_tiles_per_image is None
+    ):
+        raise ValueError(
+            "The amount of tiles per image must be specified for "
+            f"the {args.dataset} dataset, if training and/or validation images "
+            "are required. See 'deepo datagen -h' for more details."
+        )
 
     # Dataset creation
     if args.dataset == "mapillary":
@@ -71,11 +81,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["training_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "training")
             train_dataset.populate(
@@ -83,6 +90,7 @@ def main(args):
                 input_image_dir,
                 nb_images=args.nb_training_image,
                 nb_processes=int(config.get("running", "processes")),
+                nb_tiles_per_image=args.nb_tiles_per_image,
             )
             train_dataset.save(prepro_folder["training_config"])
 
@@ -93,11 +101,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["validation_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "validation")
             validation_dataset.populate(
@@ -105,6 +110,7 @@ def main(args):
                 input_image_dir,
                 nb_images=args.nb_validation_image,
                 nb_processes=int(config.get("running", "processes")),
+                nb_tiles_per_image=args.nb_tiles_per_image,
             )
             validation_dataset.save(prepro_folder["validation_config"])
 
@@ -115,11 +121,8 @@ def main(args):
             )
         else:
             logger.info(
-                (
-                    "No existing configuration file for this dataset. "
-                    "Create %s.",
+                    "No existing configuration file for this dataset. Create %s.",
                     prepro_folder["testing_config"],
-                )
             )
             input_image_dir = os.path.join(input_folder, "testing")
             test_dataset.populate(

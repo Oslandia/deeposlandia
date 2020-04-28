@@ -19,15 +19,17 @@ with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
 install_requires = [
-    "tensorflow==1.15.2",
-    "opencv-python<=3.4.0.12",
-    "pillow<=6.2.0",
-    "keras<=2.2.4",
-    "daiquiri<=1.5.0",
+    "tensorflow==2.0.0",
+    "opencv-python<=4.2.0.34",
+    "numpy<=1.16.2",
+    "pillow<=7.1.1",
+    "keras<=2.3.1",
+    "daiquiri<=2.1.1",
     "Flask<=1.0.2",
     "seaborn<=0.8.1",
-    "geopandas<=0.4.0",
-    "rtree<=0.8",
+    "shapely<=1.6.0",
+    "geopandas<=0.7.0",
+    "rtree<=0.9.4",
 ]
 
 setup(

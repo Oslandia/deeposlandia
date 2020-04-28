@@ -430,7 +430,8 @@ class GeoreferencedDataset(Dataset):
         self,
         output_dir,
         input_dir,
-        nb_images=None,
+        nb_images=0,
+        nb_tiles_per_image=0,
         labelling=True,
         nb_processes=1,
     ):
@@ -443,11 +444,12 @@ class GeoreferencedDataset(Dataset):
         input_dir : str
             Path of the directory that contains input images
         nb_images : integer
-            Number of images to be considered in the dataset; if None, consider
-        the whole repository
+            Number of images to be considered in the dataset; if None, consider the whole
+        repository
+        nb_tiles_per_image : integer
+            Number of tiles that must be picked into the raw image, for labelled datasets
         labelling : boolean
-            If True labels are recovered from dataset, otherwise dummy label
-        are generated
+            If True labels are recovered from dataset, otherwise dummy label are generated
         nb_processes : int
             Number of processes on which to run the preprocessing
         """
@@ -458,15 +460,23 @@ class GeoreferencedDataset(Dataset):
             if not l.startswith(".")
         ]
         nb_image_files = len(image_list_longname)
+        if nb_image_files < nb_images:
+            logger.warning(
+                "Asking to preprocess %s images, but only got %s files",
+                nb_images, nb_image_files)
+            nb_images = nb_image_files
+            logger.warning("Preprocessing %s images..", nb_images)
+        image_list_longname = np.random.choice(
+            image_list_longname, nb_images, replace=False
+        )
 
-        logger.info("Getting %s images to preprocess...", nb_image_files)
+        logger.info("Getting %s images to preprocess...", nb_images)
         if labelling:
-            nb_tile_per_image = int(nb_images / nb_image_files)
             if nb_processes == 1:
                 for x in image_list_longname:
                     self.image_info.append(
                         self._preprocess_for_training(
-                            x, output_dir, nb_tile_per_image
+                            x, output_dir, nb_tiles_per_image
                         )
                     )
             else:
@@ -474,20 +484,11 @@ class GeoreferencedDataset(Dataset):
                     self.image_info = p.starmap(
                         self._preprocess_for_training,
                         [
-                            (x, output_dir, nb_tile_per_image)
+                            (x, output_dir, nb_tiles_per_image)
                             for x in image_list_longname
                         ],
                     )
         else:
-            if nb_image_files < nb_images:
-                logger.warning(
-                    "Asking to preprocess %s images, but only got %s files",
-                    nb_images, nb_image_files)
-                nb_images = nb_image_files
-                logger.warning("Preprocessing %s images..", nb_images)
-            image_list_longname = np.random.choice(
-                image_list_longname, nb_images, replace=False
-            )
             if nb_processes == 1:
                 for x in image_list_longname:
                     self.image_info.append(

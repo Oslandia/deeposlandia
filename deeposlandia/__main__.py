@@ -210,6 +210,14 @@ def add_nb_image_args(parser):
         default=0,
         help=("Number of validation images"),
     )
+    parser.add_argument(
+        "--nb-tiles-per-image",
+        type=int,
+        help=(
+            "Number of tile per raw image (mandatory for geographic datasets "
+            "when training and/or validation images are involved)."
+        ),
+    )
 
 
 def add_training_args(parser):
