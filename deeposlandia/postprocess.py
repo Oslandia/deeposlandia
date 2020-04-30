@@ -297,7 +297,7 @@ def build_full_labelled_image(
     corresponds to its predicted label
     """
     img_height = img_height if img_height is not None else img_width
-    y_raw_preds = model.predict(images, batch_size=batch_size)
+    y_raw_preds = model.predict(images, batch_size=batch_size, verbose=1)
     predicted_labels = np.argmax(y_raw_preds, axis=3)
     full_labelled_image = fill_labelled_image(
         predicted_labels, coordinates, tile_size, img_width, img_height
@@ -391,6 +391,7 @@ def get_image_features(datapath, dataset, filename):
 
 
 def main(args):
+
     features = get_image_features(
         args.datapath, args.dataset, args.image_basename
     )
@@ -410,6 +411,7 @@ def main(args):
         args.datapath, args.dataset, args.image_size, len(labels)
     )
 
+    logger.info("Predict labels for input images...")
     data = build_full_labelled_image(
         images,
         coordinates,

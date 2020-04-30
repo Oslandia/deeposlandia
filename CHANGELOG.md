@@ -10,6 +10,7 @@ Les sections conserveront leur nom en anglais.
 ### Added
 
 - `--nb-tiles-per-image` as a new argument for `datagen` command.
+- A progress bar for inference processes (#153)
 
 ### Changed
 

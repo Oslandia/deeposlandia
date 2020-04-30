@@ -10,6 +10,11 @@ import daiquiri
 
 __version__ = "0.6.1"
 
+
+# Do not log Tensorflow messages
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+# Configure the logger
 daiquiri.setup(
     level=logging.INFO,
     outputs=(
@@ -25,8 +30,10 @@ daiquiri.setup(
 )
 logger = daiquiri.getLogger("root")
 
+# Deeposlandia supports feature detection (featdet) and semantic segmentation (semseg)
 AVAILABLE_MODELS = ("featdet", "semseg")
 
+# Configuration file handling
 _DEEPOSL_CONFIG = os.getenv("DEEPOSL_CONFIG")
 _DEEPOSL_CONFIG = (
     _DEEPOSL_CONFIG if _DEEPOSL_CONFIG is not None else "config.ini"
