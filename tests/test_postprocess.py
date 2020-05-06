@@ -1,6 +1,8 @@
 """Unit tests dedicated to predicted label postprocessing
 """
 
+import os
+
 import numpy as np
 import pytest
 
@@ -13,7 +15,7 @@ def test_get_image_paths(tanzania_image_size):
     Preprocessed image filenames must end with ".png"
     """
     filenames = postprocess.get_image_paths(
-        "./tests/data", "tanzania", tanzania_image_size, "grid_066"
+        f"./tests/data/tanzania/preprocessed/{tanzania_image_size}/testing/", "tanzania_sample"
     )
     assert np.all([f.endswith(".png") for f in filenames])
 
@@ -28,7 +30,7 @@ def test_extract_images(
     3).
     """
     filenames = postprocess.get_image_paths(
-        "./tests/data", "tanzania", tanzania_image_size, "tanzania_sample"
+        f"./tests/data/tanzania/preprocessed/{tanzania_image_size}/testing/", "tanzania_sample"
     )
     images = postprocess.extract_images(filenames)
     assert len(images.shape) == 4
@@ -64,7 +66,9 @@ def test_get_trained_model(tanzania_image_size, tanzania_nb_labels):
       + 4 are related to pooling
     """
     model = postprocess.get_trained_model(
-        "./tests.data", "tanzania", tanzania_image_size, tanzania_nb_labels
+        "./tests/data/tanzania/output/semseg/checkpoints/",
+        tanzania_image_size,
+        tanzania_nb_labels
     )
     assert model.input_shape[1:] == (
         tanzania_image_size,
@@ -233,12 +237,16 @@ def test_build_full_labelled_image(
     datapath = "./tests/data"
     dataset = "tanzania"
     image_paths = postprocess.get_image_paths(
-        datapath, dataset, tanzania_image_size, "tanzania_sample"
+        os.path.join(datapath, dataset, "preprocessed", str(tanzania_image_size), "testing"),
+        "tanzania_sample"
     )
     images = postprocess.extract_images(image_paths)
     coordinates = postprocess.extract_coordinates_from_filenames(image_paths)
+    model_filename = f"best-model-{tanzania_image_size}.h5"
     model = postprocess.get_trained_model(
-        datapath, dataset, tanzania_image_size, tanzania_nb_labels
+        os.path.join(datapath, dataset, "output/semseg/checkpoints/", model_filename),
+        tanzania_image_size,
+        tanzania_nb_labels
     )
     labelled_image = postprocess.build_full_labelled_image(
         images,

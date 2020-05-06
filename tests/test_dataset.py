@@ -145,6 +145,7 @@ def test_aerial_training_dataset_population(
     aerial_training_temp_dir,
     aerial_raw_sample,
     aerial_nb_images,
+    nb_tiles_per_image,
     aerial_training_config,
     aerial_nb_labels,
     aerial_nb_output_training_images,
@@ -156,6 +157,7 @@ def test_aerial_training_dataset_population(
         str(aerial_training_temp_dir),
         aerial_raw_sample,
         nb_images=aerial_nb_images,
+        nb_tiles_per_image=nb_tiles_per_image,
     )
     d.save(str(aerial_training_config))
     assert d.get_nb_labels() == aerial_nb_labels
@@ -223,6 +225,7 @@ def test_tanzania_training_dataset_population(
     tanzania_training_temp_dir,
     tanzania_raw_sample,
     tanzania_nb_images,
+    nb_tiles_per_image,
     tanzania_training_config,
     tanzania_nb_labels,
     tanzania_nb_output_training_images,
@@ -234,6 +237,7 @@ def test_tanzania_training_dataset_population(
         str(tanzania_training_temp_dir),
         tanzania_raw_sample,
         nb_images=tanzania_nb_images,
+        nb_tiles_per_image=nb_tiles_per_image,
     )
     d.save(str(tanzania_training_config))
     assert d.get_nb_labels() == tanzania_nb_labels
