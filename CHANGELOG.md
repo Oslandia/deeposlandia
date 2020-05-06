@@ -17,6 +17,7 @@ Les sections conserveront leur nom en anglais.
 - The preprocessing has been modified for geographic datasets: `-t`, `-v` and `-T` now
   refer to raw images, the amount of preprocessed tiles being obtained by a combination
   of `--nb-tiles-per-image` and these last arguments.
+- The tile grid becomes optional for postprocessing (#155).
 
 ### Fixed
 

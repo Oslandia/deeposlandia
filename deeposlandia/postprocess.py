@@ -423,9 +423,10 @@ def main(args):
         "Labelled image dimension: %s, %s" % (data.shape[0], data.shape[1])
     )
     colored_data = assign_label_colors(data, labels)
-    colored_data = draw_grid(
-        colored_data, img_width, img_height, args.image_size
-    )
+    if args.draw_grid:
+        colored_data = draw_grid(
+            colored_data, img_width, img_height, args.image_size
+        )
     predicted_label_folder = os.path.join(
         args.datapath,
         args.dataset,
@@ -466,9 +467,10 @@ def main(args):
         vectorized_data, vectorized_labels, img_height, img_width
     )
     colored_raster_data = assign_label_colors(rasterized_data, labels)
-    colored_raster_data = draw_grid(
-        colored_raster_data, img_width, img_height, args.image_size
-    )
+    if args.draw_grid:
+        colored_raster_data = draw_grid(
+            colored_raster_data, img_width, img_height, args.image_size
+        )
     predicted_raster_folder = os.path.join(
         args.datapath,
         args.dataset,
