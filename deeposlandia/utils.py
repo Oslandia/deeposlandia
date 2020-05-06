@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
+from deeposlandia.datasets import GEOGRAPHIC_DATASETS
+
 
 logger = daiquiri.getLogger(__name__)
 
@@ -186,7 +188,7 @@ def prepare_preprocessed_folder(
     }
 
 
-def prepare_output_folder(datapath, dataset, model, instance_name=None):
+def prepare_output_folder(datapath, dataset, image_size, model):
     """Dataset and repository management; create and return the dataset output
     path
 
@@ -196,27 +198,38 @@ def prepare_output_folder(datapath, dataset, model, instance_name=None):
         Data root directory, contain all used the datasets
     dataset : str
         Dataset name, *e.g.* `mapillary` or `shapes`
+    image_size : int
+        Size of the considered images (height and width are equal)
     model : str
-        Research problem that is tackled, *e.g.* `feature_detection` or
-    `semantic_segmentation`
-    instance_name : str
-        Instance name, used to create the accurate output folders
+        Research problem that is tackled, *e.g.* `featdet` or `semseg`
 
     Returns
     -------
-    str
-        Dataset output path
+    dict
+        Dataset output paths
     """
-    if instance_name is not None:
-        output_folder = os.path.join(
-            datapath, dataset, "output", model, "checkpoints", instance_name
-        )
-    else:
-        output_folder = os.path.join(
-            datapath, dataset, "output", model, "checkpoints"
-        )
+    output_folder = os.path.join(datapath, dataset, "output", model)
     os.makedirs(output_folder, exist_ok=True)
-    return output_folder
+    checkpoint_folder = os.path.join(output_folder, "checkpoints")
+    os.makedirs(checkpoint_folder, exist_ok=True)
+    best_model_filename = "best-model-" + str(image_size) + ".h5"
+    best_instance_filename = "best-instance-" + str(image_size) + ".json"
+    label_folder = os.path.join(output_folder, "predicted_labels")
+    os.makedirs(label_folder, exist_ok=True)
+    geometry_folder = raster_folder = None
+    if dataset in GEOGRAPHIC_DATASETS:
+        geometry_folder = os.path.join(output_folder, "predicted_geometries")
+        raster_folder = os.path.join(output_folder, "predicted_rasters")
+        os.makedirs(geometry_folder, exist_ok=True)
+        os.makedirs(raster_folder, exist_ok=True)
+    return {
+        "best-model": os.path.join(checkpoint_folder, best_model_filename),
+        "best-instance": os.path.join(checkpoint_folder, best_instance_filename),
+        "checkpoints": checkpoint_folder,
+        "geometries": geometry_folder,
+        "labels": label_folder,
+        "rasters": raster_folder,
+    }
 
 
 def recover_instance(instance_path):

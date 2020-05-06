@@ -167,9 +167,8 @@ def predict(
             "Please generate a valid dataset before calling the program."
         )
 
-    output_folder = utils.prepare_output_folder(datapath, dataset, problem)
-    instance_filename = "best-instance-" + str(model_input_size) + ".json"
-    instance_path = os.path.join(output_folder, instance_filename)
+    output_folder = utils.prepare_output_folder(datapath, dataset, model_input_size, problem)
+    instance_path = os.path.join(output_folder, output_folder["best-instance"])
     dropout, network = utils.recover_instance(instance_path)
     model = init_model(
         problem,
@@ -179,13 +178,11 @@ def predict(
         dropout,
         network,
     )
-    checkpoint_filename = "best-model-" + str(model_input_size) + ".h5"
-    checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
-    if os.path.isfile(checkpoint_full_path):
-        model.load_weights(checkpoint_full_path)
+    if os.path.isfile(output_folder["best-model"]):
+        model.load_weights(output_folder["best-model"])
         logger.info(
             "Model weights have been recovered from %s",
-            checkpoint_full_path,
+            output_folder["best-model"],
         )
     else:
         logger.info(

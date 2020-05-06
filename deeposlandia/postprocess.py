@@ -25,19 +25,15 @@ from deeposlandia.semantic_segmentation import SemanticSegmentationNetwork
 logger = daiquiri.getLogger(__name__)
 
 
-def get_image_paths(datapath, dataset, image_size, image_basename):
+def get_image_paths(testing_folder, image_basename):
     """Returns a list with the path of every image that belongs to the
     `dataset`, preprocessed in `image_size`-pixelled images, that were
     extracted from an original image named as `image_basename`.
 
     Parameters
     ----------
-    datapath : str
-        Path of the data on the file system
-    dataset : str
-        Name of the dataset
-    image_size : int
-        Size of preprocessed images, in pixels
+    testing_folder : str
+        Path of the testing image folder
     image_basename : str
         Original image name
 
@@ -46,15 +42,7 @@ def get_image_paths(datapath, dataset, image_size, image_basename):
     list
         List of image full paths
     """
-    image_raw_paths = os.path.join(
-        datapath,
-        dataset,
-        "preprocessed",
-        str(image_size),
-        "testing",
-        "images",
-        image_basename + "*",
-    )
+    image_raw_paths = os.path.join(testing_folder, "images", image_basename + "*")
     return [glob.glob(f) for f in [image_raw_paths]][0]
 
 
@@ -121,16 +109,14 @@ def get_labels(datapath, dataset, tile_size):
     return [l for l in test_config["labels"] if l["is_evaluate"]]
 
 
-def get_trained_model(datapath, dataset, image_size, nb_labels):
+def get_trained_model(model_filepath, image_size, nb_labels):
     """Recover model weights stored on the file system, and assign them into
     the `model` structure
 
     Parameters
     ----------
-    datapath : str
-        Path of the data on the file system
-    dataset : str
-        Name of the dataset
+    model_filepath : str
+        Path of the model on the file system
     image_size : int
         Image size, in pixels (height=width)
     nb_labels : int
@@ -150,16 +136,9 @@ def get_trained_model(datapath, dataset, image_size, nb_labels):
         architecture="unet",
     )
     model = Model(net.X, net.Y)
-    output_folder = utils.prepare_output_folder(
-        datapath, dataset, "semseg"
-    )
-    checkpoint_filename = "best-model-" + str(image_size) + ".h5"
-    checkpoint_full_path = os.path.join(output_folder, checkpoint_filename)
-    if os.path.isfile(checkpoint_full_path):
-        model.load_weights(checkpoint_full_path)
-        logger.info(
-            "Model weights have been recovered from %s" % checkpoint_full_path
-        )
+    if os.path.isfile(model_filepath):
+        model.load_weights(model_filepath)
+        logger.info("Model weights have been recovered from %s" % model_filepath)
     else:
         logger.info(
             (
@@ -392,6 +371,7 @@ def get_image_features(datapath, dataset, filename):
 
 def main(args):
 
+    logger.info("Postprocess %s...", args.image_basename)
     features = get_image_features(
         args.datapath, args.dataset, args.image_basename
     )
@@ -399,16 +379,18 @@ def main(args):
     img_width, img_height = features["width"], features["height"]
     logger.info("Raw image size: %s, %s" % (img_width, img_height))
 
-    image_paths = get_image_paths(
-        args.datapath, args.dataset, args.image_size, args.image_basename
-    )
+    prepro_folder = utils.prepare_preprocessed_folder(args.datapath, args.dataset, args.image_size)
+    image_paths = get_image_paths(prepro_folder["testing"], args.image_basename)
     logger.info("The image will be splitted into %s tiles" % len(image_paths))
     images = extract_images(image_paths)
     coordinates = extract_coordinates_from_filenames(image_paths)
     labels = get_labels(args.datapath, args.dataset, args.image_size)
 
+    output_folder = utils.prepare_output_folder(
+        args.datapath, args.dataset, args.image_size, "semseg"
+    )
     model = get_trained_model(
-        args.datapath, args.dataset, args.image_size, len(labels)
+        output_folder["best-model"], args.image_size, len(labels)
     )
 
     logger.info("Predict labels for input images...")
@@ -429,16 +411,8 @@ def main(args):
         colored_data = draw_grid(
             colored_data, img_width, img_height, args.image_size
         )
-    predicted_label_folder = os.path.join(
-        args.datapath,
-        args.dataset,
-        "output",
-        "semseg",
-        "predicted_labels"
-    )
-    os.makedirs(predicted_label_folder, exist_ok=True)
     predicted_label_file = os.path.join(
-        predicted_label_folder,
+        output_folder["labels"],
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_data).save(predicted_label_file)
@@ -449,16 +423,8 @@ def main(args):
     gdf = gpd.GeoDataFrame(
         {"labels": vectorized_labels, "geometry": vectorized_data}
     )
-    predicted_geom_folder = os.path.join(
-        args.datapath,
-        args.dataset,
-        "output",
-        "semseg",
-        "predicted_geometries",
-    )
-    os.makedirs(predicted_geom_folder, exist_ok=True)
     predicted_geom_file = os.path.join(
-        predicted_geom_folder,
+        output_folder["geometries"],
         args.image_basename + "_" + str(args.image_size) + ".geojson",
     )
     if os.path.isfile(predicted_geom_file):
@@ -473,16 +439,8 @@ def main(args):
         colored_raster_data = draw_grid(
             colored_raster_data, img_width, img_height, args.image_size
         )
-    predicted_raster_folder = os.path.join(
-        args.datapath,
-        args.dataset,
-        "output",
-        "semseg",
-        "predicted_rasters",
-    )
-    os.makedirs(predicted_raster_folder, exist_ok=True)
     predicted_raster_file = os.path.join(
-        predicted_raster_folder,
+        output_folder["rasters"],
         args.image_basename + "_" + str(args.image_size) + ".png",
     )
     Image.fromarray(colored_raster_data).save(predicted_raster_file)

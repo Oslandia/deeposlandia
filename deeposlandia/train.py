@@ -251,6 +251,9 @@ def run_model(
 def main(args):
     # Grid search
     model_output = []
+    output_folder = utils.prepare_output_folder(
+        args.datapath, args.dataset, args.image_size, args.model
+    )
     for batch_size in args.batch_size:
         logger.info("Generating data with batch of %s images...", batch_size)
         # Data generator building
@@ -283,16 +286,14 @@ def main(args):
                 learning_rate_decay,
             ]
             instance_name = utils.list_to_str(instance_args, "_")
-            output_folder = utils.prepare_output_folder(
-                args.datapath, args.dataset, args.model, instance_name
-            )
+            instance_folder = os.path.join(output_folder["checkpoints"], instance_name)
             # Model running
             model_output.append(
                 run_model(
                     train_gen,
                     valid_gen,
                     args.model,
-                    output_folder,
+                    instance_folder,
                     instance_name,
                     args.image_size,
                     nb_labels,
@@ -309,15 +310,8 @@ def main(args):
     best_instance = max(model_output, key=lambda x: x["val_acc"])
 
     # Save best model
-    output_folder = utils.prepare_output_folder(
-        args.datapath, args.dataset, args.model
-    )
-    instance_name = os.path.join(
-        output_folder,
-        "best-{}-" + str(args.image_size) + ".{}",
-    )
-    best_instance["model"].save(instance_name.format("model", "h5"))
-    with open(instance_name.format("instance", "json"), "w") as fobj:
+    best_instance["model"].save(output_folder["best-model"])
+    with open(output_folder["best-instance"], "w") as fobj:
         json.dump(
             {
                 key: best_instance[key]
