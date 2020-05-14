@@ -11,7 +11,6 @@ Example of program call:
 
 import argparse
 import os
-import sys
 
 import daiquiri
 import pandas as pd
@@ -66,11 +65,9 @@ def main(args):
         validation_dataset = TanzaniaDataset(args.image_size)
         test_dataset = TanzaniaDataset(args.image_size)
     else:
-        logger.error(
-            "Unsupported dataset type. Please choose amongst %s",
-            AVAILABLE_DATASETS,
+        raise ValueError(
+            f"Unsupported dataset type. Please choose amongst {AVAILABLE_DATASETS}"
         )
-        sys.exit(1)
 
     # Dataset populating/loading
     # (depends on the existence of a specification file)
@@ -137,4 +134,3 @@ def main(args):
     glossary = pd.DataFrame(train_dataset.labels)
     glossary["popularity"] = train_dataset.get_label_popularity()
     logger.info("Data glossary:\n%s", glossary)
-    sys.exit(0)

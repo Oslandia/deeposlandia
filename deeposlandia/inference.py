@@ -16,7 +16,6 @@ Example of program call, that will infers labels on all files from
 import argparse
 import glob
 import os
-import sys
 
 import daiquiri
 import numpy as np
@@ -43,8 +42,7 @@ def init_model(
     Parameters
     ----------
     problem : str
-        Type of solved problem, either `feature_detection` or
-    `semantic_segmentation`
+        Type of solved problem, either `featdet` or `semseg`
     instance_name : str
         Name of the instance, for identification purpose
     image_size : int
@@ -79,13 +77,9 @@ def init_model(
             architecture=network,
         )
     else:
-        logger.error(
-            (
-                "Unrecognized model. Please enter 'feature_detection' "
-                "or 'semantic_segmentation'."
-            )
+        raise ValueError(
+            "Unrecognized model. Please enter 'featdet' or 'semseg'."
         )
-        sys.exit(1)
     return Model(net.X, net.Y)
 
 
@@ -112,8 +106,7 @@ def predict(
     dataset : str
         Name of the dataset
     problem : str
-        Name of the considered model, either `feature_detection` or
-    `semantic_segmentation`
+        Name of the considered model, either `featdet` or `semseg`
     datapath : str
         Relative path of dataset repository
     name : str
@@ -169,14 +162,10 @@ def predict(
         ]
         nb_labels = len(label_ids)
     else:
-        logger.error(
-            (
-                "There is no training data with the given "
-                "parameters. Please generate a valid dataset "
-                "before calling the program."
-            )
+        raise FileNotFoundError(
+            "There is no training data with the given parameters. "
+            "Please generate a valid dataset before calling the program."
         )
-        sys.exit(1)
 
     output_folder = utils.prepare_output_folder(datapath, dataset, problem)
     instance_filename = "best-instance-" + str(model_input_size) + ".json"
@@ -200,11 +189,8 @@ def predict(
         )
     else:
         logger.info(
-            (
-                "No available trained model for this image size"
-                " with optimized hyperparameters. The "
-                "inference will be done on an untrained model"
-            )
+            "No available trained model for this image size with optimized hyperparameters. "
+            "The inference will be done on an untrained model"
         )
 
     y_raw_pred = model.predict(images)
@@ -252,13 +238,9 @@ def predict(
             "label_images": result,
         }
     else:
-        logger.error(
-            (
-                "Unknown model argument. Please use "
-                "'feature_detection' or 'semantic_segmentation'."
-            )
+        raise ValueError(
+                "Unknown model argument. Please use 'featdet' or 'semseg'."
         )
-        sys.exit(1)
 
 
 def summarize_config(config):
@@ -296,10 +278,7 @@ def extract_images(image_paths):
     for image_path in image_paths:
         image = Image.open(image_path)
         if image.size[0] != image.size[1]:
-            logger.error(
-                ("One of the parsed images " "has non-squared dimensions.")
-            )
-            sys.exit(1)
+            raise ValueError("One of the parsed images has non-squared dimensions.")
         x_test.append(np.array(image))
     return np.array(x_test)
 

@@ -1,8 +1,6 @@
 """Define a class that represents typical convolutional neural networks
 """
 
-import sys
-
 import keras as K
 
 
@@ -39,7 +37,6 @@ class ConvolutionalNeuralNetwork:
                 "per 16. To train a neural network with "
                 "such an input size may fail."
             )
-            sys.exit(1)
         self.network_name = network_name
         self.image_size = image_size
         self.nb_channels = nb_channels
