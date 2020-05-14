@@ -7,6 +7,14 @@ Les sections conserveront leur nom en anglais.
 
 ## Unreleased
 
+## v0.6.3.post1 (2020-05-14)
+
+*A nicer Pypi description*
+
+### Fixed
+
+- From `https://github.com/Oslandia/deeposlandia/blob/master/images/...` to `https://github.com/Oslandia/deeposlandia/raw/master/images/...`
+
 ## v0.6.3 (2020-05-14)
 
 *A nice Pypi description*
