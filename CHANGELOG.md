@@ -7,6 +7,18 @@ Les sections conserveront leur nom en anglais.
 
 ## Unreleased
 
+## v0.6.3 (2020-05-14)
+
+*A nice Pypi description*
+
+### Added
+
+- `long_description_content_type` argument in `setup()` function.
+
+### Modified
+
+- From relative image paths to absolute image paths, in `README.md`.
+
 ## v0.6.2 (2020-05-14)
 
 *Postprocessing improvement*

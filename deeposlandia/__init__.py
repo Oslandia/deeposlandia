@@ -7,7 +7,7 @@ import os
 
 import daiquiri
 
-__version__ = "0.6.2"
+__version__ = "0.6.3"
 
 
 # Do not log Tensorflow messages
