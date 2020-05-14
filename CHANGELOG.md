@@ -7,6 +7,10 @@ Les sections conserveront leur nom en anglais.
 
 ## Unreleased
 
+## v0.6.2 (2020-05-14)
+
+*Postprocessing improvement*
+
 ### Added
 
 - `--nb-tiles-per-image` as a new argument for `datagen` command.
