@@ -46,6 +46,7 @@ setup(
         "with deep learning"
         ),
     long_description=long_description,
+    long_description_content_type="text/markdown",
     license="MIT",
     author="Oslandia",
     author_email="info@oslandia.com",
