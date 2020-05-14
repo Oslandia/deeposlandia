@@ -98,7 +98,7 @@ class ShapeDataset(Dataset):
         output_dir=None,
         input_dir=None,
         nb_images=10000,
-        nb_tiles_per_images=None,
+        nb_tiles_per_image=None,
         aggregate=False,
         labelling=True,
         buf=8,

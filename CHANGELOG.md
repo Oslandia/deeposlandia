@@ -14,6 +14,7 @@ Les sections conserveront leur nom en anglais.
 
 ### Changed
 
+- `utils.prepare_output_folder()` returns now a dictionary of all useful output paths
 - Some dependency updates (Tensorflow, opencv, pillow, keras, daiquiri)
 - The preprocessing has been modified for geographic datasets: `-t`, `-v` and `-T` now
   refer to raw images, the amount of preprocessed tiles being obtained by a combination

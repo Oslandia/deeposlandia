@@ -171,6 +171,11 @@ def aerial_nb_images():
 
 
 @pytest.fixture
+def nb_tiles_per_image():
+    return 10
+
+
+@pytest.fixture
 def aerial_nb_output_training_images():
     return 10
 

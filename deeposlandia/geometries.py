@@ -10,7 +10,7 @@ from collections import defaultdict
 
 import cv2
 import daiquiri
-import fiona
+from fiona.crs import from_epsg
 import geopandas as gpd
 import numpy as np
 import shapely.geometry as shgeom
@@ -265,7 +265,7 @@ def extract_tile_items(
         raster_features, min_x, min_y, tile_width, tile_height
     )
     bdf = gpd.GeoDataFrame(
-        crs=fiona.crs.from_epsg(raster_features["srid"]), geometry=[area]
+        crs=from_epsg(raster_features["srid"]), geometry=[area]
     )
     reproj_labels = labels.to_crs(epsg=raster_features["srid"])
     tile_items = gpd.sjoin(reproj_labels, bdf)

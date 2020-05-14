@@ -16,7 +16,7 @@ import numpy as np
 from osgeo import gdal
 from PIL import Image
 
-from deeposlandia import geometries, utils
+from deeposlandia import geometries
 
 logger = daiquiri.getLogger(__name__)
 

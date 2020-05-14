@@ -127,16 +127,21 @@ def test_output_folder(datapath_repo):
     """
     datapath = str(datapath_repo)
     dataset = "shapes"
+    image_size = 100
     model = "feature_detection"
-    instance_name = "test_instance"
-    prepare_output_folder(datapath, dataset, model, instance_name)
-    assert os.path.isdir(os.path.join(datapath, dataset, "output"))
-    assert os.path.isdir(os.path.join(datapath, dataset, "output", model))
+    output_folder = prepare_output_folder(datapath, dataset, image_size, model)
+    assert len(output_folder.keys()) == 6
     assert os.path.isdir(
         os.path.join(datapath, dataset, "output", model, "checkpoints")
     )
     assert os.path.isdir(
-        os.path.join(
-            datapath, dataset, "output", model, "checkpoints", instance_name
-        )
+        os.path.join(datapath, dataset, "output", model, "predicted_labels")
+    )
+    dataset = "aerial"
+    prepare_output_folder(datapath, dataset, image_size, model)
+    assert os.path.isdir(
+        os.path.join(datapath, dataset, "output", model, "predicted_geometries")
+    )
+    assert os.path.isdir(
+        os.path.join(datapath, dataset, "output", model, "predicted_rasters")
     )
