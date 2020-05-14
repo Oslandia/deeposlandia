@@ -193,7 +193,7 @@ def predict(
             "The inference will be done on an untrained model"
         )
 
-    y_raw_pred = model.predict(images)
+    y_raw_pred = model.predict(images, batch_size=2, verbose=1)
 
     result = {}
     if problem == "featdet":
