@@ -133,6 +133,12 @@ def postprocess_parser(subparser, reference_func):
         help=("Number of images in each inference batch"),
     )
     parser.add_argument(
+        "-g",
+        "--draw-grid",
+        action="store_true",
+        help="If specified, draw the grid that materializes the predicted tiles"
+    )
+    parser.add_argument(
         "-i",
         "--image-basename",
         required=True,
