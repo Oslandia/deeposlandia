@@ -108,7 +108,7 @@ model test purpose, it does not contain filtered versions of images. The raw
 dataset contains 66 labels, splitted into 13 categories. The following figure
 depicts a prediction result over the 13-labelled dataset version.
 
-![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/blob/master/images/mapillary_prediction_example.png)
+![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/raw/master/images/mapillary_prediction_example.png)
 
 ## AerialImage (Inria)
 
@@ -122,7 +122,7 @@ testing. Each of these images are 5000*5000 `tif` images. Amongst the 180
 training images, we assigned 15 training images to validation. One example of
 this image from this dataset is depicted below.
 
-![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/blob/master/images/aerial_prediction_example.png)
+![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/raw/master/images/aerial_prediction_example.png)
 
 ## Open AI Tanzania
 
@@ -137,7 +137,7 @@ allowing a fine data preprocessing step.
 In such a dataset, one tries to automatically detect building footprints by
 distinguishing complete buildings, incomplete buildings and foudations.
 
-![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/blob/master/images/tanzania_prediction_example.png)
+![Example of image, with labels and predictions](https://github.com/Oslandia/deeposlandia/raw/master/images/tanzania_prediction_example.png)
 
 ## Shapes
 
